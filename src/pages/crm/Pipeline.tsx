@@ -48,10 +48,10 @@ const DraggableLeadCard = memo<LeadCardProps>(({ lead, isClosed }) => {
   return (
     <div
       ref={setNodeRef}
-      style={style}
+      style={{ ...style, width: '100%' }}
       {...listeners}
       {...attributes}
-      className={`pipeline-card-straight bg-[#1a1a1a] w-full p-4 rounded-md border-2 border-[#B5FF03] shadow-xl pointer-events-none`}
+      className={`pipeline-card-base bg-[#1a1a1a] w-full p-2 md:p-4 rounded-md border border-[#333] shadow-none hover:border-[#B5FF03] transition-all cursor-grab active:cursor-grabbing group ${isDragging ? 'opacity-50 grayscale border-[#B5FF03] dragging-card' : ''}`}
     >
       <div className="font-bold text-[11px] md:text-[13px] text-white mb-0.5">{lead.name}</div>
       <div className="text-[9px] md:text-[10px] text-neutral-400 font-semibold mb-2 md:mb-3">{lead.niche}</div>
@@ -102,7 +102,7 @@ const DraggableLeadCard = memo<LeadCardProps>(({ lead, isClosed }) => {
 DraggableLeadCard.displayName = 'DraggableLeadCard';
 
 const StaticLeadCard = memo<LeadCardProps>(({ lead, isClosed }) => (
-  <div className="bg-[#1a1a1a] w-full p-4 rounded-md border-2 border-[#B5FF03] shadow-none pointer-events-none">
+  <div className="pipeline-card-base bg-[#1a1a1a] w-full p-4 rounded-md border-2 border-[#B5FF03] shadow-xl pointer-events-none">
     <div className="font-bold text-[13px] text-white mb-0.5">{lead.name}</div>
     <div className="text-[10px] text-neutral-400 font-semibold mb-3">{lead.niche}</div>
     {isClosed && (

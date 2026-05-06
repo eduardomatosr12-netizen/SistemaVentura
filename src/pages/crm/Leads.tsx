@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef, useEffect } from 'react';
+﻿import { useState, useMemo, useRef, useEffect } from 'react';
 import { ReactNode } from 'react';
 import { Plus, Pencil, Trash2, X, Save, Filter, XCircle, ChevronDown, ChevronUp, AlertCircle, MessageCircle } from 'lucide-react';
 import { cleanPhoneNumber, generateWhatsAppLink, WHATSAPP_MESSAGE_TEMPLATES } from '../../lib/whatsapp';
@@ -27,7 +27,7 @@ const STAGES = [
   'Novos Leads',
   'Primeiro Contato',
   'Contato Ativo',
-  'Reunião Agendada',
+  'ReuniÃ£o Agendada',
   'Follow Up',
   'Proposta Enviada',
   'Contrato Fechado',
@@ -36,7 +36,7 @@ const STAGES = [
 
 const STAGE_ORIGINS = [
   'Instagram',
-  'Indicação',
+  'IndicaÃ§Ã£o',
   'WhatsApp',
   'Facebook',
   'Google',
@@ -46,10 +46,10 @@ const STAGE_ORIGINS = [
 ];
 
 const stageStyle: Record<string, string> = {
-  'Novos Leads':      'bg-neutral-100 text-neutral-600',
-  'Primeiro Contato': 'bg-neutral-200 text-neutral-700',
-  'Contato Ativo':    'bg-slate-100 text-slate-700',
-  'Reunião Agendada': 'bg-black text-white',
+  'Novos Leads':      'bg-[#111] text-neutral-400',
+  'Primeiro Contato': 'bg-[#222] text-neutral-500',
+  'Contato Ativo':    'bg-[#111] text-slate-700',
+  'ReuniÃ£o Agendada': 'bg-black text-white',
   'Follow Up':        'bg-slate-800 text-white',
   'Proposta Enviada': 'bg-zinc-100 text-zinc-700',
   'Contrato Fechado': 'bg-emerald-100 text-emerald-700',
@@ -59,13 +59,13 @@ const stageStyle: Record<string, string> = {
 const FilterSection = ({ title, children, defaultOpen = true }: { title: string; children: React.ReactNode; defaultOpen?: boolean }) => {
   const [isOpen, setIsOpen] = useState(defaultOpen);
   return (
-    <div className="border-b border-neutral-100 px-3 py-2">
+    <div className="border-b border-[#1a1a1a] px-3 py-2">
       <button 
         type="button"
         onClick={() => setIsOpen(!isOpen)} 
         className="flex items-center justify-between w-full text-left py-1"
       >
-        <span className="text-[9px] font-black text-black uppercase tracking-widest">{title}</span>
+        <span className="text-[9px] font-black text-white uppercase tracking-widest">{title}</span>
         {isOpen ? <ChevronUp size={12} className="text-neutral-400" /> : <ChevronDown size={12} className="text-neutral-400" />}
       </button>
       {isOpen && <div className="mt-1 space-y-1">{children}</div>}
@@ -81,21 +81,21 @@ const CheckboxFilter = ({ label, checked, onChange }: { label: string; checked: 
       </svg>}
     </div>
     <input type="checkbox" className="hidden" checked={checked} onChange={e => onChange(e.target.checked)} />
-    <span className="text-xs font-medium text-neutral-600 group-hover:text-black">{label}</span>
+    <span className="text-xs font-medium text-neutral-400 group-hover:text-white">{label}</span>
   </label>
 );
 
 const Field = ({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) => (
   <div className="space-y-1.5">
     <label className="block text-[11px] font-semibold text-slate-500 uppercase tracking-widest">
-      {label}{required && <span className="text-black ml-0.5">*</span>}
+      {label}{required && <span className="text-white ml-0.5">*</span>}
     </label>
     {children}
   </div>
 );
 
 const inputCls =
-  'w-full bg-white border border-slate-200 rounded-md py-2.5 px-3.5 text-black text-sm placeholder-slate-300 focus:outline-none focus:border-black transition-colors';
+   'w-full bg-[#111] border border-slate-700 rounded-md py-2.5 px-3.5 text-white text-sm placeholder-slate-500 focus:outline-none focus:border-[#B5FF03] transition-colors';
 
 const CRMLeads = () => {
   const { leads, addLead, updateLead, deleteLead, searchTerm } = useCRM();
@@ -159,7 +159,7 @@ const CRMLeads = () => {
     e.preventDefault();
     const modifiedLead = {
       ...current,
-      lastModifiedBy: employeeName || (role === 'admin' ? 'Administrador' : 'Funcionário')
+      lastModifiedBy: employeeName || (role === 'admin' ? 'Administrador' : 'FuncionÃ¡rio')
     };
     
     if (mode === 'add') {
@@ -276,15 +276,15 @@ const CRMLeads = () => {
       {isSidebarOpen && (
         <>
           <div className="fixed inset-0 bg-black/20 z-40" onClick={() => setIsSidebarOpen(false)} />
-          <div className="absolute top-14 left-4 w-[280px] max-h-[70vh] bg-white border border-neutral-200 rounded-xl shadow-xl overflow-y-auto z-50">
-            <div className="p-3 sticky top-0 bg-white border-b border-neutral-100 flex items-center justify-between">
+          <div className="absolute top-14 left-4 w-[280px] max-h-[70vh] bg-[#111] border border-[#333] rounded-xl shadow-xl overflow-y-auto z-50">
+            <div className="p-3 sticky top-0 bg-[#111] border-b border-[#333] flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Filter size={12} className="text-black" />
-                <span className="text-[10px] font-black text-black uppercase tracking-widest">Filtros</span>
+                <Filter size={12} className="text-white" />
+                <span className="text-[10px] font-black text-white uppercase tracking-widest">Filtros</span>
               </div>
               <button 
                 onClick={() => setIsSidebarOpen(false)}
-                className="p-1 hover:bg-neutral-100 rounded-md transition-colors"
+                className="p-1 hover:bg-[#222] rounded-md transition-colors"
               >
                 <X size={14} className="text-neutral-400" />
               </button>
@@ -292,7 +292,7 @@ const CRMLeads = () => {
             {hasActiveFilters && (
               <button 
                 onClick={clearFilters}
-                className="text-[10px] font-bold text-neutral-400 hover:text-red-500 transition-colors flex items-center gap-1 px-3 py-2 border-b border-neutral-100 w-full"
+                className="text-[10px] font-bold text-neutral-400 hover:text-red-500 transition-colors flex items-center gap-1 px-3 py-2 border-b border-[#1a1a1a] w-full"
               >
                 <XCircle size={10} />
                 Limpar filtros
@@ -332,16 +332,16 @@ const CRMLeads = () => {
                     onBlur={() => setTimeout(() => setShowNicheSuggestions(false), 200)}
                     onKeyDown={(e) => e.key === 'Enter' && handleAddNiche()}
                     placeholder="Buscar ou adicionar nicho..."
-                    className="w-full bg-white border border-slate-200 rounded-md py-2 px-3 text-xs font-medium text-black focus:outline-none focus:border-black"
+                    className="w-full bg-[#111] border border-slate-700 rounded-md py-2 px-3 text-xs font-medium text-white focus:outline-none focus:border-[#B5FF03]"
                   />
                   {showNicheSuggestions && nicheSuggestions.length > 0 && (
-                    <div className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-md shadow-lg max-h-40 overflow-y-auto">
+                    <div className="absolute z-10 w-full mt-1 bg-[#111] border border-[#333] rounded-md shadow-lg max-h-40 overflow-y-auto">
                       {nicheSuggestions.map(s => (
                         <button
                           key={s}
                           type="button"
                           onClick={() => handleNicheSelect(s)}
-                          className="w-full text-left px-3 py-2 text-xs font-medium text-black hover:bg-slate-100"
+                          className="w-full text-left px-3 py-2 text-xs font-medium text-white hover:bg-[#111]"
                         >
                           {s}
                         </button>
@@ -352,7 +352,7 @@ const CRMLeads = () => {
                 <button
                   type="button"
                   onClick={handleAddNiche}
-                  className="w-full py-2 text-xs font-bold text-neutral-500 hover:text-black text-center border border-dashed border-neutral-300 rounded-md"
+                  className="w-full py-2 text-xs font-bold text-neutral-500 hover:text-white text-center border border-dashed border-neutral-300 rounded-md"
                 >
                   + Adicionar "{nicheSearch || '...'}"
                 </button>
@@ -361,7 +361,7 @@ const CRMLeads = () => {
                     {filters.niches.map(n => (
                       <span key={n} className="px-2 py-1 bg-black text-white text-[10px] font-bold rounded-md flex items-center gap-1">
                         {n}
-                        <button type="button" onClick={() => toggleNicheFilter(n)} className="hover:text-red-400">×</button>
+                        <button type="button" onClick={() => toggleNicheFilter(n)} className="hover:text-red-400">Ã—</button>
                       </span>
                     ))}
                   </div>
@@ -375,12 +375,12 @@ const CRMLeads = () => {
                   { value: '', label: 'Todos' },
                   { value: 'today', label: 'Hoje' },
                   { value: 'week', label: 'Esta semana' },
-                  { value: 'month', label: 'Este mês' }
+                  { value: 'month', label: 'Este mÃªs' }
                 ].map(opt => (
                   <label key={opt.value} className="flex items-center gap-2 cursor-pointer group">
                     <div className={`w-4 h-4 border rounded-full flex items-center justify-center transition-all ${filters?.dateFilter === opt.value ? 'bg-black border-black' : 'border-neutral-300 group-hover:border-black'}`}>
                       {filters?.dateFilter === opt.value && (
-                        <div className="w-2 h-2 bg-white rounded-full" />
+                        <div className="w-2 h-2 bg-[#111] rounded-full" />
                       )}
                     </div>
                     <input 
@@ -389,7 +389,7 @@ const CRMLeads = () => {
                       checked={filters?.dateFilter === opt.value}
                       onChange={() => setDateFilter(opt.value as any)}
                     />
-                    <span className={`text-xs font-medium ${filters?.dateFilter === opt.value ? 'text-black' : 'text-neutral-500'}`}>{opt.label}</span>
+                    <span className={`text-xs font-medium ${filters?.dateFilter === opt.value ? 'text-white' : 'text-neutral-500'}`}>{opt.label}</span>
                   </label>
                 ))}
               </div>
@@ -405,7 +405,7 @@ const CRMLeads = () => {
               <div className="relative group">
                 <button 
                   onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                  className={`p-2 rounded-lg border transition-all relative ${hasActiveFilters ? 'bg-neutral-100 text-black border-neutral-200' : 'bg-transparent border-transparent text-neutral-400 hover:text-neutral-600 hover:bg-neutral-50'}`}
+                  className={`p-2 rounded-lg border transition-all relative ${hasActiveFilters ? 'bg-[#111] text-white border-[#333]' : 'bg-transparent border-transparent text-neutral-400 hover:text-neutral-400 hover:bg-[#0a0a0a]'}`}
                 >
                   <Filter size={16} strokeWidth={hasActiveFilters ? 2.5 : 1.5} />
                   {hasActiveFilters && (
@@ -417,25 +417,25 @@ const CRMLeads = () => {
                 </span>
               </div>
               <div>
-                <h1 className="text-2xl md:text-3xl font-black text-black tracking-tight mb-1">Leads</h1>
+                <h1 className="text-2xl md:text-3xl font-black text-white tracking-tight mb-1">Contatos</h1>
                 <p className="text-neutral-500 text-xs md:text-sm">
-                  {filteredLeads.length} lead{filteredLeads.length !== 1 ? 's' : ''} encontrado{filteredLeads.length !== 1 ? 's' : ''}
+                  {filteredLeads.length} contato{filteredLeads.length !== 1 ? 's' : ''} encontrado{filteredLeads.length !== 1 ? 's' : ''}
                   {hasActiveFilters && <span className="text-neutral-400"> (filtrado{filteredLeads.length !== 1 ? 's' : ''})</span>}
                 </p>
               </div>
             </div>
             <button onClick={openAdd} className="btn-primary flex items-center gap-2 whitespace-nowrap">
               <Plus size={15} strokeWidth={2.5} />
-              <span className="hidden sm:inline">Novo Lead</span>
+                <span className="hidden sm:inline">Novo Contato</span>
               <span className="sm:hidden text-xs">Novo</span>
             </button>
           </div>
 
-          <div className="bg-white border border-neutral-200 rounded-md overflow-x-auto shadow-sm">
+          <div className="bg-[#0a0a0a] border border-[#333] rounded-md overflow-x-auto shadow-sm">
             <table className="w-full text-xs md:text-sm">
               <thead>
-                <tr className="border-b border-neutral-200 bg-neutral-50">
-                  {['Nome / Nicho', 'WhatsApp', 'Instagram', 'GMN ⭐', 'Valor', 'Etapa', 'Ações'].map(h => (
+                <tr className="border-b border-[#1a1a1a] bg-[#111]">
+                  {['Nome / Nicho', 'WhatsApp', 'Instagram', 'GMN â­', 'Valor', 'Etapa', 'AÃ§Ãµes'].map(h => (
                     <th key={h} className="px-3 md:px-5 py-2 md:py-3.5 text-left text-[10px] md:text-[11px] text-neutral-400 font-semibold uppercase tracking-wider last:text-center whitespace-nowrap">
                       {h}
                     </th>
@@ -444,42 +444,42 @@ const CRMLeads = () => {
               </thead>
               <tbody className="divide-y divide-neutral-100">
                 {Array.isArray(filteredLeads) && filteredLeads.length > 0 ? filteredLeads.map(lead => (
-                  <tr key={lead?.id} className="hover:bg-neutral-50 transition-colors group">
+                  <tr key={lead?.id} className="hover:bg-[#111] transition-colors group border-b border-[#1a1a1a]">
                     <td className="px-3 md:px-5 py-2 md:py-4">
-                      <div className="font-semibold text-black text-xs md:text-sm">{lead?.name}</div>
-                      <div className="text-[10px] md:text-xs text-neutral-400 truncate">{lead?.niche} · {lead?.email}</div>
+                      <div className="font-semibold text-white text-xs md:text-sm">{lead?.name}</div>
+                      <div className="text-[10px] md:text-xs text-neutral-400 truncate">{lead?.niche} Â· {lead?.email}</div>
                     </td>
-                    <td className="px-3 md:px-5 py-2 md:py-4 text-neutral-600 text-xs md:text-sm whitespace-nowrap">
+                    <td className="px-3 md:px-5 py-2 md:py-4 text-neutral-400 text-xs md:text-sm whitespace-nowrap">
                       {lead?.whatsapp ? (
                         <div className="flex items-center gap-1.5">
                           <span>{lead.whatsapp}</span>
                           <button
                             type="button"
                             onClick={() => setWhatsAppModal({ lead, selectedTemplate: null })}
-                            className="text-[#25D366] hover:text-green-600 transition-colors"
+                            className="text-[#25D366] hover:text-[#B5FF03] transition-colors"
                             title="Enviar mensagem via WhatsApp"
                           >
                             <MessageCircle size={14} className="md:w-4 md:h-4" />
                           </button>
                         </div>
                       ) : (
-                        <span className="text-neutral-400">—</span>
+                        <span className="text-neutral-400">â€”</span>
                       )}
                     </td>
-                    <td className="px-3 md:px-5 py-2 md:py-4 text-neutral-600 text-xs md:text-sm whitespace-nowrap">{lead?.instagram}</td>
+                    <td className="px-3 md:px-5 py-2 md:py-4 text-neutral-400 text-xs md:text-sm whitespace-nowrap">{lead?.instagram}</td>
                     <td className="px-3 md:px-5 py-2 md:py-4">
-                      <div className="text-black font-semibold text-xs md:text-sm">{lead?.gmnStars} ★</div>
-                      <div className="text-[10px] md:text-xs text-neutral-400">{lead?.gmnReviews} avaliações</div>
+                      <div className="text-white font-semibold text-xs md:text-sm">{lead?.gmnStars} â˜…</div>
+                      <div className="text-[10px] md:text-xs text-neutral-400">{lead?.gmnReviews} avaliaÃ§Ãµes</div>
                     </td>
-                    <td className="px-3 md:px-5 py-2 md:py-4 text-black font-medium text-xs md:text-sm whitespace-nowrap">{lead?.value || '—'}</td>
+                    <td className="px-3 md:px-5 py-2 md:py-4 text-white font-medium text-xs md:text-sm whitespace-nowrap">{lead?.value || 'â€”'}</td>
                     <td className="px-3 md:px-5 py-2 md:py-4">
-                      <span className={`px-2 md:px-2.5 py-1 rounded-md text-[10px] md:text-[11px] font-semibold ${stageStyle[lead?.stage] ?? 'bg-neutral-100 text-neutral-600'}`}>
+                      <span className={`px-2 md:px-2.5 py-1 rounded-md text-[10px] md:text-[11px] font-semibold ${stageStyle[lead?.stage] ?? 'bg-[#111] text-neutral-400'}`}>
                         {lead?.stage}
                       </span>
                     </td>
                     <td className="px-3 md:px-5 py-2 md:py-4">
                       <div className="flex items-center justify-center gap-0.5 md:gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button onClick={() => openEdit(lead)} className="p-1 md:p-1.5 text-neutral-400 hover:text-black hover:bg-neutral-100 rounded-md transition-all">
+                        <button onClick={() => openEdit(lead)} className="p-1 md:p-1.5 text-neutral-400 hover:text-white hover:bg-[#111] rounded-md transition-all">
                           <Pencil size={12} className="md:w-3.5 md:h-3.5" />
                         </button>
                         <button onClick={() => handleDelete(lead?.id)} className="p-1 md:p-1.5 text-neutral-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-all">
@@ -503,17 +503,17 @@ const CRMLeads = () => {
 
       {isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-3 md:p-4 bg-black/30 backdrop-blur-sm">
-          <div className="bg-white border border-slate-200 w-full max-w-sm md:max-w-2xl rounded-2xl shadow-xl overflow-hidden max-h-[90vh] flex flex-col">
+          <div className="bg-[#111] border border-[#333] w-full max-w-sm md:max-w-2xl rounded-2xl shadow-xl overflow-hidden max-h-[90vh] flex flex-col">
             <div className="flex justify-between items-start md:items-center gap-3 px-4 md:px-7 py-3 md:py-5 border-b border-slate-100 shrink-0">
               <div>
-                <h2 className="text-lg md:text-xl font-black text-black tracking-tight">
-                  {mode === 'add' ? 'Novo Lead' : 'Editar Lead'}
-                </h2>
-                <p className="text-[10px] md:text-xs text-slate-400 mt-0.5 md:mt-0.5">
-                  {mode === 'add' ? 'Preencha os dados para cadastrar um novo lead.' : `Editando: ${current.name}`}
+                  <h2 className="text-lg md:text-xl font-black text-white tracking-tight">
+                    {mode === 'add' ? 'Novo Contato' : 'Editar Contato'}
+                  </h2>
+                <p className="text-[10px] md:text-xs text-neutral-400 mt-0.5 md:mt-0.5">
+                  {mode === 'add' ? 'Preencha os dados para cadastrar um novo contato.' : `Editando: ${current.name}`}
                 </p>
               </div>
-              <button onClick={() => setIsOpen(false)} className="text-slate-400 hover:text-black transition-colors p-1 flex-shrink-0" type="button">
+                <button onClick={() => setIsOpen(false)} className="text-neutral-400 hover:text-white transition-colors p-1 flex-shrink-0" type="button">
                 <X size={20} className="w-5 h-5 md:w-5 md:h-5" />
               </button>
             </div>
@@ -523,7 +523,7 @@ const CRMLeads = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
                   <Field label="Nome" required>
                     <input type="text" value={current.name} onChange={e => updateField('name', e.target.value)}
-                      required className={inputCls} placeholder="Ex: João Silva" />
+                      required className={inputCls} placeholder="Ex: JoÃ£o Silva" />
                   </Field>
                   <Field label="Nicho">
                     <input type="text" value={current.niche} onChange={e => updateField('niche', e.target.value)}
@@ -582,34 +582,34 @@ const CRMLeads = () => {
                   </Field>
                 </div>
 
-                <Field label="Endereço / Localização">
+                <Field label="EndereÃ§o / LocalizaÃ§Ã£o">
                   <input type="text" value={current.address} onChange={e => updateField('address', e.target.value)}
-                    className={inputCls} placeholder="Ex: São Paulo - SP" />
+                    className={inputCls} placeholder="Ex: SÃ£o Paulo - SP" />
                 </Field>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
-                  <Field label="Quantidade de Avaliações GMN">
+                  <Field label="Quantidade de AvaliaÃ§Ãµes GMN">
                     <input type="number" min="0" value={current.gmnReviews} onChange={e => updateField('gmnReviews', e.target.value)}
                       className={inputCls} placeholder="Ex: 248" />
                   </Field>
-                  <Field label="Média de Estrelas GMN">
+                  <Field label="MÃ©dia de Estrelas GMN">
                     <input type="number" min="0" max="5" step="0.1" value={current.gmnStars} onChange={e => updateField('gmnStars', e.target.value)}
                       className={inputCls} placeholder="Ex: 4.7" />
                   </Field>
                 </div>
 
-                <Field label="Observações">
+                <Field label="ObservaÃ§Ãµes">
                   <textarea value={current.notes} onChange={e => updateField('notes', e.target.value)}
                     rows={4} className={`${inputCls} resize-none`}
                     placeholder="Notas internas, contexto do lead..." />
                 </Field>
               </div>
 
-              <div className="flex flex-col md:flex-row gap-2 md:gap-3 px-4 md:px-7 py-3 md:py-5 border-t border-slate-100 shrink-0 bg-white">
+              <div className="flex flex-col md:flex-row gap-2 md:gap-3 px-4 md:px-7 py-3 md:py-5 border-t border-slate-100 shrink-0 bg-[#111]">
                 <button
                   type="button"
                   onClick={() => setIsOpen(false)}
-                  className="flex-1 px-4 py-2 md:py-3 rounded-md bg-slate-100 text-slate-700 font-semibold hover:bg-slate-200 transition-colors text-xs md:text-sm"
+                  className="flex-1 px-4 py-2 md:py-3 rounded-md bg-[#111] text-slate-700 font-semibold hover:bg-slate-200 transition-colors text-xs md:text-sm"
                 >
                   Cancelar
                 </button>
@@ -629,34 +629,34 @@ const CRMLeads = () => {
 
     {whatsAppModal.lead && (
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-        <div className="bg-white border border-neutral-200 rounded-2xl p-8 max-w-md w-full shadow-2xl">
+        <div className="bg-[#111] border border-[#333] rounded-2xl p-8 max-w-md w-full shadow-2xl">
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-xl font-black text-black">Enviar mensagem via WhatsApp</h3>
-            <button onClick={() => setWhatsAppModal({ lead: null, selectedTemplate: null })} className="text-neutral-400 hover:text-black">
+            <h3 className="text-xl font-black text-white">Enviar mensagem via WhatsApp</h3>
+            <button onClick={() => setWhatsAppModal({ lead: null, selectedTemplate: null })} className="text-neutral-400 hover:text-white">
               <X size={20} />
             </button>
           </div>
           <div className="mb-4">
-            <p className="text-sm text-neutral-600">Lead: <span className="font-bold">{whatsAppModal.lead.name}</span></p>
-            <p className="text-sm text-neutral-600">WhatsApp: <span className="font-bold">{whatsAppModal.lead.whatsapp}</span></p>
+            <p className="text-sm text-neutral-400">Lead: <span className="font-bold">{whatsAppModal.lead.name}</span></p>
+            <p className="text-sm text-neutral-400">WhatsApp: <span className="font-bold">{whatsAppModal.lead.whatsapp}</span></p>
           </div>
           <div className="space-y-3">
-            <p className="text-xs font-black text-neutral-500 uppercase tracking-widest mb-2">Escolha uma mensagem rápida:</p>
+            <p className="text-xs font-black text-neutral-500 uppercase tracking-widest mb-2">Escolha uma mensagem rÃ¡pida:</p>
             {WHATSAPP_MESSAGE_TEMPLATES.map(template => (
               <button
                 key={template.id}
                 type="button"
                 onClick={() => {
-                  const message = template.template(whatsAppModal.lead.name, employeeName || 'Usuário');
+                  const message = template.template(whatsAppModal.lead.name, employeeName || 'UsuÃ¡rio');
                   const link = generateWhatsAppLink(whatsAppModal.lead.whatsapp, message);
                   window.open(link, '_blank');
                   setWhatsAppModal({ lead: null, selectedTemplate: null });
                 }}
-                className="w-full p-4 text-left border border-neutral-200 rounded-lg hover:bg-neutral-50 hover:border-neutral-300 transition-colors"
+                className="w-full p-4 text-left border border-[#333] rounded-lg hover:bg-[#0a0a0a] hover:border-neutral-300 transition-colors"
               >
-                <div className="font-bold text-black text-sm">{template.label}</div>
+                <div className="font-bold text-white text-sm">{template.label}</div>
                 <div className="text-xs text-neutral-500 mt-1">
-                  {template.template(whatsAppModal.lead.name, employeeName || 'Usuário').substring(0, 60)}...
+                  {template.template(whatsAppModal.lead.name, employeeName || 'UsuÃ¡rio').substring(0, 60)}...
                 </div>
               </button>
             ))}
@@ -667,7 +667,7 @@ const CRMLeads = () => {
                 window.open(link, '_blank');
                 setWhatsAppModal({ lead: null, selectedTemplate: null });
               }}
-              className="w-full p-4 text-left border border-dashed border-neutral-300 rounded-lg hover:bg-neutral-50 transition-colors text-sm text-neutral-500"
+              className="w-full p-4 text-left border border-dashed border-neutral-300 rounded-lg hover:bg-[#0a0a0a] transition-colors text-sm text-neutral-500"
             >
               Abrir sem mensagem personalizada
             </button>
