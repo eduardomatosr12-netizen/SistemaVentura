@@ -39,37 +39,33 @@ const Sidebar = ({ isOpen = false, onClose }: SidebarProps) => {
         />
       )}
       
-      <aside className={`fixed md:hidden left-0 top-0 h-screen w-[85%] max-w-80 bg-white border-r border-neutral-200 flex-col overflow-y-auto z-50 transform transition-transform duration-300 ease-out ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+       <aside className={`fixed md:hidden left-0 top-0 h-screen w-[85%] max-w-80 bg-black border-r border-[#333] flex-col overflow-y-auto z-50 transform transition-transform duration-300 ease-out ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-2 rounded-md hover:bg-neutral-100"
+           className="absolute top-4 right-4 p-2 rounded-md hover:bg-[#222]"
           aria-label="Fechar menu"
         >
-          <X className="w-5 h-5 text-neutral-600" />
+               <X className="w-5 h-5 text-neutral-400 hover:text-[#B5FF03]" />
         </button>
         
-        <div className="px-4 pt-8 pb-6 border-b border-neutral-100">
-          <img
-            src="/logo.png"
-            alt="Universo Axium"
-            className="h-10 w-auto object-contain"
-          />
-        </div>
+         <div className="px-4 pt-8 pb-6 border-b border-[#333]">
+           <div className="text-2xl font-black text-[#B5FF03]">VENTURA</div>
+         </div>
 
         <nav className="flex-1 px-4 py-6 space-y-1">
           {visibleMenuItems.map((item) => {
             const Icon = item.icon;
             const active = isActive(item.path);
             return (
-              <Link
-                key={item.id}
-                to={item.path}
-                onClick={onClose}
-                className={`sidebar-item ${active ? 'active' : ''}`}
-              >
-                <Icon className="w-4 h-4 shrink-0" strokeWidth={2} />
-                <span>{item.label}</span>
-              </Link>
+               <Link
+                 key={item.id}
+                 to={item.path}
+                 onClick={onClose}
+                 className={`sidebar-item ${active ? 'active' : ''}`}
+               >
+                 <Icon className="w-4 h-4 shrink-0" strokeWidth={2} />
+                 <span className={active ? 'text-[#B5FF03]' : 'text-neutral-400'}>{item.label}</span>
+               </Link>
             );
           })}
         </nav>
@@ -96,30 +92,26 @@ const Sidebar = ({ isOpen = false, onClose }: SidebarProps) => {
         </div>
       </aside>
 
-      <aside className="fixed left-0 top-0 h-screen w-64 bg-white border-r border-neutral-200 flex-col overflow-y-auto z-40 hidden md:flex">
-        <div className="px-6 pt-8 pb-6 border-b border-neutral-100">
-          <img
-            src="/logo.png"
-            alt="Universo Axium"
-            className="h-10 w-auto object-contain"
-          />
-        </div>
+       <aside className="fixed left-0 top-0 h-screen w-64 bg-black border-r border-[#333] flex-col overflow-y-auto z-40 hidden md:flex">
+         <div className="px-6 pt-8 pb-6 border-b border-[#333]">
+           <div className="text-2xl font-black text-[#B5FF03]">VENTURA</div>
+         </div>
 
         <nav className="flex-1 px-4 py-6 space-y-1">
-          {visibleMenuItems.map((item) => {
-            const Icon = item.icon;
-            const active = isActive(item.path);
-            return (
+           {visibleMenuItems.map((item) => {
+             const Icon = item.icon;
+             const active = isActive(item.path);
+             return (
               <Link
-                key={item.id}
-                to={item.path}
-                className={`sidebar-item ${active ? 'active' : ''}`}
-              >
-                <Icon className="w-4 h-4 shrink-0" strokeWidth={2} />
-                <span>{item.label}</span>
-              </Link>
-            );
-          })}
+                  key={item.id}
+                  to={item.path}
+                  className={`sidebar-item ${active ? 'active' : ''}`}
+                >
+                  <Icon className="w-4 h-4 shrink-0" strokeWidth={2} />
+                  <span className={active ? 'text-[#B5FF03]' : 'text-neutral-400'}>{item.label}</span>
+                </Link>
+             );
+           })}
         </nav>
 
         <div className="px-4 pb-6 border-t border-neutral-100 pt-4">

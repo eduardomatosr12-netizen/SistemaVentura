@@ -18,8 +18,8 @@ const CRMSubmenu = () => {
   return (
     <div
       className="
-        bg-white/70 backdrop-blur-md
-        border-b border-neutral-200/60
+        bg-black/70 backdrop-blur-md
+        border-b border-[#333]
         px-2 md:px-8
       "
     >
@@ -35,8 +35,8 @@ const CRMSubmenu = () => {
                 relative whitespace-nowrap flex items-center gap-1 md:gap-2
                 px-2 md:px-3 py-2 md:py-3.5 text-xs md:text-sm font-medium transition-colors duration-150
                 ${active
-                  ? 'text-black font-semibold'
-                  : 'text-neutral-400 hover:text-neutral-700'
+                  ? 'text-[#B5FF03] font-semibold'
+                  : 'text-neutral-400 hover:text-white'
                 }
               `}
             >
@@ -44,7 +44,7 @@ const CRMSubmenu = () => {
               <span>{item.label}</span>
               {/* Active underline */}
               {active && (
-                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-black rounded-t-full" />
+                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#B5FF03] rounded-t-full" />
               )}
             </Link>
           );

@@ -48,16 +48,16 @@ const ACTION_ICONS: ActionIconConfig = {
   tarefa_concluida: CheckSquare,
 };
 
-const CHART_CONFIG = {
-  margin: { top: 20, right: 10, left: 0, bottom: 60 },
-  barSize: 40,
-  colors: {
-    fill: '#000',
-    grid: '#f1f5f9',
-    stroke: '#000',
-    tooltip: { bg: '#fff', border: '#e2e8f0', text: '#000', fontSize: '12px' },
-  },
-};
+  const CHART_CONFIG = {
+    margin: { top: 20, right: 10, left: 0, bottom: 60 },
+    barSize: 40,
+    colors: {
+      fill: '#B5FF03',
+      grid: '#333',
+      stroke: '#666',
+      tooltip: { bg: '#111', border: '#333', text: '#fff', fontSize: '12px' },
+    },
+  };
 
 const formatRelativeTime = (timestamp: string): string => {
   if (!timestamp || typeof timestamp !== 'string') return '';
@@ -188,7 +188,7 @@ const CRMDashboard = () => {
   const hasChartData = chartData.length > 0 && filteredLeads.length > 0;
 
   return (
-    <div className="relative min-h-screen bg-white">
+    <div className="relative min-h-screen bg-black">
       {isSidebarOpen && (
         <>
           <div 
@@ -196,19 +196,19 @@ const CRMDashboard = () => {
             onClick={() => setIsSidebarOpen(false)}
             aria-hidden="true"
           />
-          <div 
-            className="absolute top-14 left-4 w-[280px] bg-white border border-neutral-200 rounded-xl shadow-xl z-50 p-3"
-            role="dialog"
-            aria-label="Filtros ativos"
-          >
+          <div
+             className="absolute top-14 left-4 w-[280px] bg-[#111] border border-[#333] rounded-xl shadow-xl z-50 p-3"
+             role="dialog"
+             aria-label="Filtros ativos"
+           >
             <div className="flex items-center justify-between mb-2">
-              <span className="text-[10px] font-black text-black uppercase tracking-widest">Filtros</span>
+              <span className="text-[10px] font-black text-white uppercase tracking-widest">Filtros</span>
               <button 
                 onClick={() => setIsSidebarOpen(false)} 
-                className="p-1 hover:bg-neutral-100 rounded-md"
+                 className="p-1 hover:bg-[#222] rounded-md"
                 aria-label="Fechar filtros"
               >
-                <XCircle size={14} className="text-neutral-400" />
+                <XCircle size={14} className="text-neutral-400 hover:text-[#B5FF03]" />
               </button>
             </div>
             <p className="text-[10px] text-neutral-400">Aplique filtros na aba Leads para filtrar dados aqui.</p>
@@ -219,48 +219,48 @@ const CRMDashboard = () => {
       {/* Header section */}
       <div className="mb-4 md:mb-6 flex justify-between items-start">
         <div>
-          <h1 className="text-2xl md:text-4xl font-black text-black tracking-tight mb-2 whitespace-nowrap">Painel de Vendas</h1>
-          <p className="text-neutral-500 text-xs md:text-sm">Monitoramento em tempo real do seu funil de vendas.</p>
+          <h1 className="text-2xl md:text-4xl font-black text-white tracking-tight mb-2 whitespace-nowrap">Painel de Vendas</h1>
+          <p className="text-neutral-400 text-xs md:text-sm">Monitoramento em tempo real do seu funil de vendas.</p>
         </div>
         <div className="relative group">
           <button 
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            className={`p-2 rounded-lg border transition-all relative ${hasActiveFilters ? 'bg-neutral-100 text-black border-neutral-200' : 'bg-transparent border-transparent text-neutral-400 hover:text-neutral-600 hover:bg-neutral-50'}`}
+             className={`p-2 rounded-lg border transition-all relative ${hasActiveFilters ? 'bg-[#111] text-[#B5FF03] border-[#333]' : 'bg-transparent border-transparent text-neutral-400 hover:text-[#B5FF03] hover:bg-[#111]'}`}
           >
             <Filter size={16} strokeWidth={hasActiveFilters ? 2.5 : 1.5} />
             {hasActiveFilters && (
               <span className="absolute top-1 right-1 w-1.5 h-1.5 bg-red-500 rounded-full" />
             )}
           </button>
-          <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-neutral-800 text-white text-[10px] font-medium rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
-            Filtros
-          </span>
+           <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-[#111] text-white text-[10px] font-medium rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
+             Filtros
+           </span>
         </div>
       </div>
 
       {/* Metrics Cards Grid */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-6 gap-2 md:gap-3 lg:gap-4 mb-6 md:mb-10">
         {stats.map((stat, idx) => {
-          const Icon = stat.icon;
-          return (
-            <div key={idx} className="bg-white border border-slate-200 rounded-md p-3 md:p-5 hover:border-black transition-all shadow-sm">
-              <div className="flex items-center gap-2 md:gap-3 mb-2 md:mb-3">
-                <div className="w-6 md:w-8 h-6 md:h-8 rounded-md bg-slate-100 flex items-center justify-center">
-                  <Icon size={14} className="text-black md:w-4 md:h-4" />
-                </div>
-                <p className="text-slate-500 text-[9px] md:text-[11px] font-bold uppercase tracking-widest leading-none">{stat.title}</p>
-              </div>
-              <p className="text-2xl md:text-3xl font-black text-black">{stat.value}</p>
-            </div>
-          );
-        })}
+           const Icon = stat.icon;
+           return (
+             <div key={idx} className="bg-[#111] border border-[#333] rounded-md p-3 md:p-5 hover:border-[#B5FF03] transition-all shadow-sm">
+               <div className="flex items-center gap-2 md:gap-3 mb-2 md:mb-3">
+                 <div className="w-6 md:w-8 h-6 md:h-8 rounded-md bg-[#222] flex items-center justify-center">
+                   <Icon size={14} className="text-[#B5FF03] md:w-4 md:h-4" />
+                 </div>
+                 <p className="text-white text-[9px] md:text-[11px] font-bold uppercase tracking-widest leading-none">{stat.title}</p>
+               </div>
+               <p className="text-2xl md:text-3xl font-black text-[#B5FF03]">{stat.value}</p>
+             </div>
+           );
+         })}
       </div>
 
       {/* Chart Section */}
-      <div className="bg-white border border-slate-200 rounded-2xl p-4 md:p-8 shadow-sm overflow-x-auto mb-6 md:mb-10">
+        <div className="bg-[#111] border border-[#333] rounded-2xl p-4 md:p-8 shadow-sm overflow-x-auto mb-6 md:mb-10">
         <div className="mb-6 md:mb-8">
-          <h2 className="text-lg md:text-xl font-bold text-black mb-1">Visão Geral do Pipeline</h2>
-          <p className="text-slate-400 text-[10px] md:text-xs uppercase font-bold tracking-widest">Distribuição de leads por etapa</p>
+          <h2 className="text-lg md:text-xl font-bold text-white mb-1">Visão Geral do Pipeline</h2>
+          <p className="text-neutral-400 text-[10px] md:text-xs uppercase font-bold tracking-widest">Distribuição de leads por etapa</p>
         </div>
         
         <div className="min-h-[280px] md:min-h-[400px]">
@@ -288,23 +288,23 @@ const CRMDashboard = () => {
                   dy={8}
                   dx={5}
                 />
-                <YAxis 
-                  stroke="#64748b" 
-                  fontSize={11} 
-                  tickLine={false}
-                  axisLine={false}
-                />
-                <Tooltip 
-                  cursor={{ fill: 'rgba(0,0,0,0.02)' }}
-                  contentStyle={{ 
-                    backgroundColor: CHART_CONFIG.colors.tooltip.bg, 
-                    border: `1px solid ${CHART_CONFIG.colors.tooltip.border}`,
-                    borderRadius: '12px',
-                    color: CHART_CONFIG.colors.tooltip.text,
-                    fontSize: CHART_CONFIG.colors.tooltip.fontSize,
-                    fontWeight: '600'
-                  }}
-                />
+                 <YAxis 
+                   stroke="#888" 
+                   fontSize={11} 
+                   tickLine={false}
+                   axisLine={false}
+                 />
+                 <Tooltip 
+                   cursor={{ fill: 'rgba(181,255,3,0.1)' }}
+                   contentStyle={{ 
+                     backgroundColor: CHART_CONFIG.colors.tooltip.bg, 
+                     border: `1px solid ${CHART_CONFIG.colors.tooltip.border}`,
+                     borderRadius: '12px',
+                     color: CHART_CONFIG.colors.tooltip.text,
+                     fontSize: CHART_CONFIG.colors.tooltip.fontSize,
+                     fontWeight: '600'
+                   }}
+                 />
                 <Bar 
                   dataKey="value" 
                   fill={CHART_CONFIG.colors.fill} 
@@ -314,23 +314,23 @@ const CRMDashboard = () => {
               </BarChart>
             </ResponsiveContainer>
           ) : (
-            <div className="h-full flex items-center justify-center text-slate-400 text-sm">
-              Nenhum dado disponível
-            </div>
+             <div className="h-full flex items-center justify-center text-neutral-400 text-sm">
+               Nenhum dado disponível
+             </div>
           )}
         </div>
       </div>
 
       {/* Atividades Recentes */}
-      <div className="bg-white border border-slate-200 rounded-2xl p-4 md:p-8 shadow-sm">
+       <div className="bg-[#111] border border-[#333] rounded-2xl p-4 md:p-8 shadow-sm">
         <div className="flex items-center gap-2 mb-6">
-          <Activity className="w-4 h-4 text-black" aria-hidden="true" />
-          <h2 className="text-lg md:text-xl font-bold text-black">Atividades Recentes</h2>
+           <Activity className="w-4 h-4 text-[#B5FF03]" aria-hidden="true" />
+           <h2 className="text-lg md:text-xl font-bold text-white">Atividades Recentes</h2>
         </div>
         {isLoadingLogs ? (
           <div className="flex items-center justify-center py-8">
-            <div className="w-6 h-6 border-2 border-black/20 border-t-black rounded-full animate-spin" />
-            <span className="ml-2 text-sm text-neutral-500">Carregando atividades...</span>
+             <div className="w-6 h-6 border-2 border-[#B5FF03]/20 border-t-[#B5FF03] rounded-full animate-spin" />
+             <span className="ml-2 text-sm text-neutral-400">Carregando atividades...</span>
           </div>
         ) : fetchActivityLogsError ? (
           <div className="flex items-center gap-2 p-4 bg-red-50 border border-red-100 rounded-md" role="alert">
@@ -338,20 +338,20 @@ const CRMDashboard = () => {
             <p className="text-sm text-red-600">{fetchActivityLogsError}</p>
           </div>
         ) : displayLogs.length === 0 ? (
-          <p className="text-slate-400 text-xs">Nenhuma atividade registrada.</p>
+           <p className="text-neutral-400 text-xs">Nenhuma atividade registrada.</p>
         ) : (
           <div className="space-y-3">
             {displayLogs.map((log) => {
               const Icon = ACTION_ICONS[log.acao] || Activity;
               return (
                 <div key={log.id} className="flex items-start gap-3">
-                  <div className="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center shrink-0 mt-0.5">
-                    <Icon className="w-3.5 h-3.5 text-black" strokeWidth={2} aria-hidden="true" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs md:text-sm text-black leading-snug">{sanitizeDescription(log.descricao)}</p>
-                    <p className="text-[10px] md:text-xs text-slate-400 font-medium mt-0.5">há {formatRelativeTime(log.timestamp)}</p>
-                  </div>
+                   <div className="w-7 h-7 rounded-full bg-[#222] flex items-center justify-center shrink-0 mt-0.5">
+                     <Icon className="w-3.5 h-3.5 text-[#B5FF03]" strokeWidth={2} aria-hidden="true" />
+                   </div>
+                   <div className="flex-1 min-w-0">
+                     <p className="text-xs md:text-sm text-white leading-snug">{sanitizeDescription(log.descricao)}</p>
+                     <p className="text-[10px] md:text-xs text-neutral-400 font-medium mt-0.5">há {formatRelativeTime(log.timestamp)}</p>
+                   </div>
                 </div>
               );
             })}
