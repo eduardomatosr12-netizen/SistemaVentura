@@ -271,6 +271,7 @@ const CRMLeads = () => {
   }, [leads, searchTerm, filters]);
 
   return (
+    <>
     <div className="relative min-h-screen">
       {isSidebarOpen && (
         <>
@@ -674,6 +675,7 @@ const CRMLeads = () => {
         </div>
       </div>
     )}
+    </>
   );
 };
 
