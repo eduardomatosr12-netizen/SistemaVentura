@@ -5,11 +5,11 @@
 
 :root {
   --primary: #000000;
-  --bg-main: #f5f5f5;
-  --bg-card: #ffffff;
-  --text-main: #000000;
-  --text-muted: #525252;
-  --border-main: #e5e5e5;
+  --bg-main: #000000;
+  --bg-card: #111111;
+  --text-main: #ffffff;
+  --text-muted: #a3a3a3;
+  --border-main: #1a1a1a;
 }
 
 * {
@@ -46,11 +46,11 @@ body {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #d4d4d4;
+  background: #333333;
   border-radius: 99px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #a3a3a3;
+  background: #555555;
 }
 
 .scrollbar-hide {
@@ -70,7 +70,7 @@ body {
   }
 
   .sidebar-item:hover {
-    @apply bg-black/5;
+    @apply bg-[#222];
     color: var(--text-main);
   }
 
@@ -89,16 +89,16 @@ body {
   .card {
     background-color: var(--bg-card);
     border: 1px solid var(--border-main);
-    @apply rounded-md;
+    @apply rounded-md text-white;
   }
 
   .page-title {
-    color: var(--text-main);
+    color: #ffffff;
     @apply text-3xl font-extrabold tracking-tighter leading-none;
   }
 
   .page-subtitle {
-    color: var(--text-muted);
+    color: #a3a3a3;
     @apply text-sm font-medium mt-1;
   }
 
