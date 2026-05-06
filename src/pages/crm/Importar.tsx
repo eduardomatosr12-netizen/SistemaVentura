@@ -358,15 +358,15 @@ const CRMImportar = () => {
   const unmappedCount = mappings.length - mappedCount;
 
   return (
-    <div className="min-h-screen p-2 md:p-8">
+    <div className="min-h-screen p-2 md:p-8 bg-[#000000]">
       <div className="mb-4 md:mb-8">
-        <h1 className="text-2xl md:text-3xl font-black text-black tracking-tight mb-1">Importar</h1>
-        <p className="text-neutral-500 text-xs md:text-sm">Importe leads e contatos para o CRM com mapeamento de colunas.</p>
+        <h1 className="text-2xl md:text-3xl font-black text-white tracking-tight mb-1">Importar</h1>
+        <p className="text-neutral-400 text-xs md:text-sm">Importe leads e contatos para o CRM com mapeamento de colunas.</p>
       </div>
 
       {notification && (
         <div className={`mb-6 p-4 rounded-xl flex items-center gap-3 ${
-          notification.type === 'success' ? 'bg-emerald-50 border border-emerald-100 text-emerald-800' : 'bg-red-50 border border-red-100 text-red-800'
+          notification.type === 'success' ? 'bg-emerald-900/30 border border-emerald-500/30 text-emerald-400' : 'bg-red-900/30 border border-red-500/30 text-red-400'
         }`}>
           {notification.type === 'success' ? <CheckCircle2 size={18} /> : <AlertCircle size={18} />}
           <p className="text-sm font-bold">{notification.message}</p>
@@ -375,36 +375,100 @@ const CRMImportar = () => {
 
       {step !== 'upload' && (
         <div className="flex items-center gap-4 mb-6">
-          <button onClick={goBack} className="flex items-center gap-2 px-4 py-2 border border-neutral-200 rounded-lg text-sm font-bold text-neutral-600 hover:bg-neutral-50 transition-colors">
+          <button onClick={goBack} className="flex items-center gap-2 px-4 py-2 border border-[#333] rounded-lg text-sm font-bold text-neutral-400 hover:bg-[#111] hover:text-white transition-colors">
             <ArrowLeft size={16} /> Voltar
           </button>
           <div className="flex items-center gap-2 text-sm">
-            <span className={`px-3 py-1.5 rounded-full text-xs font-bold ${step === 'upload' ? 'bg-black text-white' : 'bg-neutral-100 text-neutral-500'}`}>1. Upload</span>
-            <span className="text-neutral-300">→</span>
-            <span className={`px-3 py-1.5 rounded-full text-xs font-bold ${step === 'mapping' ? 'bg-black text-white' : 'bg-neutral-100 text-neutral-500'}`}>2. Mapeamento</span>
-            <span className="text-neutral-300">→</span>
-            <span className={`px-3 py-1.5 rounded-full text-xs font-bold ${step === 'preview' ? 'bg-black text-white' : 'bg-neutral-100 text-neutral-500'}`}>3. Leads</span>
+            <span className={`px-3 py-1.5 rounded-full text-xs font-bold ${step === 'upload' ? 'bg-[#B5FF03] text-black' : 'bg-[#1a1a1a] text-neutral-400 border border-[#333]'}`}>1. Upload</span>
+            <span className="text-[#333]">→</span>
+            <span className={`px-3 py-1.5 rounded-full text-xs font-bold ${step === 'mapping' ? 'bg-[#B5FF03] text-black' : 'bg-[#1a1a1a] text-neutral-400 border border-[#333]'}`}>2. Mapeamento</span>
+            <span className="text-[#333]">→</span>
+            <span className={`px-3 py-1.5 rounded-full text-xs font-bold ${step === 'preview' ? 'bg-[#B5FF03] text-black' : 'bg-[#1a1a1a] text-neutral-400 border border-[#333]'}`}>3. Leads</span>
           </div>
         </div>
       )}
 
       {step === 'mapping' && uploadState && (
         <div className="max-w-5xl">
-          <div className="bg-white border border-neutral-200 rounded-2xl overflow-hidden shadow-sm mb-6">
-            <div className="px-6 py-4 border-b border-neutral-100 flex items-center justify-between">
+          <div className="bg-[#111] border border-[#333] rounded-2xl overflow-hidden shadow-sm mb-6">
+            <div className="px-6 py-4 border-b border-[#1a1a1a] flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center">
-                  <Map size={16} className="text-blue-600" />
+                <div className="w-8 h-8 rounded-lg bg-[#222] flex items-center justify-center">
+                  <Map size={16} className="text-[#B5FF03]" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-black text-black">Mapeamento de Colunas</h3>
+                  <h3 className="text-sm font-black text-white">Mapeamento de Colunas</h3>
                   <p className="text-[10px] text-neutral-400 font-bold uppercase tracking-widest">
                     {uploadState.fileName} · {uploadState.spreadsheetColumns.length} colunas · {mappedCount} mapeadas
                   </p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                <button onClick={autoMapAll} className="px-3 py-1.5 text-xs font-bold text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
+                <button onClick={autoMapAll} className="px-3 py-1.5 text-xs font-bold text-[#B5FF03] hover:bg-[#222] rounded-lg transition-colors">
+                  Auto-detectar
+                </button>
+                <button onClick={clearMappings} className="px-3 py-1.5 text-xs font-bold text-neutral-500 hover:bg-[#222] rounded-lg transition-colors">
+                  Limpar
+                </button>
+              </div>
+            </div>
+
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-[#1a1a1a] bg-[#111]">
+                    <th className="text-left px-6 py-3 text-[10px] font-black text-[#B5FF03] uppercase tracking-widest">
+                      Coluna da Planilha
+                    </th>
+                    <th className="text-center px-4 py-3">
+                      <ArrowDownLeft size={14} className="text-[#333] mx-auto" />
+                    </th>
+                    <th className="text-left px-6 py-3 text-[10px] font-black text-[#B5FF03] uppercase tracking-widest">
+                      Campo no Sistema
+                    </th>
+                    <th className="text-left px-4 py-3 text-[10px] font-black text-[#B5FF03] uppercase tracking-widest">
+                      Exemplo
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#1a1a1a]">
+                  {mappings.map((mapping, index) => (
+                    <tr key={index} className={`hover:bg-[#111] transition-colors ${!mapping.targetField ? 'bg-[#0a0a0a]' : ''}`}>
+                      <td className="px-6 py-3">
+                        <div className="flex items-center gap-2">
+                          <div className={`w-2 h-2 rounded-full ${mapping.targetField ? 'bg-[#B5FF03]' : 'bg-[#333]'}`} />
+                          <span className="text-sm font-bold text-white">{mapping.spreadsheetColumn}</span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 text-center">
+                        <ArrowDownLeft size={14} className="text-[#333]" />
+                      </td>
+                      <td className="px-6 py-3">
+                        <select
+                          value={mapping.targetField}
+                          onChange={(e) => updateMapping(index, e.target.value)}
+                          className="w-full bg-[#0a0a0a] border border-[#333] rounded-md px-3 py-2 text-xs font-black text-white focus:ring-1 focus:ring-[#B5FF03] outline-none transition-all"
+                        >
+                          {TARGET_FIELDS.map(f => (
+                            <option key={f.key} value={f.key} className="bg-[#111] text-white">{f.label}</option>
+                          ))}
+                        </select>
+                      </td>
+                      <td className="px-6 py-3 text-sm text-neutral-400 font-bold">{mapping.sampleValue}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+                <div>
+                  <h3 className="text-sm font-black text-white">Mapeamento de Colunas</h3>
+                  <p className="text-[10px] text-neutral-400 font-bold uppercase tracking-widest">
+                    {uploadState.fileName} · {uploadState.spreadsheetColumns.length} colunas · {mappedCount} mapeadas
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <button onClick={autoMapAll} className="px-3 py-1.5 text-xs font-bold text-[#B5FF03] hover:bg-[#222] rounded-lg transition-colors">
                   Auto-detectar
                 </button>
                 <button onClick={clearMappings} className="px-3 py-1.5 text-xs font-bold text-neutral-500 hover:bg-neutral-100 rounded-lg transition-colors">
@@ -437,7 +501,7 @@ const CRMImportar = () => {
                       <td className="px-6 py-3">
                         <div className="flex items-center gap-2">
                           <div className={`w-2 h-2 rounded-full ${mapping.targetField ? 'bg-emerald-500' : 'bg-neutral-300'}`} />
-                          <span className="text-sm font-bold text-black">{mapping.spreadsheetColumn}</span>
+                          <span className="text-sm font-bold text-white">{mapping.spreadsheetColumn}</span>
                         </div>
                       </td>
                       <td className="px-4 py-3 text-center">
@@ -447,7 +511,7 @@ const CRMImportar = () => {
                         <select
                           value={mapping.targetField}
                           onChange={(e) => updateMapping(index, e.target.value)}
-                          className="text-sm font-medium text-neutral-900 border-2 border-neutral-300 rounded-lg px-3 py-2.5 outline-none focus:border-black focus:ring-2 focus:ring-black/10 bg-white hover:bg-neutral-50 hover:border-neutral-400 cursor-pointer min-w-[220px] transition-colors"
+                          className="text-sm font-medium text-white border-2 border-[#333] rounded-lg px-3 py-2.5 outline-none focus:border-[#B5FF03] focus:ring-2 focus:ring-[#B5FF03]/10 bg-[#111] hover:bg-[#222] hover:border-[#444] cursor-pointer min-w-[220px] transition-colors"
                         >
                           {TARGET_FIELDS.map(field => (
                             <option key={field.key || 'empty'} value={field.key}>
@@ -477,7 +541,7 @@ const CRMImportar = () => {
           </div>
 
           <div className="flex gap-4">
-            <button onClick={cancelImport} className="flex-1 py-4 rounded-xl font-black text-sm uppercase tracking-widest border border-neutral-200 text-neutral-500 hover:bg-neutral-50 transition-colors">
+            <button onClick={cancelImport} className="flex-1 py-4 rounded-xl font-black text-sm uppercase tracking-widest border border-[#333] text-neutral-500 hover:bg-[#111] transition-colors">
               Cancelar
             </button>
             <button onClick={proceedToPreview} className="flex-[2] py-4 rounded-xl font-black text-sm uppercase tracking-widest bg-black text-white hover:brightness-90 transition-all flex items-center justify-center gap-2">
@@ -601,38 +665,38 @@ const CRMImportar = () => {
               </div>
             ) : (
               <>
-                <div className="w-16 h-16 bg-neutral-100 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:bg-black transition-all group-hover:scale-110 group-hover:rotate-3">
-                  <Upload className="w-6 h-6 text-neutral-400 group-hover:text-white transition-colors" />
+                <div className="w-16 h-16 bg-[#0a0a0a] border border-[#333] rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:bg-[#111] transition-all group-hover:scale-110 group-hover:rotate-3">
+                  <Upload className="w-6 h-6 text-[#B5FF03] group-hover:text-[#B5FF03] transition-colors" />
                 </div>
-                <h3 className="text-black font-black text-xl mb-2">Arraste ou clique para selecionar</h3>
+                <h3 className="text-white font-black text-xl mb-2">Arraste ou clique para selecionar</h3>
                 <p className="text-neutral-400 text-sm font-bold">CSV, XLSX, XLS — maximo 10MB</p>
                 <div className="mt-8 flex justify-center gap-4">
-                  <span className="px-4 py-2 bg-neutral-50 rounded-lg text-[10px] font-black text-neutral-400 uppercase tracking-widest border border-neutral-100">Excel</span>
-                  <span className="px-4 py-2 bg-neutral-50 rounded-lg text-[10px] font-black text-neutral-400 uppercase tracking-widest border border-neutral-100">CSV</span>
+                  <span className="px-4 py-2 bg-black rounded-lg text-[10px] font-black text-neutral-400 uppercase tracking-widest border border-[#333] hover:border-[#B5FF03] hover:shadow-[0_0_10px_rgba(181,255,3,0.3)] transition-all">Excel</span>
+                  <span className="px-4 py-2 bg-black rounded-lg text-[10px] font-black text-neutral-400 uppercase tracking-widest border border-[#333] hover:border-[#B5FF03] hover:shadow-[0_0_10px_rgba(181,255,3,0.3)] transition-all">CSV</span>
                 </div>
               </>
             )}
           </div>
 
           {recentImports.length > 0 && (
-            <div className="bg-white border border-neutral-200 rounded-2xl overflow-hidden shadow-sm">
-              <div className="px-8 py-5 border-b border-neutral-100 flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-neutral-50 flex items-center justify-center">
-                  <FileText size={16} className="text-black" />
+            <div className="bg-[#111] border border-[#333] rounded-2xl overflow-hidden shadow-sm">
+              <div className="px-8 py-5 border-b border-[#1a1a1a] flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-[#0a0a0a] flex items-center justify-center">
+                  <FileText size={16} className="text-[#B5FF03]" />
                 </div>
-                <h3 className="text-[11px] font-black text-black uppercase tracking-widest">Importacoes Recentes</h3>
+                <h3 className="text-[11px] font-black text-[#B5FF03] uppercase tracking-widest">IMPORTAÇÕES RECENTES</h3>
               </div>
-              <div className="divide-y divide-neutral-100">
+              <div className="divide-y divide-[#1a1a1a]">
                 {recentImports.map((item, idx) => (
-                  <div key={idx} className="flex items-center justify-between px-8 py-5 hover:bg-neutral-50 transition-colors">
+                  <div key={idx} className="flex items-center justify-between px-8 py-5 hover:bg-[#1a1a1a] transition-colors">
                     <div>
-                      <p className="text-sm font-black text-black">{item.name}</p>
+                      <p className="text-sm font-black text-white">{item.name}</p>
                       <p className="text-[10px] text-neutral-400 font-bold uppercase tracking-widest mt-1">
                         {item.date} · <span className="text-neutral-500">{item.records}</span>
                       </p>
                     </div>
                     <div className="flex items-center gap-2">
-                      <div className={`w-1.5 h-1.5 rounded-full ${item.status === 'Concluida' ? 'bg-emerald-500' : 'bg-neutral-300'}`} />
+                      <div className={`w-1.5 h-1.5 rounded-full ${item.status === 'Concluida' ? 'bg-[#B5FF03]' : 'bg-[#333]'}`} />
                       <span className="text-[10px] font-black text-neutral-500 uppercase tracking-widest">{item.status}</span>
                     </div>
                   </div>
