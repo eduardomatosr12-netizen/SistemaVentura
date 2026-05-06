@@ -463,24 +463,6 @@ const CRMImportar = () => {
           </div>
           
           {unmappedCount > 0 && (
-            <div className="px-6 py-3 bg-amber-900/30 border-t border-amber-900/300/30">
-              <p className="text-xs font-bold text-amber-400">
-                {unmappedCount} coluna{unmappedCount > 1 ? 's' : ''} nao mapeada{unmappedCount > 1 ? 's' : ''} (serao ignoradas na importacao)
-              </p>
-            </div>
-          )}
-        </div>
-      )}
-
-            {unmappedCount > 0 && (
-              <div className="px-6 py-3 bg-amber-900/30 border-t border-amber-500/30">
-                <p className="text-xs font-bold text-amber-400">
-                  {unmappedCount} coluna{unmappedCount > 1 ? 's' : ''} nao mapeada{unmappedCount > 1 ? 's' : ''} (serao ignoradas na importacao)
-                </p>
-              </div>
-            )}
-          </div>
-
           <div className="flex gap-4">
             <button onClick={cancelImport} className="flex-1 py-4 rounded-xl font-black text-sm uppercase tracking-widest border border-[#333] text-neutral-500 hover:bg-[#111] transition-colors">
               Cancelar
