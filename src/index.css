@@ -69,6 +69,16 @@ body {
   background: #555555;
 }
 
+/* Force pipeline cards to be perfectly straight */
+.pipeline-card-straight {
+  transform: none !important;
+  rotate: 0deg !important;
+  scale: 1 !important;
+  width: 100% !important;
+  margin: 0 !important;
+  transform-origin: center center !important;
+}
+
 .scrollbar-hide {
   -ms-overflow-style: none;
   scrollbar-width: none;

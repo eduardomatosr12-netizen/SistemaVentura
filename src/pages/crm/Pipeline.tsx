@@ -51,7 +51,7 @@ const DraggableLeadCard = memo<LeadCardProps>(({ lead, isClosed }) => {
       style={style}
       {...listeners}
       {...attributes}
-      className={`bg-[#1a1a1a] p-4 rounded-md border-2 border-[#B5FF03] shadow-xl rotate-3 scale-105 pointer-events-none`}
+      className={`pipeline-card-straight bg-[#1a1a1a] w-full p-4 rounded-md border-2 border-[#B5FF03] shadow-xl pointer-events-none`}
     >
       <div className="font-bold text-[11px] md:text-[13px] text-white mb-0.5">{lead.name}</div>
       <div className="text-[9px] md:text-[10px] text-neutral-400 font-semibold mb-2 md:mb-3">{lead.niche}</div>
@@ -102,9 +102,9 @@ const DraggableLeadCard = memo<LeadCardProps>(({ lead, isClosed }) => {
 DraggableLeadCard.displayName = 'DraggableLeadCard';
 
 const StaticLeadCard = memo<LeadCardProps>(({ lead, isClosed }) => (
-  <div className="bg-white p-4 rounded-md border border-black shadow-xl rotate-3 scale-105 pointer-events-none">
-      <div className="font-bold text-[13px] text-white mb-0.5">{lead.name}</div>
-      <div className="text-[10px] text-neutral-400 font-semibold mb-3">{lead.niche}</div>
+  <div className="bg-[#1a1a1a] w-full p-4 rounded-md border-2 border-[#B5FF03] shadow-none pointer-events-none">
+    <div className="font-bold text-[13px] text-white mb-0.5">{lead.name}</div>
+    <div className="text-[10px] text-neutral-400 font-semibold mb-3">{lead.niche}</div>
     {isClosed && (
         <div className="pt-3 border-t border-[#333] mt-3">
           <div className="flex justify-between items-center">
