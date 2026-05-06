@@ -680,5 +680,5 @@ const CRMLeads = () => {
 };
 
 export default function LeadsPage() {
-  return <CRMleads />;
+  return <CRMLeads />;
 }
