@@ -46,14 +46,14 @@ const STAGE_ORIGINS = [
 ];
 
 const stageStyle: Record<string, string> = {
-  'Novos Leads':      'bg-[#1a1a1a] text-white/70 text-center rounded-full px-3 py-1 border border-gray-700',
-  'Primeiro Contato': 'bg-[#1a1a1a] text-white/70 text-center rounded-full px-3 py-1 border border-gray-700',
-  'Contato Ativo':    'bg-[#1a1a1a] text-white/70 text-center rounded-full px-3 py-1 border border-gray-700',
-  'Reunião Agendada': 'bg-[#1a1a1a] text-white/70 text-center rounded-full px-3 py-1 border border-gray-700',
-  'Follow Up':        'bg-[#1a1a1a] text-white/70 text-center rounded-full px-3 py-1 border border-gray-700',
-  'Proposta Enviada': 'bg-[#1a1a1a] text-white/70 text-center rounded-full px-3 py-1 border border-[#B5FF03]',
-  'Contrato Fechado': 'bg-[#B5FF03] text-black font-bold text-center rounded-full px-3 py-1',
-  'Perdido':          'bg-[#1a1a1a] text-white/70 text-center rounded-full px-3 py-1 border border-red-500/50',
+  'Novos Leads':      'bg-[#1a1a1a] text-white/70 text-center text-sm rounded-full px-3 py-1 border border-gray-700',
+  'Primeiro Contato': 'bg-[#1a1a1a] text-white/70 text-center text-sm rounded-full px-3 py-1 border border-gray-700',
+  'Contato Ativo':    'bg-[#1a1a1a] text-white/70 text-center text-sm rounded-full px-3 py-1 border border-gray-700',
+  'Reunião Agendada': 'bg-[#1a1a1a] text-white/70 text-center text-sm rounded-full px-3 py-1 border border-gray-700',
+  'Follow Up':        'bg-[#1a1a1a] text-white/70 text-center text-sm rounded-full px-3 py-1 border border-gray-700',
+  'Proposta Enviada': 'bg-black text-white/70 text-center text-sm rounded-full px-3 py-1 border border-[#B5FF03]',
+  'Contrato Fechado': 'bg-[#B5FF03] text-black font-bold text-center text-sm rounded-full px-3 py-1',
+  'Perdido':          'bg-black text-white/70 text-center text-sm rounded-full px-3 py-1 border border-red-500/50',
 };
 
 const FilterSection = ({ title, children, defaultOpen = true }: { title: string; children: React.ReactNode; defaultOpen?: boolean }) => {
@@ -482,11 +482,13 @@ const CRMLeads = () => {
                        <div className="text-[10px] md:text-xs text-neutral-400">{lead?.gmnReviews} avaliações</div>
                     </td>
                       <td className="px-3 md:px-5 py-2 md:py-4 text-white font-medium text-xs md:text-sm whitespace-nowrap">{lead?.value || '—'}</td>
-                    <td className="px-3 md:px-5 py-2 md:py-4">
-                       <span className={`px-2 md:px-2.5 py-1 rounded-full text-[10px] md:text-[11px] font-semibold ${stageStyle[lead?.stage] ?? 'bg-[#1a1a1a] text-white/70 text-center rounded-full px-3 border border-gray-700'}`}>
-                        {lead?.stage === 'Novos Leads' ? 'Novos Contatos' : lead?.stage}
-                      </span>
-                    </td>
+                     <td className="px-3 md:px-5 py-4 md:py-6">
+                       <div className="flex justify-center">
+                         <span className={`inline-block ${stageStyle[lead?.stage] ?? 'bg-[#1a1a1a] text-white/70 text-center text-sm rounded-full px-3 py-1 border border-gray-700'}`}>
+                           {lead?.stage === 'Novos Leads' ? 'Novos Contatos' : lead?.stage}
+                         </span>
+                       </div>
+                     </td>
                     <td className="px-3 md:px-5 py-2 md:py-4">
                       <div className="flex items-center justify-center gap-0.5 md:gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                          <button onClick={() => openEdit(lead)} className="p-1 md:p-1.5 text-neutral-400 hover:text-white hover:bg-[#111] rounded-md transition-all">
