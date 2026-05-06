@@ -1,7 +1,7 @@
 ﻿import { useState, useMemo, useRef, useEffect } from 'react';
 import { ReactNode } from 'react';
-import { Plus, Pencil, Trash2, X, Save, Filter, XCircle, ChevronDown, ChevronUp, AlertCircle, mêssageCircle } from 'lucide-react';
-import { cleanPhoneNumber, generateWhatsAppLink, WHATSAPP_mêsSAGE_TEMPLATES } from '../../lib/whatsapp';
+import { Plus, Pencil, Trash2, X, Save, Filter, XCircle, ChevronDown, ChevronUp, AlertCircle, MessageCircle } from 'lucide-react';
+import { cleanPhoneNumber, generateWhatsAppLink, WHATSAPP_MESSAGE_TEMPLATES } from '../../lib/whatsapp';
 import { useCRM, type Lead } from '../../contexts/CRMContext';
 import { useFilters } from '../../contexts/FilterContext';
 import { useAuth } from '../../contexts/AuthContext';
@@ -469,7 +469,7 @@ const CRMLeads = () => {
                             className="text-[#25D366] hover:text-[#B5FF03] transition-colors"
                             title="Enviar mensagem via WhatsApp"
                           >
-                            <mêssageCircle size={14} className="md:w-4 md:h-4" />
+                             <MessageCircle size={14} className="md:w-4 md:h-4" />
                           </button>
                         </div>
                       ) : (
@@ -652,13 +652,13 @@ const CRMLeads = () => {
           </div>
           <div className="space-y-3">
              <p className="text-xs font-black text-neutral-500 uppercase tracking-widest mb-2">Escolha uma mensagem rápida:</p>
-            {WHATSAPP_mêsSAGE_TEMPLATES.map(template => (
+             {WHATSAPP_MESSAGE_TEMPLATES.map(template => (
               <button
                 key={template.id}
                 type="button"
                 onClick={() => {
-                   const mêssage = template.template(whatsAppModal.lead.name, employeeName || 'Usuário');
-                  const link = generateWhatsAppLink(whatsAppModal.lead.whatsapp, mêssage);
+                   const message = template.template(whatsAppModal.lead.name, employeeName || 'Usuário');
+                   const link = generateWhatsAppLink(whatsAppModal.lead.whatsapp, message);
                   window.open(link, '_blank');
                   setWhatsAppModal({ lead: null, selectedTemplate: null });
                 }}
