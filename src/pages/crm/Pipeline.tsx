@@ -51,14 +51,14 @@ const DraggableLeadCard = memo<LeadCardProps>(({ lead, isClosed }) => {
       style={style}
       {...listeners}
       {...attributes}
-      className={`bg-white p-2 md:p-4 rounded-md border border-neutral-200 shadow-[0_2px_4px_rgba(0,0,0,0.02)] hover:border-black hover:shadow-md transition-all cursor-grab active:cursor-grabbing group ${isDragging ? 'opacity-50 grayscale' : ''}`}
+      className={`bg-[#1a1a1a] p-4 rounded-md border-2 border-[#B5FF03] shadow-xl rotate-3 scale-105 pointer-events-none`}
     >
-      <div className="font-bold text-[11px] md:text-[13px] text-black mb-0.5">{lead.name}</div>
-      <div className="text-[9px] md:text-[10px] text-neutral-500 font-semibold mb-2 md:mb-3">{lead.niche}</div>
+      <div className="font-bold text-[11px] md:text-[13px] text-white mb-0.5">{lead.name}</div>
+      <div className="text-[9px] md:text-[10px] text-neutral-400 font-semibold mb-2 md:mb-3">{lead.niche}</div>
       
       {lead.whatsapp && (
         <div className="flex items-center gap-1 mb-2">
-          <span className="text-[9px] md:text-[10px] text-neutral-600">{lead.whatsapp}</span>
+          <span className="text-[9px] md:text-[10px] text-neutral-400">{lead.whatsapp}</span>
           <button
             type="button"
             onClick={(e) => {
@@ -75,13 +75,13 @@ const DraggableLeadCard = memo<LeadCardProps>(({ lead, isClosed }) => {
       )}
 
       {isClosed && (
-        <div className="pt-2 md:pt-3 border-t border-neutral-100 mt-2 md:mt-3">
+        <div className="pt-2 md:pt-3 border-t border-[#333] mt-2 md:mt-3">
           <div className="flex justify-between items-center gap-2">
             <div className="flex flex-col">
               <span className="text-[7px] md:text-[8px] text-neutral-400 font-bold uppercase tracking-[0.1em]">Valor</span>
-              <span className="text-[10px] md:text-xs font-black text-black mt-0.5">{lead.value || 'R$ 0,00'}</span>
+              <span className="text-[10px] md:text-xs font-black text-white mt-0.5">{lead.value || 'R$ 0,00'}</span>
             </div>
-            <div className="w-5 h-5 md:w-6 md:h-6 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center text-[9px] md:text-[10px] font-bold flex-shrink-0">
+            <div className="w-5 h-5 md:w-6 md:h-6 rounded-full bg-[#B5FF03]/20 text-[#B5FF03] flex items-center justify-center text-[9px] md:text-[10px] font-bold flex-shrink-0">
               ✓
             </div>
           </div>
@@ -90,7 +90,7 @@ const DraggableLeadCard = memo<LeadCardProps>(({ lead, isClosed }) => {
 
       {!isClosed && (
         <div className="flex justify-end">
-          <div className="w-6 h-6 rounded-full bg-neutral-50 flex items-center justify-center text-[10px] font-bold text-neutral-400 group-hover:bg-black group-hover:text-white transition-colors">
+          <div className="w-6 h-6 rounded-full bg-[#222] flex items-center justify-center text-[10px] font-bold text-neutral-400 group-hover:bg-[#B5FF03] group-hover:text-black transition-colors">
             →
           </div>
         </div>
@@ -103,20 +103,20 @@ DraggableLeadCard.displayName = 'DraggableLeadCard';
 
 const StaticLeadCard = memo<LeadCardProps>(({ lead, isClosed }) => (
   <div className="bg-white p-4 rounded-md border border-black shadow-xl rotate-3 scale-105 pointer-events-none">
-    <div className="font-bold text-[13px] text-black mb-0.5">{lead.name}</div>
-    <div className="text-[10px] text-neutral-500 font-semibold mb-3">{lead.niche}</div>
+      <div className="font-bold text-[13px] text-white mb-0.5">{lead.name}</div>
+      <div className="text-[10px] text-neutral-400 font-semibold mb-3">{lead.niche}</div>
     {isClosed && (
-      <div className="pt-3 border-t border-neutral-100 mt-3">
-        <div className="flex justify-between items-center">
-          <div className="flex flex-col">
-            <span className="text-[8px] text-neutral-400 font-bold uppercase tracking-[0.1em]">Valor do Contrato</span>
-            <span className="text-xs font-black text-black mt-0.5">{lead.value || 'R$ 0,00'}</span>
-          </div>
-          <div className="w-6 h-6 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center text-[10px] font-bold">
-            ✓
+        <div className="pt-3 border-t border-[#333] mt-3">
+          <div className="flex justify-between items-center">
+            <div className="flex flex-col">
+              <span className="text-[8px] text-neutral-400 font-bold uppercase tracking-[0.1em]">Valor do Contrato</span>
+              <span className="text-xs font-black text-white mt-0.5">{lead.value || 'R$ 0,00'}</span>
+            </div>
+            <div className="w-6 h-6 rounded-full bg-[#B5FF03]/20 text-[#B5FF03] flex items-center justify-center text-[10px] font-bold">
+              ✓
+            </div>
           </div>
         </div>
-      </div>
     )}
   </div>
 ));
@@ -137,25 +137,25 @@ const DroppableColumn = memo<DroppableColumnProps>(({ stage, children, count, to
   return (
     <div 
       ref={setNodeRef}
-      className={`bg-neutral-50/50 border-2 rounded-md w-[300px] shrink-0 flex flex-col max-h-full transition-colors ${isOver ? 'border-black bg-neutral-100/50' : 'border-transparent'}`}
+      className={`bg-[#0a0a0a] border-2 rounded-md w-[300px] shrink-0 flex flex-col max-h-full transition-colors ${isOver ? 'border-[#B5FF03] bg-[#111]' : 'border-[#333]'}`}
     >
-      <div className="bg-neutral-50 border-b border-neutral-200 rounded-t-xl">
-        <div className="p-5 border-b border-neutral-200 bg-white rounded-t-xl">
+      <div className="bg-[#111] border-b border-[#333] rounded-t-xl">
+        <div className="p-5 border-b border-[#333] bg-[#111] rounded-t-xl">
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-[11px] font-black text-black uppercase tracking-widest">{stage}</h3>
-            <span className="text-[10px] font-bold bg-neutral-100 text-neutral-500 px-2 py-0.5 rounded-md">
-              {count}
-            </span>
+        <h3 className="text-[11px] font-black text-white uppercase tracking-widest">{stage}</h3>
+                <span className="text-[10px] font-bold bg-[#222] text-[#B5FF03] px-2 py-0.5 rounded-md">
+                  {count}
+                </span>
           </div>
           
           {config.isClosed ? (
             <div className="flex flex-col">
-              <span className="text-lg font-black text-black tracking-tight">{formatCurrency(totalValue)}</span>
+              <span className="text-lg font-black text-white tracking-tight">{formatCurrency(totalValue)}</span>
               <span className="text-[9px] text-neutral-400 font-bold uppercase tracking-widest mt-0.5">Faturamento Real</span>
             </div>
           ) : (
             <div className="h-[38px] flex items-center">
-              <div className="h-1.5 w-12 bg-neutral-100 rounded-full"></div>
+              <div className="h-1.5 w-12 bg-[#333] rounded-full"></div>
             </div>
           )}
         </div>
@@ -163,9 +163,9 @@ const DroppableColumn = memo<DroppableColumnProps>(({ stage, children, count, to
         <div className="p-3 space-y-3 overflow-y-auto min-h-[200px]">
           {children}
           {count === 0 && !isOver && (
-            <div className="py-12 border-2 border-dashed border-neutral-200 rounded-md flex flex-col items-center justify-center opacity-40">
-              <div className="w-8 h-8 rounded-full bg-neutral-100 mb-2"></div>
-              <span className="text-[9px] text-neutral-400 font-bold uppercase tracking-widest">Sem leads</span>
+            <div className="py-12 border-2 border-dashed border-[#333] rounded-md flex flex-col items-center justify-center opacity-40">
+              <div className="w-8 h-8 rounded-full bg-[#222] mb-2"></div>
+              <span className="text-[9px] text-neutral-500 font-bold uppercase tracking-widest">Sem leads</span>
             </div>
           )}
         </div>
@@ -302,38 +302,38 @@ const CRMPipeline = () => {
   }, [filteredLeads, searchTerm]);
 
   return (
-    <div className="relative flex flex-col h-full">
+    <div className="relative flex flex-col h-full bg-black">
       {isSidebarOpen && (
         <>
           <div className="fixed inset-0 bg-black/20 z-40" onClick={() => setIsSidebarOpen(false)} />
-          <div className="absolute top-14 left-4 w-[280px] bg-white border border-neutral-200 rounded-xl shadow-xl z-50 p-3">
+          <div className="absolute top-14 left-4 w-[280px] bg-[#111] border border-[#333] rounded-xl shadow-xl z-50 p-3">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-[10px] font-black text-black uppercase tracking-widest">Filtros</span>
-              <button onClick={() => setIsSidebarOpen(false)} className="p-1 hover:bg-neutral-100 rounded-md">
-                <XCircle size={14} className="text-neutral-400" />
+              <span className="text-[10px] font-black text-white uppercase tracking-widest">Filtros</span>
+              <button onClick={() => setIsSidebarOpen(false)}                 className="p-1 hover:bg-[#222] rounded-md">
+                <XCircle size={14} className="text-neutral-400 hover:text-[#B5FF03]" />
               </button>
             </div>
-            <p className="text-[10px] text-neutral-400">Aplique filtros na aba Leads para filtrar dados aqui.</p>
+            <p className="text-[10px] text-neutral-500">Aplique filtros na aba Leads para filtrar dados aqui.</p>
           </div>
         </>
       )}
 
       <div className="mb-4 flex justify-between items-start">
         <div>
-          <h1 className="text-3xl font-black text-black tracking-tight mb-1">Pipeline</h1>
-          <p className="text-neutral-500 text-sm">Visualize o progresso das suas oportunidades. Arraste e solte para mover entre etapas.</p>
+          <h1 className="text-3xl font-black text-white tracking-tight mb-1">Pipeline</h1>
+          <p className="text-neutral-400 text-sm">Visualize o progresso das suas oportunidades. Arraste e solte para mover entre etapas.</p>
         </div>
         <div className="relative group">
           <button 
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-            className={`p-2 rounded-lg border transition-all relative ${hasActiveFilters ? 'bg-neutral-100 text-black border-neutral-200' : 'bg-transparent border-transparent text-neutral-400 hover:text-neutral-600 hover:bg-neutral-50'}`}
+            className={`p-2 rounded-lg border transition-all relative ${hasActiveFilters ? 'bg-[#B5FF03] text-black border-[#B5FF03]' : 'bg-transparent border-transparent text-neutral-400 hover:text-white hover:bg-[#222]'}`}
           >
             <Filter size={16} strokeWidth={hasActiveFilters ? 2.5 : 1.5} />
             {hasActiveFilters && (
               <span className="absolute top-1 right-1 w-1.5 h-1.5 bg-red-500 rounded-full" />
             )}
           </button>
-          <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-neutral-800 text-white text-[10px] font-medium rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
+          <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-[#111] text-white text-[10px] font-medium rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
             Filtros
           </span>
         </div>
@@ -345,7 +345,7 @@ const CRMPipeline = () => {
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
-        <div className="flex-1 overflow-x-auto pb-6">
+        <div         className="flex-1 overflow-x-auto pb-6 scrollbar-thin scrollbar-thumb-[#333] scrollbar-track-transparent">
           <div className="flex gap-5 min-w-max h-full items-start">
             {columnData.map(({ stage, leads: columnLeads, count, totalValue }) => (
               <DroppableColumn 
