@@ -46,14 +46,14 @@ const STAGE_ORIGINS = [
 ];
 
 const stageStyle: Record<string, string> = {
-  'Novos Leads':      'bg-[#1a1a1a] text-white/70 text-center text-sm rounded-full px-3 py-1 border border-gray-700',
-  'Primeiro Contato': 'bg-[#1a1a1a] text-white/70 text-center text-sm rounded-full px-3 py-1 border border-gray-700',
-  'Contato Ativo':    'bg-[#1a1a1a] text-white/70 text-center text-sm rounded-full px-3 py-1 border border-gray-700',
-  'Reunião Agendada': 'bg-[#1a1a1a] text-white/70 text-center text-sm rounded-full px-3 py-1 border border-gray-700',
-  'Follow Up':        'bg-[#1a1a1a] text-white/70 text-center text-sm rounded-full px-3 py-1 border border-gray-700',
-  'Proposta Enviada': 'bg-black text-white/70 text-center text-sm rounded-full px-3 py-1 border border-[#B5FF03]',
-  'Contrato Fechado': 'bg-[#B5FF03] text-black font-bold text-center text-sm rounded-full px-3 py-1',
-  'Perdido':          'bg-black text-white/70 text-center text-sm rounded-full px-3 py-1 border border-red-500/50',
+  'Novos Leads':      'bg-[#1a1a1a] text-white/70 text-center text-sm leading-5 rounded-full px-4 py-1.5 min-w-[120px] border border-gray-700 inline-flex items-center justify-center',
+  'Primeiro Contato': 'bg-[#1a1a1a] text-white/70 text-center text-sm leading-5 rounded-full px-4 py-1.5 min-w-[120px] border border-gray-700 inline-flex items-center justify-center',
+  'Contato Ativo':    'bg-[#1a1a1a] text-white/70 text-center text-sm leading-5 rounded-full px-4 py-1.5 min-w-[120px] border border-gray-700 inline-flex items-center justify-center',
+  'Reunião Agendada': 'bg-[#1a1a1a] text-white/70 text-center text-sm leading-5 rounded-full px-4 py-1.5 min-w-[120px] border border-gray-700 inline-flex items-center justify-center',
+  'Follow Up':        'bg-[#1a1a1a] text-white/70 text-center text-sm leading-5 rounded-full px-4 py-1.5 min-w-[120px] border border-gray-700 inline-flex items-center justify-center',
+  'Proposta Enviada': 'bg-black text-white/70 text-center text-sm leading-5 rounded-full px-4 py-1.5 min-w-[120px] border border-[#B5FF03] inline-flex items-center justify-center',
+  'Contrato Fechado': 'bg-[#B5FF03] text-black font-bold text-center text-sm leading-5 rounded-full px-4 py-1.5 min-w-[120px] inline-flex items-center justify-center',
+  'Perdido':          'bg-black text-white/70 text-center text-sm leading-5 rounded-full px-4 py-1.5 min-w-[120px] border border-red-500/50 inline-flex items-center justify-center',
 };
 
 const FilterSection = ({ title, children, defaultOpen = true }: { title: string; children: React.ReactNode; defaultOpen?: boolean }) => {
@@ -452,9 +452,9 @@ const CRMLeads = () => {
                   ))}
                 </tr>
               </thead>
-              <tbody className="divide-y divide-neutral-100">
+               <tbody className="divide-y divide-[#222]">
                 {Array.isArray(filteredLeads) && filteredLeads.length > 0 ? filteredLeads.map(lead => (
-                  <tr key={lead?.id} className="hover:bg-[#111] transition-colors group border-b border-[#1a1a1a]">
+                   <tr key={lead?.id} className="hover:bg-[#111] transition-colors group">
                     <td className="px-3 md:px-5 py-2 md:py-4">
                       <div className="font-semibold text-white text-xs md:text-sm">{lead?.name}</div>
                        <div className="text-[10px] md:text-xs text-neutral-400 truncate">{lead?.niche} · {lead?.email}</div>
@@ -484,7 +484,7 @@ const CRMLeads = () => {
                       <td className="px-3 md:px-5 py-2 md:py-4 text-white font-medium text-xs md:text-sm whitespace-nowrap">{lead?.value || '—'}</td>
                      <td className="px-3 md:px-5 py-4 md:py-6">
                        <div className="flex justify-center">
-                         <span className={`inline-block ${stageStyle[lead?.stage] ?? 'bg-[#1a1a1a] text-white/70 text-center text-sm rounded-full px-3 py-1 border border-gray-700'}`}>
+                         <span className={`${stageStyle[lead?.stage] ?? 'bg-[#1a1a1a] text-white/70 text-center text-sm leading-5 rounded-full px-4 py-1.5 min-w-[120px] border border-gray-700 inline-flex items-center justify-center'}`}>
                            {lead?.stage === 'Novos Leads' ? 'Novos Contatos' : lead?.stage}
                          </span>
                        </div>
