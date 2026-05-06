@@ -45,15 +45,17 @@ const STAGE_ORIGINS = [
   'Outros'
 ];
 
+const baseStageStyle = 'bg-[#1a1a1a] text-white/70 text-center text-sm leading-5 rounded-full px-4 py-1.5 min-w-[120px] border border-gray-700 inline-flex items-center justify-center';
+
 const stageStyle: Record<string, string> = {
-  'Novos Leads':      'bg-[#1a1a1a] text-white/70 text-center text-sm leading-5 rounded-full px-4 py-1.5 min-w-[120px] border border-gray-700 inline-flex items-center justify-center',
-  'Primeiro Contato': 'bg-[#1a1a1a] text-white/70 text-center text-sm leading-5 rounded-full px-4 py-1.5 min-w-[120px] border border-gray-700 inline-flex items-center justify-center',
-  'Contato Ativo':    'bg-[#1a1a1a] text-white/70 text-center text-sm leading-5 rounded-full px-4 py-1.5 min-w-[120px] border border-gray-700 inline-flex items-center justify-center',
-  'Reunião Agendada': 'bg-[#1a1a1a] text-white/70 text-center text-sm leading-5 rounded-full px-4 py-1.5 min-w-[120px] border border-gray-700 inline-flex items-center justify-center',
-  'Follow Up':        'bg-[#1a1a1a] text-white/70 text-center text-sm leading-5 rounded-full px-4 py-1.5 min-w-[120px] border border-gray-700 inline-flex items-center justify-center',
-  'Proposta Enviada': 'bg-black text-white/70 text-center text-sm leading-5 rounded-full px-4 py-1.5 min-w-[120px] border border-[#B5FF03] inline-flex items-center justify-center',
-  'Contrato Fechado': 'bg-[#B5FF03] text-black font-bold text-center text-sm leading-5 rounded-full px-4 py-1.5 min-w-[120px] inline-flex items-center justify-center',
-  'Perdido':          'bg-black text-white/70 text-center text-sm leading-5 rounded-full px-4 py-1.5 min-w-[120px] border border-red-500/50 inline-flex items-center justify-center',
+  'Novos Leads':      baseStageStyle,
+  'Primeiro Contato': baseStageStyle,
+  'Contato Ativo':    baseStageStyle,
+  'Reunião Agendada': baseStageStyle,
+  'Follow Up':        baseStageStyle,
+  'Proposta Enviada': baseStageStyle,
+  'Contrato Fechado': baseStageStyle,
+  'Perdido':          baseStageStyle,
 };
 
 const FilterSection = ({ title, children, defaultOpen = true }: { title: string; children: React.ReactNode; defaultOpen?: boolean }) => {
@@ -95,7 +97,7 @@ const Field = ({ label, required, children }: { label: string; required?: boolea
 );
 
 const inputCls =
-   'w-full bg-[#111] border border-slate-700 rounded-md py-2.5 px-3.5 text-white text-sm placeholder-slate-500 focus:outline-none focus:border-[#B5FF03] transition-colors';
+   'w-full bg-[#1a1a1a] border border-gray-700 rounded-md py-2.5 px-3.5 text-white text-sm placeholder-gray-500 focus:outline-none focus:border-[#B5FF03] transition-colors';
 
 const CRMLeads = () => {
   const { leads, addLead, updateLead, deleteLead, searchTerm } = useCRM();
@@ -484,7 +486,7 @@ const CRMLeads = () => {
                       <td className="px-3 md:px-5 py-2 md:py-4 text-white font-medium text-xs md:text-sm whitespace-nowrap">{lead?.value || '—'}</td>
                      <td className="px-3 md:px-5 py-4 md:py-6">
                        <div className="flex justify-center">
-                         <span className={`${stageStyle[lead?.stage] ?? 'bg-[#1a1a1a] text-white/70 text-center text-sm leading-5 rounded-full px-4 py-1.5 min-w-[120px] border border-gray-700 inline-flex items-center justify-center'}`}>
+                         <span className={`${stageStyle[lead?.stage] ?? baseStageStyle} ${lead?.stage ? '' : ''}`}>
                            {lead?.stage === 'Novos Leads' ? 'Novos Contatos' : lead?.stage}
                          </span>
                        </div>
@@ -559,12 +561,12 @@ const CRMLeads = () => {
                     <input type="text" value={current.instagram} onChange={e => updateField('instagram', e.target.value)}
                       className={inputCls} placeholder="@Usuário" />
                   </Field>
-                   <Field label="ETAPA DO PIPELINE">
-                     <select value={current.stage} onChange={e => updateField('stage', e.target.value)}
-                       className={`${inputCls} appearance-none cursor-pointer`}>
-                       {STAGES.map(s => <option key={s} value={s}>{s === 'Novos Leads' ? 'Novos Contatos' : s}</option>)}
-                     </select>
-                   </Field>
+                      <Field label="ETAPA DO PIPELINE">
+                        <select value={current.stage} onChange={e => updateField('stage', e.target.value)}
+                          className={`${inputCls} appearance-none cursor-pointer`}>
+                          {STAGES.map(s => <option key={s} value={s} className="bg-[#1a1a1a] text-white">{s === 'Novos Leads' ? 'Novos Contatos' : s}</option>)}
+                        </select>
+                      </Field>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
