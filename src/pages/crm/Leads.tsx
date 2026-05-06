@@ -1,7 +1,7 @@
 ﻿import { useState, useMemo, useRef, useEffect } from 'react';
 import { ReactNode } from 'react';
-import { Plus, Pencil, Trash2, X, Save, Filter, XCircle, ChevronDown, ChevronUp, AlertCircle, MessageCircle } from 'lucide-react';
-import { cleanPhoneNumber, generateWhatsAppLink, WHATSAPP_MESSAGE_TEMPLATES } from '../../lib/whatsapp';
+import { Plus, Pencil, Trash2, X, Save, Filter, XCircle, ChevronDown, ChevronUp, AlertCircle, mêssageCircle } from 'lucide-react';
+import { cleanPhoneNumber, generateWhatsAppLink, WHATSAPP_mêsSAGE_TEMPLATES } from '../../lib/whatsapp';
 import { useCRM, type Lead } from '../../contexts/CRMContext';
 import { useFilters } from '../../contexts/FilterContext';
 import { useAuth } from '../../contexts/AuthContext';
@@ -27,7 +27,7 @@ const STAGES = [
   'Novos Leads',
   'Primeiro Contato',
   'Contato Ativo',
-  'ReuniÃ£o Agendada',
+  'Reunião Agendada',
   'Follow Up',
   'Proposta Enviada',
   'Contrato Fechado',
@@ -36,7 +36,7 @@ const STAGES = [
 
 const STAGE_ORIGINS = [
   'Instagram',
-  'IndicaÃ§Ã£o',
+  'Indicação',
   'WhatsApp',
   'Facebook',
   'Google',
@@ -46,10 +46,10 @@ const STAGE_ORIGINS = [
 ];
 
 const stageStyle: Record<string, string> = {
-  'Novos Leads':      'bg-[#111] text-neutral-400',
+  'Novos Leads':      'bg-[#111] text-[#B5FF03]',
   'Primeiro Contato': 'bg-[#222] text-neutral-500',
-  'Contato Ativo':    'bg-[#111] text-slate-700',
-  'ReuniÃ£o Agendada': 'bg-black text-white',
+   'Contato Ativo':    'bg-[#111] text-neutral-400',
+  'Reunião Agendada': 'bg-black text-white',
   'Follow Up':        'bg-slate-800 text-white',
   'Proposta Enviada': 'bg-zinc-100 text-zinc-700',
   'Contrato Fechado': 'bg-emerald-100 text-emerald-700',
@@ -66,7 +66,7 @@ const FilterSection = ({ title, children, defaultOpen = true }: { title: string;
         className="flex items-center justify-between w-full text-left py-1"
       >
         <span className="text-[9px] font-black text-white uppercase tracking-widest">{title}</span>
-        {isOpen ? <ChevronUp size={12} className="text-neutral-400" /> : <ChevronDown size={12} className="text-neutral-400" />}
+        {isOpen ? <ChevronUp size={12} className="text-[#B5FF03]" /> : <ChevronDown size={12} className="text-[#B5FF03]" />}
       </button>
       {isOpen && <div className="mt-1 space-y-1">{children}</div>}
     </div>
@@ -75,19 +75,19 @@ const FilterSection = ({ title, children, defaultOpen = true }: { title: string;
 
 const CheckboxFilter = ({ label, checked, onChange }: { label: string; checked: boolean; onChange: (checked: boolean) => void }) => (
   <label className="flex items-center gap-2 cursor-pointer group">
-    <div className={`w-4 h-4 border rounded flex items-center justify-center transition-all ${checked ? 'bg-black border-black' : 'border-neutral-300 group-hover:border-black'}`}>
+    <div className={`w-4 h-4 border rounded flex items-center justify-center transition-all ${checked ? 'bg-black border-black' : 'border-[#333] group-hover:border-black'}`}>
       {checked && <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
       </svg>}
     </div>
     <input type="checkbox" className="hidden" checked={checked} onChange={e => onChange(e.target.checked)} />
-    <span className="text-xs font-medium text-neutral-400 group-hover:text-white">{label}</span>
+    <span className="text-xs font-medium text-[#B5FF03] group-hover:text-white">{label}</span>
   </label>
 );
 
 const Field = ({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) => (
   <div className="space-y-1.5">
-    <label className="block text-[11px] font-semibold text-slate-500 uppercase tracking-widest">
+    <label className="block text-[11px] font-semibold uppercase tracking-widest" style={{color: '#B5FF03'}}>
       {label}{required && <span className="text-white ml-0.5">*</span>}
     </label>
     {children}
@@ -159,7 +159,7 @@ const CRMLeads = () => {
     e.preventDefault();
     const modifiedLead = {
       ...current,
-      lastModifiedBy: employeeName || (role === 'admin' ? 'Administrador' : 'FuncionÃ¡rio')
+        lastModifiedBy: employeeName || (role === 'admin' ? 'Administrador' : 'Funcionário')
     };
     
     if (mode === 'add') {
@@ -279,20 +279,30 @@ const CRMLeads = () => {
           <div className="absolute top-14 left-4 w-[280px] max-h-[70vh] bg-[#111] border border-[#333] rounded-xl shadow-xl overflow-y-auto z-50">
             <div className="p-3 sticky top-0 bg-[#111] border-b border-[#333] flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <Filter size={12} className="text-white" />
-                <span className="text-[10px] font-black text-white uppercase tracking-widest">Filtros</span>
+                <div>
+                  <h2 className="text-2xl md:text-3xl font-black text-white tracking-tight mb-1">Contatos</h2>
+                  <p className="text-[#B5FF03] text-xs md:text-sm">
+                    {filteredLeads.length} contato{filteredLeads.length !== 1 ? 's' : ''} encontrado{filteredLeads.length !== 1 ? 's' : ''}
+                    {hasActiveFilters && <span className="text-[#B5FF03]"> (filtrado{filteredLeads.length !== 1 ? 's' : ''})</span>}
+                  </p>
+                </div>
+                <button onClick={openAdd} className="flex items-center gap-2 px-6 py-3 bg-[#B5FF03] text-black font-black rounded-lg hover:bg-[#a1e600] transition-all">
+                  <Plus size={15} strokeWidth={2.5} />
+                  <span className="hidden sm:inline">Novo Contato</span>
+                  <span className="sm:hidden text-xs">Novo</span>
+                </button>
               </div>
               <button 
                 onClick={() => setIsSidebarOpen(false)}
                 className="p-1 hover:bg-[#222] rounded-md transition-colors"
               >
-                <X size={14} className="text-neutral-400" />
+                <X size={14} className="text-[#B5FF03]" />
               </button>
             </div>
             {hasActiveFilters && (
               <button 
                 onClick={clearFilters}
-                className="text-[10px] font-bold text-neutral-400 hover:text-red-500 transition-colors flex items-center gap-1 px-3 py-2 border-b border-[#1a1a1a] w-full"
+                className="text-[10px] font-bold text-[#B5FF03] hover:text-red-500 transition-colors flex items-center gap-1 px-3 py-2 border-b border-[#1a1a1a] w-full"
               >
                 <XCircle size={10} />
                 Limpar filtros
@@ -303,7 +313,7 @@ const CRMLeads = () => {
               {(STAGES || []).map(stage => (
                 <CheckboxFilter
                   key={stage}
-                  label={stage}
+                  label={stage === 'Novos Leads' ? 'Novos Contatos' : stage}
                   checked={(filters?.stages || []).includes(stage)}
                   onChange={() => toggleStageFilter(stage)}
                 />
@@ -352,7 +362,7 @@ const CRMLeads = () => {
                 <button
                   type="button"
                   onClick={handleAddNiche}
-                  className="w-full py-2 text-xs font-bold text-neutral-500 hover:text-white text-center border border-dashed border-neutral-300 rounded-md"
+                  className="w-full py-2 text-xs font-bold text-neutral-500 hover:text-white text-center border border-dashed border-[#333] rounded-md"
                 >
                   + Adicionar "{nicheSearch || '...'}"
                 </button>
@@ -361,7 +371,7 @@ const CRMLeads = () => {
                     {filters.niches.map(n => (
                       <span key={n} className="px-2 py-1 bg-black text-white text-[10px] font-bold rounded-md flex items-center gap-1">
                         {n}
-                        <button type="button" onClick={() => toggleNicheFilter(n)} className="hover:text-red-400">Ã—</button>
+                         <button type="button" onClick={() => toggleNicheFilter(n)} className="hover:text-red-400">×</button>
                       </span>
                     ))}
                   </div>
@@ -375,10 +385,10 @@ const CRMLeads = () => {
                   { value: '', label: 'Todos' },
                   { value: 'today', label: 'Hoje' },
                   { value: 'week', label: 'Esta semana' },
-                  { value: 'month', label: 'Este mÃªs' }
+                   { value: 'month', label: 'Este mês' }
                 ].map(opt => (
                   <label key={opt.value} className="flex items-center gap-2 cursor-pointer group">
-                    <div className={`w-4 h-4 border rounded-full flex items-center justify-center transition-all ${filters?.dateFilter === opt.value ? 'bg-black border-black' : 'border-neutral-300 group-hover:border-black'}`}>
+                    <div className={`w-4 h-4 border rounded-full flex items-center justify-center transition-all ${filters?.dateFilter === opt.value ? 'bg-black border-black' : 'border-[#333] group-hover:border-black'}`}>
                       {filters?.dateFilter === opt.value && (
                         <div className="w-2 h-2 bg-[#111] rounded-full" />
                       )}
@@ -405,7 +415,7 @@ const CRMLeads = () => {
               <div className="relative group">
                 <button 
                   onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                  className={`p-2 rounded-lg border transition-all relative ${hasActiveFilters ? 'bg-[#111] text-white border-[#333]' : 'bg-transparent border-transparent text-neutral-400 hover:text-neutral-400 hover:bg-[#0a0a0a]'}`}
+                  className={`p-2 rounded-lg border transition-all relative ${hasActiveFilters ? 'bg-[#111] text-white border-[#333]' : 'bg-transparent border-transparent text-[#B5FF03] hover:text-[#B5FF03] hover:bg-[#0a0a0a]'}`}
                 >
                   <Filter size={16} strokeWidth={hasActiveFilters ? 2.5 : 1.5} />
                   {hasActiveFilters && (
@@ -420,11 +430,11 @@ const CRMLeads = () => {
                 <h1 className="text-2xl md:text-3xl font-black text-white tracking-tight mb-1">Contatos</h1>
                 <p className="text-neutral-500 text-xs md:text-sm">
                   {filteredLeads.length} contato{filteredLeads.length !== 1 ? 's' : ''} encontrado{filteredLeads.length !== 1 ? 's' : ''}
-                  {hasActiveFilters && <span className="text-neutral-400"> (filtrado{filteredLeads.length !== 1 ? 's' : ''})</span>}
+                  {hasActiveFilters && <span className="text-[#B5FF03]"> (filtrado{filteredLeads.length !== 1 ? 's' : ''})</span>}
                 </p>
               </div>
             </div>
-            <button onClick={openAdd} className="btn-primary flex items-center gap-2 whitespace-nowrap">
+            <button onClick={openAdd} className="flex items-center gap-2 px-6 py-3 bg-[#B5FF03] text-black font-black rounded-lg hover:bg-[#a1e600] transition-all whitespace-nowrap">
               <Plus size={15} strokeWidth={2.5} />
                 <span className="hidden sm:inline">Novo Contato</span>
               <span className="sm:hidden text-xs">Novo</span>
@@ -435,8 +445,8 @@ const CRMLeads = () => {
             <table className="w-full text-xs md:text-sm">
               <thead>
                 <tr className="border-b border-[#1a1a1a] bg-[#111]">
-                  {['Nome / Nicho', 'WhatsApp', 'Instagram', 'GMN â­', 'Valor', 'Etapa', 'AÃ§Ãµes'].map(h => (
-                    <th key={h} className="px-3 md:px-5 py-2 md:py-3.5 text-left text-[10px] md:text-[11px] text-neutral-400 font-semibold uppercase tracking-wider last:text-center whitespace-nowrap">
+                  {['NOME', 'WHATSAPP', 'INSTAGRAM', 'GMN ⭐', 'VALOR', 'ETAPA DO PIPELINE', 'AÇÕES'].map(h => (
+                    <th key={h} className="px-3 md:px-5 py-2 md:py-3.5 text-left text-[10px] md:text-[11px] text-[#B5FF03] font-semibold uppercase tracking-wider last:text-center whitespace-nowrap">
                       {h}
                     </th>
                   ))}
@@ -447,10 +457,10 @@ const CRMLeads = () => {
                   <tr key={lead?.id} className="hover:bg-[#111] transition-colors group border-b border-[#1a1a1a]">
                     <td className="px-3 md:px-5 py-2 md:py-4">
                       <div className="font-semibold text-white text-xs md:text-sm">{lead?.name}</div>
-                      <div className="text-[10px] md:text-xs text-neutral-400 truncate">{lead?.niche} Â· {lead?.email}</div>
+                       <div className="text-[10px] md:text-xs text-neutral-400 truncate">{lead?.niche} · {lead?.email}</div>
                     </td>
-                    <td className="px-3 md:px-5 py-2 md:py-4 text-neutral-400 text-xs md:text-sm whitespace-nowrap">
-                      {lead?.whatsapp ? (
+                     <td className="px-3 md:px-5 py-2 md:py-4 text-neutral-400 text-xs md:text-sm whitespace-nowrap">
+                       {lead?.whatsapp ? (
                         <div className="flex items-center gap-1.5">
                           <span>{lead.whatsapp}</span>
                           <button
@@ -459,30 +469,30 @@ const CRMLeads = () => {
                             className="text-[#25D366] hover:text-[#B5FF03] transition-colors"
                             title="Enviar mensagem via WhatsApp"
                           >
-                            <MessageCircle size={14} className="md:w-4 md:h-4" />
+                            <mêssageCircle size={14} className="md:w-4 md:h-4" />
                           </button>
                         </div>
                       ) : (
-                        <span className="text-neutral-400">â€”</span>
+                         <span className="text-[#B5FF03]">—</span>
                       )}
                     </td>
-                    <td className="px-3 md:px-5 py-2 md:py-4 text-neutral-400 text-xs md:text-sm whitespace-nowrap">{lead?.instagram}</td>
+                     <td className="px-3 md:px-5 py-2 md:py-4 text-neutral-400 text-xs md:text-sm whitespace-nowrap">{lead?.instagram}</td>
                     <td className="px-3 md:px-5 py-2 md:py-4">
-                      <div className="text-white font-semibold text-xs md:text-sm">{lead?.gmnStars} â˜…</div>
-                      <div className="text-[10px] md:text-xs text-neutral-400">{lead?.gmnReviews} avaliaÃ§Ãµes</div>
+                       <div className="text-white font-semibold text-xs md:text-sm">{lead?.gmnStars} ⭐</div>
+                       <div className="text-[10px] md:text-xs text-neutral-400">{lead?.gmnReviews} avaliações</div>
                     </td>
-                    <td className="px-3 md:px-5 py-2 md:py-4 text-white font-medium text-xs md:text-sm whitespace-nowrap">{lead?.value || 'â€”'}</td>
+                      <td className="px-3 md:px-5 py-2 md:py-4 text-white font-medium text-xs md:text-sm whitespace-nowrap">{lead?.value || '—'}</td>
                     <td className="px-3 md:px-5 py-2 md:py-4">
-                      <span className={`px-2 md:px-2.5 py-1 rounded-md text-[10px] md:text-[11px] font-semibold ${stageStyle[lead?.stage] ?? 'bg-[#111] text-neutral-400'}`}>
-                        {lead?.stage}
+                       <span className={`px-2 md:px-2.5 py-1 rounded-md text-[10px] md:text-[11px] font-semibold ${stageStyle[lead?.stage] ?? 'bg-[#111] text-neutral-400'}`}>
+                        {lead?.stage === 'Novos Leads' ? 'Novos Contatos' : lead?.stage}
                       </span>
                     </td>
                     <td className="px-3 md:px-5 py-2 md:py-4">
                       <div className="flex items-center justify-center gap-0.5 md:gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button onClick={() => openEdit(lead)} className="p-1 md:p-1.5 text-neutral-400 hover:text-white hover:bg-[#111] rounded-md transition-all">
+                         <button onClick={() => openEdit(lead)} className="p-1 md:p-1.5 text-neutral-400 hover:text-white hover:bg-[#111] rounded-md transition-all">
                           <Pencil size={12} className="md:w-3.5 md:h-3.5" />
                         </button>
-                        <button onClick={() => handleDelete(lead?.id)} className="p-1 md:p-1.5 text-neutral-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-all">
+                         <button onClick={() => handleDelete(lead?.id)} className="p-1 md:p-1.5 text-neutral-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-all">
                           <Trash2 size={12} className="md:w-3.5 md:h-3.5" />
                         </button>
                       </div>
@@ -490,7 +500,7 @@ const CRMLeads = () => {
                   </tr>
                 )) : (
                   <tr>
-                    <td colSpan={7} className="px-3 md:px-5 py-8 md:py-12 text-center text-neutral-400 font-medium italic text-xs md:text-sm">
+                     <td colSpan={7} className="px-3 md:px-5 py-8 md:py-12 text-center text-neutral-400 font-medium italic text-xs md:text-sm">
                       {hasActiveFilters ? 'Nenhum lead encontrado com os filtros aplicados' : `Nenhum lead encontrado para "${searchTerm}"`}
                     </td>
                   </tr>
@@ -509,11 +519,11 @@ const CRMLeads = () => {
                   <h2 className="text-lg md:text-xl font-black text-white tracking-tight">
                     {mode === 'add' ? 'Novo Contato' : 'Editar Contato'}
                   </h2>
-                <p className="text-[10px] md:text-xs text-neutral-400 mt-0.5 md:mt-0.5">
+                <p className="text-[10px] md:text-xs text-[#B5FF03] mt-0.5 md:mt-0.5">
                   {mode === 'add' ? 'Preencha os dados para cadastrar um novo contato.' : `Editando: ${current.name}`}
                 </p>
               </div>
-                <button onClick={() => setIsOpen(false)} className="text-neutral-400 hover:text-white transition-colors p-1 flex-shrink-0" type="button">
+                <button onClick={() => setIsOpen(false)} className="text-[#B5FF03] hover:text-white transition-colors p-1 flex-shrink-0" type="button">
                 <X size={20} className="w-5 h-5 md:w-5 md:h-5" />
               </button>
             </div>
@@ -521,57 +531,57 @@ const CRMLeads = () => {
             <form onSubmit={handleSave} className="overflow-y-auto flex-1">
               <div className="px-4 md:px-7 py-4 md:py-6 space-y-3 md:space-y-5">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
-                  <Field label="Nome" required>
+                  <Field label="NOME" required>
                     <input type="text" value={current.name} onChange={e => updateField('name', e.target.value)}
-                      required className={inputCls} placeholder="Ex: JoÃ£o Silva" />
+                      required className={inputCls} placeholder="Ex: João Silva" />
                   </Field>
-                  <Field label="Nicho">
+                  <Field label="NICHO">
                     <input type="text" value={current.niche} onChange={e => updateField('niche', e.target.value)}
                       className={inputCls} placeholder="Ex: Odontologia" />
                   </Field>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
-                  <Field label="WhatsApp">
+                  <Field label="WHATSAPP">
                     <input type="text" value={current.whatsapp} onChange={e => updateField('whatsapp', e.target.value)}
                       className={inputCls} placeholder="(11) 99999-9999" />
                   </Field>
-                  <Field label="Email">
+                  <Field label="EMAIL">
                     <input type="email" value={current.email} onChange={e => updateField('email', e.target.value)}
                       className={inputCls} placeholder="email@dominio.com" />
                   </Field>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
-                  <Field label="Instagram">
+                  <Field label="INSTAGRAM">
                     <input type="text" value={current.instagram} onChange={e => updateField('instagram', e.target.value)}
-                      className={inputCls} placeholder="@usuario" />
+                      className={inputCls} placeholder="@Usuário" />
                   </Field>
-                  <Field label="Etapa do Pipeline">
-                    <select value={current.stage} onChange={e => updateField('stage', e.target.value)}
-                      className={`${inputCls} appearance-none cursor-pointer`}>
-                      {STAGES.map(s => <option key={s} value={s}>{s}</option>)}
-                    </select>
-                  </Field>
+                   <Field label="ETAPA DO PIPELINE">
+                     <select value={current.stage} onChange={e => updateField('stage', e.target.value)}
+                       className={`${inputCls} appearance-none cursor-pointer`}>
+                       {STAGES.map(s => <option key={s} value={s}>{s === 'Novos Leads' ? 'Novos Contatos' : s}</option>)}
+                     </select>
+                   </Field>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
-                  <Field label="Primeiro Contato">
+                   <Field label="PRIMEIRO CONTATO">
                     <input type="date" value={current.firstContact} onChange={e => updateField('firstContact', e.target.value)}
                       className={`${inputCls} [color-scheme:light]`} />
                   </Field>
-                  <Field label="Data de Fechamento">
+                   <Field label="DATA DE FECHAMENTO">
                     <input type="date" value={current.closingDate} onChange={e => updateField('closingDate', e.target.value)}
                       className={`${inputCls} [color-scheme:light]`} />
                   </Field>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
-                  <Field label="Lembrete de Follow-up">
+                   <Field label="LEMBRETE DE FOLLOW-UP">
                     <input type="date" value={current.followUpReminder} onChange={e => updateField('followUpReminder', e.target.value)}
                       className={`${inputCls} [color-scheme:light]`} />
                   </Field>
-                  <Field label="Valor do Contrato">
+                   <Field label="VALOR DO CONTRATO">
                     <input 
                       type="text" 
                       value={current.value} 
@@ -582,37 +592,37 @@ const CRMLeads = () => {
                   </Field>
                 </div>
 
-                <Field label="EndereÃ§o / LocalizaÃ§Ã£o">
-                  <input type="text" value={current.address} onChange={e => updateField('address', e.target.value)}
-                    className={inputCls} placeholder="Ex: SÃ£o Paulo - SP" />
-                </Field>
+                 <Field label="ENDEREÇO / LOCALIZAÇÃO">
+                   <input type="text" value={current.address} onChange={e => updateField('address', e.target.value)}
+                     className={inputCls} placeholder="Ex: São Paulo - SP" />
+                 </Field>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
-                  <Field label="Quantidade de AvaliaÃ§Ãµes GMN">
-                    <input type="number" min="0" value={current.gmnReviews} onChange={e => updateField('gmnReviews', e.target.value)}
-                      className={inputCls} placeholder="Ex: 248" />
-                  </Field>
-                  <Field label="MÃ©dia de Estrelas GMN">
-                    <input type="number" min="0" max="5" step="0.1" value={current.gmnStars} onChange={e => updateField('gmnStars', e.target.value)}
-                      className={inputCls} placeholder="Ex: 4.7" />
-                  </Field>
+                   <Field label="QUANTIDADE DE AVALIAÇÕES GMN">
+                     <input type="number" min="0" value={current.gmnReviews} onChange={e => updateField('gmnReviews', e.target.value)}
+                       className={inputCls} placeholder="Ex: 248" />
+                   </Field>
+                    <Field label="MÉDIA DE ESTRELAS GMN">
+                     <input type="number" min="0" max="5" step="0.1" value={current.gmnStars} onChange={e => updateField('gmnStars', e.target.value)}
+                       className={inputCls} placeholder="Ex: 4.7" />
+                   </Field>
                 </div>
 
-                <Field label="ObservaÃ§Ãµes">
+                 <Field label="OBSERVAÇÕES">
                   <textarea value={current.notes} onChange={e => updateField('notes', e.target.value)}
                     rows={4} className={`${inputCls} resize-none`}
                     placeholder="Notas internas, contexto do lead..." />
                 </Field>
               </div>
 
-              <div className="flex flex-col md:flex-row gap-2 md:gap-3 px-4 md:px-7 py-3 md:py-5 border-t border-slate-100 shrink-0 bg-[#111]">
-                <button
-                  type="button"
-                  onClick={() => setIsOpen(false)}
-                  className="flex-1 px-4 py-2 md:py-3 rounded-md bg-[#111] text-slate-700 font-semibold hover:bg-slate-200 transition-colors text-xs md:text-sm"
-                >
-                  Cancelar
-                </button>
+               <div className="flex flex-col md:flex-row gap-2 md:gap-3 px-4 md:px-7 py-3 md:py-5 border-t border-[#333] shrink-0 bg-[#111]">
+                 <button
+                   type="button"
+                   onClick={() => setIsOpen(false)}
+                   className="flex-1 px-4 py-2 md:py-3 rounded-md bg-[#222] text-white font-semibold hover:bg-[#333] transition-colors text-xs md:text-sm"
+                 >
+                   Cancelar
+                 </button>
                 <button
                   type="submit"
                   className="flex-1 flex items-center justify-center gap-2 bg-black text-white px-4 py-2 md:py-3 rounded-md font-bold hover:bg-neutral-800 active:scale-[0.98] transition-all text-xs md:text-sm"
@@ -632,31 +642,31 @@ const CRMLeads = () => {
         <div className="bg-[#111] border border-[#333] rounded-2xl p-8 max-w-md w-full shadow-2xl">
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-xl font-black text-white">Enviar mensagem via WhatsApp</h3>
-            <button onClick={() => setWhatsAppModal({ lead: null, selectedTemplate: null })} className="text-neutral-400 hover:text-white">
+            <button onClick={() => setWhatsAppModal({ lead: null, selectedTemplate: null })} className="text-[#B5FF03] hover:text-white">
               <X size={20} />
             </button>
           </div>
           <div className="mb-4">
-            <p className="text-sm text-neutral-400">Lead: <span className="font-bold">{whatsAppModal.lead.name}</span></p>
-            <p className="text-sm text-neutral-400">WhatsApp: <span className="font-bold">{whatsAppModal.lead.whatsapp}</span></p>
+            <p className="text-sm text-[#B5FF03]">Lead: <span className="font-bold">{whatsAppModal.lead.name}</span></p>
+            <p className="text-sm text-[#B5FF03]">WhatsApp: <span className="font-bold">{whatsAppModal.lead.whatsapp}</span></p>
           </div>
           <div className="space-y-3">
-            <p className="text-xs font-black text-neutral-500 uppercase tracking-widest mb-2">Escolha uma mensagem rÃ¡pida:</p>
-            {WHATSAPP_MESSAGE_TEMPLATES.map(template => (
+             <p className="text-xs font-black text-neutral-500 uppercase tracking-widest mb-2">Escolha uma mensagem rápida:</p>
+            {WHATSAPP_mêsSAGE_TEMPLATES.map(template => (
               <button
                 key={template.id}
                 type="button"
                 onClick={() => {
-                  const message = template.template(whatsAppModal.lead.name, employeeName || 'UsuÃ¡rio');
-                  const link = generateWhatsAppLink(whatsAppModal.lead.whatsapp, message);
+                   const mêssage = template.template(whatsAppModal.lead.name, employeeName || 'Usuário');
+                  const link = generateWhatsAppLink(whatsAppModal.lead.whatsapp, mêssage);
                   window.open(link, '_blank');
                   setWhatsAppModal({ lead: null, selectedTemplate: null });
                 }}
-                className="w-full p-4 text-left border border-[#333] rounded-lg hover:bg-[#0a0a0a] hover:border-neutral-300 transition-colors"
+                className="w-full p-4 text-left border border-[#333] rounded-lg hover:bg-[#0a0a0a] hover:border-[#333] transition-colors"
               >
                 <div className="font-bold text-white text-sm">{template.label}</div>
                 <div className="text-xs text-neutral-500 mt-1">
-                  {template.template(whatsAppModal.lead.name, employeeName || 'UsuÃ¡rio').substring(0, 60)}...
+                   {template.template(whatsAppModal.lead.name, employeeName || 'Usuário').substring(0, 60)}...
                 </div>
               </button>
             ))}
@@ -667,7 +677,7 @@ const CRMLeads = () => {
                 window.open(link, '_blank');
                 setWhatsAppModal({ lead: null, selectedTemplate: null });
               }}
-              className="w-full p-4 text-left border border-dashed border-neutral-300 rounded-lg hover:bg-[#0a0a0a] transition-colors text-sm text-neutral-500"
+              className="w-full p-4 text-left border border-dashed border-[#333] rounded-lg hover:bg-[#0a0a0a] transition-colors text-sm text-neutral-500"
             >
               Abrir sem mensagem personalizada
             </button>
@@ -682,3 +692,5 @@ const CRMLeads = () => {
 export default function LeadsPage() {
   return <CRMLeads />;
 }
+
+
