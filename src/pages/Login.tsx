@@ -41,10 +41,10 @@ const Login = () => {
         <div className="text-3xl font-black text-[#B5FF03]">VENTURA</div>
         <div>
           <h1 className="text-5xl font-black text-white leading-tight tracking-tight mb-4">
-            Acelerando<br />o Crescimento.
+            Transformando Ambientes,<br />Criando Experiências.
           </h1>
             <p className="text-white text-lg font-medium">
-             Sistema de gestão interno para resultados extraordinários.
+             Gestão inteligente de iluminação e efeitos especiais.
            </p>
         </div>
         <p className="text-white text-sm">© 2026 Ventura Luz e Efeitos · v1.0.0</p>
