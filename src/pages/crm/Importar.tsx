@@ -1,4 +1,4 @@
-import { useState, useRef, useMemo } from 'react';
+﻿import { useState, useRef, useMemo } from 'react';
 import { useCRM, type Lead } from '../../contexts/CRMContext';
 import Papa from 'papaparse';
 import * as XLSX from 'xlsx';
@@ -416,7 +416,7 @@ const CRMImportar = () => {
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-[#1a1a1a] bg-[#111]">
+                  <tr className="border-b border-[#1a1a1a] bg-[#0a0a0a]">
                     <th className="text-left px-6 py-3 text-[10px] font-black text-[#B5FF03] uppercase tracking-widest">
                       Coluna da Planilha
                     </th>
@@ -433,7 +433,7 @@ const CRMImportar = () => {
                 </thead>
                 <tbody className="divide-y divide-[#1a1a1a]">
                   {mappings.map((mapping, index) => (
-                    <tr key={index} className={`hover:bg-[#111] transition-colors ${!mapping.targetField ? 'bg-[#0a0a0a]' : ''}`}>
+                    <tr key={index} className={`hover:bg-[#1a1a1a] transition-colors ${!mapping.targetField ? 'bg-[#0a0a0a]' : ''}`}>
                       <td className="px-6 py-3">
                         <div className="flex items-center gap-2">
                           <div className={`w-2 h-2 rounded-full ${mapping.targetField ? 'bg-[#B5FF03]' : 'bg-[#333]'}`} />
@@ -460,80 +460,21 @@ const CRMImportar = () => {
                 </tbody>
               </table>
             </div>
-                <div>
-                  <h3 className="text-sm font-black text-white">Mapeamento de Colunas</h3>
-                  <p className="text-[10px] text-neutral-400 font-bold uppercase tracking-widest">
-                    {uploadState.fileName} · {uploadState.spreadsheetColumns.length} colunas · {mappedCount} mapeadas
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <button onClick={autoMapAll} className="px-3 py-1.5 text-xs font-bold text-[#B5FF03] hover:bg-[#222] rounded-lg transition-colors">
-                  Auto-detectar
-                </button>
-                <button onClick={clearMappings} className="px-3 py-1.5 text-xs font-bold text-neutral-500 hover:bg-neutral-100 rounded-lg transition-colors">
-                  Limpar
-                </button>
-              </div>
+          </div>
+          
+          {unmappedCount > 0 && (
+            <div className="px-6 py-3 bg-amber-900/30 border-t border-amber-900/300/30">
+              <p className="text-xs font-bold text-amber-400">
+                {unmappedCount} coluna{unmappedCount > 1 ? 's' : ''} nao mapeada{unmappedCount > 1 ? 's' : ''} (serao ignoradas na importacao)
+              </p>
             </div>
-
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-neutral-100 bg-neutral-50">
-                    <th className="text-left px-6 py-3 text-[10px] font-black text-neutral-400 uppercase tracking-widest">
-                      Coluna da Planilha
-                    </th>
-                    <th className="text-center px-4 py-3">
-                      <ArrowDownLeft size={14} className="text-neutral-300 mx-auto" />
-                    </th>
-                    <th className="text-left px-6 py-3 text-[10px] font-black text-neutral-400 uppercase tracking-widest">
-                      Campo no Sistema
-                    </th>
-                    <th className="text-left px-4 py-3 text-[10px] font-black text-neutral-400 uppercase tracking-widest">
-                      Exemplo
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-neutral-100">
-                  {mappings.map((mapping, index) => (
-                    <tr key={index} className={`hover:bg-neutral-50 transition-colors ${!mapping.targetField ? 'bg-neutral-50' : ''}`}>
-                      <td className="px-6 py-3">
-                        <div className="flex items-center gap-2">
-                          <div className={`w-2 h-2 rounded-full ${mapping.targetField ? 'bg-emerald-500' : 'bg-neutral-300'}`} />
-                          <span className="text-sm font-bold text-white">{mapping.spreadsheetColumn}</span>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3 text-center">
-                        <ArrowDownLeft size={14} className="text-neutral-300" />
-                      </td>
-                      <td className="px-6 py-3">
-                        <select
-                          value={mapping.targetField}
-                          onChange={(e) => updateMapping(index, e.target.value)}
-                          className="text-sm font-medium text-white border-2 border-[#333] rounded-lg px-3 py-2.5 outline-none focus:border-[#B5FF03] focus:ring-2 focus:ring-[#B5FF03]/10 bg-[#111] hover:bg-[#222] hover:border-[#444] cursor-pointer min-w-[220px] transition-colors"
-                        >
-                          {TARGET_FIELDS.map(field => (
-                            <option key={field.key || 'empty'} value={field.key}>
-                              {field.label}{field.required ? ' *' : ''}
-                            </option>
-                          ))}
-                        </select>
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className="text-xs text-neutral-500 font-medium truncate block max-w-[150px]">
-                          {mapping.sampleValue || '-'}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+          )}
+        </div>
+      )}
 
             {unmappedCount > 0 && (
-              <div className="px-6 py-3 bg-amber-50 border-t border-amber-100">
-                <p className="text-xs font-bold text-amber-700">
+              <div className="px-6 py-3 bg-amber-900/30 border-t border-amber-500/30">
+                <p className="text-xs font-bold text-amber-400">
                   {unmappedCount} coluna{unmappedCount > 1 ? 's' : ''} nao mapeada{unmappedCount > 1 ? 's' : ''} (serao ignoradas na importacao)
                 </p>
               </div>
