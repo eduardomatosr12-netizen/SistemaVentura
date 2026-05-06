@@ -46,14 +46,14 @@ const STAGE_ORIGINS = [
 ];
 
 const stageStyle: Record<string, string> = {
-  'Novos Leads':      'bg-[#111] text-[#B5FF03]',
-  'Primeiro Contato': 'bg-[#222] text-neutral-500',
-   'Contato Ativo':    'bg-[#111] text-neutral-400',
-  'Reunião Agendada': 'bg-black text-white',
-  'Follow Up':        'bg-slate-800 text-white',
-  'Proposta Enviada': 'bg-zinc-100 text-zinc-700',
-  'Contrato Fechado': 'bg-emerald-100 text-emerald-700',
-  'Perdido':          'bg-red-50 text-red-600',
+  'Novos Leads':      'bg-[#111] text-neutral-400 rounded-full px-3 py-1 border border-[#333] hover:border-[#B5FF03] hover:shadow-[0_0_8px_rgba(181,255,3,0.2)] transition-all',
+  'Primeiro Contato': 'bg-[#1a1a1a] text-white rounded-full px-3 py-1 border border-gray-700 hover:border-[#B5FF03] hover:shadow-[0_0_8px_rgba(181,255,3,0.2)] transition-all',
+  'Contato Ativo':    'bg-[#111] text-neutral-400 rounded-full px-3 py-1 border border-[#333] hover:border-[#B5FF03] hover:shadow-[0_0_8px_rgba(181,255,3,0.2)] transition-all',
+  'Reunião Agendada': 'bg-[#1a1a1a] text-white rounded-full px-3 py-1 border border-gray-700 hover:border-[#B5FF03] hover:shadow-[0_0_8px_rgba(181,255,3,0.2)] transition-all',
+  'Follow Up':        'bg-[#222] text-neutral-500 rounded-full px-3 py-1 border border-[#333] hover:border-[#B5FF03] hover:shadow-[0_0_8px_rgba(181,255,3,0.2)] transition-all',
+  'Proposta Enviada': 'bg-black text-white rounded-full px-3 py-1 border border-[#B5FF03] hover:shadow-[0_0_12px_rgba(181,255,3,0.4)] transition-all',
+  'Contrato Fechado': 'bg-[#B5FF03] text-black font-bold rounded-full px-3 py-1 hover:bg-[#a1e600] transition-all',
+  'Perdido':          'bg-red-900/30 text-red-400 rounded-full px-3 py-1 border border-red-500/50 hover:border-red-400 transition-all',
 };
 
 const FilterSection = ({ title, children, defaultOpen = true }: { title: string; children: React.ReactNode; defaultOpen?: boolean }) => {
@@ -483,7 +483,7 @@ const CRMLeads = () => {
                     </td>
                       <td className="px-3 md:px-5 py-2 md:py-4 text-white font-medium text-xs md:text-sm whitespace-nowrap">{lead?.value || '—'}</td>
                     <td className="px-3 md:px-5 py-2 md:py-4">
-                       <span className={`px-2 md:px-2.5 py-1 rounded-md text-[10px] md:text-[11px] font-semibold ${stageStyle[lead?.stage] ?? 'bg-[#111] text-neutral-400'}`}>
+                       <span className={`px-2 md:px-2.5 py-1 rounded-full text-[10px] md:text-[11px] font-semibold ${stageStyle[lead?.stage] ?? 'bg-[#111] text-neutral-400 rounded-full px-3 border border-[#333]'}`}>
                         {lead?.stage === 'Novos Leads' ? 'Novos Contatos' : lead?.stage}
                       </span>
                     </td>
