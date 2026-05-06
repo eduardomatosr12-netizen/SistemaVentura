@@ -34,12 +34,12 @@ interface BoardType {
 
 const DEFAULT_STATUS_COLUMNS: ColumnOption[] = [
   { id: 'st-1', label: 'Pendente', color: '#6b7280' },
-  { id: 'st-2', label: 'Em Andamento', color: '#3b82f6' },
-  { id: 'st-3', label: 'Concluído', color: '#22c55e' },
+  { id: 'st-2', label: 'Em Andamento', color: '#f59e0b' },
+  { id: 'st-3', label: 'Concluído', color: '#B5FF03' },
 ];
 
 const DEFAULT_PRIORITY_COLUMNS: ColumnOption[] = [
-  { id: 'pr-1', label: 'Baixa', color: '#94a3b8' },
+  { id: 'pr-1', label: 'Baixa', color: '#6b7280' },
   { id: 'pr-2', label: 'Média', color: '#f59e0b' },
   { id: 'pr-3', label: 'Alta', color: '#ef4444' },
 ];
@@ -160,7 +160,7 @@ const Board = ({
               value={String(value)}
               onChange={(e) => handleCellChange(row.id, col.id, e.target.value)}
               onKeyDown={(e) => e.stopPropagation()}
-              className="flex-1 min-h-[36px] bg-transparent border-none outline-none text-sm px-3 py-2 text-black hover:bg-neutral-100 focus:bg-neutral-50 focus:border-b-2 focus:border-neutral-400 transition-colors"
+              className="flex-1 min-h-[36px] bg-transparent border-none outline-none text-sm px-3 py-2 text-white hover:bg-[#111] focus:bg-[#222] focus:border-b-2 focus:border-[#B5FF03] transition-colors"
               autoComplete="off"
               placeholder="Editar..."
             />
@@ -187,7 +187,7 @@ const Board = ({
             value={String(value)}
             onChange={(e) => handleCellChange(row.id, col.id, e.target.value)}
             onKeyDown={(e) => e.stopPropagation()}
-            className="w-full min-h-[36px] bg-transparent border-none outline-none text-sm px-3 py-2 text-black hover:bg-neutral-100 focus:bg-neutral-50 focus:border-b-2 focus:border-neutral-400 transition-colors"
+            className="w-full min-h-[36px] bg-transparent border-none outline-none text-sm px-3 py-2 text-white hover:bg-[#111] focus:bg-[#222] focus:border-b-2 focus:border-[#B5FF03] transition-colors"
             autoComplete="off"
           />
         );
@@ -297,7 +297,7 @@ const Board = ({
                   }
                 }}
                 onClick={(e) => e.stopPropagation()}
-                className="min-h-[24px] px-1 text-xs border-none outline-none cursor-pointer bg-neutral-100 rounded text-neutral-600 hover:bg-neutral-200 transition-colors"
+                className="min-h-[24px] px-1 text-xs border-none outline-none cursor-pointer bg-[#222] rounded text-neutral-300 hover:bg-[#333] transition-colors"
               >
                 <option value="">+ Tag</option>
                 {options
@@ -314,13 +314,13 @@ const Board = ({
 
             <div 
               id={`create-tag-container-${row.id}-${col.id}`}
-              className="hidden flex-col gap-1 p-2 border border-neutral-200 rounded bg-white shadow-sm"
+              className="hidden flex-col gap-1 p-2 border border-[#333] rounded bg-[#111] shadow-sm"
             >
               <input
                 id={`new-tag-${row.id}-${col.id}`}
                 type="text"
                 placeholder="Nome da tag..."
-                className="w-full px-2 py-1 text-xs border border-neutral-200 rounded outline-none focus:border-black"
+                className="w-full px-2 py-1 text-xs border border-[#333] rounded outline-none focus:border-[#B5FF03] text-white bg-[#111]"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') createAndAddTag();
                 }}
@@ -351,14 +351,14 @@ const Board = ({
                     const container = document.getElementById(`create-tag-container-${row.id}-${col.id}`);
                     if (container) container.style.display = 'none';
                   }}
-                  className="flex-1 px-2 py-1 text-xs border border-neutral-200 rounded hover:bg-neutral-50 transition-colors"
+                  className="flex-1 px-2 py-1 text-xs border border-[#333] rounded hover:bg-[#222] transition-colors text-white"
                 >
                   Cancelar
                 </button>
                 <button
                   type="button"
                   onClick={createAndAddTag}
-                  className="flex-1 px-2 py-1 text-xs bg-black text-white rounded hover:bg-neutral-800 transition-colors"
+                   className="flex-1 px-2 py-1 text-xs bg-[#B5FF03] text-black rounded hover:bg-[#a1e600] transition-colors"
                 >
                   Criar
                 </button>
@@ -374,13 +374,13 @@ const Board = ({
             value={String(value)}
             onChange={(e) => handleCellChange(row.id, col.id, e.target.value)}
             onKeyDown={(e) => e.stopPropagation()}
-            className="w-full min-h-[36px] bg-transparent border-none outline-none text-sm px-3 py-2 text-black hover:bg-neutral-100 focus:bg-neutral-50 transition-colors"
+                  className="w-full min-h-[36px] bg-transparent border-none outline-none text-sm px-3 py-2 text-white hover:bg-[#111] focus:bg-[#222] transition-colors"
           />
         );
       case 'notes':
         return (
           <div className="relative group cursor-pointer" onClick={(e) => e.stopPropagation()}>
-            <div className="w-full min-h-[36px] px-3 py-2 text-sm text-neutral-600 truncate">
+            <div className="w-full min-h-[36px] px-3 py-2 text-sm text-neutral-300 truncate">
               {String(value) || 'Clique para editar...'}
             </div>
             <button
@@ -390,7 +390,7 @@ const Board = ({
                 });
                 window.dispatchEvent(event);
               }}
-              className="absolute inset-0 opacity-0 group-hover:opacity-100 bg-black/20 flex items-center justify-center transition-opacity"
+              className="absolute inset-0 opacity-0 group-hover:opacity-100 bg-black/40 flex items-center justify-center transition-opacity"
             >
               <Edit3 size={14} className="text-white" />
             </button>
@@ -405,22 +405,22 @@ const Board = ({
     <div className="mb-8">
       <div className="flex items-center gap-3 mb-3">
         <div className="w-3 h-8 rounded-full" style={{ backgroundColor: board.color }} />
-        <h2 className="text-xl font-black text-black">{board.title}</h2>
-        <button onClick={onAddColumn} className="px-3 py-1 text-xs font-bold text-neutral-500 hover:text-black hover:bg-neutral-100 rounded-md transition-colors">
+        <h2 className="text-xl font-black text-white">{board.title}</h2>
+        <button onClick={onAddColumn}           className="px-3 py-1 text-xs font-bold text-neutral-400 hover:text-white hover:bg-[#222] rounded-md transition-colors">
           + Coluna
         </button>
-        <button onClick={onDeleteBoard} className="ml-auto text-neutral-400 hover:text-red-500"><Trash2 size={16} /></button>
+        <button onClick={onDeleteBoard} className="ml-auto text-neutral-400 hover:text-red-400"><Trash2 size={16} /></button>
       </div>
-      <div className="border rounded-2xl border-neutral-200 bg-white overflow-hidden flex flex-col">
+        <div className="border rounded-2xl border-[#333] bg-[#111] overflow-hidden flex flex-col">
         <div className="overflow-x-auto overflow-y-auto max-h-[600px]">
           <table className="w-full border-collapse">
             <thead className="sticky top-0 z-10">
-              <tr className="border-b border-neutral-200 bg-neutral-100">
-                <th className="w-10 p-3 border-r border-neutral-200 text-black">#</th>
+              <tr className="border-b border-[#333] bg-[#0a0a0a]">
+                <th className="w-10 p-3 border-r border-[#333] text-white font-bold">#</th>
                 {board.columns.map(col => (
                   <th 
                     key={col.id} 
-                    className="p-3 border-l border-neutral-200 text-left text-[10px] font-black uppercase tracking-widest text-neutral-600 whitespace-nowrap group hover:bg-neutral-50 transition-colors" 
+                     className="p-3 border-l border-[#333] text-left text-[10px] font-black uppercase tracking-widest text-white whitespace-nowrap group hover:bg-[#222] transition-colors" 
                     style={{ minWidth: col.width }}
                   >
                     <div className="flex items-center justify-between">
@@ -438,7 +438,7 @@ const Board = ({
                   </th>
                 ))}
                 {role === 'admin' && (
-                  <th className="p-3 border-l border-neutral-200 text-left text-[10px] font-black uppercase tracking-widest text-neutral-600 whitespace-nowrap">
+                  <th className="p-3 border-l border-[#333] text-left text-[10px] font-black uppercase tracking-widest text-white whitespace-nowrap">
                     Última Modificação
                   </th>
                 )}
@@ -446,17 +446,17 @@ const Board = ({
             </thead>
             <tbody>
               {board.rows.map(row => (
-                <tr key={row.id} className="border-b border-neutral-200 hover:bg-neutral-50">
-                  <td className="p-3 border-r border-neutral-200 text-center">
-                    <button onClick={() => handleDeleteRow(row.id)} className="text-neutral-400 hover:text-red-500"><Trash2 size={14} /></button>
+                <tr key={row.id} className="border-b border-[#1a1a1a] hover:bg-[#111]">
+                  <td className="p-3 border-r border-[#333] text-center">
+                    <button onClick={() => handleDeleteRow(row.id)} className="text-neutral-400 hover:text-red-400"><Trash2 size={14} /></button>
                   </td>
                   {board.columns.map(col => (
-                    <td key={col.id} className="p-0 border-l border-neutral-200">
+                    <td key={col.id} className="p-0 border-l border-[#333]">
                       {renderCell(row, col)}
                     </td>
                   ))}
                   {role === 'admin' && (
-                    <td className="p-3 border-l border-neutral-200 text-sm text-neutral-500">
+                    <td className="p-3 border-l border-[#333] text-sm text-neutral-400">
                       {row.lastModifiedBy || '—'}
                     </td>
                   )}
@@ -465,8 +465,8 @@ const Board = ({
             </tbody>
           </table>
         </div>
-        <div className="p-3 border-t border-neutral-200 bg-neutral-50">
-          <button onClick={handleAddRow} className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-neutral-500 hover:text-black hover:bg-neutral-100 rounded-lg transition-colors">
+        <div className="p-3 border-t border-[#333] bg-[#111]">
+          <button onClick={handleAddRow} className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-neutral-400 hover:text-white hover:bg-[#222] rounded-lg transition-colors">
             <Plus size={16} /> Nova Linha
           </button>
         </div>
@@ -573,19 +573,19 @@ const Tarefas = () => {
       width: newColumnData.width,
       options:
         newColumnData.type === 'status' ? [
-          { id: 'st-1', label: 'Pendente', color: '#6b7280' },
-          { id: 'st-2', label: 'Em Andamento', color: '#3b82f6' },
-          { id: 'st-3', label: 'Concluído', color: '#22c55e' },
+  { id: 'st-1', label: 'Pendente', color: '#6b7280' },
+  { id: 'st-2', label: 'Em Andamento', color: '#f59e0b' },
+  { id: 'st-3', label: 'Concluído', color: '#B5FF03' },
         ] :
         newColumnData.type === 'priority' ? [
-          { id: 'pr-1', label: 'Baixa', color: '#94a3b8' },
-          { id: 'pr-2', label: 'Media', color: '#f59e0b' },
-          { id: 'pr-3', label: 'Alta', color: '#ef4444' },
+  { id: 'pr-1', label: 'Baixa', color: '#6b7280' },
+  { id: 'pr-2', label: 'Media', color: '#f59e0b' },
+  { id: 'pr-3', label: 'Alta', color: '#ef4444' },
         ] :
         newColumnData.type === 'tags' ? [
-          { id: 'tg-1', label: 'Urgente', color: '#ef4444' },
-          { id: 'tg-2', label: 'Importante', color: '#f59e0b' },
-          { id: 'tg-3', label: 'Normal', color: '#3b82f6' },
+  { id: 'tg-1', label: 'Urgente', color: '#ef4444' },
+  { id: 'tg-2', label: 'Importante', color: '#f59e0b' },
+  { id: 'tg-3', label: 'Normal', color: '#B5FF03' },
         ] :
         undefined,
     };
@@ -611,17 +611,17 @@ const Tarefas = () => {
   };
 
   return (
-    <div className="p-6 space-y-8 min-h-screen">
+    <div className="p-6 space-y-8 min-h-screen bg-black">
       <div className="flex flex-wrap gap-3 mb-6">
         <button 
           onClick={() => setShowCreateTaskModal(true)}
-          className="flex items-center gap-2 px-6 py-3 bg-black text-white font-black rounded-lg hover:bg-neutral-800 transition-colors"
+          className="flex items-center gap-2 px-6 py-3 bg-[#B5FF03] text-black font-black rounded-lg hover:bg-[#a1e600] transition-colors"
         >
           <Plus size={20} /> Nova Tarefa
         </button>
         <button 
           onClick={() => setShowNewBoardModal(true)}
-          className="flex items-center gap-2 px-6 py-3 bg-white border-2 border-neutral-200 text-black font-black rounded-lg hover:border-black hover:bg-neutral-50 transition-colors"
+          className="flex items-center gap-2 px-6 py-3 bg-transparent border-2 border-[#B5FF03] text-[#B5FF03] font-black rounded-lg hover:bg-[#B5FF03]/10 transition-colors"
         >
           <Plus size={20} /> Novo Quadro
         </button>
@@ -641,23 +641,23 @@ const Tarefas = () => {
 
       {showCreateTaskModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="bg-white border border-neutral-200 rounded-2xl p-8 max-w-md w-full shadow-2xl">
-            <h3 className="text-xl font-black text-black mb-6">Qual quadro deseja criar a tarefa?</h3>
+          <div className="bg-[#111] border border-[#333] rounded-2xl p-8 max-w-md w-full shadow-2xl">
+            <h3 className="text-xl font-black text-white mb-6">Qual quadro deseja criar a tarefa?</h3>
             <div className="space-y-3">
               {boards.map(board => (
                 <button
                   key={board.id}
                   onClick={() => handleCreateNewTask(board.id)}
-                  className="w-full p-4 text-left border border-neutral-200 rounded-lg hover:bg-neutral-50 hover:border-neutral-300 transition-colors flex items-center gap-3"
+                  className="w-full p-4 text-left border border-[#333] rounded-lg hover:bg-[#222] hover:border-[#B5FF03] transition-colors flex items-center gap-3"
                 >
                   <div className="w-4 h-4 rounded-full" style={{ backgroundColor: board.color }} />
-                  <span className="font-bold text-black">{board.title}</span>
+                  <span className="font-bold text-white">{board.title}</span>
                 </button>
               ))}
             </div>
             <button
               onClick={() => setShowCreateTaskModal(false)}
-              className="w-full mt-6 p-3 border border-neutral-200 rounded-lg text-neutral-600 hover:text-black hover:bg-neutral-50 transition-colors"
+              className="w-full mt-6 p-3 border border-[#333] rounded-lg text-neutral-400 hover:text-white hover:bg-[#222] transition-colors"
             >
               Cancelar
             </button>
@@ -667,27 +667,27 @@ const Tarefas = () => {
 
       {showNewBoardModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="bg-white border border-neutral-200 rounded-2xl p-8 max-w-md w-full shadow-2xl">
-            <h3 className="text-xl font-black text-black mb-6">Criar Novo Quadro</h3>
+          <div className="bg-[#111] border border-[#333] rounded-2xl p-8 max-w-md w-full shadow-2xl">
+            <h3 className="text-xl font-black text-white mb-6">Criar Novo Quadro</h3>
             <div className="space-y-5">
               <div>
-                <label className="block text-xs font-black text-neutral-500 uppercase tracking-widest mb-2">Nome do Quadro</label>
+                <label className="block text-xs font-black text-neutral-400 uppercase tracking-widest mb-2">Nome do Quadro</label>
                 <input
                   type="text"
                   value={newBoardTitle}
                   onChange={(e) => setNewBoardTitle(e.target.value)}
                   placeholder="Ex: Projetos, Vendas, Leads..."
-                  className="w-full px-4 py-3 border-2 border-neutral-200 rounded-lg font-bold text-black focus:border-black outline-none transition-colors"
+                  className="w-full px-4 py-3 border-2 border-[#333] rounded-lg font-bold text-white focus:border-[#B5FF03] outline-none transition-colors bg-[#111]"
                 />
               </div>
               <div>
-                <label className="block text-xs font-black text-neutral-500 uppercase tracking-widest mb-2">Cor</label>
+                <label className="block text-xs font-black text-neutral-400 uppercase tracking-widest mb-2">Cor</label>
                 <div className="flex gap-2 flex-wrap">
                   {PRESET_COLORS.map(color => (
                     <button
                       key={color}
                       onClick={() => setNewBoardColor(color)}
-                      className={`w-10 h-10 rounded-full transition-all ${newBoardColor === color ? 'scale-110 ring-2 ring-offset-2 ring-black' : 'hover:scale-105'}`}
+                      className={`w-10 h-10 rounded-full transition-all ${newBoardColor === color ? 'scale-110 ring-2 ring-offset-2 ring-[#B5FF03]' : 'hover:scale-105'}`}
                       style={{ backgroundColor: color }}
                     />
                   ))}
@@ -704,9 +704,9 @@ const Tarefas = () => {
               <button
                 onClick={handleCreateNewBoard}
                 disabled={!newBoardTitle.trim()}
-                className="flex-1 p-3 bg-black text-white rounded-lg font-bold hover:bg-neutral-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Criar Quadro
+                className="flex-1 p-3 bg-[#B5FF03] text-black rounded-lg font-bold hover:bg-[#a1e600] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+               >
+                  Criar Quadro
               </button>
             </div>
           </div>
@@ -715,22 +715,22 @@ const Tarefas = () => {
 
       {showAddColumnModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="bg-white border border-neutral-200 rounded-2xl p-8 max-w-md w-full shadow-2xl">
+          <div className="bg-[#111] border border-[#333] rounded-2xl p-8 max-w-md w-full shadow-2xl">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-black text-black">Adicionar Coluna</h3>
+              <h3 className="text-xl font-black text-white">Adicionar Coluna</h3>
               <button onClick={() => setShowAddColumnModal(false)} className="text-neutral-400 hover:text-black">
                 <X size={20} />
               </button>
             </div>
             <div className="space-y-5">
               <div>
-                <label className="block text-xs font-black text-neutral-500 uppercase tracking-widest mb-2">Nome da Coluna</label>
+                <label className="block text-xs font-black text-neutral-400 uppercase tracking-widest mb-2">Nome da Coluna</label>
                 <input
                   type="text"
                   value={newColumnData.title}
                   onChange={(e) => setNewColumnData({ ...newColumnData, title: e.target.value })}
                   placeholder="Ex: Descrição, Valor, Data..."
-                  className="w-full px-4 py-3 border-2 border-neutral-200 rounded-lg font-bold text-black focus:border-black outline-none transition-colors"
+                  className="w-full px-4 py-3 border-2 border-[#333] rounded-lg font-bold text-white focus:border-[#B5FF03] outline-none transition-colors bg-[#111]"
                 />
               </div>
               <div>
@@ -740,7 +740,7 @@ const Tarefas = () => {
                     <button
                       key={ct.type}
                       onClick={() => setNewColumnData({ ...newColumnData, type: ct.type })}
-                      className={`p-3 rounded-lg border-2 text-left transition-colors ${newColumnData.type === ct.type ? 'border-black bg-black text-white' : 'border-neutral-200 hover:border-neutral-300'}`}
+                      className={`p-3 rounded-lg border-2 text-left transition-colors ${newColumnData.type === ct.type ? 'border-[#B5FF03] bg-black text-[#B5FF03]' : 'border-[#333] hover:border-[#555]'}`}
                     >
                       <span className="text-sm">{ct.icon}</span>
                       <span className="ml-2 text-xs font-bold">{ct.label}</span>
@@ -754,23 +754,23 @@ const Tarefas = () => {
                   type="number"
                   value={newColumnData.width}
                   onChange={(e) => setNewColumnData({ ...newColumnData, width: Number(e.target.value) })}
-                  className="w-full px-4 py-3 border-2 border-neutral-200 rounded-lg font-bold text-black focus:border-black outline-none transition-colors"
+                  className="w-full px-4 py-3 border-2 border-[#333] rounded-lg font-bold text-white focus:border-[#B5FF03] outline-none transition-colors bg-[#111]"
                 />
               </div>
             </div>
             <div className="flex gap-3 mt-8">
-              <button
-                onClick={() => setShowAddColumnModal(false)}
-                className="flex-1 p-3 border border-neutral-200 rounded-lg text-neutral-600 hover:text-black hover:bg-neutral-50 transition-colors font-bold"
-              >
-                Cancelar
+                <button
+                  onClick={() => setShowAddColumnModal(false)}
+                  className="flex-1 p-3 border border-[#333] rounded-lg text-neutral-400 hover:text-white hover:bg-[#222] transition-colors font-bold"
+                >
+                  Cancelar
               </button>
               <button
                 onClick={handleConfirmAddColumn}
                 disabled={!newColumnData.title.trim()}
-                className="flex-1 p-3 bg-black text-white rounded-lg font-bold hover:bg-neutral-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Adicionar
+                className="flex-1 p-3 bg-[#B5FF03] text-black rounded-lg font-bold hover:bg-[#a1e600] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+               >
+                  Adicionar
               </button>
             </div>
           </div>
@@ -779,10 +779,10 @@ const Tarefas = () => {
 
       {editingNote && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="bg-white border border-neutral-200 rounded-2xl p-8 max-w-2xl w-full shadow-2xl">
+          <div className="bg-[#111] border border-[#333] rounded-2xl p-8 max-w-2xl w-full shadow-2xl">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-black text-black">Editar Notas</h3>
-              <button onClick={() => { setEditingNote(null); setNoteContent(''); }} className="text-neutral-400 hover:text-black">
+              <h3 className="text-xl font-black text-white">Editar Notas</h3>
+              <button onClick={() => { setEditingNote(null); setNoteContent(''); }} className="text-neutral-400 hover:text-white">
                 <X size={20} />
               </button>
             </div>
@@ -791,7 +791,7 @@ const Tarefas = () => {
               onChange={(e) => setNoteContent(e.target.value)}
               rows={16}
               autoFocus
-              className="w-full px-4 py-3 border-2 border-neutral-200 rounded-xl font-medium text-black focus:border-black outline-none transition-colors resize-none leading-relaxed"
+                className="w-full px-4 py-3 border-2 border-[#333] rounded-xl font-medium text-white focus:border-[#B5FF03] outline-none transition-colors resize-none leading-relaxed bg-[#111]"
               placeholder="Digite suas notas aqui..."
             />
             <div className="flex gap-3 mt-6">
@@ -803,9 +803,9 @@ const Tarefas = () => {
               </button>
               <button
                 onClick={handleSaveNote}
-                className="flex-1 p-3 bg-black text-white rounded-lg font-bold hover:bg-neutral-800 transition-colors"
-              >
-                Salvar Nota
+                className="flex-1 p-3 bg-[#B5FF03] text-black rounded-lg font-bold hover:bg-[#a1e600] transition-colors"
+               >
+                  Salvar Nota
               </button>
             </div>
           </div>
