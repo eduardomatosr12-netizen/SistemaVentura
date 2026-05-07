@@ -1,11 +1,12 @@
 ﻿import { useState, useMemo, useRef, useEffect } from 'react';
 import { ReactNode } from 'react';
-import { Plus, Pencil, Trash2, X, Save, Filter, XCircle, ChevronDown, ChevronUp, AlertCircle, MessageCircle, Package } from 'lucide-react';
+import { Plus, Pencil, Trash2, X, Save, Filter, XCircle, ChevronDown, ChevronUp, AlertCircle, MessageCircle, Package, Search } from 'lucide-react';
 import { cleanPhoneNumber, generateWhatsAppLink, WHATSAPP_MESSAGE_TEMPLATES } from '../../lib/whatsapp';
 import { useCRM, type Lead, type OrcamentoItem } from '../../contexts/CRMContext';
 import { useFilters } from '../../contexts/FilterContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { generateUUID } from '../../lib/uuid';
+import { getAllInventoryItems, getAvailableQuantity, deductInventory, restoreInventory } from '../../lib/inventory';
 
 const formatBRL = (val: string) => {
   const numeric = val.replace(/\D/g, '');
@@ -117,9 +118,51 @@ const CRMOrçamentos = () => {
   const [newItemDesc, setNewItemDesc] = useState('');
   const [newItemQty, setNewItemQty] = useState(1);
   const [newItemVal, setNewItemVal] = useState(0);
+  const [invSearch, setInvSearch] = useState('');
+  const [showInvDropdown, setShowInvDropdown] = useState(false);
+  const [invStockItems, setInvStockItems] = useState<{ name: string; qty: number; category: string }[]>([]);
+  const invDropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    setInvStockItems(getAllInventoryItems());
+  }, []);
+
+  useEffect(() => {
+    if (isOpen) {
+      setInvStockItems(getAllInventoryItems());
+      setInvSearch('');
+      setShowInvDropdown(false);
+    }
+  }, [isOpen]);
+
+  const filteredInvItems = useMemo(() => {
+    if (!invSearch.trim()) return invStockItems.slice(0, 50);
+    const q = invSearch.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    return invStockItems.filter(i =>
+      i.name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').includes(q)
+    ).slice(0, 50);
+  }, [invStockItems, invSearch]);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (invDropdownRef.current && !invDropdownRef.current.contains(e.target as Node)) {
+        setShowInvDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const addItem = () => {
     if (!newItemDesc.trim()) return;
+
+    const eventDate = current.firstContact || '';
+    const available = getAvailableQuantity(newItemDesc.trim(), eventDate);
+    if (newItemQty > available) {
+      alert(`Estoque insuficiente! Disponível apenas: ${available}`);
+      return;
+    }
+
     const item: OrcamentoItem = {
       id: generateUUID(),
       descricao: newItemDesc.trim(),
@@ -132,6 +175,7 @@ const CRMOrçamentos = () => {
     const formatted = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(total);
     updateField('value', formatted);
     setNewItemDesc('');
+    setInvSearch('');
     setNewItemQty(1);
     setNewItemVal(0);
   };
@@ -142,6 +186,17 @@ const CRMOrçamentos = () => {
     const total = updatedItems.reduce((sum, i) => sum + i.quantidade * i.valorUnitario, 0);
     const formatted = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(total);
     updateField('value', formatted);
+  };
+
+  const handleItemSelect = (name: string) => {
+    setNewItemDesc(name);
+    setInvSearch(name);
+    setShowInvDropdown(false);
+
+    const found = invStockItems.find(i => i.name === name);
+    if (found) {
+      setNewItemVal(found.qty > 0 ? 0 : 0);
+    }
   };
 
   const uniqueNiches = useMemo(() => {
@@ -190,6 +245,7 @@ const CRMOrçamentos = () => {
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
+    const isFechado = current.stage === 'Contrato Fechado';
     const modifiedLead = {
       ...current,
         lastModifiedBy: employeeName || (role === 'admin' ? 'Administrador' : 'Funcionário')
@@ -197,8 +253,26 @@ const CRMOrçamentos = () => {
     
     if (mode === 'add') {
       addLead(modifiedLead as Omit<Lead, 'id'>);
+      if (isFechado && current.items && current.items.length > 0) {
+        current.items.forEach(item => deductInventory(item.descricao, item.quantidade));
+      }
     } else {
+      const prevLead = Orçamentos.find(o => o.id === current.id);
+      const wasFechado = prevLead?.stage === 'Contrato Fechado';
+
+      if (wasFechado && !isFechado) {
+        if (prevLead?.items) {
+          prevLead.items.forEach(item => restoreInventory(item.descricao, item.quantidade));
+        }
+      }
+
       updateLead(current.id!, modifiedLead);
+
+      if (isFechado && current.items && current.items.length > 0) {
+        if (!wasFechado) {
+          current.items.forEach(item => deductInventory(item.descricao, item.quantidade));
+        }
+      }
     }
     setIsOpen(false);
   };
@@ -722,20 +796,60 @@ const CRMOrçamentos = () => {
                      </div>
                    )}
 
-                   <div className="flex items-center gap-2">
-                     <input
-                       type="text"
-                       value={newItemDesc}
-                       onChange={e => setNewItemDesc(e.target.value)}
-                       placeholder="Descrição do item"
-                       className="flex-1 bg-[#1a1a1a] border border-gray-700 rounded-md py-2 px-3 text-white text-xs placeholder-gray-500 focus:outline-none focus:border-[#B5FF03] transition-colors"
-                       onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addItem(); } }}
-                     />
+                   <div className="flex items-center gap-2 relative" ref={invDropdownRef}>
+                     <div className="flex-1 relative">
+                       <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-neutral-500" />
+                       <input
+                         type="text"
+                         value={invSearch}
+                         onChange={e => {
+                           setInvSearch(e.target.value);
+                           setNewItemDesc(e.target.value);
+                           setShowInvDropdown(true);
+                         }}
+                         onFocus={() => setShowInvDropdown(true)}
+                         placeholder="Buscar produto no estoque..."
+                         className="w-full bg-[#1a1a1a] border border-gray-700 rounded-md py-2 pl-8 pr-3 text-white text-xs placeholder-gray-500 focus:outline-none focus:border-[#B5FF03] transition-colors"
+                       />
+                       {showInvDropdown && (
+                         <div className="absolute z-50 top-full mt-1 left-0 right-0 bg-[#1a1a1a] border border-[#333] rounded-md shadow-xl max-h-48 overflow-y-auto">
+                           {filteredInvItems.length === 0 ? (
+                             <p className="px-3 py-3 text-xs text-neutral-500 text-center">Nenhum produto encontrado no estoque</p>
+                           ) : (
+                             filteredInvItems.map(item => {
+                               const available = getAvailableQuantity(item.name, current.firstContact || '');
+                               return (
+                                 <button
+                                   key={item.name}
+                                   type="button"
+                                   onClick={() => handleItemSelect(item.name)}
+                                   className="w-full text-left px-3 py-2 text-xs text-white hover:bg-[#333] transition-colors border-b border-[#222] last:border-b-0 flex items-center justify-between"
+                                 >
+                                   <span className="font-medium truncate mr-2">{item.name}</span>
+                                   <span className={`whitespace-nowrap shrink-0 ${available > 0 ? 'text-neutral-400' : 'text-red-500'}`}>
+                                     Disp: {available}
+                                   </span>
+                                 </button>
+                               );
+                             })
+                           )}
+                         </div>
+                       )}
+                     </div>
                      <input
                        type="number"
                        min="1"
                        value={newItemQty}
-                       onChange={e => setNewItemQty(parseInt(e.target.value) || 1)}
+                       onChange={e => {
+                         const qty = parseInt(e.target.value) || 1;
+                         setNewItemQty(qty);
+                         if (newItemDesc.trim()) {
+                           const available = getAvailableQuantity(newItemDesc.trim(), current.firstContact || '');
+                           if (qty > available && available > 0) {
+                             alert(`Estoque insuficiente! Disponível apenas: ${available}`);
+                           }
+                         }
+                       }}
                        className="w-14 bg-[#1a1a1a] border border-gray-700 rounded-md py-2 px-2 text-white text-xs text-center focus:outline-none focus:border-[#B5FF03] transition-colors"
                        placeholder="Qtd"
                      />
