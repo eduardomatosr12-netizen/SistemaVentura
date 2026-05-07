@@ -15,7 +15,6 @@ import OrçamentosPage from './pages/crm/Orçamentos';
 import CRMPipeline from './pages/crm/Pipeline';
 import CRMCalendario from './pages/crm/Calendario';
 import CRMImportar from './pages/crm/Importar';
-import CRMIntegracoes from './pages/crm/Integracoes';
 import Financeiro from './pages/financeiro/Index';
 import Tarefas from './pages/tarefas/Index';
 import Configuracoes from './pages/configuracoes/Index';
@@ -102,17 +101,7 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
-      <Route
-        path="/crm/integracoes"
-        element={
-          <ProtectedRoute allowedRoles={['admin']}>
-            <MainLayout>
-              <CRMIntegracoes />
-            </MainLayout>
-          </ProtectedRoute>
-        }
-      />
-
+      
       {/* Redirect /crm to /crm/painel */}
       <Route path="/crm" element={<Navigate to="/crm/painel" replace />} />
 

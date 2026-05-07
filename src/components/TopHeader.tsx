@@ -14,7 +14,6 @@ const routeTitles: Record<string, { title: string; subtitle: string }> = {
   '/crm/pipeline': { title: 'Pipeline', subtitle: 'Progresso das oportunidades' },
   '/crm/calendario': { title: 'Calendário', subtitle: 'Compromissos e agendamentos' },
   '/crm/importar': { title: 'Importar', subtitle: 'Importação de dados externos' },
-  '/crm/integracoes': { title: 'Integrações', subtitle: 'Conexões com outras plataformas' },
   '/financeiro': { title: 'Financeiro', subtitle: 'Receitas, despesas e fluxo de caixa' },
   '/tarefas': { title: 'Controle de Estoque', subtitle: 'Gerencie seus itens, categorias e fornecedores.' },
   '/configuracoes': { title: 'Configurações', subtitle: 'Preferências da aplicação' },
