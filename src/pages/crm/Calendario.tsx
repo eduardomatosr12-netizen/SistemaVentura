@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useCRM } from '../../contexts/CRMContext';
 import type { CalendarEvent } from '../../contexts/CRMContext';
 import { generateUUID } from '../../lib/uuid';
-import { X, ExternalLink, Clock, User, MessageSquare, Plus, Trash2, Calendar as CalendarIcon, Link as LinkIcon, FileText, ChevronLeft, ChevronRight } from 'lucide-react';
+import { X, ExternalLink, Clock, User, Users, MessageSquare, Plus, Trash2, Calendar as CalendarIcon, Link as LinkIcon, FileText, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const CRMCalendario = () => {
   const { events, addEvent, updateEvent, deleteEvent } = useCRM();
@@ -17,11 +17,13 @@ const CRMCalendario = () => {
   // Form State
   const [formData, setFormData] = useState<Omit<CalendarEvent, 'id'>>({
     title: '',
-    activityType: 'Reunião',
-    dateTime: '',
-    createdBy: '',
+    eventType: 'Reunião',
+    date: '',
+    client: '',
+    city: '',
+    decorator: '',
     description: '',
-    meetingLink: ''
+    equipe: ''
   });
 
   const days = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
@@ -50,20 +52,9 @@ const CRMCalendario = () => {
     }
   };
 
-  const formatTime = (dateStr?: string) => {
-    if (!dateStr) return '--:--';
-    const date = new Date(dateStr);
-    if (isNaN(date.getTime())) return '--:--';
-    try {
-      return date.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-    } catch (e) {
-      return '--:--';
-    }
-  };
-
   const formatDate = (dateStr?: string) => {
     if (!dateStr) return '--/--';
-    const date = new Date(dateStr);
+    const date = new Date(dateStr + 'T12:00:00');
     if (isNaN(date.getTime())) return '--/--';
     try {
       return date.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
@@ -74,24 +65,26 @@ const CRMCalendario = () => {
 
   const getEventsForDay = (day: number) => {
     return safeEvents.filter(e => {
-      if (!e?.dateTime) return false;
-      const d = new Date(e.dateTime);
+      if (!e?.date) return false;
+      const d = new Date(e.date + 'T12:00:00');
       if (isNaN(d.getTime())) return false;
       return d.getDate() === day && d.getMonth() === currentMonth && d.getFullYear() === currentYear;
     });
   };
 
   const handleOpenCreate = () => {
-    const defaultDate = new Date(currentYear, currentMonth, today.getDate(), 10, 0);
-    const dateStr = defaultDate.toISOString().slice(0, 16);
+    const defaultDate = new Date(currentYear, currentMonth, today.getDate());
+    const dateStr = defaultDate.toISOString().slice(0, 10);
     setModalMode('create');
     setFormData({
       title: '',
-      activityType: 'Reunião',
-      dateTime: dateStr,
-      createdBy: '',
+      eventType: 'Reunião',
+      date: dateStr,
+      client: '',
+      city: '',
+      decorator: '',
       description: '',
-      meetingLink: ''
+      equipe: ''
     });
     setSelectedEvent(null);
     setIsModalOpen(true);
@@ -102,11 +95,13 @@ const CRMCalendario = () => {
     setSelectedEvent(event);
     setFormData({
       title: event.title || '',
-      activityType: event.activityType || 'Reunião',
-      dateTime: event.dateTime || '',
-      createdBy: event.createdBy || '',
+      eventType: event.eventType || 'Reunião',
+      date: event.date || '',
+      client: event.client || '',
+      city: event.city || '',
+      decorator: event.decorator || '',
       description: event.description || '',
-      meetingLink: event.meetingLink || ''
+      equipe: event.equipe || ''
     });
     setIsModalOpen(true);
   };
@@ -212,12 +207,12 @@ const CRMCalendario = () => {
                           onClick={() => handleOpenEdit(event)}
                            className="w-full text-left p-1.5 rounded-md bg-[#111] border border-[#333] hover:border-[#B5FF03] transition-all group overflow-hidden"
                          >
-                           <div className="text-[9px] font-black text-[#B5FF03] leading-none mb-1">
-                             {formatTime(event?.dateTime)}
-                           </div>
-                           <div className="text-[9px] font-bold text-neutral-400 truncate leading-none">
-                             {event?.activityType || 'Atividade'}
-                           </div>
+                            <div className="text-[9px] font-black text-[#B5FF03] leading-none mb-1">
+                              {formatDate(event?.date)}
+                            </div>
+                            <div className="text-[9px] font-bold text-neutral-400 truncate leading-none">
+                              {event?.eventType || 'Evento'}
+                            </div>
                         </button>
                       ))}
                     </div>
@@ -247,12 +242,12 @@ const CRMCalendario = () => {
                      <div>
                        <p className="text-[13px] font-black text-white group-hover:underline leading-tight">{event?.title || 'Sem título'}</p>
                        <div className="flex flex-wrap items-center gap-x-2 mt-1.5">
-                         <span className="text-[9px] font-black bg-[#111] text-neutral-400 px-1.5 py-0.5 rounded uppercase tracking-tighter">
-                           {event?.activityType || 'Atividade'}
-                         </span>
-                         <span className="text-[9px] text-neutral-500 font-bold uppercase tracking-tighter">
-                           {formatDate(event?.dateTime)} · {formatTime(event?.dateTime)}
-                         </span>
+                          <span className="text-[9px] font-black bg-[#111] text-neutral-400 px-1.5 py-0.5 rounded uppercase tracking-tighter">
+                            {event?.eventType || 'Evento'}
+                          </span>
+                          <span className="text-[9px] text-neutral-500 font-bold uppercase tracking-tighter">
+                            {formatDate(event?.date)}
+                          </span>
                        </div>
                      </div>
                    </div>
@@ -297,77 +292,91 @@ const CRMCalendario = () => {
                <div className="p-8 space-y-6">
                  <div className="grid grid-cols-2 gap-6">
                    <div className="space-y-2">
-                     <label className="flex items-center gap-2 text-[9px] font-black text-[#B5FF03] uppercase tracking-widest">
-                       <MessageSquare size={12} strokeWidth={3} className="text-[#B5FF03]" />
-                       TIPO DE ATIVIDADE
-                     </label>
-                     <select
-                       value={formData.activityType}
-                       onChange={(e) => setFormData({ ...formData, activityType: e.target.value })}
-                       className="w-full bg-[#0a0a0a] border border-[#333] rounded-md px-3 py-2 text-xs font-black text-white focus:ring-1 focus:ring-[#B5FF03] outline-none transition-all"
-                     >
-                       <option value="Reunião">Reunião</option>
-                       <option value="Ligação">Ligação</option>
-                       <option value="Treinamento">Treinamento</option>
-                       <option value="Outro">Outro</option>
-                     </select>
+                      <label className="flex items-center gap-2 text-[9px] font-black text-[#B5FF03] uppercase tracking-widest">
+                        <MessageSquare size={12} strokeWidth={3} className="text-[#B5FF03]" />
+                        TIPO DE EVENTO
+                      </label>
+                      <select
+                        value={formData.eventType}
+                        onChange={(e) => setFormData({ ...formData, eventType: e.target.value })}
+                        className="w-full bg-[#0a0a0a] border border-[#333] rounded-md px-3 py-2 text-xs font-black text-white focus:ring-1 focus:ring-[#B5FF03] outline-none transition-all"
+                      >
+                        <option value="Reunião">Reunião</option>
+                        <option value="Ligação">Ligação</option>
+                        <option value="Treinamento">Treinamento</option>
+                        <option value="Outro">Outro</option>
+                      </select>
                    </div>
-                   <div className="space-y-2">
-                     <label className="flex items-center gap-2 text-[9px] font-black text-[#B5FF03] uppercase tracking-widest">
-                       <CalendarIcon size={12} strokeWidth={3} className="text-[#B5FF03]" />
-                       DATA E HORA
-                     </label>
-                     <input
-                       required
-                       type="datetime-local"
-                       value={formData.dateTime}
-                       onChange={(e) => setFormData({ ...formData, dateTime: e.target.value })}
-                       className="w-full bg-[#0a0a0a] border border-[#333] rounded-md px-3 py-2 text-xs font-black text-white focus:ring-1 focus:ring-[#B5FF03] outline-none transition-all [color-scheme:dark]"
-                     />
-                   </div>
+                    <div className="space-y-2">
+                      <label className="flex items-center gap-2 text-[9px] font-black text-[#B5FF03] uppercase tracking-widest">
+                        <CalendarIcon size={12} strokeWidth={3} className="text-[#B5FF03]" />
+                        DATA
+                      </label>
+                      <input
+                        required
+                        type="date"
+                        value={formData.date}
+                        onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                        className="w-full bg-[#0a0a0a] border border-[#333] rounded-md px-3 py-2 text-xs font-black text-white focus:ring-1 focus:ring-[#B5FF03] outline-none transition-all [color-scheme:dark]"
+                      />
+                    </div>
                  </div>
 
-                 <div className="space-y-2">
-                   <label className="flex items-center gap-2 text-[9px] font-black text-[#B5FF03] uppercase tracking-widest">
-                     <User size={12} strokeWidth={3} className="text-[#B5FF03]" />
-                     QUEM AGENDOU
-                   </label>
-                   <input
-                     type="text"
-                     value={formData.createdBy}
-                     onChange={(e) => setFormData({ ...formData, createdBy: e.target.value })}
-                     placeholder="Nome do responsável"
-                     className="w-full bg-[#0a0a0a] border border-[#333] rounded-md px-3 py-2 text-xs font-black text-white focus:ring-1 focus:ring-[#B5FF03] outline-none transition-all"
-                   />
-                 </div>
+                  <div className="space-y-2">
+                    <label className="flex items-center gap-2 text-[9px] font-black text-[#B5FF03] uppercase tracking-widest">
+                      <User size={12} strokeWidth={3} className="text-[#B5FF03]" />
+                      CLIENTE
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.client}
+                      onChange={(e) => setFormData({ ...formData, client: e.target.value })}
+                      placeholder="Nome do cliente"
+                      className="w-full bg-[#0a0a0a] border border-[#333] rounded-md px-3 py-2 text-xs font-black text-white focus:ring-1 focus:ring-[#B5FF03] outline-none transition-all"
+                    />
+                  </div>
 
-                 <div className="space-y-2">
-                   <label className="flex items-center gap-2 text-[9px] font-black text-[#B5FF03] uppercase tracking-widest">
-                     <LinkIcon size={12} strokeWidth={3} className="text-[#B5FF03]" />
-                     LINK DA REUNIÃO
-                   </label>
-                   <input
-                     type="url"
-                     value={formData.meetingLink}
-                     onChange={(e) => setFormData({ ...formData, meetingLink: e.target.value })}
-                     placeholder="https://meet.google.com/..."
-                     className="w-full bg-[#0a0a0a] border border-[#333] rounded-md px-3 py-2 text-xs font-black text-white focus:ring-1 focus:ring-[#B5FF03] outline-none transition-all"
-                   />
-                 </div>
+                  <div className="space-y-2">
+                    <label className="flex items-center gap-2 text-[9px] font-black text-[#B5FF03] uppercase tracking-widest">
+                      <User size={12} strokeWidth={3} className="text-[#B5FF03]" />
+                      DECORADOR
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.decorator}
+                      onChange={(e) => setFormData({ ...formData, decorator: e.target.value })}
+                      placeholder="Nome do decorador"
+                      className="w-full bg-[#0a0a0a] border border-[#333] rounded-md px-3 py-2 text-xs font-black text-white focus:ring-1 focus:ring-[#B5FF03] outline-none transition-all"
+                    />
+                  </div>
 
-                 <div className="space-y-2">
-                   <label className="flex items-center gap-2 text-[9px] font-black text-[#B5FF03] uppercase tracking-widest">
-                     <FileText size={12} strokeWidth={3} className="text-[#B5FF03]" />
-                     DESCRIÇÃO
-                   </label>
-                   <textarea
-                     rows={3}
-                     value={formData.description}
-                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                     placeholder="Adicione observações importantes..."
-                     className="w-full bg-[#0a0a0a] border border-[#333] rounded-md px-3 py-2 text-xs font-bold text-white focus:ring-1 focus:ring-[#B5FF03] outline-none transition-all resize-none"
-                   />
-                 </div>
+                  <div className="space-y-2">
+                    <label className="flex items-center gap-2 text-[9px] font-black text-[#B5FF03] uppercase tracking-widest">
+                      <FileText size={12} strokeWidth={3} className="text-[#B5FF03]" />
+                      DESCRIÇÃO
+                    </label>
+                    <textarea
+                      rows={3}
+                      value={formData.description}
+                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                      placeholder="Adicione observações importantes..."
+                      className="w-full bg-[#0a0a0a] border border-[#333] rounded-md px-3 py-2 text-xs font-bold text-white focus:ring-1 focus:ring-[#B5FF03] outline-none transition-all resize-none"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="flex items-center gap-2 text-[9px] font-black text-[#B5FF03] uppercase tracking-widest">
+                      <Users size={12} strokeWidth={3} className="text-[#B5FF03]" />
+                      EQUIPE
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.equipe}
+                      onChange={(e) => setFormData({ ...formData, equipe: e.target.value })}
+                      placeholder="Liste os membros da equipe para este evento"
+                      className="w-full bg-[#0a0a0a] border border-[#333] rounded-md px-3 py-2 text-xs font-black text-white focus:ring-1 focus:ring-[#B5FF03] outline-none transition-all"
+                    />
+                  </div>
                </div>
 
                <div className="px-8 py-5 bg-[#0a0a0a] flex justify-between items-center border-t border-[#333]">

@@ -26,11 +26,13 @@ export interface Lead {
 export interface CalendarEvent {
   id: string;
   title: string;
-  createdBy?: string;
-  activityType?: string;
-  dateTime: string;
-  meetingLink?: string;
+  client?: string;
+  eventType?: string;
+  date: string;
+  decorator?: string;
+  city?: string;
   description?: string;
+  equipe?: string;
 }
 
 export interface Notification {
@@ -102,27 +104,27 @@ const INITIAL_EVENTS: CalendarEvent[] = [
   {
     id: '1',
     title: 'Reunião com Cliente A',
-    createdBy: 'Admin',
-    activityType: 'Reunião',
-    dateTime: '2026-04-21T10:00:00',
-    meetingLink: 'https://meet.google.com/abc-defg-hij',
-    description: 'Apresentação do plano premium.'
+    client: 'Cliente A',
+    eventType: 'Reunião',
+    date: '2026-04-21',
+    decorator: 'Decorador',
+    city: 'São Paulo'
   },
   {
     id: '2',
     title: 'Follow-up Orçamentos',
-    createdBy: 'Vendedor 1',
-    activityType: 'Ligação',
-    dateTime: '2026-04-21T14:00:00',
-    description: 'Retornar contato para Orçamentos qualificados.'
+    client: 'Vendedor 1',
+    eventType: 'Ligação',
+    date: '2026-04-21',
+    city: 'Rio de Janeiro'
   },
   {
     id: '3',
     title: 'Revisão de Pipeline',
-    createdBy: 'Gerente',
-    activityType: 'Treinamento',
-    dateTime: '2026-04-22T16:00:00',
-    description: 'Alinhamento de metas semanais.'
+    client: 'Gerente',
+    eventType: 'Treinamento',
+    date: '2026-04-22',
+    city: 'Belo Horizonte'
   }
 ];
 
