@@ -227,16 +227,34 @@ const Board = ({
       case 'priority': {
         const options = col.options || [];
         const isCategory = col.id === 'col-2';
+        if (isCategory) {
+          return (
+            <div className="flex items-center gap-2 px-3 py-2">
+              {value && (
+                <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: getOptionColor(col.id, String(value)) }} />
+              )}
+              <select
+                value={String(value)}
+                onChange={(e) => handleCellChange(row.id, col.id, e.target.value)}
+                className="flex-1 min-h-[24px] bg-transparent border-none outline-none text-sm cursor-pointer font-bold"
+                style={{ color: value ? '#B5FF03' : '#888' }}
+              >
+                <option value="">—</option>
+                {options.map(opt => (
+                  <option key={opt.id} value={opt.label} className="bg-[#1a1a1a] text-white">
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          );
+        }
         return (
           <select
             value={String(value)}
             onChange={(e) => handleCellChange(row.id, col.id, e.target.value)}
-            className="w-full min-h-[36px] px-3 py-2 text-sm border-none outline-none cursor-pointer transition-colors"
-            style={{
-              backgroundColor: isCategory ? '#1a1a1a' : (value ? getOptionColor(col.id, String(value)) : '#6b7280'),
-              color: isCategory ? (value ? '#B5FF03' : '#888') : 'white',
-              fontWeight: isCategory ? 700 : 500,
-            }}
+            className="w-full min-h-[36px] px-2 py-1 text-sm border-none outline-none cursor-pointer text-white font-medium"
+            style={{ backgroundColor: value ? getOptionColor(col.id, String(value)) : '#6b7280' }}
           >
             <option value="">—</option>
             {options.map(opt => (
