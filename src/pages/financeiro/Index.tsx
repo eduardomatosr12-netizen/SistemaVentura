@@ -12,6 +12,7 @@ interface Invoice {
   date: string;
   status: 'Pago' | 'Pendente' | 'Vencida' | 'Cancelado';
   source?: 'manual' | 'lead' | 'asaas';
+  paymentMethod?: string;
   lastModifiedBy?: string;
 }
 
@@ -39,11 +40,15 @@ const EXPENSE_CATEGORIES = [
   { value: 'outros', label: 'Outros' },
 ];
 
-const ORIGINS = [
-  { value: 'asaas', label: 'Asaas' },
-  { value: 'manual', label: 'Manual' },
-  { value: 'lead', label: 'Lead Convertido' },
+const PAYMENT_METHODS = [
+  { value: 'pix', label: 'Pix' },
+  { value: 'credito', label: 'Cartão de Crédito' },
+  { value: 'boleto', label: 'Boleto' },
+  { value: 'parcelado', label: 'Parcelado (até 12x)' },
 ];
+
+const paymentMethodLabel = (value?: string) =>
+  PAYMENT_METHODS.find(pm => pm.value === value)?.label || value || '—';
 
 const INVOICE_STATUSES = ['Pago', 'Pendente', 'Vencida', 'Cancelado'];
 const EXPENSE_STATUSES = ['Pago', 'Pendente', 'Cancelado'];
@@ -189,6 +194,10 @@ const Financeiro = () => {
   useEffect(() => {
     localStorage.setItem(EXPENSES_KEY, JSON.stringify(expenses));
   }, [expenses]);
+
+  useEffect(() => {
+    localStorage.setItem('axium_finance_v1', JSON.stringify({ manualInvoices }));
+  }, [manualInvoices]);
     
   const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
   const [editingInvoice, setEditingInvoice] = useState<Invoice | null>(null);
@@ -203,10 +212,10 @@ const Financeiro = () => {
     await new Promise(resolve => setTimeout(resolve, 1500));
       
     const mockAsaas: Invoice[] = [
-      { id: 'PAY-827364', client: 'Clínica Sorriso', amount: 'R$ 15.000,00', date: '2026-04-20', status: 'Pago', source: 'asaas' },
-      { id: 'PAY-918273', client: 'João Silva', amount: 'R$ 5.000,00', date: '2026-04-21', status: 'Pago', source: 'asaas' },
-      { id: 'PAY-102938', client: 'Maria Santos', amount: 'R$ 8.000,00', date: '2026-04-25', status: 'Pendente', source: 'asaas' },
-      { id: 'PAY-445566', client: 'Odonto Master', amount: 'R$ 22.500,00', date: '2026-04-18', status: 'Pago', source: 'asaas' },
+      { id: 'PAY-827364', client: 'Clínica Sorriso', amount: 'R$ 15.000,00', date: '2026-04-20', status: 'Pago', source: 'asaas', paymentMethod: 'pix' },
+      { id: 'PAY-918273', client: 'João Silva', amount: 'R$ 5.000,00', date: '2026-04-21', status: 'Pago', source: 'asaas', paymentMethod: 'credito' },
+      { id: 'PAY-102938', client: 'Maria Santos', amount: 'R$ 8.000,00', date: '2026-04-25', status: 'Pendente', source: 'asaas', paymentMethod: 'boleto' },
+      { id: 'PAY-445566', client: 'Odonto Master', amount: 'R$ 22.500,00', date: '2026-04-18', status: 'Pago', source: 'asaas', paymentMethod: 'pix' },
     ];
       
     setAsaasInvoices(mockAsaas);
@@ -222,7 +231,8 @@ const Financeiro = () => {
       amount: l.value || 'R$ 0,00',
       date: l.closingDate || '—',
       status: 'Pago',
-      source: 'lead'
+      source: 'lead',
+      paymentMethod: 'pix',
     }));
     
   const allInvoices = useMemo(() => 
@@ -239,8 +249,8 @@ const Financeiro = () => {
       
     if (filtersState.origins?.length > 0) {
       result = result.filter(inv => {
-        const source = inv.source || 'manual';
-        return filtersState.origins.includes(source);
+        const method = inv.paymentMethod || '';
+        return filtersState.origins.includes(method);
       });
     }
       
@@ -350,21 +360,20 @@ const Financeiro = () => {
       
     const modifiedInvoice = {
       ...editingInvoice,
+      source: 'manual' as const,
       lastModifiedBy: employeeName || (role === 'admin' ? 'Administrador' : 'Funcionário')
     };
       
     if (isNewInvoice) {
       setManualInvoices(prev => [modifiedInvoice, ...prev]);
     } else {
-      if (editingInvoice.source === 'lead') {
-        alert('Faturas vinculadas a Orçamentos devem ser editadas no módulo de Orçamentos.');
-        return;
-      } else if (editingInvoice.source === 'asaas') {
-        alert('Faturas do Asaas são sincronizadas automaticamente e não podem ser editadas manualmente.');
-        return;
-      } else {
-        setManualInvoices(prev => prev.map(inv => inv.id === editingInvoice.id ? modifiedInvoice : inv));
-      }
+      setManualInvoices(prev => {
+        const exists = prev.find(inv => inv.id === editingInvoice.id);
+        if (exists) {
+          return prev.map(inv => inv.id === editingInvoice.id ? modifiedInvoice : inv);
+        }
+        return [modifiedInvoice, ...prev];
+      });
     }
     setIsInvoiceModalOpen(false);
   };
@@ -562,7 +571,7 @@ const Financeiro = () => {
                     <th className="text-left p-4 text-xs font-black uppercase tracking-widest text-[#B5FF03]">Valor</th>
                     <th className="text-left p-4 text-xs font-black uppercase tracking-widest text-[#B5FF03]">Data</th>
                     <th className="text-left p-4 text-xs font-black uppercase tracking-widest text-[#B5FF03]">Status</th>
-                    <th className="text-left p-4 text-xs font-black uppercase tracking-widest text-[#B5FF03]">Origem</th>
+                    <th className="text-left p-4 text-xs font-black uppercase tracking-widest text-[#B5FF03]">Pagamento</th>
                     <th className="text-right p-4 text-xs font-black uppercase tracking-widest text-[#B5FF03]">Ações</th>
                   </tr>
                 </thead>
@@ -578,12 +587,11 @@ const Financeiro = () => {
                           {invoice.status}
                         </span>
                       </td>
-                      <td className="p-4 text-sm text-[#888888]">{invoice.source || 'manual'}</td>
+                      <td className="p-4 text-sm text-[#888888]">{paymentMethodLabel(invoice.paymentMethod)}</td>
                       <td className="p-4 text-right">
                         <button
                           onClick={() => handleOpenInvoiceModal(invoice)}
-                          className="text-[#B5FF03] hover:text-white transition-colors mr-3"
-                          disabled={invoice.source !== 'manual'}
+                          className="text-[#B5FF03] hover:text-white transition-colors mr-3 cursor-pointer"
                         >
                           <Pencil size={16} />
                         </button>
@@ -706,17 +714,17 @@ const Financeiro = () => {
             </FilterSection>
 
             {activeTab === 'receitas' && (
-              <FilterSection title="Origem">
-                {ORIGINS.map(origin => (
+              <FilterSection title="Forma de Pagamento">
+                {PAYMENT_METHODS.map(pm => (
                   <CheckboxFilter
-                    key={origin.value}
-                    label={origin.label}
-                    checked={filtersState.origins.includes(origin.value)}
+                    key={pm.value}
+                    label={pm.label}
+                    checked={filtersState.origins.includes(pm.value)}
                     onChange={(checked) => {
                       if (checked) {
-                        setFiltersState(prev => ({ ...prev, origins: [...prev.origins, origin.value] }));
+                        setFiltersState(prev => ({ ...prev, origins: [...prev.origins, pm.value] }));
                       } else {
-                        setFiltersState(prev => ({ ...prev, origins: prev.origins.filter(o => o !== origin.value) }));
+                        setFiltersState(prev => ({ ...prev, origins: prev.origins.filter(o => o !== pm.value) }));
                       }
                     }}
                   />
@@ -821,6 +829,19 @@ const Financeiro = () => {
                 >
                   {INVOICE_STATUSES.map(status => (
                     <option key={status} value={status}>{status}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-black uppercase tracking-widest text-[#888888] mb-2">Forma de Pagamento</label>
+                <select
+                  value={editingInvoice.paymentMethod || ''}
+                  onChange={(e) => setEditingInvoice({ ...editingInvoice, paymentMethod: e.target.value })}
+                  className="w-full bg-[#111111] border border-[#222222] rounded px-3 py-2 text-sm text-white focus:border-[#B5FF03] outline-none transition-colors"
+                >
+                  <option value="">Selecionar</option>
+                  {PAYMENT_METHODS.map(pm => (
+                    <option key={pm.value} value={pm.value}>{pm.label}</option>
                   ))}
                 </select>
               </div>
