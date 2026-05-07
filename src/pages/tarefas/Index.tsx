@@ -38,6 +38,12 @@ const DEFAULT_STATUS_COLUMNS: ColumnOption[] = [
   { id: 'st-3', label: 'Concluído', color: '#B5FF03' },
 ];
 
+const CATEGORY_OPTIONS: ColumnOption[] = [
+  { id: 'cat-dec', label: 'Decoração', color: '#3b82f6' },
+  { id: 'cat-mov', label: 'Móveis', color: '#f59e0b' },
+  { id: 'cat-ilu', label: 'Iluminação', color: '#84cc16' },
+];
+
 const DEFAULT_PRIORITY_COLUMNS: ColumnOption[] = [
   { id: 'pr-1', label: 'Baixa', color: '#6b7280' },
   { id: 'pr-2', label: 'Média', color: '#f59e0b' },
@@ -59,12 +65,12 @@ const COLUMN_TYPES = [
 
 const DEFAULT_BOARD: BoardType = {
   id: 'board-1',
-  title: 'Inventário Geral',
+  title: 'Inventário de Itens',
   color: '#3b82f6',
   columns: [
     { id: 'col-1', title: 'ITEM', type: 'text', width: 250 },
-    { id: 'col-2', title: 'CATEGORIA', type: 'text', width: 150 },
-    { id: 'col-3', title: 'QTD. ATUAL', type: 'number', width: 120 },
+    { id: 'col-2', title: 'CATEGORIA', type: 'status', width: 150, options: CATEGORY_OPTIONS },
+    { id: 'col-3', title: 'QTD. ATUAL', type: 'number', width: 140 },
     { id: 'col-4', title: 'ESTOQUE MÍNIMO', type: 'number', width: 130 },
     { id: 'col-5', title: 'FORNECEDOR', type: 'text', width: 200 },
     { id: 'col-6', title: 'ÚLTIMA ENTRADA', type: 'date', width: 130 },
@@ -182,7 +188,32 @@ const Board = ({
         );
       }
       case 'number':
-        return (
+        return col.id === 'col-3' ? (
+          <div className="flex items-center gap-1 px-2">
+            <button
+              type="button"
+              onClick={() => handleCellChange(row.id, col.id, Math.max(0, (Number(value) || 0) - 1))}
+              className="w-7 h-7 flex items-center justify-center rounded-md bg-[#222] text-white hover:bg-[#333] hover:text-[#B5FF03] transition-all font-bold text-lg"
+            >
+              −
+            </button>
+            <input
+              type="number"
+              value={String(value)}
+              onChange={(e) => handleCellChange(row.id, col.id, e.target.value)}
+              onKeyDown={(e) => e.stopPropagation()}
+              className="w-14 min-h-[36px] bg-transparent border-none outline-none text-sm text-center text-white font-bold focus:border-b-2 focus:border-[#B5FF03] transition-colors"
+              autoComplete="off"
+            />
+            <button
+              type="button"
+              onClick={() => handleCellChange(row.id, col.id, (Number(value) || 0) + 1)}
+              className="w-7 h-7 flex items-center justify-center rounded-md bg-[#222] text-white hover:bg-[#333] hover:text-[#B5FF03] transition-all font-bold text-lg"
+            >
+              +
+            </button>
+          </div>
+        ) : (
           <input
             type="number"
             value={String(value)}
@@ -195,12 +226,17 @@ const Board = ({
       case 'status':
       case 'priority': {
         const options = col.options || [];
+        const isCategory = col.id === 'col-2';
         return (
           <select
             value={String(value)}
             onChange={(e) => handleCellChange(row.id, col.id, e.target.value)}
-            className="w-full min-h-[36px] px-2 py-1 text-sm border-none outline-none cursor-pointer text-white font-medium"
-            style={{ backgroundColor: value ? getOptionColor(col.id, String(value)) : '#6b7280' }}
+            className="w-full min-h-[36px] px-3 py-2 text-sm border-none outline-none cursor-pointer transition-colors"
+            style={{
+              backgroundColor: isCategory ? '#1a1a1a' : (value ? getOptionColor(col.id, String(value)) : '#6b7280'),
+              color: isCategory ? (value ? '#B5FF03' : '#888') : 'white',
+              fontWeight: isCategory ? 700 : 500,
+            }}
           >
             <option value="">—</option>
             {options.map(opt => (
