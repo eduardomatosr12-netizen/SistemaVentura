@@ -59,15 +59,16 @@ const COLUMN_TYPES = [
 
 const DEFAULT_BOARD: BoardType = {
   id: 'board-1',
-  title: 'Quadro Principal',
+  title: 'Inventário Geral',
   color: '#3b82f6',
   columns: [
-    { id: 'col-1', title: 'Tarefa', type: 'text', width: 250 },
-    { id: 'col-2', title: 'Responsável', type: 'people', width: 150 },
-    { id: 'col-3', title: 'Status', type: 'status', width: 140, options: DEFAULT_STATUS_COLUMNS },
-    { id: 'col-4', title: 'Prioridade', type: 'priority', width: 120, options: DEFAULT_PRIORITY_COLUMNS },
-    { id: 'col-5', title: 'Notas', type: 'notes', width: 200 },
-    { id: 'col-6', title: 'Prazo', type: 'date', width: 130 },
+    { id: 'col-1', title: 'ITEM', type: 'text', width: 250 },
+    { id: 'col-2', title: 'CATEGORIA', type: 'text', width: 150 },
+    { id: 'col-3', title: 'QTD. ATUAL', type: 'number', width: 120 },
+    { id: 'col-4', title: 'ESTOQUE MÍNIMO', type: 'number', width: 130 },
+    { id: 'col-5', title: 'FORNECEDOR', type: 'text', width: 200 },
+    { id: 'col-6', title: 'ÚLTIMA ENTRADA', type: 'date', width: 130 },
+    { id: 'col-7', title: 'VALOR UNIT.', type: 'number', width: 120 },
   ],
   rows: [],
 };
@@ -120,10 +121,10 @@ const Board = ({
   };
 
   const handleDeleteColumn = (colId: string) => {
-    if (colId === 'col-1') {
-      alert('Não é possível excluir a coluna "Tarefa"');
-      return;
-    }
+      if (colId === 'col-1') {
+        alert('Não é possível excluir a coluna "ITEM"');
+        return;
+      }
     
     if (!confirm('Tem certeza que deseja excluir esta coluna?')) {
       return;
@@ -437,11 +438,6 @@ const Board = ({
                     </div>
                   </th>
                 ))}
-                {role === 'admin' && (
-                  <th className="p-3 border-l border-[#333] text-left text-[10px] font-black uppercase tracking-widest text-white whitespace-nowrap">
-                    Última Modificação
-                  </th>
-                )}
               </tr>
             </thead>
             <tbody>
@@ -455,11 +451,6 @@ const Board = ({
                       {renderCell(row, col)}
                     </td>
                   ))}
-                  {role === 'admin' && (
-                    <td className="p-3 border-l border-[#333] text-sm text-neutral-400">
-                      {row.lastModifiedBy || '—'}
-                    </td>
-                  )}
                 </tr>
               ))}
             </tbody>
@@ -612,18 +603,22 @@ const Tarefas = () => {
 
   return (
     <div className="p-6 space-y-8 min-h-screen bg-black">
-      <div className="flex flex-wrap gap-3 mb-6">
+      <div>
+        <h1 className="text-3xl font-black text-white tracking-tight mb-1">Controle de Estoque</h1>
+        <p className="text-neutral-400 text-sm font-medium mb-6">Gerencie seus itens, categorias e fornecedores.</p>
+      </div>
+      <div className="flex flex-wrap gap-3">
         <button 
           onClick={() => setShowCreateTaskModal(true)}
           className="flex items-center gap-2 px-6 py-3 bg-[#B5FF03] text-black font-black rounded-lg hover:bg-[#a1e600] transition-colors"
         >
-          <Plus size={20} /> Nova Tarefa
+          <Plus size={20} /> Novo Item
         </button>
         <button 
           onClick={() => setShowNewBoardModal(true)}
           className="flex items-center gap-2 px-6 py-3 bg-transparent border-2 border-[#B5FF03] text-[#B5FF03] font-black rounded-lg hover:bg-[#B5FF03]/10 transition-colors"
         >
-          <Plus size={20} /> Novo Quadro
+          <Plus size={20} /> Nova Categoria
         </button>
       </div>
 
@@ -642,7 +637,7 @@ const Tarefas = () => {
       {showCreateTaskModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
           <div className="bg-[#111] border border-[#333] rounded-2xl p-8 max-w-md w-full shadow-2xl">
-            <h3 className="text-xl font-black text-white mb-6">Qual quadro deseja criar a tarefa?</h3>
+            <h3 className="text-xl font-black text-white mb-6">Qual categoria deseja adicionar o item?</h3>
             <div className="space-y-3">
               {boards.map(board => (
                 <button
@@ -668,7 +663,7 @@ const Tarefas = () => {
       {showNewBoardModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
           <div className="bg-[#111] border border-[#333] rounded-2xl p-8 max-w-md w-full shadow-2xl">
-            <h3 className="text-xl font-black text-white mb-6">Criar Novo Quadro</h3>
+            <h3 className="text-xl font-black text-white mb-6">Nova Categoria</h3>
             <div className="space-y-5">
               <div>
                 <label className="block text-xs font-black text-neutral-400 uppercase tracking-widest mb-2">Nome do Quadro</label>
@@ -706,7 +701,7 @@ const Tarefas = () => {
                 disabled={!newBoardTitle.trim()}
                 className="flex-1 p-3 bg-[#B5FF03] text-black rounded-lg font-bold hover:bg-[#a1e600] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                >
-                  Criar Quadro
+                  Criar Categoria
               </button>
             </div>
           </div>

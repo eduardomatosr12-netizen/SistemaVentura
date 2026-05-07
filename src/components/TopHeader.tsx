@@ -16,7 +16,7 @@ const routeTitles: Record<string, { title: string; subtitle: string }> = {
   '/crm/importar': { title: 'Importar', subtitle: 'Importação de dados externos' },
   '/crm/integracoes': { title: 'Integrações', subtitle: 'Conexões com outras plataformas' },
   '/financeiro': { title: 'Financeiro', subtitle: 'Receitas, despesas e fluxo de caixa' },
-  '/tarefas': { title: 'Tarefas', subtitle: 'Atividades e to-dos do dia' },
+  '/tarefas': { title: 'Controle de Estoque', subtitle: 'Gerencie seus itens, categorias e fornecedores.' },
   '/configuracoes': { title: 'Configurações', subtitle: 'Preferências da aplicação' },
 };
 
