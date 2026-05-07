@@ -304,7 +304,7 @@ const Configuracoes = () => {
     <div className="min-h-screen pb-20 relative">
       <div className="mb-10 flex justify-between items-end">
         <div>
-          <h1 className="text-4xl font-black text-black tracking-tighter mb-1">Configurações</h1>
+          <h1 className="text-4xl font-black text-[#ffffff] tracking-tighter mb-1">Configurações</h1>
           <p className="text-[#888888] text-sm font-medium">Controle central de perfil e preferências.</p>
         </div>
       </div>
