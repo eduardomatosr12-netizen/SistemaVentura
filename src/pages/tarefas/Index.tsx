@@ -71,7 +71,7 @@ const DEFAULT_BOARD: BoardType = {
     { id: 'col-1', title: 'ITEM', type: 'text', width: 250 },
     { id: 'col-2', title: 'CATEGORIA', type: 'status', width: 150, options: CATEGORY_OPTIONS },
     { id: 'col-3', title: 'QTD. ATUAL', type: 'number', width: 140 },
-    { id: 'col-4', title: 'ESTOQUE MÍNIMO', type: 'number', width: 130 },
+    { id: 'col-4', title: 'ESTOQUE', type: 'number', width: 130 },
     { id: 'col-5', title: 'FORNECEDOR', type: 'text', width: 200 },
     { id: 'col-6', title: 'ÚLTIMA ENTRADA', type: 'date', width: 130 },
     { id: 'col-7', title: 'VALOR UNIT.', type: 'number', width: 120 },
