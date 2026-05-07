@@ -33,14 +33,19 @@ interface BoardType {
   rows: Row[];
 }
 
-interface RentalRecord {
+interface RentalItem {
   id: string;
   item: string;
+  status: 'Em Trânsito' | 'Montado' | 'Devolvido';
+  quantidade: number;
+}
+
+interface RentalRecord {
+  id: string;
   client: string;
   dataSaida: string;
   dataDevolucao: string;
-  status: 'Em Trânsito' | 'Montado' | 'Devolvido';
-  quantidade: number;
+  items: RentalItem[];
 }
 
 const RENTAL_STATUSES = ['Em Trânsito', 'Montado', 'Devolvido'] as const;
@@ -714,17 +719,14 @@ const Tarefas = () => {
 
   const emptyRentalForm = (): RentalRecord => ({
     id: generateUUID(),
-    item: '',
     client: '',
     dataSaida: '',
     dataDevolucao: '',
-    status: 'Em Trânsito',
-    quantidade: 1,
+    items: [{ id: generateUUID(), item: '', status: 'Em Trânsito', quantidade: 1 }],
   });
 
   const [rentalForm, setRentalForm] = useState<RentalRecord>(emptyRentalForm());
 
-  const [itemSearch, setItemSearch] = useState('');
   const [clientSearch, setClientSearch] = useState('');
 
   const inventoryItems = boards.flatMap(b =>
@@ -871,19 +873,22 @@ const Tarefas = () => {
       setRentalForm(emptyRentalForm());
       setIsNewRental(true);
     }
-    setItemSearch('');
     setClientSearch('');
     setShowRentalModal(true);
   };
 
   const handleSaveRental = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!rentalForm.item.trim() || !rentalForm.client.trim()) return;
+    if (!rentalForm.client.trim()) return;
+    const validItems = rentalForm.items.filter(i => i.item.trim());
+    if (validItems.length === 0) return;
+
+    const payload = { ...rentalForm, items: validItems };
 
     if (isNewRental || !editingRental) {
-      setRentalRecords(prev => [rentalForm, ...prev]);
+      setRentalRecords(prev => [payload, ...prev]);
     } else {
-      setRentalRecords(prev => prev.map(r => r.id === editingRental.id ? rentalForm : r));
+      setRentalRecords(prev => prev.map(r => r.id === editingRental.id ? payload : r));
     }
     setShowRentalModal(false);
   };
@@ -978,28 +983,29 @@ const Tarefas = () => {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-[#222222]">
-                  <th className="text-left p-4 text-xs font-black uppercase tracking-widest text-[#B5FF03]">Item</th>
                   <th className="text-left p-4 text-xs font-black uppercase tracking-widest text-[#B5FF03]">Cliente</th>
+                  <th className="text-left p-4 text-xs font-black uppercase tracking-widest text-[#B5FF03]">Itens</th>
                   <th className="text-left p-4 text-xs font-black uppercase tracking-widest text-[#B5FF03]">Data de Saída</th>
                   <th className="text-left p-4 text-xs font-black uppercase tracking-widest text-[#B5FF03]">Data de Devolução</th>
-                  <th className="text-left p-4 text-xs font-black uppercase tracking-widest text-[#B5FF03]">Status</th>
-                  <th className="text-left p-4 text-xs font-black uppercase tracking-widest text-[#B5FF03]">Qtd. Alugada</th>
                   <th className="text-right p-4 text-xs font-black uppercase tracking-widest text-[#B5FF03]">Ações</th>
                 </tr>
               </thead>
               <tbody>
                 {rentalRecords.map(record => (
                   <tr key={record.id} className="border-b border-[#222222] hover:bg-[#1a1a1a] transition-colors">
-                    <td className="p-4 text-sm text-white">{record.item}</td>
-                    <td className="p-4 text-sm text-[#888888]">{record.client}</td>
-                    <td className="p-4 text-sm text-[#888888]">{record.dataSaida}</td>
-                    <td className="p-4 text-sm text-[#888888]">{record.dataDevolucao}</td>
-                    <td className="p-4">
-                      <span className={`px-2 py-1 rounded-full text-xs bg-[#111111] border ${statusRentalColor[record.status]}`}>
-                        {record.status}
-                      </span>
+                    <td className="p-4 text-sm text-white">{record.client}</td>
+                    <td className="p-4 text-sm text-[#888888]">
+                      {record.items.map((item, idx) => (
+                        <div key={item.id} className="flex items-center gap-2 mb-1 last:mb-0">
+                          <span className="text-white">{item.item}</span>
+                          <span className={`px-1.5 py-0.5 rounded text-[10px] border ${statusRentalColor[item.status]}`}>{item.status}</span>
+                          <span className="text-[#888888]">{item.quantidade}x</span>
+                          {idx < record.items.length - 1 && <span className="text-[#333]">|</span>}
+                        </div>
+                      ))}
                     </td>
-                    <td className="p-4 text-sm text-white">{record.quantidade}</td>
+                    <td className="p-4 text-sm text-[#888888]">{record.dataSaida}</td>
+                    <td className="p-4 text-sm text-[#888888]">{record.dataDevolucao || '—'}</td>
                     <td className="p-4 text-right">
                       <button
                         onClick={() => handleOpenRentalModal(record)}
@@ -1018,7 +1024,7 @@ const Tarefas = () => {
                 ))}
                 {rentalRecords.length === 0 && (
                   <tr>
-                    <td colSpan={7} className="p-8 text-center text-sm text-[#888888]">
+                    <td colSpan={5} className="p-8 text-center text-sm text-[#888888]">
                       Nenhum aluguel registrado
                     </td>
                   </tr>
@@ -1031,7 +1037,7 @@ const Tarefas = () => {
 
       {showRentalModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="bg-[#111] border border-[#333] rounded-2xl p-8 max-w-lg w-full shadow-2xl">
+          <div className="bg-[#111] border border-[#333] rounded-2xl p-8 max-w-2xl w-full shadow-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xl font-black text-white">{isNewRental ? 'Novo Aluguel' : 'Editar Aluguel'}</h3>
               <button onClick={() => setShowRentalModal(false)} className="text-neutral-400 hover:text-white">
@@ -1039,109 +1045,152 @@ const Tarefas = () => {
               </button>
             </div>
             <form onSubmit={handleSaveRental} className="space-y-5">
-              <div>
-                <label className="block text-xs font-black text-neutral-400 uppercase tracking-widest mb-2">Item</label>
-                <div className="relative">
-                  <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500" />
-                  <input
-                    type="text"
-                    value={itemSearch}
-                    onChange={(e) => { setItemSearch(e.target.value); setRentalForm({ ...rentalForm, item: e.target.value }); }}
-                    placeholder="Buscar item do estoque..."
-                    className="w-full pl-10 pr-4 py-3 border border-[#333] rounded-lg font-bold text-white focus:border-[#B5FF03] outline-none transition-colors bg-[#1a1a1a]"
-                    autoComplete="off"
-                  />
-                </div>
-                {itemSearch && (
-                  <div className="mt-1 border border-[#333] rounded-lg overflow-hidden bg-[#1a1a1a] max-h-32 overflow-y-auto">
-                    {inventoryItems.filter(i => i.toLowerCase().includes(itemSearch.toLowerCase())).slice(0, 8).map(i => (
-                      <button
-                        key={i}
-                        type="button"
-                        onClick={() => { setRentalForm({ ...rentalForm, item: i }); setItemSearch(i); }}
-                        className="w-full text-left px-4 py-2 text-sm text-white hover:bg-[#222] transition-colors"
-                      >
-                        {i}
-                      </button>
-                    ))}
+              <div className="space-y-4 pb-4 border-b border-[#222]">
+                <div>
+                  <label className="block text-xs font-black text-neutral-400 uppercase tracking-widest mb-2">Cliente</label>
+                  <div className="relative">
+                    <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500" />
+                    <input
+                      type="text"
+                      value={clientSearch}
+                      onChange={(e) => { setClientSearch(e.target.value); setRentalForm({ ...rentalForm, client: e.target.value }); }}
+                      placeholder="Buscar cliente dos orçamentos..."
+                      className="w-full pl-10 pr-4 py-3 border border-[#333] rounded-lg font-bold text-white focus:border-[#B5FF03] outline-none transition-colors bg-[#1a1a1a]"
+                      autoComplete="off"
+                    />
                   </div>
-                )}
-              </div>
-              <div>
-                <label className="block text-xs font-black text-neutral-400 uppercase tracking-widest mb-2">Cliente</label>
-                <div className="relative">
-                  <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500" />
-                  <input
-                    type="text"
-                    value={clientSearch}
-                    onChange={(e) => { setClientSearch(e.target.value); setRentalForm({ ...rentalForm, client: e.target.value }); }}
-                    placeholder="Buscar cliente dos orçamentos..."
-                    className="w-full pl-10 pr-4 py-3 border border-[#333] rounded-lg font-bold text-white focus:border-[#B5FF03] outline-none transition-colors bg-[#1a1a1a]"
-                    autoComplete="off"
-                  />
+                  {clientSearch && (
+                    <div className="mt-1 border border-[#333] rounded-lg overflow-hidden bg-[#1a1a1a] max-h-32 overflow-y-auto">
+                      {clientNames.filter(c => c.toLowerCase().includes(clientSearch.toLowerCase())).slice(0, 8).map(c => (
+                        <button
+                          key={c}
+                          type="button"
+                          onClick={() => { setRentalForm({ ...rentalForm, client: c }); setClientSearch(c); }}
+                          className="w-full text-left px-4 py-2 text-sm text-white hover:bg-[#222] transition-colors"
+                        >
+                          {c}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
-                {clientSearch && (
-                  <div className="mt-1 border border-[#333] rounded-lg overflow-hidden bg-[#1a1a1a] max-h-32 overflow-y-auto">
-                    {clientNames.filter(c => c.toLowerCase().includes(clientSearch.toLowerCase())).slice(0, 8).map(c => (
-                      <button
-                        key={c}
-                        type="button"
-                        onClick={() => { setRentalForm({ ...rentalForm, client: c }); setClientSearch(c); }}
-                        className="w-full text-left px-4 py-2 text-sm text-white hover:bg-[#222] transition-colors"
-                      >
-                        {c}
-                      </button>
-                    ))}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-black text-neutral-400 uppercase tracking-widest mb-2">Data de Saída</label>
+                    <input
+                      type="date"
+                      value={rentalForm.dataSaida}
+                      onChange={(e) => setRentalForm({ ...rentalForm, dataSaida: e.target.value })}
+                      className="w-full px-4 py-3 border border-[#333] rounded-lg font-bold text-white focus:border-[#B5FF03] outline-none transition-colors bg-[#1a1a1a]"
+                      required
+                    />
                   </div>
-                )}
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-black text-neutral-400 uppercase tracking-widest mb-2">Data de Saída</label>
-                  <input
-                    type="date"
-                    value={rentalForm.dataSaida}
-                    onChange={(e) => setRentalForm({ ...rentalForm, dataSaida: e.target.value })}
-                    className="w-full px-4 py-3 border border-[#333] rounded-lg font-bold text-white focus:border-[#B5FF03] outline-none transition-colors bg-[#1a1a1a]"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-black text-neutral-400 uppercase tracking-widest mb-2">Data de Devolução</label>
-                  <input
-                    type="date"
-                    value={rentalForm.dataDevolucao}
-                    onChange={(e) => setRentalForm({ ...rentalForm, dataDevolucao: e.target.value })}
-                    className="w-full px-4 py-3 border border-[#333] rounded-lg font-bold text-white focus:border-[#B5FF03] outline-none transition-colors bg-[#1a1a1a]"
-                  />
+                  <div>
+                    <label className="block text-xs font-black text-neutral-400 uppercase tracking-widest mb-2">Data de Devolução</label>
+                    <input
+                      type="date"
+                      value={rentalForm.dataDevolucao}
+                      onChange={(e) => setRentalForm({ ...rentalForm, dataDevolucao: e.target.value })}
+                      className="w-full px-4 py-3 border border-[#333] rounded-lg font-bold text-white focus:border-[#B5FF03] outline-none transition-colors bg-[#1a1a1a]"
+                    />
+                  </div>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-black text-neutral-400 uppercase tracking-widest mb-2">Status</label>
-                  <select
-                    value={rentalForm.status}
-                    onChange={(e) => setRentalForm({ ...rentalForm, status: e.target.value as RentalRecord['status'] })}
-                    className="w-full px-4 py-3 border border-[#333] rounded-lg font-bold text-white focus:border-[#B5FF03] outline-none transition-colors bg-[#1a1a1a]"
-                  >
-                    {RENTAL_STATUSES.map(s => (
-                      <option key={s} value={s}>{s}</option>
-                    ))}
-                  </select>
+
+              <div>
+                <label className="block text-xs font-black text-neutral-400 uppercase tracking-widest mb-3">Itens do Aluguel</label>
+                <div className="space-y-3">
+                  {rentalForm.items.map((item, idx) => (
+                    <div key={item.id} className="flex gap-3 items-start bg-[#1a1a1a] border border-[#333] rounded-lg p-3">
+                      <div className="flex-1 min-w-0">
+                        <div className="relative">
+                          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500" />
+                          <input
+                            type="text"
+                            value={item.item}
+                            onChange={(e) => {
+                              const newItems = [...rentalForm.items];
+                              newItems[idx] = { ...newItems[idx], item: e.target.value };
+                              setRentalForm({ ...rentalForm, items: newItems });
+                            }}
+                            placeholder="Buscar item do estoque..."
+                            className="w-full pl-9 pr-3 py-2 border border-[#333] rounded-lg text-sm font-bold text-white focus:border-[#B5FF03] outline-none transition-colors bg-[#111]"
+                            autoComplete="off"
+                          />
+                        </div>
+                        {item.item && (
+                          <div className="mt-1 border border-[#333] rounded-lg overflow-hidden bg-[#111] max-h-24 overflow-y-auto">
+                            {inventoryItems.filter(i => i.toLowerCase().includes(item.item.toLowerCase())).slice(0, 5).map(i => (
+                              <button
+                                key={i}
+                                type="button"
+                                onClick={() => {
+                                  const newItems = [...rentalForm.items];
+                                  newItems[idx] = { ...newItems[idx], item: i };
+                                  setRentalForm({ ...rentalForm, items: newItems });
+                                }}
+                                className="w-full text-left px-3 py-1.5 text-xs text-white hover:bg-[#222] transition-colors"
+                              >
+                                {i}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      <div className="w-36">
+                        <select
+                          value={item.status}
+                          onChange={(e) => {
+                            const newItems = [...rentalForm.items];
+                            newItems[idx] = { ...newItems[idx], status: e.target.value as RentalItem['status'] };
+                            setRentalForm({ ...rentalForm, items: newItems });
+                          }}
+                          className="w-full px-3 py-2 border border-[#333] rounded-lg text-sm font-bold text-white focus:border-[#B5FF03] outline-none transition-colors bg-[#111]"
+                        >
+                          {RENTAL_STATUSES.map(s => (
+                            <option key={s} value={s}>{s}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="w-20">
+                        <input
+                          type="number"
+                          min={1}
+                          value={item.quantidade}
+                          onChange={(e) => {
+                            const newItems = [...rentalForm.items];
+                            newItems[idx] = { ...newItems[idx], quantidade: Number(e.target.value) };
+                            setRentalForm({ ...rentalForm, items: newItems });
+                          }}
+                          className="w-full px-3 py-2 border border-[#333] rounded-lg text-sm font-bold text-white focus:border-[#B5FF03] outline-none transition-colors bg-[#111]"
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const newItems = rentalForm.items.filter((_, i) => i !== idx);
+                          setRentalForm({ ...rentalForm, items: newItems.length ? newItems : [{ id: generateUUID(), item: '', status: 'Em Trânsito', quantidade: 1 }] });
+                        }}
+                        className="mt-2 text-[#ff4444] hover:text-white transition-colors shrink-0"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  ))}
                 </div>
-                <div>
-                  <label className="block text-xs font-black text-neutral-400 uppercase tracking-widest mb-2">Quantidade Alugada</label>
-                  <input
-                    type="number"
-                    min={1}
-                    value={rentalForm.quantidade}
-                    onChange={(e) => setRentalForm({ ...rentalForm, quantidade: Number(e.target.value) })}
-                    className="w-full px-4 py-3 border border-[#333] rounded-lg font-bold text-white focus:border-[#B5FF03] outline-none transition-colors bg-[#1a1a1a]"
-                    required
-                  />
-                </div>
+                <button
+                  type="button"
+                  onClick={() => setRentalForm({
+                    ...rentalForm,
+                    items: [...rentalForm.items, { id: generateUUID(), item: '', status: 'Em Trânsito', quantidade: 1 }]
+                  })}
+                  className="mt-3 flex items-center gap-2 text-xs font-bold text-[#B5FF03] hover:text-white transition-colors"
+                >
+                  + Adicionar outro item
+                </button>
               </div>
-              <div className="flex gap-3 pt-2">
+
+              <div className="flex gap-3 pt-2 border-t border-[#222]">
                 <button
                   type="button"
                   onClick={() => setShowRentalModal(false)}
