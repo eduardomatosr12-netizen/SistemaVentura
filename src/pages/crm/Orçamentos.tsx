@@ -506,6 +506,72 @@ const CRMOrçamentos = () => {
                 )}
               </tbody>
             </table>
+
+            {/* Mobile Card View */}
+            <div className="md:hidden space-y-3 mt-3">
+              {Array.isArray(filteredOrçamentos) && filteredOrçamentos.length > 0 ? filteredOrçamentos.map(lead => (
+                <div key={lead?.id} className="bg-[#111] border border-[#333] rounded-lg p-4 space-y-2.5">
+                  <div>
+                    <div className="font-semibold text-white text-sm">{lead?.name}</div>
+                    <div className="text-xs text-neutral-400 truncate">{lead?.niche} · {lead?.email}</div>
+                  </div>
+
+                  <div className="flex items-center gap-2 text-xs text-neutral-300">
+                    <span className="text-neutral-500 font-medium">WhatsApp:</span>
+                    {lead?.whatsapp ? (
+                      <div className="flex items-center gap-1">
+                        <span>{lead.whatsapp}</span>
+                        <button
+                          type="button"
+                          onClick={() => setWhatsAppModal({ lead, selectedTemplate: null })}
+                          className="text-[#25D366] hover:text-[#B5FF03] transition-colors"
+                          title="Enviar mensagem via WhatsApp"
+                        >
+                          <MessageCircle size={14} />
+                        </button>
+                      </div>
+                    ) : (
+                      <span className="text-[#B5FF03]">—</span>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-2 text-xs text-neutral-300">
+                    <span className="text-neutral-500 font-medium">Instagram:</span>
+                    <span>{lead?.instagram || '—'}</span>
+                  </div>
+
+                  <div className="flex items-center gap-2 text-xs">
+                    <span className="text-neutral-500 font-medium">GMN:</span>
+                    <span className="text-white font-semibold">{lead?.gmnStars} ⭐</span>
+                    <span className="text-neutral-400">({lead?.gmnReviews} avaliações)</span>
+                  </div>
+
+                  <div className="flex items-center gap-2 text-xs">
+                    <span className="text-neutral-500 font-medium">Valor:</span>
+                    <span className="text-white font-medium">{lead?.value || '—'}</span>
+                  </div>
+
+                  <div className="flex justify-center pt-1">
+                    <span className={`${stageStyle[lead?.stage] ?? baseStageStyle} ${lead?.stage ? '' : ''}`}>
+                      {lead?.stage === 'Novos Orçamentos' ? 'Novos Contatos' : lead?.stage}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center justify-end gap-2 pt-2 border-t border-[#222]">
+                    <button onClick={() => openEdit(lead)} className="p-1.5 text-neutral-400 hover:text-white hover:bg-[#1a1a1a] rounded-md transition-all">
+                      <Pencil size={14} />
+                    </button>
+                    <button onClick={() => handleDelete(lead?.id)} className="p-1.5 text-neutral-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-all">
+                      <Trash2 size={14} />
+                    </button>
+                  </div>
+                </div>
+              )) : (
+                <div className="text-center text-neutral-400 font-medium italic text-xs py-8">
+                  {hasActiveFilters ? 'Nenhum lead encontrado com os filtros aplicados' : `Nenhum lead encontrado para "${searchTerm}"`}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </main>

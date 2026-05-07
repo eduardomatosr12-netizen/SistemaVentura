@@ -1,11 +1,11 @@
 import type { ReactNode } from 'react';
 import { useState, useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, Link } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import CRMSubmenu from '../components/CRMSubmenu';
 import TopHeader from '../components/TopHeader';
 import { useAuth } from '../contexts/AuthContext';
-import { BarChart3, Users, Lock } from 'lucide-react';
+import { BarChart3, Users, Lock, DollarSign, Package } from 'lucide-react';
 
 type UserRole = 'admin' | 'employee';
 
@@ -173,11 +173,26 @@ const MainLayout = ({ children }: MainLayoutProps) => {
         )}
 
         <div className="flex-1 bg-black w-full">
-          <div className="px-4 p-4 md:p-8 w-full">
+          <div className="px-4 p-4 md:p-8 w-full pb-20 md:pb-4">
             {children}
           </div>
         </div>
       </main>
+
+      <nav className="fixed bottom-0 left-0 right-0 z-50 bg-black border-t border-[#333] flex md:hidden justify-around items-center h-16 safe-area-bottom">
+        <Link to="/crm" className={`flex flex-col items-center gap-0.5 px-3 py-2 ${location.pathname.startsWith('/crm') ? 'text-[#B5FF03]' : 'text-neutral-400'}`}>
+          <BarChart3 size={20} />
+          <span className="text-[10px] font-bold uppercase tracking-wider">CRM</span>
+        </Link>
+        <Link to="/financeiro" className={`flex flex-col items-center gap-0.5 px-3 py-2 ${location.pathname.startsWith('/financeiro') ? 'text-[#B5FF03]' : 'text-neutral-400'}`}>
+          <DollarSign size={20} />
+          <span className="text-[10px] font-bold uppercase tracking-wider">Financeiro</span>
+        </Link>
+        <Link to="/tarefas" className={`flex flex-col items-center gap-0.5 px-3 py-2 ${location.pathname.startsWith('/tarefas') ? 'text-[#B5FF03]' : 'text-neutral-400'}`}>
+          <Package size={20} />
+          <span className="text-[10px] font-bold uppercase tracking-wider">Estoque</span>
+        </Link>
+      </nav>
     </div>
   );
 };

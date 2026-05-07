@@ -1032,15 +1032,44 @@ const Tarefas = () => {
               </tbody>
             </table>
           </div>
+          {/* Mobile rental cards */}
+          <div className="md:hidden space-y-3">
+            {rentalRecords.map(record => (
+              <div key={record.id} className="bg-[#111] border border-[#333] rounded-lg p-4 space-y-3">
+                <div className="flex justify-between items-start">
+                  <span className="text-white font-bold text-sm">{record.client}</span>
+                  <div className="flex gap-2">
+                    <button onClick={() => handleOpenRentalModal(record)} className="text-[#B5FF03] p-2 min-h-[44px]"><Edit3 size={18} /></button>
+                    <button onClick={() => handleDeleteRental(record.id)} className="text-[#ff4444] p-2 min-h-[44px]"><Trash2 size={18} /></button>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  {record.items.map(item => (
+                    <div key={item.id} className="flex items-center justify-between bg-[#1a1a1a] rounded-lg px-3 py-2">
+                      <div className="flex-1">
+                        <span className="text-white text-xs font-bold">{item.item}</span>
+                        <span className={`ml-2 px-1.5 py-0.5 rounded text-[10px] border ${statusRentalColor[item.status]}`}>{item.status}</span>
+                      </div>
+                      <span className="text-[#888888] text-xs ml-2">{item.quantidade}x</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div><span className="text-neutral-500">Saída:</span> <span className="text-white">{record.dataSaida}</span></div>
+                  <div><span className="text-neutral-500">Devolução:</span> <span className="text-white">{record.dataDevolucao || '—'}</span></div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
       {showRentalModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="bg-[#111] border border-[#333] rounded-2xl p-8 max-w-2xl w-full shadow-2xl max-h-[90vh] overflow-y-auto">
+          <div className="bg-[#111] border border-[#333] rounded-2xl p-8 max-w-full md:max-w-2xl w-full shadow-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xl font-black text-white">{isNewRental ? 'Novo Aluguel' : 'Editar Aluguel'}</h3>
-              <button onClick={() => setShowRentalModal(false)} className="text-neutral-400 hover:text-white">
+              <button onClick={() => setShowRentalModal(false)} className="text-neutral-400 hover:text-white p-2 min-h-[44px]">
                 <X size={20} />
               </button>
             </div>
@@ -1194,13 +1223,13 @@ const Tarefas = () => {
                 <button
                   type="button"
                   onClick={() => setShowRentalModal(false)}
-                  className="flex-1 p-3 border border-[#333] rounded-lg text-neutral-400 hover:text-white hover:bg-[#222] transition-colors font-bold"
+                  className="flex-1 p-3 border border-[#333] rounded-lg text-neutral-400 hover:text-white hover:bg-[#222] transition-colors font-bold min-h-[44px]"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 p-3 bg-[#B5FF03] text-black rounded-lg font-bold hover:bg-[#a1e600] transition-colors"
+                  className="flex-1 p-3 bg-[#B5FF03] text-black rounded-lg font-bold hover:bg-[#a1e600] transition-colors min-h-[44px]"
                 >
                   {isNewRental ? 'Adicionar' : 'Salvar'}
                 </button>
@@ -1212,14 +1241,14 @@ const Tarefas = () => {
 
       {showCreateTaskModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="bg-[#111] border border-[#333] rounded-2xl p-8 max-w-md w-full shadow-2xl">
+          <div className="bg-[#111] border border-[#333] rounded-2xl p-8 max-w-full md:max-w-md w-full shadow-2xl">
             <h3 className="text-xl font-black text-white mb-6">Qual categoria deseja adicionar o item?</h3>
             <div className="space-y-3">
               {boards.map(board => (
                 <button
                   key={board.id}
                   onClick={() => handleCreateNewTask(board.id)}
-                  className="w-full p-4 text-left border border-[#333] rounded-lg hover:bg-[#222] hover:border-[#B5FF03] transition-colors flex items-center gap-3"
+                  className="w-full p-4 text-left border border-[#333] rounded-lg hover:bg-[#222] hover:border-[#B5FF03] transition-colors flex items-center gap-3 min-h-[44px]"
                 >
                   <div className="w-4 h-4 rounded-full" style={{ backgroundColor: board.color }} />
                   <span className="font-bold text-white">{board.title}</span>
@@ -1228,7 +1257,7 @@ const Tarefas = () => {
             </div>
             <button
               onClick={() => setShowCreateTaskModal(false)}
-              className="w-full mt-6 p-3 border border-[#333] rounded-lg text-neutral-400 hover:text-white hover:bg-[#222] transition-colors"
+              className="w-full mt-6 p-3 border border-[#333] rounded-lg text-neutral-400 hover:text-white hover:bg-[#222] transition-colors min-h-[44px]"
             >
               Cancelar
             </button>
@@ -1238,7 +1267,7 @@ const Tarefas = () => {
 
       {showNewBoardModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="bg-[#111] border border-[#333] rounded-2xl p-8 max-w-md w-full shadow-2xl">
+          <div className="bg-[#111] border border-[#333] rounded-2xl p-8 max-w-full md:max-w-md w-full shadow-2xl">
             <h3 className="text-xl font-black text-white mb-6">Nova Categoria</h3>
             <div className="space-y-5">
               <div>
@@ -1268,14 +1297,14 @@ const Tarefas = () => {
             <div className="flex gap-3 mt-8">
               <button
                 onClick={() => setShowNewBoardModal(false)}
-                className="flex-1 p-3 border border-neutral-200 rounded-lg text-neutral-600 hover:text-black hover:bg-neutral-50 transition-colors font-bold"
+                className="flex-1 p-3 border border-neutral-200 rounded-lg text-neutral-600 hover:text-black hover:bg-neutral-50 transition-colors font-bold min-h-[44px]"
               >
                 Cancelar
               </button>
               <button
                 onClick={handleCreateNewBoard}
                 disabled={!newBoardTitle.trim()}
-                className="flex-1 p-3 bg-[#B5FF03] text-black rounded-lg font-bold hover:bg-[#a1e600] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 p-3 bg-[#B5FF03] text-black rounded-lg font-bold hover:bg-[#a1e600] transition-colors min-h-[44px] disabled:opacity-50 disabled:cursor-not-allowed"
                >
                   Criar Categoria
               </button>
@@ -1286,10 +1315,10 @@ const Tarefas = () => {
 
       {showAddColumnModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="bg-[#111] border border-[#333] rounded-2xl p-8 max-w-md w-full shadow-2xl">
+          <div className="bg-[#111] border border-[#333] rounded-2xl p-8 max-w-full md:max-w-md w-full shadow-2xl">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xl font-black text-white">Adicionar Coluna</h3>
-              <button onClick={() => setShowAddColumnModal(false)} className="text-neutral-400 hover:text-black">
+              <button onClick={() => setShowAddColumnModal(false)} className="text-neutral-400 hover:text-black p-2 min-h-[44px]">
                 <X size={20} />
               </button>
             </div>
@@ -1332,14 +1361,14 @@ const Tarefas = () => {
             <div className="flex gap-3 mt-8">
                 <button
                   onClick={() => setShowAddColumnModal(false)}
-                  className="flex-1 p-3 border border-[#333] rounded-lg text-neutral-400 hover:text-white hover:bg-[#222] transition-colors font-bold"
+                  className="flex-1 p-3 border border-[#333] rounded-lg text-neutral-400 hover:text-white hover:bg-[#222] transition-colors font-bold min-h-[44px]"
                 >
                   Cancelar
               </button>
               <button
                 onClick={handleConfirmAddColumn}
                 disabled={!newColumnData.title.trim()}
-                className="flex-1 p-3 bg-[#B5FF03] text-black rounded-lg font-bold hover:bg-[#a1e600] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 p-3 bg-[#B5FF03] text-black rounded-lg font-bold hover:bg-[#a1e600] transition-colors min-h-[44px] disabled:opacity-50 disabled:cursor-not-allowed"
                >
                   Adicionar
               </button>
@@ -1350,10 +1379,10 @@ const Tarefas = () => {
 
       {editingNote && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="bg-[#111] border border-[#333] rounded-2xl p-8 max-w-2xl w-full shadow-2xl">
+          <div className="bg-[#111] border border-[#333] rounded-2xl p-8 max-w-full md:max-w-2xl w-full shadow-2xl">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xl font-black text-white">Editar Notas</h3>
-              <button onClick={() => { setEditingNote(null); setNoteContent(''); }} className="text-neutral-400 hover:text-white">
+              <button onClick={() => { setEditingNote(null); setNoteContent(''); }} className="text-neutral-400 hover:text-white p-2 min-h-[44px]">
                 <X size={20} />
               </button>
             </div>
@@ -1368,13 +1397,13 @@ const Tarefas = () => {
             <div className="flex gap-3 mt-6">
               <button
                 onClick={() => { setEditingNote(null); setNoteContent(''); }}
-                className="flex-1 p-3 border border-neutral-200 rounded-lg text-neutral-600 hover:text-black hover:bg-neutral-50 transition-colors font-bold"
+                className="flex-1 p-3 border border-neutral-200 rounded-lg text-neutral-600 hover:text-black hover:bg-neutral-50 transition-colors font-bold min-h-[44px]"
               >
                 Cancelar
               </button>
               <button
                 onClick={handleSaveNote}
-                className="flex-1 p-3 bg-[#B5FF03] text-black rounded-lg font-bold hover:bg-[#a1e600] transition-colors"
+                className="flex-1 p-3 bg-[#B5FF03] text-black rounded-lg font-bold hover:bg-[#a1e600] transition-colors min-h-[44px]"
                >
                   Salvar Nota
               </button>

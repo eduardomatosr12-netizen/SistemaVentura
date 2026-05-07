@@ -471,6 +471,119 @@ const Financeiro = () => {
     }));
   };
 
+  const filterContent = (
+    <>
+      <div className="flex justify-between items-center mb-6">
+        <h3 className="text-xs font-black uppercase tracking-widest text-[#B5FF03]">Filtros</h3>
+        {hasActiveFilters && (
+          <button
+            onClick={clearFilters}
+            className="text-xs text-[#888888] hover:text-[#B5FF03] transition-colors flex items-center gap-1"
+          >
+            <XCircle size={12} />
+            Limpar
+          </button>
+        )}
+      </div>
+
+      <FilterSection title="Período">
+        <RadioFilter
+          label="Este Mês"
+          checked={filtersState.period === 'this_month'}
+          onChange={() => setFiltersState(prev => ({ ...prev, period: prev.period === 'this_month' ? '' : 'this_month' }))}
+        />
+        <RadioFilter
+          label="Mês Passado"
+          checked={filtersState.period === 'last_month'}
+          onChange={() => setFiltersState(prev => ({ ...prev, period: prev.period === 'last_month' ? '' : 'last_month' }))}
+        />
+        <RadioFilter
+          label="Últimos 90 Dias"
+          checked={filtersState.period === '90_days'}
+          onChange={() => setFiltersState(prev => ({ ...prev, period: prev.period === '90_days' ? '' : '90_days' }))}
+        />
+      </FilterSection>
+
+      <FilterSection title="Status">
+        {(activeTab === 'receitas' ? INVOICE_STATUSES : EXPENSE_STATUSES).map(status => (
+          <CheckboxFilter
+            key={status}
+            label={status}
+            checked={filtersState.statuses.includes(status)}
+            onChange={(checked) => {
+              if (checked) {
+                setFiltersState(prev => ({ ...prev, statuses: [...prev.statuses, status] }));
+              } else {
+                setFiltersState(prev => ({ ...prev, statuses: prev.statuses.filter(s => s !== status) }));
+              }
+            }}
+          />
+        ))}
+      </FilterSection>
+
+      {activeTab === 'receitas' && (
+        <FilterSection title="Forma de Pagamento">
+          {PAYMENT_METHODS.map(pm => (
+            <CheckboxFilter
+              key={pm.value}
+              label={pm.label}
+              checked={filtersState.origins.includes(pm.value)}
+              onChange={(checked) => {
+                if (checked) {
+                  setFiltersState(prev => ({ ...prev, origins: [...prev.origins, pm.value] }));
+                } else {
+                  setFiltersState(prev => ({ ...prev, origins: prev.origins.filter(o => o !== pm.value) }));
+                }
+              }}
+            />
+          ))}
+        </FilterSection>
+      )}
+
+      {activeTab === 'fluxo' && (
+        <FilterSection title="Categorias">
+          {EXPENSE_CATEGORIES.map(cat => (
+            <CheckboxFilter
+              key={cat.value}
+              label={cat.label}
+              checked={filtersState.categories.includes(cat.value)}
+              onChange={(checked) => {
+                if (checked) {
+                  setFiltersState(prev => ({ ...prev, categories: [...prev.categories, cat.value] }));
+                } else {
+                  setFiltersState(prev => ({ ...prev, categories: prev.categories.filter(c => c !== cat.value) }));
+                }
+              }}
+            />
+          ))}
+        </FilterSection>
+      )}
+
+      <FilterSection title="Valor">
+        <div className="space-y-3">
+          <div>
+            <label className="text-xs text-[#888888] uppercase tracking-widest">Mínimo (R$)</label>
+            <input
+              type="number"
+              value={filtersState.minValue}
+              onChange={(e) => setFiltersState(prev => ({ ...prev, minValue: e.target.value }))}
+              className="w-full bg-[#111111] border border-[#222222] rounded px-3 py-2 text-sm text-white focus:border-[#B5FF03] outline-none transition-colors"
+            />
+          </div>
+          <div>
+            <label className="text-xs text-[#888888] uppercase tracking-widest">Máximo (R$)</label>
+            <input
+              type="number"
+              value={filtersState.maxValue}
+              onChange={(e) => setFiltersState(prev => ({ ...prev, maxValue: e.target.value }))}
+              className="w-full bg-[#111111] border border-[#222222] rounded px-3 py-2 text-sm text-white focus:border-[#B5FF03] outline-none transition-colors"
+            />
+          </div>
+        </div>
+      </FilterSection>
+    </>
+  );
+
   return (
     <div className="min-h-screen bg-[#000000] text-white">
       {/* Header */}
@@ -563,6 +676,7 @@ const Financeiro = () => {
       <div className="flex relative">
         <div className="flex-1 p-6">
           {activeTab === 'receitas' ? (
+            <>
             <div className="bg-[#111111] border border-[#222222] rounded-lg overflow-hidden">
               <table className="w-full">
                 <thead>
@@ -609,7 +723,31 @@ const Financeiro = () => {
                 </tbody>
               </table>
             </div>
+            <div className="md:hidden space-y-3">
+              {filteredInvoices.map(invoice => (
+                <div key={invoice.id} className="bg-[#111] border border-[#333] rounded-lg p-4 space-y-2">
+                  <div className="flex justify-between items-start">
+                    <span className="text-white font-bold text-sm">{invoice.client}</span>
+                    <span className={`px-2 py-0.5 rounded-full text-[10px] ${statusStyle[invoice.status]}`}>{invoice.status}</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div><span className="text-neutral-500">ID:</span> <span className="text-white">{invoice.id}</span></div>
+                    <div><span className="text-neutral-500">Valor:</span> <span className="text-white">{invoice.amount}</span></div>
+                    <div><span className="text-neutral-500">Data:</span> <span className="text-white">{invoice.date}</span></div>
+                    <div><span className="text-neutral-500">Pagamento:</span> <span className="text-white">{paymentMethodLabel(invoice.paymentMethod)}</span></div>
+                  </div>
+                  <div className="flex justify-end gap-2 pt-2 border-t border-[#222]">
+                    <button onClick={() => handleOpenInvoiceModal(invoice)} className="text-[#B5FF03] p-2 min-h-[44px]"><Pencil size={18} /></button>
+                  </div>
+                </div>
+              ))}
+              {filteredInvoices.length === 0 && (
+                <p className="text-center text-sm text-[#888888] py-8">Nenhuma fatura encontrada</p>
+              )}
+            </div>
+            </>
           ) : (
+            <>
             <div className="bg-[#111111] border border-[#222222] rounded-lg overflow-hidden">
               <table className="w-full">
                 <thead>
@@ -660,128 +798,51 @@ const Financeiro = () => {
                 </tbody>
               </table>
             </div>
-          )}
-        </div>
-
-        {/* Filter Sidebar */}
-        {isSidebarOpen && (
-          <div className="w-64 bg-[#0a0a0a] border-l border-[#222222] p-4 overflow-y-auto max-h-screen sticky top-0">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-xs font-black uppercase tracking-widest text-[#B5FF03]">Filtros</h3>
-              {hasActiveFilters && (
-                <button
-                  onClick={clearFilters}
-                  className="text-xs text-[#888888] hover:text-[#B5FF03] transition-colors flex items-center gap-1"
-                >
-                  <XCircle size={12} />
-                  Limpar
-                </button>
+            {/* Mobile card view - Fluxo */}
+            <div className="md:hidden space-y-3">
+              {filteredExpenses.map(expense => (
+                <div key={expense.id} className="bg-[#111] border border-[#333] rounded-lg p-4 space-y-2">
+                  <div className="flex justify-between items-start">
+                    <span className="text-white font-bold text-sm">{expense.description}</span>
+                    <span className={`px-2 py-0.5 rounded-full text-[10px] ${statusStyle[expense.status]}`}>{expense.status}</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div><span className="text-neutral-500">Categoria:</span> <span className="text-white">{categoryLabel(expense.category)}</span></div>
+                    <div><span className="text-neutral-500">Valor:</span> <span className="text-white">{expense.amount}</span></div>
+                    <div><span className="text-neutral-500">Data:</span> <span className="text-white">{expense.date}</span></div>
+                  </div>
+                  <div className="flex justify-end gap-2 pt-2 border-t border-[#222]">
+                    <button onClick={() => handleOpenExpenseModal(expense)} className="text-[#B5FF03] p-2 min-h-[44px]"><Pencil size={18} /></button>
+                    <button onClick={() => handleDeleteExpense(expense.id)} className="text-[#ff4444] p-2 min-h-[44px]"><X size={18} /></button>
+                  </div>
+                </div>
+              ))}
+              {filteredExpenses.length === 0 && (
+                <p className="text-center text-sm text-[#888888] py-8">Nenhuma despesa encontrada</p>
               )}
             </div>
-
-            <FilterSection title="Período">
-              <RadioFilter
-                label="Este Mês"
-                checked={filtersState.period === 'this_month'}
-                onChange={() => setFiltersState(prev => ({ ...prev, period: prev.period === 'this_month' ? '' : 'this_month' }))}
-              />
-              <RadioFilter
-                label="Mês Passado"
-                checked={filtersState.period === 'last_month'}
-                onChange={() => setFiltersState(prev => ({ ...prev, period: prev.period === 'last_month' ? '' : 'last_month' }))}
-              />
-              <RadioFilter
-                label="Últimos 90 Dias"
-                checked={filtersState.period === '90_days'}
-                onChange={() => setFiltersState(prev => ({ ...prev, period: prev.period === '90_days' ? '' : '90_days' }))}
-              />
-            </FilterSection>
-
-            <FilterSection title="Status">
-              {(activeTab === 'receitas' ? INVOICE_STATUSES : EXPENSE_STATUSES).map(status => (
-                <CheckboxFilter
-                  key={status}
-                  label={status}
-                  checked={filtersState.statuses.includes(status)}
-                  onChange={(checked) => {
-                    if (checked) {
-                      setFiltersState(prev => ({ ...prev, statuses: [...prev.statuses, status] }));
-                    } else {
-                      setFiltersState(prev => ({ ...prev, statuses: prev.statuses.filter(s => s !== status) }));
-                    }
-                  }}
-                />
-              ))}
-            </FilterSection>
-
-            {activeTab === 'receitas' && (
-              <FilterSection title="Forma de Pagamento">
-                {PAYMENT_METHODS.map(pm => (
-                  <CheckboxFilter
-                    key={pm.value}
-                    label={pm.label}
-                    checked={filtersState.origins.includes(pm.value)}
-                    onChange={(checked) => {
-                      if (checked) {
-                        setFiltersState(prev => ({ ...prev, origins: [...prev.origins, pm.value] }));
-                      } else {
-                        setFiltersState(prev => ({ ...prev, origins: prev.origins.filter(o => o !== pm.value) }));
-                      }
-                    }}
-                  />
-                ))}
-              </FilterSection>
-            )}
-
-            {activeTab === 'fluxo' && (
-              <FilterSection title="Categorias">
-                {EXPENSE_CATEGORIES.map(cat => (
-                  <CheckboxFilter
-                    key={cat.value}
-                    label={cat.label}
-                    checked={filtersState.categories.includes(cat.value)}
-                    onChange={(checked) => {
-                      if (checked) {
-                        setFiltersState(prev => ({ ...prev, categories: [...prev.categories, cat.value] }));
-                      } else {
-                        setFiltersState(prev => ({ ...prev, categories: prev.categories.filter(c => c !== cat.value) }));
-                      }
-                    }}
-                  />
-                ))}
-              </FilterSection>
-            )}
-
-            <FilterSection title="Valor">
-              <div className="space-y-3">
-                <div>
-                  <label className="text-xs text-[#888888] uppercase tracking-widest">Mínimo (R$)</label>
-                  <input
-                    type="number"
-                    value={filtersState.minValue}
-                    onChange={(e) => setFiltersState(prev => ({ ...prev, minValue: e.target.value }))}
-                    className="w-full bg-[#111111] border border-[#222222] rounded px-3 py-2 text-sm text-white focus:border-[#B5FF03] outline-none transition-colors"
-                  />
-                </div>
-                <div>
-                  <label className="text-xs text-[#888888] uppercase tracking-widest">Máximo (R$)</label>
-                  <input
-                    type="number"
-                    value={filtersState.maxValue}
-                    onChange={(e) => setFiltersState(prev => ({ ...prev, maxValue: e.target.value }))}
-                    className="w-full bg-[#111111] border border-[#222222] rounded px-3 py-2 text-sm text-white focus:border-[#B5FF03] outline-none transition-colors"
-                  />
-                </div>
-              </div>
-            </FilterSection>
-          </div>
+            </>
+          )}
+        </div>
+        
+        {/* Filter Sidebar */}
+        {isSidebarOpen && (
+          <>
+            <div className="fixed inset-0 z-40 bg-black/60 md:hidden" onClick={() => setIsSidebarOpen(false)} />
+            <div className="fixed inset-x-0 bottom-0 z-50 bg-[#0a0a0a] border-t border-[#222] rounded-t-2xl p-4 max-h-[70vh] overflow-y-auto md:hidden">
+              {filterContent}
+            </div>
+            <div className="hidden md:block w-64 bg-[#0a0a0a] border-l border-[#222222] p-4 overflow-y-auto max-h-screen sticky top-0">
+              {filterContent}
+            </div>
+          </>
         )}
       </div>
 
       {/* Invoice Modal */}
       {isInvoiceModalOpen && editingInvoice && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-          <div className="bg-[#0a0a0a] border border-[#222222] rounded-lg w-full max-w-md p-6">
+          <div className="bg-[#0a0a0a] border border-[#222222] rounded-lg w-full max-w-full md:max-w-md p-6">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-lg font-black uppercase tracking-widest text-white">
                 {isNewInvoice ? 'Nova Fatura' : 'Editar Fatura'}
@@ -867,17 +928,17 @@ const Financeiro = () => {
                   <button
                     type="button"
                     onClick={() => handleDeleteInvoice(editingInvoice.id)}
-                    className="rounded-full px-3 py-1.5 min-w-[120px] bg-[#111111] text-[#ff4444] font-bold text-xs uppercase tracking-widest border border-[#ff4444]/50 hover:border-[#ff4444] transition-colors"
+                    className="rounded-full px-3 py-1.5 min-w-[120px] min-h-[44px] bg-[#111111] text-[#ff4444] font-bold text-xs uppercase tracking-widest border border-[#ff4444]/50 hover:border-[#ff4444] transition-colors"
                   >
                     EXCLUIR
                   </button>
                 )}
                 <button
                   type="submit"
-                  className="rounded-full px-3 py-1.5 min-w-[120px] bg-[#B5FF03] text-black font-bold text-xs uppercase tracking-widest hover:bg-[#a5ef03] transition-colors"
-                >
-                  SALVAR
-                </button>
+                  className="rounded-full px-3 py-1.5 min-w-[120px] min-h-[44px] bg-[#B5FF03] text-black font-bold text-xs uppercase tracking-widest hover:bg-[#a5ef03] transition-colors"
+                  >
+                    SALVAR
+                  </button>
               </div>
             </form>
           </div>
@@ -887,7 +948,7 @@ const Financeiro = () => {
       {/* Expense Modal */}
       {isExpenseModalOpen && editingExpense && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-          <div className="bg-[#0a0a0a] border border-[#222222] rounded-lg w-full max-w-md p-6">
+          <div className="bg-[#0a0a0a] border border-[#222222] rounded-lg w-full max-w-full md:max-w-md p-6">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-lg font-black uppercase tracking-widest text-white">
                 {isNewExpense ? 'Nova Despesa' : 'Editar Despesa'}
@@ -955,13 +1016,13 @@ const Financeiro = () => {
                 <button
                   type="button"
                   onClick={() => handleDeleteExpense(editingExpense.id)}
-                  className="rounded-full px-3 py-1.5 min-w-[120px] bg-[#111111] text-[#ff4444] font-bold text-xs uppercase tracking-widest border border-[#ff4444]/50 hover:border-[#ff4444] transition-colors"
+                  className="rounded-full px-3 py-1.5 min-w-[120px] min-h-[44px] bg-[#111111] text-[#ff4444] font-bold text-xs uppercase tracking-widest border border-[#ff4444]/50 hover:border-[#ff4444] transition-colors"
                 >
                   EXCLUIR
                 </button>
                 <button
                   type="submit"
-                  className="rounded-full px-3 py-1.5 min-w-[120px] bg-[#B5FF03] text-black font-bold text-xs uppercase tracking-widest hover:bg-[#a5ef03] transition-colors"
+                  className="rounded-full px-3 py-1.5 min-w-[120px] min-h-[44px] bg-[#B5FF03] text-black font-bold text-xs uppercase tracking-widest hover:bg-[#a5ef03] transition-colors"
                 >
                   SALVAR
                 </button>

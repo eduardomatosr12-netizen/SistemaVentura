@@ -48,9 +48,9 @@ const Sidebar = ({ isOpen = false, onClose }: SidebarProps) => {
                <X className="w-5 h-5 text-neutral-400 hover:text-[#B5FF03]" />
         </button>
         
-         <div className="px-4 pt-[20px] pb-[20px] border-b border-[#333] flex items-center justify-center">
-            <img src="/logo.jpg" alt="VENTURA" className="w-full object-contain" style={{ maxWidth: 160 }} />
-          </div>
+         <div className="px-4 pt-4 pb-4 border-b border-[#333] flex items-center justify-center">
+             <img src="/logo.jpg" alt="VENTURA" className="w-full object-contain" style={{ maxWidth: 120 }} />
+           </div>
 
         <nav className="flex-1 px-4 py-6 space-y-1">
           {visibleMenuItems.map((item) => {
@@ -93,9 +93,9 @@ const Sidebar = ({ isOpen = false, onClose }: SidebarProps) => {
       </aside>
 
        <aside className="fixed left-0 top-0 h-screen w-64 bg-black border-r border-[#333] flex-col overflow-y-auto z-40 hidden md:flex">
-         <div className="px-6 pt-[20px] pb-[20px] border-b border-[#333] flex items-center justify-center">
-            <img src="/logo.jpg" alt="VENTURA" className="w-full object-contain" style={{ maxWidth: 160 }} />
-          </div>
+         <div className="px-6 pt-4 pb-4 border-b border-[#333] flex items-center justify-center">
+             <img src="/logo.jpg" alt="VENTURA" className="w-full object-contain" style={{ maxWidth: 140 }} />
+           </div>
 
         <nav className="flex-1 px-4 py-6 space-y-1">
            {visibleMenuItems.map((item) => {
