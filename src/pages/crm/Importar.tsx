@@ -84,13 +84,13 @@ const CRMImportar = () => {
   const parseDateValue = (val: string): string => {
     if (!val || !val.trim()) return '';
     const trimmed = val.trim();
-    if (/^\d{4}-\d{2}-\d{2}/.test(trimmed)) return trimmed.split('T')[0];
-    const brMatch = trimmed.match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{4})$/);
+    if (/^\\d{4}-\\d{2}-\\d{2}/.test(trimmed)) return trimmed.split('T')[0];
+    const brMatch = trimmed.match(/^(\\d{1,2})[\/\-.](\\d{1,2})[\/\-.](\\d{4})$/);
     if (brMatch) {
       const [, day, month, year] = brMatch;
       return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
     }
-    const usMatch = trimmed.match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})$/);
+    const usMatch = trimmed.match(/^(\\d{1,2})[\/\-.](\\d{1,2})[\/\-.](\\d{2,4})$/);
     if (usMatch) {
       const [, a, b, c] = usMatch;
       const year = c.length === 2 ? `20${c}` : c;
@@ -122,7 +122,7 @@ const CRMImportar = () => {
 
   const parseNumberValue = (val: string): string => {
     if (!val || !val.trim()) return '';
-    const cleaned = val.trim().replace(/[^\d.,]/g, '').replace(',', '.');
+    const cleaned = val.trim().replace(/[^\\d.,]/g, '').replace(',', '.');
     const num = parseFloat(cleaned);
     if (isNaN(num)) return '';
     return String(Math.round(num));
@@ -130,7 +130,7 @@ const CRMImportar = () => {
 
   const parseFloatValue = (val: string): string => {
     if (!val || !val.trim()) return '';
-    const cleaned = val.trim().replace(/[^\d.,]/g, '').replace(',', '.');
+    const cleaned = val.trim().replace(/[^\\d.,]/g, '').replace(',', '.');
     const num = parseFloat(cleaned);
     if (isNaN(num)) return '';
     return num.toFixed(1);
