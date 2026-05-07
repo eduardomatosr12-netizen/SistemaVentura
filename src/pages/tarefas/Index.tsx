@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Plus, Trash2, X, Edit3, MessageCircle } from 'lucide-react';
+import { Plus, Trash2, X, Edit3, MessageCircle, Package, Building2, Search, Calendar } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import { useCRM } from '../../contexts/CRMContext';
 import { generateUUID } from '../../lib/uuid';
 import { cleanPhoneNumber, generateWhatsAppLink, WHATSAPP_MESSAGE_TEMPLATES } from '../../lib/whatsapp';
 
@@ -31,6 +32,18 @@ interface BoardType {
   columns: Column[];
   rows: Row[];
 }
+
+interface RentalRecord {
+  id: string;
+  item: string;
+  client: string;
+  dataSaida: string;
+  dataDevolucao: string;
+  status: 'Em Trânsito' | 'Montado' | 'Devolvido';
+  quantidade: number;
+}
+
+const RENTAL_STATUSES = ['Em Trânsito', 'Montado', 'Devolvido'] as const;
 
 const DEFAULT_STATUS_COLUMNS: ColumnOption[] = [
   { id: 'st-1', label: 'Pendente', color: '#6b7280' },
@@ -680,10 +693,49 @@ const Board = ({
 };
 
 const Tarefas = () => {
+  const { role } = useAuth();
+  const { Orçamentos } = useCRM();
+
   const [boards, setBoards] = useState<BoardType[]>(() => {
     const stored = localStorage.getItem('axium_boards_v3');
     return stored ? JSON.parse(stored) : [DEFAULT_BOARD];
   });
+
+  const [activeTab, setActiveTab] = useState<'inventario' | 'aluguel'>('inventario');
+
+  const [rentalRecords, setRentalRecords] = useState<RentalRecord[]>(() => {
+    const stored = localStorage.getItem('axium_rental_v1');
+    return stored ? JSON.parse(stored) : [];
+  });
+
+  const [showRentalModal, setShowRentalModal] = useState(false);
+  const [editingRental, setEditingRental] = useState<RentalRecord | null>(null);
+  const [isNewRental, setIsNewRental] = useState(false);
+
+  const emptyRentalForm = (): RentalRecord => ({
+    id: generateUUID(),
+    item: '',
+    client: '',
+    dataSaida: '',
+    dataDevolucao: '',
+    status: 'Em Trânsito',
+    quantidade: 1,
+  });
+
+  const [rentalForm, setRentalForm] = useState<RentalRecord>(emptyRentalForm());
+
+  const [itemSearch, setItemSearch] = useState('');
+  const [clientSearch, setClientSearch] = useState('');
+
+  const inventoryItems = boards.flatMap(b =>
+    b.rows.map(r => String(r.values['col-1'] || '')).filter(Boolean)
+  );
+
+  const clientNames = (Orçamentos || []).map(o => o.name).filter(Boolean);
+
+  useEffect(() => {
+    localStorage.setItem('axium_rental_v1', JSON.stringify(rentalRecords));
+  }, [rentalRecords]);
 
   const [showCreateTaskModal, setShowCreateTaskModal] = useState(false);
   const [showNewBoardModal, setShowNewBoardModal] = useState(false);
@@ -809,38 +861,305 @@ const Tarefas = () => {
     setNoteContent('');
   };
 
+  const handleOpenRentalModal = (record?: RentalRecord) => {
+    if (record) {
+      setEditingRental(record);
+      setRentalForm(record);
+      setIsNewRental(false);
+    } else {
+      setEditingRental(null);
+      setRentalForm(emptyRentalForm());
+      setIsNewRental(true);
+    }
+    setItemSearch('');
+    setClientSearch('');
+    setShowRentalModal(true);
+  };
+
+  const handleSaveRental = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!rentalForm.item.trim() || !rentalForm.client.trim()) return;
+
+    if (isNewRental || !editingRental) {
+      setRentalRecords(prev => [rentalForm, ...prev]);
+    } else {
+      setRentalRecords(prev => prev.map(r => r.id === editingRental.id ? rentalForm : r));
+    }
+    setShowRentalModal(false);
+  };
+
+  const handleDeleteRental = (id: string) => {
+    if (confirm('Excluir este registro de aluguel?')) {
+      setRentalRecords(prev => prev.filter(r => r.id !== id));
+    }
+  };
+
+  const statusRentalColor: Record<string, string> = {
+    'Em Trânsito': 'text-[#f59e0b] border-[#f59e0b]/50',
+    'Montado': 'text-[#B5FF03] border-[#B5FF03]',
+    'Devolvido': 'text-[#888888] border-[#222222]',
+  };
+
   return (
     <div className="p-6 space-y-8 min-h-screen bg-black">
       <div>
         <h1 className="text-3xl font-black text-white tracking-tight mb-1">Controle de Estoque</h1>
         <p className="text-neutral-400 text-sm font-medium mb-6">Gerencie seus itens, categorias e fornecedores.</p>
       </div>
-      <div className="flex flex-wrap gap-3">
-        <button 
-          onClick={() => setShowCreateTaskModal(true)}
-          className="flex items-center gap-2 px-6 py-3 bg-[#B5FF03] text-black font-black rounded-lg hover:bg-[#a1e600] transition-colors"
+
+      <div className="flex gap-6 border-b border-[#222222]">
+        <button
+          onClick={() => setActiveTab('inventario')}
+          className={`py-3 px-1 border-b-2 font-bold text-xs uppercase tracking-widest transition-colors ${
+            activeTab === 'inventario'
+              ? 'border-[#B5FF03] text-[#B5FF03]'
+              : 'border-transparent text-[#888888] hover:text-white'
+          }`}
         >
-          <Plus size={20} /> Novo Item
+          <Package size={16} className="inline mr-2" />
+          Inventário
         </button>
-        <button 
-          onClick={() => setShowNewBoardModal(true)}
-          className="flex items-center gap-2 px-6 py-3 bg-transparent border-2 border-[#B5FF03] text-[#B5FF03] font-black rounded-lg hover:bg-[#B5FF03]/10 transition-colors"
+        <button
+          onClick={() => setActiveTab('aluguel')}
+          className={`py-3 px-1 border-b-2 font-bold text-xs uppercase tracking-widest transition-colors ${
+            activeTab === 'aluguel'
+              ? 'border-[#B5FF03] text-[#B5FF03]'
+              : 'border-transparent text-[#888888] hover:text-white'
+          }`}
         >
-          <Plus size={20} /> Nova Categoria
+          <Building2 size={16} className="inline mr-2" />
+          Controle de Aluguel
         </button>
       </div>
 
-      {boards.map(board => (
-        <Board 
-          key={board.id} 
-          board={board} 
-          allBoards={boards} 
-          onUpdateBoard={handleUpdateBoard}
-          onDeleteBoard={() => handleDeleteBoard(board.id)}
-          onMoveRow={() => {}}
-          onAddColumn={() => handleAddColumn(board.id)}
-        />
-      ))}
+      {activeTab === 'inventario' && (
+        <>
+          <div className="flex flex-wrap gap-3">
+            <button
+              onClick={() => setShowCreateTaskModal(true)}
+              className="flex items-center gap-2 px-6 py-3 bg-[#B5FF03] text-black font-black rounded-lg hover:bg-[#a1e600] transition-colors"
+            >
+              <Plus size={20} /> Novo Item
+            </button>
+            <button
+              onClick={() => setShowNewBoardModal(true)}
+              className="flex items-center gap-2 px-6 py-3 bg-transparent border-2 border-[#B5FF03] text-[#B5FF03] font-black rounded-lg hover:bg-[#B5FF03]/10 transition-colors"
+            >
+              <Plus size={20} /> Nova Categoria
+            </button>
+          </div>
+
+          {boards.map(board => (
+            <Board
+              key={board.id}
+              board={board}
+              allBoards={boards}
+              onUpdateBoard={handleUpdateBoard}
+              onDeleteBoard={() => handleDeleteBoard(board.id)}
+              onMoveRow={() => {}}
+              onAddColumn={() => handleAddColumn(board.id)}
+            />
+          ))}
+        </>
+      )}
+
+      {activeTab === 'aluguel' && (
+        <div>
+          <div className="flex justify-end mb-4">
+            <button
+              onClick={() => handleOpenRentalModal()}
+              className="flex items-center gap-2 px-6 py-3 bg-[#B5FF03] text-black font-black rounded-lg hover:bg-[#a1e600] transition-colors"
+            >
+              <Plus size={20} /> Novo Aluguel
+            </button>
+          </div>
+
+          <div className="bg-[#111111] border border-[#222222] rounded-lg overflow-hidden">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-[#222222]">
+                  <th className="text-left p-4 text-xs font-black uppercase tracking-widest text-[#B5FF03]">Item</th>
+                  <th className="text-left p-4 text-xs font-black uppercase tracking-widest text-[#B5FF03]">Cliente</th>
+                  <th className="text-left p-4 text-xs font-black uppercase tracking-widest text-[#B5FF03]">Data de Saída</th>
+                  <th className="text-left p-4 text-xs font-black uppercase tracking-widest text-[#B5FF03]">Data de Devolução</th>
+                  <th className="text-left p-4 text-xs font-black uppercase tracking-widest text-[#B5FF03]">Status</th>
+                  <th className="text-left p-4 text-xs font-black uppercase tracking-widest text-[#B5FF03]">Qtd. Alugada</th>
+                  <th className="text-right p-4 text-xs font-black uppercase tracking-widest text-[#B5FF03]">Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rentalRecords.map(record => (
+                  <tr key={record.id} className="border-b border-[#222222] hover:bg-[#1a1a1a] transition-colors">
+                    <td className="p-4 text-sm text-white">{record.item}</td>
+                    <td className="p-4 text-sm text-[#888888]">{record.client}</td>
+                    <td className="p-4 text-sm text-[#888888]">{record.dataSaida}</td>
+                    <td className="p-4 text-sm text-[#888888]">{record.dataDevolucao}</td>
+                    <td className="p-4">
+                      <span className={`px-2 py-1 rounded-full text-xs bg-[#111111] border ${statusRentalColor[record.status]}`}>
+                        {record.status}
+                      </span>
+                    </td>
+                    <td className="p-4 text-sm text-white">{record.quantidade}</td>
+                    <td className="p-4 text-right">
+                      <button
+                        onClick={() => handleOpenRentalModal(record)}
+                        className="text-[#B5FF03] hover:text-white transition-colors mr-3"
+                      >
+                        <Edit3 size={16} />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteRental(record.id)}
+                        className="text-[#ff4444] hover:text-white transition-colors"
+                      >
+                        <X size={16} />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+                {rentalRecords.length === 0 && (
+                  <tr>
+                    <td colSpan={7} className="p-8 text-center text-sm text-[#888888]">
+                      Nenhum aluguel registrado
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {showRentalModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="bg-[#111] border border-[#333] rounded-2xl p-8 max-w-lg w-full shadow-2xl">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-black text-white">{isNewRental ? 'Novo Aluguel' : 'Editar Aluguel'}</h3>
+              <button onClick={() => setShowRentalModal(false)} className="text-neutral-400 hover:text-white">
+                <X size={20} />
+              </button>
+            </div>
+            <form onSubmit={handleSaveRental} className="space-y-5">
+              <div>
+                <label className="block text-xs font-black text-neutral-400 uppercase tracking-widest mb-2">Item</label>
+                <div className="relative">
+                  <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500" />
+                  <input
+                    type="text"
+                    value={itemSearch}
+                    onChange={(e) => { setItemSearch(e.target.value); setRentalForm({ ...rentalForm, item: e.target.value }); }}
+                    placeholder="Buscar item do estoque..."
+                    className="w-full pl-10 pr-4 py-3 border border-[#333] rounded-lg font-bold text-white focus:border-[#B5FF03] outline-none transition-colors bg-[#1a1a1a]"
+                    autoComplete="off"
+                  />
+                </div>
+                {itemSearch && (
+                  <div className="mt-1 border border-[#333] rounded-lg overflow-hidden bg-[#1a1a1a] max-h-32 overflow-y-auto">
+                    {inventoryItems.filter(i => i.toLowerCase().includes(itemSearch.toLowerCase())).slice(0, 8).map(i => (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={() => { setRentalForm({ ...rentalForm, item: i }); setItemSearch(i); }}
+                        className="w-full text-left px-4 py-2 text-sm text-white hover:bg-[#222] transition-colors"
+                      >
+                        {i}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <div>
+                <label className="block text-xs font-black text-neutral-400 uppercase tracking-widest mb-2">Cliente</label>
+                <div className="relative">
+                  <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500" />
+                  <input
+                    type="text"
+                    value={clientSearch}
+                    onChange={(e) => { setClientSearch(e.target.value); setRentalForm({ ...rentalForm, client: e.target.value }); }}
+                    placeholder="Buscar cliente dos orçamentos..."
+                    className="w-full pl-10 pr-4 py-3 border border-[#333] rounded-lg font-bold text-white focus:border-[#B5FF03] outline-none transition-colors bg-[#1a1a1a]"
+                    autoComplete="off"
+                  />
+                </div>
+                {clientSearch && (
+                  <div className="mt-1 border border-[#333] rounded-lg overflow-hidden bg-[#1a1a1a] max-h-32 overflow-y-auto">
+                    {clientNames.filter(c => c.toLowerCase().includes(clientSearch.toLowerCase())).slice(0, 8).map(c => (
+                      <button
+                        key={c}
+                        type="button"
+                        onClick={() => { setRentalForm({ ...rentalForm, client: c }); setClientSearch(c); }}
+                        className="w-full text-left px-4 py-2 text-sm text-white hover:bg-[#222] transition-colors"
+                      >
+                        {c}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-black text-neutral-400 uppercase tracking-widest mb-2">Data de Saída</label>
+                  <input
+                    type="date"
+                    value={rentalForm.dataSaida}
+                    onChange={(e) => setRentalForm({ ...rentalForm, dataSaida: e.target.value })}
+                    className="w-full px-4 py-3 border border-[#333] rounded-lg font-bold text-white focus:border-[#B5FF03] outline-none transition-colors bg-[#1a1a1a]"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-black text-neutral-400 uppercase tracking-widest mb-2">Data de Devolução</label>
+                  <input
+                    type="date"
+                    value={rentalForm.dataDevolucao}
+                    onChange={(e) => setRentalForm({ ...rentalForm, dataDevolucao: e.target.value })}
+                    className="w-full px-4 py-3 border border-[#333] rounded-lg font-bold text-white focus:border-[#B5FF03] outline-none transition-colors bg-[#1a1a1a]"
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-black text-neutral-400 uppercase tracking-widest mb-2">Status</label>
+                  <select
+                    value={rentalForm.status}
+                    onChange={(e) => setRentalForm({ ...rentalForm, status: e.target.value as RentalRecord['status'] })}
+                    className="w-full px-4 py-3 border border-[#333] rounded-lg font-bold text-white focus:border-[#B5FF03] outline-none transition-colors bg-[#1a1a1a]"
+                  >
+                    {RENTAL_STATUSES.map(s => (
+                      <option key={s} value={s}>{s}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-black text-neutral-400 uppercase tracking-widest mb-2">Quantidade Alugada</label>
+                  <input
+                    type="number"
+                    min={1}
+                    value={rentalForm.quantidade}
+                    onChange={(e) => setRentalForm({ ...rentalForm, quantidade: Number(e.target.value) })}
+                    className="w-full px-4 py-3 border border-[#333] rounded-lg font-bold text-white focus:border-[#B5FF03] outline-none transition-colors bg-[#1a1a1a]"
+                    required
+                  />
+                </div>
+              </div>
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowRentalModal(false)}
+                  className="flex-1 p-3 border border-[#333] rounded-lg text-neutral-400 hover:text-white hover:bg-[#222] transition-colors font-bold"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 p-3 bg-[#B5FF03] text-black rounded-lg font-bold hover:bg-[#a1e600] transition-colors"
+                >
+                  {isNewRental ? 'Adicionar' : 'Salvar'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {showCreateTaskModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
