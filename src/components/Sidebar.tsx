@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { BarChart3, DollarSign, CheckCircle, Settings, LogOut, X, User } from 'lucide-react';
+import { BarChart3, DollarSign, Package, Settings, LogOut, X, User } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 interface SidebarProps {
@@ -15,7 +15,7 @@ const Sidebar = ({ isOpen = false, onClose }: SidebarProps) => {
   const mainMenuItems = [
     { id: 'crm', label: 'CRM', icon: BarChart3, path: '/crm', allowedRoles: ['admin', 'manager', 'user'] as const },
     { id: 'financeiro', label: 'Financeiro', icon: DollarSign, path: '/financeiro', allowedRoles: ['admin', 'manager'] as const },
-    { id: 'tarefas', label: 'Tarefas', icon: CheckCircle, path: '/tarefas', allowedRoles: ['admin', 'manager', 'user'] as const },
+    { id: 'tarefas', label: 'Estoque', icon: Package, path: '/tarefas', allowedRoles: ['admin', 'manager', 'user'] as const },
     { id: 'configuracoes', label: 'Configurações', icon: Settings, path: '/configuracoes', allowedRoles: ['admin'] as const },
   ];
 
