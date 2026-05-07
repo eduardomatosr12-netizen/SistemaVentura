@@ -1,42 +1,74 @@
 ﻿import { useState, useRef } from 'react';
-import { Upload, Download, CheckCircle, AlertCircle } from 'lucide-react';
+import { Upload, Download, CheckCircle, AlertCircle, ArrowRight } from 'lucide-react';
 import Papa from 'papaparse';
 import * as XLSX from 'xlsx';
 import { generateUUID } from '../../lib/uuid';
 
-const COLUMN_MAP: Record<string, string> = {
-  'ITEM': 'col-1',
-  'CATEGORIA': 'col-2',
-  'QTD. ATUAL': 'col-3',
-  'ESTOQUE MÍNIMO': 'col-4',
-  'FORNECEDOR': 'col-5',
-  'ÚLTIMA ENTRADA': 'col-6',
-  'VALOR UNIT.': 'col-7',
+const COLUMNS_BY_TYPE: Record<string, { headers: string[]; map: Record<string, string> }> = {
+  Estoque: {
+    headers: ['ITEM', 'CATEGORIA', 'QTD. ATUAL', 'ESTOQUE MÍNIMO', 'FORNECEDOR', 'ÚLTIMA ENTRADA', 'VALOR UNIT.'],
+    map: {
+      'ITEM': 'col-1',
+      'CATEGORIA': 'col-2',
+      'QTD. ATUAL': 'col-3',
+      'ESTOQUE MÍNIMO': 'col-4',
+      'FORNECEDOR': 'col-5',
+      'ÚLTIMA ENTRADA': 'col-6',
+      'VALOR UNIT.': 'col-7',
+    },
+  },
+  Clientes: {
+    headers: ['Nome', 'Email', 'Telefone', 'Instagram', 'Nicho', 'Origem'],
+    map: {
+      'Nome': 'nome',
+      'Email': 'email',
+      'Telefone': 'telefone',
+      'Instagram': 'instagram',
+      'Nicho': 'nicho',
+      'Origem': 'origem',
+    },
+  },
+  Orçamentos: {
+    headers: ['Cliente', 'Cidade', 'Data', 'Valor', 'Categoria', 'Observações'],
+    map: {
+      'Cliente': 'cliente',
+      'Cidade': 'cidade',
+      'Data': 'data',
+      'Valor': 'valor',
+      'Categoria': 'categoria',
+      'Observações': 'observacoes',
+    },
+  },
 };
 
 const CATEGORY_OPTIONS = ['Decoração', 'Móveis', 'Iluminação'];
 
-function generateCSVTemplate(): string {
-  const headers = Object.keys(COLUMN_MAP);
-  const sampleRow = [
-    'Mesa de Centro',
-    'Móveis',
-    '10',
-    '5',
-    'Móveis LTDA',
-    '2026-05-01',
-    '850,00',
-  ];
-  return [headers.join(','), sampleRow.join(',')].join('\n');
+const ROUTE_MAP: Record<string, string> = {
+  Estoque: '/tarefas',
+  Clientes: '/crm/orcamentos',
+  Orçamentos: '/crm/orcamentos',
+};
+
+type ImportType = keyof typeof COLUMNS_BY_TYPE;
+
+function generateCSVTemplate(type: ImportType): string {
+  const config = COLUMNS_BY_TYPE[type];
+  const headers = config.headers;
+  const sampleRows: Record<string, string[]> = {
+    Estoque: ['Mesa de Centro', 'Móveis', '10', '5', 'Móveis LTDA', '2026-05-01', '850,00'],
+    Clientes: ['João Silva', 'joao@email.com', '11 99999-9999', '@joaosilva', 'Odontologia', 'Instagram'],
+    Orçamentos: ['Maria Santos', 'São Paulo', '2026-05-15', '5000', 'Casamento', 'Cliente solicitou orçamento'],
+  };
+  return [headers.join(','), (sampleRows[type] || []).join(',')].join('\n');
 }
 
-function downloadCSV() {
-  const csv = generateCSVTemplate();
+function downloadCSV(type: ImportType) {
+  const csv = generateCSVTemplate(type);
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.href = url;
-  link.download = 'modelo_estoque.csv';
+  link.download = `modelo_${type.toLowerCase()}.csv`;
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
@@ -74,49 +106,55 @@ function parseXLSXFile(file: File): Promise<Record<string, string>[]> {
   });
 }
 
+function matchHeader(header: string, expected: string[]): string | null {
+  const h = header.trim().toLowerCase();
+  for (const exp of expected) {
+    if (exp.toLowerCase() === h) return exp;
+  }
+  return null;
+}
+
 interface Toast {
-  type: 'success' | 'error';
+  type: 'success' | 'error' | 'info';
   message: string;
+  action?: { label: string; href: string };
 }
 
 const Importar = () => {
-  const [selectedType, setSelectedType] = useState('Estoque');
+  const [selectedType, setSelectedType] = useState<ImportType>('Estoque');
   const [toast, setToast] = useState<Toast | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const showToast = (type: Toast['type'], message: string) => {
-    setToast({ type, message });
-    setTimeout(() => setToast(null), 4000);
+  const showToast = (t: Toast) => {
+    setToast(t);
+    setTimeout(() => setToast(null), 8000);
   };
 
-  const processRows = (rows: Record<string, string>[]) => {
+  const processEstoque = (rows: Record<string, string>[]) => {
+    const config = COLUMNS_BY_TYPE.Estoque;
     const storageKey = 'axium_boards_v3';
     const stored = localStorage.getItem(storageKey);
     const boards = stored ? JSON.parse(stored) : [];
 
     const inventoryBoard = boards.find((b: { id: string }) => b.id === 'board-1');
     if (!inventoryBoard) {
-      showToast('error', 'Board de inventário não encontrado.');
+      showToast({ type: 'error', message: 'Board de inventário não encontrado.' });
       return;
     }
 
-    const colKeys = Object.keys(COLUMN_MAP);
     const newRows = rows.map((row) => {
       const values: Record<string, unknown> = {};
-      for (const header of colKeys) {
-        const colId = COLUMN_MAP[header];
+      for (const header of config.headers) {
+        const colId = config.map[header];
         let raw = (row[header] ?? row[header.toLowerCase()] ?? '').toString().trim();
 
         if (colId === 'col-2') {
-          const match = CATEGORY_OPTIONS.find(
-            (opt) => opt.toLowerCase() === raw.toLowerCase()
-          );
+          const match = CATEGORY_OPTIONS.find((opt) => opt.toLowerCase() === raw.toLowerCase());
           raw = match || raw;
         }
         if (colId === 'col-3' || colId === 'col-4' || colId === 'col-7') {
-          const num = parseFloat(raw.replace(',', '.'));
-          values[colId] = isNaN(num) ? 0 : num;
+          values[colId] = isNaN(parseFloat(raw.replace(',', '.'))) ? 0 : parseFloat(raw.replace(',', '.'));
         } else {
           values[colId] = raw;
         }
@@ -126,35 +164,113 @@ const Importar = () => {
 
     inventoryBoard.rows = [...(inventoryBoard.rows || []), ...newRows];
     localStorage.setItem(storageKey, JSON.stringify(boards));
-    showToast('success', `${newRows.length} item(ns) importado(s) com sucesso!`);
+    showToast({
+      type: 'success',
+      message: `${newRows.length} item(ns) importado(s) para o Estoque!`,
+      action: { label: 'Ver registros importados', href: ROUTE_MAP.Estoque },
+    });
+  };
+
+  const processOrcamentos = (rows: Record<string, string>[], isCliente: boolean) => {
+    const storageKey = 'axium_Orçamentos_v2';
+    const stored = localStorage.getItem(storageKey);
+    const existing: { id: string; stage: string; name?: string; email?: string; whatsapp?: string; instagram?: string; niche?: string; origin?: string; address?: string; firstContact?: string; value?: string; notes?: string; }[] = stored ? JSON.parse(stored) : [];
+
+    const now = new Date().toISOString().slice(0, 10);
+
+    const newRecords = rows.map((row) => {
+      if (isCliente) {
+        return {
+          id: generateUUID(),
+          name: (row['Nome'] || row['nome'] || '').trim(),
+          email: (row['Email'] || row['email'] || '').trim(),
+          whatsapp: (row['Telefone'] || row['telefone'] || row['WhatsApp'] || row['whatsapp'] || '').trim(),
+          instagram: (row['Instagram'] || row['instagram'] || '').trim(),
+          niche: (row['Nicho'] || row['nicho'] || '').trim(),
+          origin: (row['Origem'] || row['origem'] || '').trim(),
+          stage: 'Novos Orçamentos',
+          firstContact: now,
+          closingDate: '',
+          followUpReminder: '',
+          address: '',
+          gmnReviews: '',
+          gmnStars: '',
+          notes: '',
+          value: '',
+        };
+      }
+
+      return {
+        id: generateUUID(),
+        name: (row['Cliente'] || row['cliente'] || row['Nome'] || row['nome'] || '').trim(),
+        address: (row['Cidade'] || row['cidade'] || '').trim(),
+        firstContact: (row['Data'] || row['data'] || now).trim(),
+        value: (row['Valor'] || row['valor'] || '').trim(),
+        notes: (row['Observações'] || row['observacoes'] || '').trim(),
+        niche: (row['Categoria'] || row['categoria'] || '').trim(),
+        stage: 'Novos Orçamentos',
+        email: '',
+        whatsapp: '',
+        instagram: '',
+        origin: '',
+        closingDate: '',
+        followUpReminder: '',
+        gmnReviews: '',
+        gmnStars: '',
+      };
+    });
+
+    const updated = [...existing, ...newRecords];
+    localStorage.setItem(storageKey, JSON.stringify(updated));
+    showToast({
+      type: 'success',
+      message: `${newRecords.length} registro(s) importado(s) para ${isCliente ? 'Clientes' : 'Orçamentos'}!`,
+      action: { label: 'Ver registros importados', href: ROUTE_MAP.Orçamentos },
+    });
+  };
+
+  const validateHeaders = (rows: Record<string, string>[], expected: string[]): string | null => {
+    if (rows.length === 0) return 'Arquivo vazio.';
+    const fileHeaders = Object.keys(rows[0]).map((h) => h.trim().toLowerCase());
+    const required = expected.map((h) => h.toLowerCase());
+    const matched = required.filter((r) => fileHeaders.includes(r));
+    if (matched.length < Math.ceil(required.length * 0.4)) {
+      return `Os cabeçalhos do arquivo não correspondem ao tipo "${selectedType}". Esperado: ${expected.join(', ')}`;
+    }
+    return null;
   };
 
   const handleFile = async (file: File) => {
     const ext = file.name.split('.').pop()?.toLowerCase();
-
     if (ext !== 'csv' && ext !== 'xlsx') {
-      showToast('error', 'Formato não suportado. Use .csv ou .xlsx.');
+      showToast({ type: 'error', message: 'Formato não suportado. Use .csv ou .xlsx.' });
       return;
     }
 
     setIsProcessing(true);
     try {
-      let rows: Record<string, string>[];
-      if (ext === 'csv') {
-        rows = await parseCSVFile(file);
-      } else {
-        rows = await parseXLSXFile(file);
-      }
-
+      const rows: Record<string, string>[] = ext === 'csv' ? await parseCSVFile(file) : await parseXLSXFile(file);
       if (!rows || rows.length === 0) {
-        showToast('error', 'Arquivo vazio ou formato inválido.');
-        setIsProcessing(false);
+        showToast({ type: 'error', message: 'Arquivo vazio ou formato inválido.' });
         return;
       }
 
-      processRows(rows);
+      const config = COLUMNS_BY_TYPE[selectedType];
+      const validationError = validateHeaders(rows, config.headers);
+      if (validationError) {
+        showToast({ type: 'error', message: validationError });
+        return;
+      }
+
+      if (selectedType === 'Estoque') {
+        processEstoque(rows);
+      } else if (selectedType === 'Clientes') {
+        processOrcamentos(rows, true);
+      } else if (selectedType === 'Orçamentos') {
+        processOrcamentos(rows, false);
+      }
     } catch {
-      showToast('error', 'Erro ao importar o arquivo.');
+      showToast({ type: 'error', message: 'Erro ao processar o arquivo.' });
     } finally {
       setIsProcessing(false);
     }
@@ -186,19 +302,38 @@ const Importar = () => {
     <div className="min-h-screen bg-[#000000] p-2 md:p-8">
       <div className="mb-4 md:mb-8">
         <h1 className="text-2xl md:text-3xl font-black text-white tracking-tight mb-1">Importar Dados</h1>
-        <p className="text-neutral-400 text-xs md:text-sm">Selecione o tipo de importação e envie seu arquivo CSV.</p>
+        <p className="text-neutral-400 text-xs md:text-sm">Selecione o tipo de importação e envie seu arquivo.</p>
       </div>
 
       {toast && (
         <div
-          className={`fixed top-6 right-6 z-[200] flex items-center gap-3 px-6 py-4 rounded-xl shadow-2xl animate-in slide-in-from-top-2 fade-in duration-300 ${
+          className={`fixed top-6 right-6 z-[200] flex items-center gap-4 px-6 py-4 rounded-xl shadow-2xl animate-in slide-in-from-top-2 fade-in duration-300 ${
             toast.type === 'success'
-              ? 'bg-[#1a1a1a] border border-[#B5FF03] text-[#B5FF03]'
-              : 'bg-[#1a1a1a] border border-red-500 text-red-400'
+              ? 'bg-[#1a1a1a] border border-[#B5FF03]'
+              : toast.type === 'error'
+              ? 'bg-[#1a1a1a] border border-red-500'
+              : 'bg-[#1a1a1a] border border-[#B5FF03]'
           }`}
         >
-          {toast.type === 'success' ? <CheckCircle size={20} /> : <AlertCircle size={20} />}
-          <span className="text-sm font-bold">{toast.message}</span>
+          <div className="flex items-center gap-3 flex-1">
+            {toast.type === 'success' ? (
+              <CheckCircle size={20} className="text-[#B5FF03]" />
+            ) : (
+              <AlertCircle size={20} className="text-red-400" />
+            )}
+            <span className={`text-sm font-bold ${toast.type === 'success' ? 'text-[#B5FF03]' : 'text-red-400'}`}>
+              {toast.message}
+            </span>
+          </div>
+          {toast.action && (
+            <a
+              href={toast.action.href}
+              className="flex items-center gap-1 px-4 py-2 bg-[#B5FF03] text-black rounded-lg font-black text-[10px] uppercase tracking-widest hover:bg-[#a1e600] transition-all shrink-0"
+            >
+              {toast.action.label}
+              <ArrowRight size={14} />
+            </a>
+          )}
         </div>
       )}
 
@@ -206,10 +341,10 @@ const Importar = () => {
         <div className="bg-[#111] border border-[#333] rounded-2xl p-6">
           <h3 className="text-[10px] font-black text-[#B5FF03] uppercase tracking-widest mb-4">Tipo de Importação</h3>
           <div className="flex flex-wrap gap-3">
-            {['Estoque', 'Clientes', 'Equipamentos', 'Orçamentos'].map((type) => (
+            {Object.keys(COLUMNS_BY_TYPE).map((type) => (
               <button
                 key={type}
-                onClick={() => setSelectedType(type)}
+                onClick={() => setSelectedType(type as ImportType)}
                 className={
                   'px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest transition-all ' +
                   (selectedType === type
@@ -247,11 +382,11 @@ const Importar = () => {
 
         <div className="flex justify-center">
           <button
-            onClick={downloadCSV}
+            onClick={() => downloadCSV(selectedType)}
             className="flex items-center gap-2 px-6 py-3 bg-[#B5FF03] text-black font-black rounded-lg hover:bg-[#a1e600] transition-all"
           >
             <Download size={16} />
-            Baixar modelo CSV
+            Baixar modelo {selectedType}
           </button>
         </div>
       </div>
