@@ -288,11 +288,6 @@ const CRMLeads = () => {
                     {hasActiveFilters && <span className="text-[#B5FF03]"> (filtrado{filteredLeads.length !== 1 ? 's' : ''})</span>}
                   </p>
                 </div>
-                <button onClick={openAdd} className="flex items-center gap-2 px-6 py-3 bg-[#B5FF03] text-black font-black rounded-lg hover:bg-[#a1e600] transition-all">
-                  <Plus size={15} strokeWidth={2.5} />
-                  <span className="hidden sm:inline">Novo Contato</span>
-                  <span className="sm:hidden text-xs">Novo</span>
-                </button>
               </div>
               <button 
                 onClick={() => setIsSidebarOpen(false)}
