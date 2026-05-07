@@ -63,7 +63,7 @@ function AppRoutes() {
         }
       />
       <Route
-        path="/crm/Orçamentos"
+        path="/crm/orcamentos"
         element={
           <ProtectedRoute allowedRoles={['admin', 'manager', 'user']}>
             <MainLayout>
