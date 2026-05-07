@@ -13,9 +13,8 @@ import { useNavigate } from 'react-router-dom';
 
 interface Employee {
   id: string;
-  email: string;
   name: string;
-  role: 'funcionario' | 'socio';
+  role: 'tecnico' | 'motorista' | 'decorador' | 'administrativo';
   createdAt: string;
 }
 
@@ -45,9 +44,8 @@ const Configuracoes = () => {
   const [isLoadingEmployees, setIsLoadingEmployees] = useState(false);
 
   const [newEmployee, setNewEmployee] = useState({
-    email: '',
     name: '',
-    role: 'funcionario' as 'funcionario' | 'socio',
+    role: 'tecnico' as 'tecnico' | 'motorista' | 'decorador' | 'administrativo',
   });
 
   useEffect(() => {
@@ -116,17 +114,11 @@ const Configuracoes = () => {
   }, [user?.id]);
 
   const handleAddEmployee = async () => {
-    if (!newEmployee.email.trim() || !newEmployee.name.trim()) {
-      setInviteError('Preencha todos os campos');
+    if (!newEmployee.name.trim()) {
+      setInviteError('Preencha o nome do funcionário');
       return;
     }
 
-    if (employees.some(emp => emp.email === newEmployee.email)) {
-      setInviteError('Email já cadastrado');
-      return;
-    }
-
-    // Validar se user.id é um UUID válido
     if (!user?.id || !isValidUUID(user.id)) {
       setInviteError('ID de usuário inválido. Faça logout e login novamente.');
       console.error('[CONFIG] user.id inválido:', user?.id);
@@ -138,7 +130,6 @@ const Configuracoes = () => {
         .from('employees')
         .insert([{
           user_id: user.id,
-          email: newEmployee.email.trim(),
           name: newEmployee.name.trim(),
           role: newEmployee.role,
         }])
@@ -148,7 +139,7 @@ const Configuracoes = () => {
       if (error) throw error;
 
       setEmployees([...employees, data]);
-      setNewEmployee({ email: '', name: '', role: 'funcionario' });
+      setNewEmployee({ name: '', role: 'tecnico' });
       setInviteSuccess('Funcionário adicionado!');
       setInviteError('');
       setTimeout(() => setInviteSuccess(''), 3000);
@@ -364,7 +355,7 @@ const Configuracoes = () => {
 
       {activeModal && activeModal !== 'delete' && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/60 backdrop-blur-md animate-in fade-in duration-300">
-          <div className="bg-white border border-neutral-200 rounded-[40px] shadow-2xl w-full max-w-2xl overflow-hidden transform animate-in slide-in-from-bottom-8 duration-500">
+          <div className="bg-[#0a0a0a] border border-[#222222] rounded-[40px] shadow-2xl w-full max-w-2xl overflow-hidden transform animate-in slide-in-from-bottom-8 duration-500">
             {activeModal === 'perfil' ? (
               <form onSubmit={handleSaveProfile}>
                 <div className="px-12 py-10 border-b border-neutral-100 flex justify-between items-start bg-neutral-50/30">
@@ -427,68 +418,58 @@ const Configuracoes = () => {
                 </div>
                 </form>
             ) : activeModal === 'equipe' ? (
-              <div>
-                <div className="px-12 py-10 border-b border-neutral-100 flex justify-between items-start bg-neutral-50/30">
+              <div className="bg-[#000000]">
+                <div className="px-12 py-10 border-b border-[#222222] flex justify-between items-start">
                   <div>
-                    <span className="text-[10px] font-black text-neutral-400 uppercase tracking-[3px] mb-3 block">Preferências do Sistema</span>
-                    <h2 className="text-4xl font-black text-black tracking-tighter">Equipe</h2>
+                    <span className="text-[10px] font-black text-[#888888] uppercase tracking-[3px] mb-3 block">Preferências do Sistema</span>
+                    <h2 className="text-4xl font-black text-white tracking-tighter">Equipe</h2>
                   </div>
-                  <button type="button" onClick={() => { setActiveModal(null); setInviteError(''); setInviteSuccess(''); }} className="p-3 hover:bg-white rounded-2xl transition-colors text-neutral-300 hover:text-black border border-transparent hover:border-neutral-200 shadow-sm">
+                  <button type="button" onClick={() => { setActiveModal(null); setInviteError(''); setInviteSuccess(''); }} className="p-3 hover:bg-[#111111] rounded-2xl transition-colors text-[#888888] hover:text-white border border-transparent hover:border-[#222222]">
                     <X size={24} />
                   </button>
                 </div>
                 <div className="p-12 space-y-10 max-h-[60vh] overflow-y-auto custom-scrollbar">
                   {inviteError && (
-                    <div className="p-4 bg-red-50 border border-red-100 rounded-2xl flex items-center gap-3 text-red-600 text-sm font-medium">
+                    <div className="p-4 bg-[#111111] border border-red-500/30 rounded-2xl flex items-center gap-3 text-red-400 text-sm font-medium">
                       <AlertCircle size={20} />
                       {inviteError}
                     </div>
                   )}
                   {inviteSuccess && (
-                    <div className="p-4 bg-green-50 border border-green-100 rounded-2xl flex items-center gap-3 text-green-600 text-sm font-medium">
+                    <div className="p-4 bg-[#111111] border border-[#B5FF03]/30 rounded-2xl flex items-center gap-3 text-[#B5FF03] text-sm font-medium">
                       <CheckCircle2 size={20} />
                       {inviteSuccess}
                     </div>
                   )}
                   <div className="space-y-8">
-                    <div className="p-6 bg-blue-50 rounded-3xl border border-blue-100 flex items-center gap-4">
-                      <Users className="text-blue-500" size={32} />
-                      <div>
-                        <p className="text-sm font-black text-blue-900">Gerencie sua Equipe</p>
-                        <p className="text-xs text-blue-600 font-medium">Adicione e gerencie membros da equipe.</p>
-                      </div>
-                    </div>
-                    <div className="bg-neutral-50 border border-neutral-200 rounded-2xl p-6 space-y-4">
+                    <div className="bg-[#111111] border border-[#222222] rounded-2xl p-6 space-y-4">
                       <div className="space-y-3">
-                        <label className="text-[10px] font-black text-neutral-400 uppercase tracking-widest ml-1">Nome Completo</label>
-                        <input type="text" value={newEmployee.name} onChange={(e) => setNewEmployee({...newEmployee, name: e.target.value})} placeholder="João Silva" className="w-full bg-white border-2 border-neutral-100 rounded-xl px-4 py-3 font-bold text-black focus:border-black outline-none transition-all" />
+                        <label className="text-[10px] font-black text-white uppercase tracking-widest ml-1">Nome Completo</label>
+                        <input type="text" value={newEmployee.name} onChange={(e) => setNewEmployee({...newEmployee, name: e.target.value})} placeholder="João Silva" className="w-full bg-[#1a1a1a] border border-[#222222] rounded-xl px-4 py-3 font-bold text-white focus:border-[#B5FF03] outline-none transition-all" />
                       </div>
                       <div className="space-y-3">
-                        <label className="text-[10px] font-black text-neutral-400 uppercase tracking-widest ml-1">E-mail</label>
-                        <input type="email" value={newEmployee.email} onChange={(e) => setNewEmployee({...newEmployee, email: e.target.value})} placeholder="joao@empresa.com" className="w-full bg-white border-2 border-neutral-100 rounded-xl px-4 py-3 font-bold text-black focus:border-black outline-none transition-all" />
-                      </div>
-                      <div className="space-y-3">
-                        <label className="text-[10px] font-black text-neutral-400 uppercase tracking-widest ml-1">Cargo</label>
-                        <select value={newEmployee.role} onChange={(e) => setNewEmployee({...newEmployee, role: e.target.value as 'funcionario' | 'socio'})} className="w-full bg-white border-2 border-neutral-100 rounded-xl px-4 py-3 font-bold text-black focus:border-black outline-none transition-all">
-                          <option value="funcionario">Funcionário</option>
-                          <option value="socio">Sócio</option>
+                        <label className="text-[10px] font-black text-white uppercase tracking-widest ml-1">Cargo</label>
+                        <select value={newEmployee.role} onChange={(e) => setNewEmployee({...newEmployee, role: e.target.value as 'tecnico' | 'motorista' | 'decorador' | 'administrativo'})} className="w-full bg-[#1a1a1a] border border-[#222222] rounded-xl px-4 py-3 font-bold text-white focus:border-[#B5FF03] outline-none transition-all">
+                          <option value="tecnico">Técnico</option>
+                          <option value="motorista">Motorista</option>
+                          <option value="decorador">Decorador</option>
+                          <option value="administrativo">Administrativo</option>
                         </select>
                       </div>
-                      <button type="button" onClick={handleAddEmployee} className="w-full py-4 bg-black text-white rounded-xl font-black text-xs uppercase tracking-widest hover:bg-neutral-800 transition-all flex items-center justify-center gap-2">
+                      <button type="button" onClick={handleAddEmployee} className="w-full py-4 bg-[#B5FF03] text-black rounded-xl font-black text-xs uppercase tracking-widest hover:bg-[#a1e600] transition-all flex items-center justify-center gap-2">
                         <Users size={16} /> Adicionar Funcionário
                       </button>
                     </div>
                     {employees.length > 0 && (
                       <div className="space-y-4">
-                        <label className="text-[10px] font-black text-neutral-400 uppercase tracking-widest ml-1">Funcionários Cadastrados ({employees.length})</label>
+                        <label className="text-[10px] font-black text-white uppercase tracking-widest ml-1">Funcionários Cadastrados ({employees.length})</label>
                         {employees.map((emp) => (
-                          <div key={emp.id} className="p-4 bg-white border border-neutral-200 rounded-xl flex items-center justify-between">
+                          <div key={emp.id} className="p-4 bg-[#111111] border border-[#222222] rounded-xl flex items-center justify-between">
                             <div>
-                              <p className="font-black text-black">{emp.name}</p>
-                              <p className="text-sm text-neutral-500 font-medium">{emp.email}</p>
-                              <p className="text-xs text-neutral-400 font-medium uppercase">Cargo: {emp.role === 'socio' ? 'Sócio' : 'Funcionário'}</p>
+                              <p className="font-black text-white">{emp.name}</p>
+                              <p className="text-xs text-[#888888] font-medium uppercase">Cargo: {emp.role === 'tecnico' ? 'Técnico' : emp.role === 'motorista' ? 'Motorista' : emp.role === 'decorador' ? 'Decorador' : 'Administrativo'}</p>
                             </div>
-                            <button type="button" onClick={() => handleRemoveEmployee(emp.id)} className="px-4 py-2 bg-red-50 text-red-600 rounded-lg font-bold text-xs uppercase hover:bg-red-100 transition-all">
+                            <button type="button" onClick={() => handleRemoveEmployee(emp.id)} className="px-4 py-2 bg-red-500/10 text-red-400 rounded-lg font-bold text-xs uppercase hover:bg-red-500/20 transition-all">
                               Remover
                             </button>
                           </div>
@@ -497,8 +478,8 @@ const Configuracoes = () => {
                     )}
                   </div>
                 </div>
-                <div className="px-12 py-10 bg-neutral-50">
-                  <button type="button" onClick={() => setActiveModal(null)} className="w-full py-5 rounded-[20px] font-black text-[11px] uppercase tracking-widest text-neutral-400 hover:text-black hover:bg-neutral-100 transition-all border border-transparent hover:border-neutral-200">Fechar</button>
+                <div className="px-12 py-10 border-t border-[#222222]">
+                  <button type="button" onClick={() => setActiveModal(null)} className="w-full py-5 rounded-[20px] font-black text-[11px] uppercase tracking-widest text-[#888888] hover:text-white hover:bg-[#111111] transition-all border border-transparent hover:border-[#222222]">Fechar</button>
                 </div>
               </div>
             ) : null}
