@@ -65,6 +65,7 @@ interface FechadoOrcamentoItem {
 
 interface FechadoOrcamento {
   id: string;
+  stage?: string;
   items?: FechadoOrcamentoItem[];
   firstContact?: string;
 }
@@ -75,7 +76,7 @@ export const getReservedQuantity = (itemName: string, eventDate: string): number
     if (!stored) return 0;
     const orcamentos: FechadoOrcamento[] = JSON.parse(stored);
     return orcamentos
-      .filter(o => o.firstContact === eventDate && o.items && o.items.length > 0)
+      .filter(o => o.stage === STAGE_FECHADO && o.firstContact === eventDate && o.items && o.items.length > 0)
       .flatMap(o => o.items || [])
       .filter(i => i.descricao && i.descricao.toLowerCase() === itemName.toLowerCase())
       .reduce((sum, i) => sum + (i.quantidade || 0), 0);

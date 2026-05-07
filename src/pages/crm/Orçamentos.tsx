@@ -266,13 +266,14 @@ const CRMOrçamentos = () => {
         }
       }
 
-      updateLead(current.id!, modifiedLead);
-
       if (isFechado && current.items && current.items.length > 0) {
-        if (!wasFechado) {
-          current.items.forEach(item => deductInventory(item.descricao, item.quantidade));
+        if (wasFechado && prevLead?.items) {
+          prevLead.items.forEach(item => restoreInventory(item.descricao, item.quantidade));
         }
+        current.items.forEach(item => deductInventory(item.descricao, item.quantidade));
       }
+
+      updateLead(current.id!, modifiedLead);
     }
     setIsOpen(false);
   };
