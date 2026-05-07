@@ -88,7 +88,7 @@ const Sidebar = ({ isOpen = false, onClose }: SidebarProps) => {
             <LogOut className="w-4 h-4 shrink-0" strokeWidth={2} />
             <span>Sair</span>
           </button>
-          <p className="text-[11px] text-neutral-300 text-center mt-4">© 2026 Universo Axium</p>
+          <p className="text-[11px] text-neutral-300 text-center mt-4">© 2026 Ventura Luz e Efeitos</p>
         </div>
       </aside>
 
@@ -132,7 +132,7 @@ const Sidebar = ({ isOpen = false, onClose }: SidebarProps) => {
             <LogOut className="w-4 h-4 shrink-0" strokeWidth={2} />
             <span>Sair</span>
           </button>
-          <p className="text-[11px] text-neutral-300 text-center mt-4">© 2026 Universo Axium</p>
+          <p className="text-[11px] text-neutral-300 text-center mt-4">© 2026 Ventura Luz e Efeitos</p>
         </div>
       </aside>
     </>

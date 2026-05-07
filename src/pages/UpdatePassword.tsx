@@ -82,7 +82,7 @@ const UpdatePassword = () => {
             Sistema de gestão interno para resultados extraordinários.
           </p>
         </div>
-        <p className="text-neutral-600 text-sm">© 2026 Universo Axium · v1.0.0</p>
+        <p className="text-neutral-600 text-sm">© 2026 Ventura Luz e Efeitos · v1.0.0</p>
       </div>
 
       <div className="flex-1 flex items-center justify-center p-4 md:p-8">
