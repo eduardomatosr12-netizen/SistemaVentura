@@ -613,10 +613,10 @@ const CRMOrçamentos = () => {
             <div className="flex justify-between items-start md:items-center gap-3 px-4 md:px-7 py-3 md:py-5 border-b border-slate-100 shrink-0">
               <div>
                   <h2 className="text-lg md:text-xl font-black text-white tracking-tight">
-                    {mode === 'add' ? 'Novo Contato' : 'Editar Contato'}
+                    {mode === 'add' ? 'Novo Evento' : 'Editar Evento'}
                   </h2>
                 <p className="text-[10px] md:text-xs text-[#B5FF03] mt-0.5 md:mt-0.5">
-                  {mode === 'add' ? 'Preencha os dados para cadastrar um novo contato.' : `Editando: ${current.name}`}
+                  {mode === 'add' ? 'Preencha os dados para cadastrar um novo evento.' : `Editando: ${current.name}`}
                 </p>
               </div>
                 <button onClick={() => setIsOpen(false)} className="text-[#B5FF03] hover:text-white transition-colors p-1 flex-shrink-0" type="button">
@@ -631,9 +631,15 @@ const CRMOrçamentos = () => {
                     <input type="text" value={current.name} onChange={e => updateField('name', e.target.value)}
                       required className={inputCls} placeholder="Ex: João Silva" />
                   </Field>
-                  <Field label="NICHO">
-                    <input type="text" value={current.niche} onChange={e => updateField('niche', e.target.value)}
-                      className={inputCls} placeholder="Ex: Odontologia" />
+                  <Field label="TIPO DE EVENTO">
+                    <select value={current.niche} onChange={e => updateField('niche', e.target.value)}
+                      className={`${inputCls} appearance-none cursor-pointer`}>
+                      <option value="">Selecione...</option>
+                      <option value="Casamento">Casamento</option>
+                      <option value="15 Anos">15 Anos</option>
+                      <option value="Corporativo">Corporativo</option>
+                      <option value="Outros">Outros</option>
+                    </select>
                   </Field>
                 </div>
 
@@ -642,42 +648,38 @@ const CRMOrçamentos = () => {
                     <input type="text" value={current.whatsapp} onChange={e => updateField('whatsapp', e.target.value)}
                       className={inputCls} placeholder="(11) 99999-9999" />
                   </Field>
-                  <Field label="EMAIL">
-                    <input type="email" value={current.email} onChange={e => updateField('email', e.target.value)}
-                      className={inputCls} placeholder="email@dominio.com" />
-                  </Field>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
                   <Field label="INSTAGRAM">
                     <input type="text" value={current.instagram} onChange={e => updateField('instagram', e.target.value)}
                       className={inputCls} placeholder="@Usuário" />
                   </Field>
-                      <Field label="ETAPA DO PIPELINE">
-                        <select value={current.stage} onChange={e => updateField('stage', e.target.value)}
-                          className={`${inputCls} appearance-none cursor-pointer`}>
-                          {STAGES.map(s => <option key={s} value={s} className="bg-[#1a1a1a] text-white">{s === 'Novos Orçamentos' ? 'Novos Contatos' : s}</option>)}
-                        </select>
-                      </Field>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
-                   <Field label="PRIMEIRO CONTATO">
+                  <Field label="CIDADE">
+                    <input type="text" value={current.address} onChange={e => updateField('address', e.target.value)}
+                      className={inputCls} placeholder="Ex: São Paulo - SP" />
+                  </Field>
+                  <Field label="ETAPA DO PIPELINE">
+                    <select value={current.stage} onChange={e => updateField('stage', e.target.value)}
+                      className={`${inputCls} appearance-none cursor-pointer`}>
+                      {STAGES.map(s => <option key={s} value={s} className="bg-[#1a1a1a] text-white">{s === 'Novos Orçamentos' ? 'Novos Contatos' : s}</option>)}
+                    </select>
+                  </Field>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+                  <Field label="DATA DO EVENTO">
                     <input type="date" value={current.firstContact} onChange={e => updateField('firstContact', e.target.value)}
                       className={`${inputCls} [color-scheme:light]`} />
                   </Field>
-                   <Field label="DATA DE FECHAMENTO">
+                  <Field label="DATA DE FECHAMENTO">
                     <input type="date" value={current.closingDate} onChange={e => updateField('closingDate', e.target.value)}
                       className={`${inputCls} [color-scheme:light]`} />
                   </Field>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
-                   <Field label="LEMBRETE DE FOLLOW-UP">
-                    <input type="date" value={current.followUpReminder} onChange={e => updateField('followUpReminder', e.target.value)}
-                      className={`${inputCls} [color-scheme:light]`} />
-                  </Field>
-                   <Field label="VALOR DO CONTRATO">
+                  <Field label="VALOR DO CONTRATO">
                     <input 
                       type="text" 
                       value={current.value} 
@@ -686,22 +688,10 @@ const CRMOrçamentos = () => {
                       placeholder="R$ 0,00" 
                     />
                   </Field>
-                </div>
-
-                 <Field label="ENDEREÇO / LOCALIZAÇÃO">
-                   <input type="text" value={current.address} onChange={e => updateField('address', e.target.value)}
-                     className={inputCls} placeholder="Ex: São Paulo - SP" />
-                 </Field>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
-                   <Field label="QUANTIDADE DE AVALIAÇÕES GMN">
-                     <input type="number" min="0" value={current.gmnReviews} onChange={e => updateField('gmnReviews', e.target.value)}
-                       className={inputCls} placeholder="Ex: 248" />
-                   </Field>
-                    <Field label="MÉDIA DE ESTRELAS GMN">
-                     <input type="number" min="0" max="5" step="0.1" value={current.gmnStars} onChange={e => updateField('gmnStars', e.target.value)}
-                       className={inputCls} placeholder="Ex: 4.7" />
-                   </Field>
+                  <Field label="DECORADOR">
+                    <input type="text" value={current.followUpReminder} onChange={e => updateField('followUpReminder', e.target.value)}
+                      className={inputCls} placeholder="Nome do decorador" />
+                  </Field>
                 </div>
 
                  <Field label="OBSERVAÇÕES">
