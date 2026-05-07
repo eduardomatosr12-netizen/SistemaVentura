@@ -39,9 +39,9 @@ const DEFAULT_STATUS_COLUMNS: ColumnOption[] = [
 ];
 
 const CATEGORY_OPTIONS: ColumnOption[] = [
-  { id: 'cat-dec', label: 'Decoração', color: '#3b82f6' },
-  { id: 'cat-mov', label: 'Móveis', color: '#f59e0b' },
-  { id: 'cat-ilu', label: 'Iluminação', color: '#84cc16' },
+  { id: 'cat-dec', label: 'Decoração', color: '#6b7280' },
+  { id: 'cat-mov', label: 'Móveis', color: '#6b7280' },
+  { id: 'cat-ilu', label: 'Iluminação', color: '#6b7280' },
 ];
 
 const DEFAULT_PRIORITY_COLUMNS: ColumnOption[] = [
@@ -95,6 +95,52 @@ const Board = ({
   onAddColumn: (boardId: string) => void;
 }) => {
   const { role, employeeName } = useAuth();
+
+  const [activeCategoryRow, setActiveCategoryRow] = useState<string | null>(null);
+  const [editingCatId, setEditingCatId] = useState<string | null>(null);
+  const [editingCatLabel, setEditingCatLabel] = useState('');
+  const [addingCategory, setAddingCategory] = useState(false);
+  const [newCategoryLabel, setNewCategoryLabel] = useState('');
+
+  const catCol = board.columns.find(c => c.id === 'col-2');
+
+  const updateCategoryOptions = (newOptions: ColumnOption[]) => {
+    if (!catCol) return;
+    onUpdateBoard({
+      ...board,
+      columns: board.columns.map(c => c.id === 'col-2' ? { ...c, options: newOptions } : c),
+    });
+  };
+
+  const handleAddCategory = () => {
+    const label = newCategoryLabel.trim();
+    if (!label || !catCol) return;
+    const colors = ['#3b82f6', '#f59e0b', '#84cc16', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#22c55e'];
+    const usedColors = (catCol.options || []).map(o => o.color);
+    const freeColor = colors.find(c => !usedColors.includes(c)) || '#6b7280';
+    const newOpt: ColumnOption = { id: generateUUID(), label, color: freeColor };
+    updateCategoryOptions([...(catCol.options || []), newOpt]);
+    setNewCategoryLabel('');
+    setAddingCategory(false);
+  };
+
+  const handleEditCategory = (opt: ColumnOption) => {
+    const label = editingCatLabel.trim();
+    if (!label || !catCol) return;
+    updateCategoryOptions((catCol.options || []).map(o => o.id === opt.id ? { ...o, label } : o));
+    setEditingCatId(null);
+    setEditingCatLabel('');
+  };
+
+  const handleDeleteCategory = (opt: ColumnOption) => {
+    if (!catCol || !confirm(`Excluir categoria "${opt.label}"?`)) return;
+    updateCategoryOptions((catCol.options || []).filter(o => o.id !== opt.id));
+    board.rows.forEach(r => {
+      if (r.values['col-2'] === opt.label) {
+        handleCellChange(r.id, 'col-2', '');
+      }
+    });
+  };
 
   const handleAddRow = () => {
     const newRow: Row = {
@@ -228,24 +274,122 @@ const Board = ({
         const options = col.options || [];
         const isCategory = col.id === 'col-2';
         if (isCategory) {
+          const isOpen = activeCategoryRow === row.id;
           return (
-            <div className="flex items-center gap-2 px-3 py-2">
-              {value && (
-                <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: getOptionColor(col.id, String(value)) }} />
-              )}
-              <select
-                value={String(value)}
-                onChange={(e) => handleCellChange(row.id, col.id, e.target.value)}
-                className="flex-1 min-h-[24px] bg-transparent border-none outline-none text-sm cursor-pointer font-bold"
-                style={{ color: value ? '#B5FF03' : '#888' }}
+            <div className="relative px-3 py-2">
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); setActiveCategoryRow(isOpen ? null : row.id); setAddingCategory(false); setEditingCatId(null); }}
+                className="flex items-center gap-2 w-full text-left"
               >
-                <option value="">—</option>
-                {options.map(opt => (
-                  <option key={opt.id} value={opt.label} className="bg-[#1a1a1a] text-white">
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
+                {value && (
+                  <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: getOptionColor(col.id, String(value)) }} />
+                )}
+                <span className="text-sm font-bold truncate" style={{ color: value ? '#B5FF03' : '#888' }}>
+                  {String(value) || '—'}
+                </span>
+              </button>
+
+              {isOpen && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setActiveCategoryRow(null)} />
+                  <div className="absolute top-full left-0 right-0 mt-1 z-50 bg-[#1a1a1a] border border-[#333] rounded-lg shadow-xl overflow-hidden min-w-[200px]">
+                    <div className="max-h-[240px] overflow-y-auto">
+                      {options.map(opt => {
+                        const isEditing = editingCatId === opt.id;
+                        return (
+                          <div
+                            key={opt.id}
+                            className="flex items-center gap-2 px-3 py-2 hover:bg-[#222] transition-colors group"
+                          >
+                            <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: opt.color }} />
+                            {isEditing ? (
+                              <input
+                                autoFocus
+                                type="text"
+                                value={editingCatLabel}
+                                onChange={(e) => setEditingCatLabel(e.target.value)}
+                                onKeyDown={(e) => {
+                                  e.stopPropagation();
+                                  if (e.key === 'Enter') handleEditCategory(opt);
+                                  if (e.key === 'Escape') { setEditingCatId(null); setEditingCatLabel(''); }
+                                }}
+                                onBlur={() => { setEditingCatId(null); setEditingCatLabel(''); }}
+                                className="flex-1 bg-[#111] border border-[#B5FF03] rounded px-2 py-0.5 text-xs text-white outline-none"
+                                onClick={(e) => e.stopPropagation()}
+                              />
+                            ) : (
+                              <button
+                                type="button"
+                                onClick={(e) => { e.stopPropagation(); handleCellChange(row.id, col.id, opt.label); setActiveCategoryRow(null); }}
+                                className="flex-1 text-left text-xs text-white font-medium truncate"
+                              >
+                                {opt.label}
+                              </button>
+                            )}
+                            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <button
+                                type="button"
+                                onClick={(e) => { e.stopPropagation(); setEditingCatId(opt.id); setEditingCatLabel(opt.label); setAddingCategory(false); }}
+                                className="p-1 text-neutral-400 hover:text-[#B5FF03] transition-colors"
+                                title="Editar"
+                              >
+                                ✎
+                              </button>
+                              <button
+                                type="button"
+                                onClick={(e) => { e.stopPropagation(); handleDeleteCategory(opt); }}
+                                className="p-1 text-neutral-400 hover:text-red-400 transition-colors"
+                                title="Excluir"
+                              >
+                                ✕
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    <div className="border-t border-[#333]">
+                      {addingCategory ? (
+                        <div className="flex items-center gap-2 px-3 py-2">
+                          <span className="w-2 h-2 rounded-full shrink-0 bg-[#555]" />
+                          <input
+                            autoFocus
+                            type="text"
+                            value={newCategoryLabel}
+                            onChange={(e) => setNewCategoryLabel(e.target.value)}
+                            onKeyDown={(e) => {
+                              e.stopPropagation();
+                              if (e.key === 'Enter') handleAddCategory();
+                              if (e.key === 'Escape') { setAddingCategory(false); setNewCategoryLabel(''); }
+                            }}
+                            placeholder="Nova categoria..."
+                            className="flex-1 bg-[#111] border border-[#B5FF03] rounded px-2 py-0.5 text-xs text-white outline-none placeholder-neutral-500"
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                          <button
+                            type="button"
+                            onClick={(e) => { e.stopPropagation(); handleAddCategory(); }}
+                            className="text-[#B5FF03] text-xs font-bold hover:text-white transition-colors"
+                          >
+                            OK
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={(e) => { e.stopPropagation(); setAddingCategory(true); setEditingCatId(null); setNewCategoryLabel(''); }}
+                          className="flex items-center gap-2 px-3 py-2 w-full text-left text-xs text-[#B5FF03] font-bold hover:bg-[#222] transition-colors"
+                        >
+                          <span className="w-4 h-4 flex items-center justify-center rounded-full border border-[#B5FF03] text-[10px]">+</span>
+                          Nova Categoria
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
           );
         }
