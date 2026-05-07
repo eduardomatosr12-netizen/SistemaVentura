@@ -52,8 +52,8 @@ const Login = () => {
 
       <div className="flex-1 flex items-center justify-center p-4 md:p-8">
         <div className="w-full max-w-sm">
-          <div className="lg:hidden mb-6 md:mb-10 text-center">
-             <div className="text-2xl font-black text-[#B5FF03]">VENTURA</div>
+          <div className="lg:hidden mb-6 md:mb-10 flex justify-center">
+             <img src="/logo.jpg" alt="VENTURA" className="w-full max-w-[180px] object-contain" />
            </div>
 
           <div className="mb-6 md:mb-8">
