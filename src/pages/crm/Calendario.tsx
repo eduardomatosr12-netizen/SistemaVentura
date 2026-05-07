@@ -352,20 +352,6 @@ const CRMCalendario = () => {
 
                   <div className="space-y-2">
                     <label className="flex items-center gap-2 text-[9px] font-black text-[#B5FF03] uppercase tracking-widest">
-                      <FileText size={12} strokeWidth={3} className="text-[#B5FF03]" />
-                      DESCRIÇÃO
-                    </label>
-                    <textarea
-                      rows={3}
-                      value={formData.description}
-                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                      placeholder="Adicione observações importantes..."
-                      className="w-full bg-[#0a0a0a] border border-[#333] rounded-md px-3 py-2 text-xs font-bold text-white focus:ring-1 focus:ring-[#B5FF03] outline-none transition-all resize-none"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="flex items-center gap-2 text-[9px] font-black text-[#B5FF03] uppercase tracking-widest">
                       <Users size={12} strokeWidth={3} className="text-[#B5FF03]" />
                       EQUIPE
                     </label>
@@ -375,6 +361,20 @@ const CRMCalendario = () => {
                       onChange={(e) => setFormData({ ...formData, equipe: e.target.value })}
                       placeholder="Liste os membros da equipe para este evento"
                       className="w-full bg-[#0a0a0a] border border-[#333] rounded-md px-3 py-2 text-xs font-black text-white focus:ring-1 focus:ring-[#B5FF03] outline-none transition-all"
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="flex items-center gap-2 text-[9px] font-black text-[#B5FF03] uppercase tracking-widest">
+                      <FileText size={12} strokeWidth={3} className="text-[#B5FF03]" />
+                      DESCRIÇÃO
+                    </label>
+                    <textarea
+                      rows={3}
+                      value={formData.description}
+                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                      placeholder="Adicione observações importantes..."
+                      className="w-full bg-[#0a0a0a] border border-[#333] rounded-md px-3 py-2 text-xs font-bold text-white focus:ring-1 focus:ring-[#B5FF03] outline-none transition-all resize-none"
                     />
                   </div>
                </div>
