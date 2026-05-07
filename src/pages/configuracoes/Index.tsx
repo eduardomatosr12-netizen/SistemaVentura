@@ -305,7 +305,7 @@ const Configuracoes = () => {
       <div className="mb-10 flex justify-between items-end">
         <div>
           <h1 className="text-4xl font-black text-black tracking-tighter mb-1">Configurações</h1>
-          <p className="text-neutral-500 text-sm font-medium">Controle central de perfil e preferências.</p>
+          <p className="text-[#888888] text-sm font-medium">Controle central de perfil e preferências.</p>
         </div>
       </div>
 
@@ -313,27 +313,27 @@ const Configuracoes = () => {
         {sections.map((section) => {
           const Icon = section.icon;
           return (
-            <div key={section.id} className="bg-white border border-neutral-200 rounded-3xl p-8 hover:border-black transition-all group relative overflow-hidden">
+            <div key={section.id} className="bg-[#111111] border border-[#222222] rounded-3xl p-8 hover:border-[#b5ff03] transition-all group relative overflow-hidden">
               <div className="flex items-center justify-between relative z-10">
                 <div className="flex items-center gap-6">
-                  <div className="w-16 h-16 bg-neutral-50 rounded-2xl flex items-center justify-center shrink-0 group-hover:bg-black transition-colors">
-                    <Icon className="w-8 h-8 text-neutral-400 group-hover:text-white transition-colors" strokeWidth={2.5} />
+                  <div className="w-16 h-16 bg-[#1a1a1a] rounded-2xl flex items-center justify-center shrink-0 group-hover:bg-[#1a1a1a] transition-colors">
+                    <Icon className="w-8 h-8 text-[#b5ff03] group-hover:text-[#b5ff03] transition-colors" strokeWidth={2.5} />
                   </div>
                   <div>
-                    <h3 className="font-black text-black text-lg tracking-tight">{section.title}</h3>
-                    <p className="text-xs text-neutral-400 font-bold uppercase tracking-widest mt-1">{section.description}</p>
+                    <h3 className="font-black text-[#ffffff] text-lg tracking-tight">{section.title}</h3>
+                    <p className="text-xs text-[#888888] font-bold uppercase tracking-widest mt-1">{section.description}</p>
                   </div>
                 </div>
                 <button 
                   onClick={() => setActiveModal(section.id)}
-                  className="bg-black text-white px-6 py-3 rounded-md font-black text-[11px] uppercase tracking-widest hover:bg-neutral-800 transition-all active:scale-[0.95] shadow-lg shadow-black/10"
+                  className="bg-[#b5ff03] text-black font-bold px-6 py-3 rounded-md text-[11px] uppercase tracking-widest hover:bg-[#b5ff03]/90 transition-all active:scale-[0.95] shadow-lg shadow-black/10"
                 >
                   Configurar
                 </button>
               </div>
-              <div className="flex gap-2 flex-wrap mt-8 pt-8 border-t border-neutral-50">
+              <div className="flex gap-2 flex-wrap mt-8 pt-8 border-t border-[#222222]">
                 {section.items.map((item, itemIdx) => (
-                  <span key={itemIdx} className="px-4 py-2 bg-neutral-50 text-neutral-400 text-[10px] font-black uppercase tracking-[1.5px] rounded-md border border-neutral-100">
+                  <span key={itemIdx} className="px-4 py-2 bg-[#111111] text-[#888888] text-[10px] font-black uppercase tracking-[1.5px] rounded-md border border-[#222222]">
                     {item}
                   </span>
                 ))}
