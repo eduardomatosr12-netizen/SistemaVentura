@@ -1,10 +1,11 @@
 ﻿import { useState, useMemo, useRef, useEffect } from 'react';
 import { ReactNode } from 'react';
-import { Plus, Pencil, Trash2, X, Save, Filter, XCircle, ChevronDown, ChevronUp, AlertCircle, MessageCircle } from 'lucide-react';
+import { Plus, Pencil, Trash2, X, Save, Filter, XCircle, ChevronDown, ChevronUp, AlertCircle, MessageCircle, Package } from 'lucide-react';
 import { cleanPhoneNumber, generateWhatsAppLink, WHATSAPP_MESSAGE_TEMPLATES } from '../../lib/whatsapp';
-import { useCRM, type Lead } from '../../contexts/CRMContext';
+import { useCRM, type Lead, type OrcamentoItem } from '../../contexts/CRMContext';
 import { useFilters } from '../../contexts/FilterContext';
 import { useAuth } from '../../contexts/AuthContext';
+import { generateUUID } from '../../lib/uuid';
 
 const formatBRL = (val: string) => {
   const numeric = val.replace(/\D/g, '');
@@ -20,7 +21,7 @@ const EMPTY_LEAD: Partial<Lead> = {
   name: '', niche: '', whatsapp: '', email: '', instagram: '',
   stage: 'Novos Orçamentos', firstContact: '', closingDate: '',
   followUpReminder: '', address: '', gmnReviews: '', gmnStars: '',
-  notes: '', value: '',
+  notes: '', value: '', items: [],
 };
 
 const STAGES = [
@@ -112,6 +113,36 @@ const CRMOrçamentos = () => {
   const [whatsAppModal, setWhatsAppModal] = useState<{ lead: Lead | null; selectedTemplate: string | null }>({ lead: null, selectedTemplate: null });
   const [nicheSuggestions, setNicheSuggestions] = useState<string[]>([]);
   const [showNicheSuggestions, setShowNicheSuggestions] = useState(false);
+
+  const [newItemDesc, setNewItemDesc] = useState('');
+  const [newItemQty, setNewItemQty] = useState(1);
+  const [newItemVal, setNewItemVal] = useState(0);
+
+  const addItem = () => {
+    if (!newItemDesc.trim()) return;
+    const item: OrcamentoItem = {
+      id: generateUUID(),
+      descricao: newItemDesc.trim(),
+      quantidade: newItemQty,
+      valorUnitario: newItemVal,
+    };
+    const updatedItems = [...(current.items || []), item];
+    setCurrent(prev => ({ ...prev, items: updatedItems }));
+    const total = updatedItems.reduce((sum, i) => sum + i.quantidade * i.valorUnitario, 0);
+    const formatted = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(total);
+    updateField('value', formatted);
+    setNewItemDesc('');
+    setNewItemQty(1);
+    setNewItemVal(0);
+  };
+
+  const removeItem = (id: string) => {
+    const updatedItems = (current.items || []).filter(i => i.id !== id);
+    setCurrent(prev => ({ ...prev, items: updatedItems }));
+    const total = updatedItems.reduce((sum, i) => sum + i.quantidade * i.valorUnitario, 0);
+    const formatted = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(total);
+    updateField('value', formatted);
+  };
 
   const uniqueNiches = useMemo(() => {
     if (!Orçamentos || !Array.isArray(Orçamentos)) return [];
@@ -674,11 +705,69 @@ const CRMOrçamentos = () => {
                 </div>
 
                  <Field label="OBSERVAÇÕES">
-                  <textarea value={current.notes} onChange={e => updateField('notes', e.target.value)}
-                    rows={4} className={`${inputCls} resize-none`}
-                    placeholder="Notas internas, contexto do lead..." />
-                </Field>
-              </div>
+                   <textarea value={current.notes} onChange={e => updateField('notes', e.target.value)}
+                     rows={4} className={`${inputCls} resize-none`}
+                     placeholder="Notas internas, contexto do lead..." />
+                 </Field>
+
+                 <div className="border-t border-[#333] pt-4 mt-2">
+                   <label className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-widest mb-3" style={{color: '#B5FF03'}}>
+                     <Package size={14} /> ITENS DO ORÇAMENTO
+                   </label>
+
+                   {current.items && current.items.length > 0 && (
+                     <div className="space-y-2 mb-4">
+                       {current.items.map(item => (
+                         <div key={item.id} className="flex items-center gap-2 bg-[#1a1a1a] border border-[#333] rounded-md px-3 py-2">
+                           <span className="flex-1 text-white text-sm font-medium truncate">{item.descricao}</span>
+                           <span className="text-neutral-400 text-xs whitespace-nowrap">{item.quantidade}x</span>
+                           <span className="text-white text-xs font-bold whitespace-nowrap">
+                             {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(item.valorUnitario)}
+                           </span>
+                           <button type="button" onClick={() => removeItem(item.id)} className="text-neutral-500 hover:text-red-500 transition-colors p-1">
+                             <X size={14} />
+                           </button>
+                         </div>
+                       ))}
+                     </div>
+                   )}
+
+                   <div className="flex items-center gap-2">
+                     <input
+                       type="text"
+                       value={newItemDesc}
+                       onChange={e => setNewItemDesc(e.target.value)}
+                       placeholder="Descrição do item"
+                       className="flex-1 bg-[#1a1a1a] border border-gray-700 rounded-md py-2 px-3 text-white text-xs placeholder-gray-500 focus:outline-none focus:border-[#B5FF03] transition-colors"
+                       onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addItem(); } }}
+                     />
+                     <input
+                       type="number"
+                       min="1"
+                       value={newItemQty}
+                       onChange={e => setNewItemQty(parseInt(e.target.value) || 1)}
+                       className="w-14 bg-[#1a1a1a] border border-gray-700 rounded-md py-2 px-2 text-white text-xs text-center focus:outline-none focus:border-[#B5FF03] transition-colors"
+                       placeholder="Qtd"
+                     />
+                     <input
+                       type="number"
+                       min="0"
+                       step="0.01"
+                       value={newItemVal}
+                       onChange={e => setNewItemVal(parseFloat(e.target.value) || 0)}
+                       className="w-24 bg-[#1a1a1a] border border-gray-700 rounded-md py-2 px-2 text-white text-xs text-right focus:outline-none focus:border-[#B5FF03] transition-colors"
+                       placeholder="Valor unit."
+                     />
+                     <button
+                       type="button"
+                       onClick={addItem}
+                       className="p-2 bg-[#B5FF03] text-black rounded-md hover:bg-[#a1e600] transition-colors"
+                     >
+                       <Plus size={16} />
+                     </button>
+                   </div>
+                 </div>
+               </div>
 
                <div className="flex flex-col md:flex-row gap-2 md:gap-3 px-4 md:px-7 py-3 md:py-5 border-t border-[#333] shrink-0 bg-[#111]">
                  <button

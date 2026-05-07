@@ -43,6 +43,13 @@ const CRMCalendario = () => {
     );
   }, [closedOrçamentos, clientSearch]);
 
+  const buildItemsDescription = (lead: typeof Orçamentos[number]): string => {
+    const items = lead.items;
+    if (!items || items.length === 0) return '';
+    const lines = items.map(i => `- ${i.quantidade}x ${i.descricao}`);
+    return `Itens do Orçamento Fechado:\n${lines.join('\n')}`;
+  };
+
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (clientDropdownRef.current && !clientDropdownRef.current.contains(e.target as Node)) {
@@ -386,7 +393,8 @@ const CRMCalendario = () => {
                               type="button"
                               onClick={() => {
                                 setClientSearch(o.name);
-                                setFormData({ ...formData, client: o.name, clientId: o.id });
+                                const itemsDesc = buildItemsDescription(o);
+                                setFormData({ ...formData, client: o.name, clientId: o.id, description: itemsDesc });
                                 setShowClientDropdown(false);
                               }}
                               className="w-full text-left px-3 py-2 text-xs text-white hover:bg-[#333] transition-colors border-b border-[#222] last:border-b-0"

@@ -3,6 +3,13 @@ import type { ReactNode } from 'react';
 import { STAGES, STAGE_CONFIG, parseMonetaryValue, calculateTotalValue, groupOrçamentosByStage, type Stage } from '../lib/crmHelpers';
 import { generateUUID } from '../lib/uuid';
 
+export interface OrcamentoItem {
+  id: string;
+  descricao: string;
+  quantidade: number;
+  valorUnitario: number;
+}
+
 export interface Lead {
   id: string;
   name: string;
@@ -20,6 +27,7 @@ export interface Lead {
   gmnStars: string;
   notes: string;
   value: string;
+  items?: OrcamentoItem[];
   lastModifiedBy?: string;
 }
 
