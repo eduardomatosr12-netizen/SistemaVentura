@@ -38,7 +38,7 @@ const Login = () => {
   return (
     <div className="min-h-screen bg-black flex">
       <div className="hidden lg:flex lg:w-1/2 bg-black flex-col justify-between p-12">
-        <div className="text-3xl font-black text-[#B5FF03]">VENTURA</div>
+        <img src="/logo.jpg" alt="VENTURA" className="w-full max-w-[160px] object-contain" />
         <div>
           <h1 className="text-5xl font-black text-white leading-tight tracking-tight mb-4">
             Transformando Ambientes,<br />Criando Experiências.
