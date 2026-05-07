@@ -54,13 +54,13 @@ const PRESET_COLORS = ['#ef4444', '#f97316', '#f59e0b', '#84cc16', '#22c55e', '#
 
 const COLUMN_TYPES = [
   { type: 'text', label: 'Texto', icon: 'Aa' },
-  { type: 'number', label: 'Número', icon: '#' },
-  { type: 'status', label: 'Status', icon: '●●' },
-  { type: 'priority', label: 'Prioridade', icon: '!' },
-  { type: 'people', label: 'Pessoa', icon: '👤' },
+  { type: 'number', label: 'Quantidade', icon: '#' },
+  { type: 'status', label: 'Disponibilidade', icon: '●●' },
+  { type: 'priority', label: 'Moeda/Valor', icon: '$' },
+  { type: 'people', label: 'Fornecedor', icon: '🏢' },
   { type: 'date', label: 'Data', icon: '📅' },
-  { type: 'notes', label: 'Notas', icon: '📝' },
-  { type: 'tags', label: 'Tags', icon: '🏷' },
+  { type: 'notes', label: 'Especificações', icon: '📋' },
+  { type: 'tags', label: 'Categoria', icon: '🏷' },
 ] as const;
 
 const DEFAULT_BOARD: BoardType = {
@@ -146,7 +146,7 @@ const Board = ({
     const newRow: Row = {
       id: generateUUID(),
       values: board.columns.reduce((acc, col) => {
-        acc[col.id] = col.type === 'number' ? 0 : '';
+        acc[col.id] = col.type === 'number' || col.type === 'priority' ? 0 : '';
         return acc;
       }, {} as Record<string, unknown>),
       lastModifiedBy: employeeName || (role === 'admin' ? 'Administrador' : 'Funcionário'),
@@ -269,8 +269,23 @@ const Board = ({
             autoComplete="off"
           />
         );
-      case 'status':
-      case 'priority': {
+      case 'priority':
+        return (
+          <div className="flex items-center gap-1 px-3 w-full">
+            <span className="text-[#B5FF03] text-sm font-bold shrink-0">R$</span>
+            <input
+              type="number"
+              step="0.01"
+              value={String(value || '')}
+              onChange={(e) => handleCellChange(row.id, col.id, e.target.value)}
+              onKeyDown={(e) => e.stopPropagation()}
+              className="flex-1 min-h-[36px] bg-transparent border-none outline-none text-sm text-white font-bold focus:border-b-2 focus:border-[#B5FF03] transition-colors"
+              autoComplete="off"
+              placeholder="0,00"
+            />
+          </div>
+        );
+      case 'status': {
         const options = col.options || [];
         const isCategory = col.id === 'col-2';
         if (isCategory) {
@@ -718,7 +733,7 @@ const Tarefas = () => {
     const newRow: Row = {
       id: generateUUID(),
       values: board.columns.reduce((acc, col) => {
-        acc[col.id] = col.type === 'number' ? 0 : '';
+        acc[col.id] = col.type === 'number' || col.type === 'priority' ? 0 : '';
         return acc;
       }, {} as Record<string, unknown>),
     };
@@ -762,14 +777,9 @@ const Tarefas = () => {
       width: newColumnData.width,
       options:
         newColumnData.type === 'status' ? [
-  { id: 'st-1', label: 'Pendente', color: '#6b7280' },
-  { id: 'st-2', label: 'Em Andamento', color: '#f59e0b' },
-  { id: 'st-3', label: 'Concluído', color: '#B5FF03' },
-        ] :
-        newColumnData.type === 'priority' ? [
-  { id: 'pr-1', label: 'Baixa', color: '#6b7280' },
-  { id: 'pr-2', label: 'Media', color: '#f59e0b' },
-  { id: 'pr-3', label: 'Alta', color: '#ef4444' },
+  { id: 'st-1', label: 'Disponível', color: '#B5FF03' },
+  { id: 'st-2', label: 'Alugado', color: '#f59e0b' },
+  { id: 'st-3', label: 'Manutenção', color: '#ef4444' },
         ] :
         newColumnData.type === 'tags' ? [
   { id: 'tg-1', label: 'Urgente', color: '#ef4444' },
