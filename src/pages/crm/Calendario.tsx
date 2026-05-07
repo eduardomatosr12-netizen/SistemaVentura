@@ -1,11 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useCRM } from '../../contexts/CRMContext';
 import type { CalendarEvent } from '../../contexts/CRMContext';
 import { generateUUID } from '../../lib/uuid';
-import { X, ExternalLink, Clock, User, Users, MessageSquare, Plus, Trash2, Calendar as CalendarIcon, Link as LinkIcon, FileText, ChevronLeft, ChevronRight } from 'lucide-react';
+import { X, ExternalLink, Clock, User, Users, MessageSquare, Plus, Trash2, Calendar as CalendarIcon, Link as LinkIcon, FileText, ChevronLeft, ChevronRight, Search } from 'lucide-react';
 
 const CRMCalendario = () => {
-  const { events, addEvent, updateEvent, deleteEvent } = useCRM();
+  const { events, addEvent, updateEvent, deleteEvent, Orçamentos } = useCRM();
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<'create' | 'edit'>('create');
@@ -20,11 +20,38 @@ const CRMCalendario = () => {
     eventType: 'Reunião',
     date: '',
     client: '',
+    clientId: '',
     city: '',
     decorator: '',
     description: '',
     equipe: ''
   });
+
+  const [clientSearch, setClientSearch] = useState('');
+  const [showClientDropdown, setShowClientDropdown] = useState(false);
+  const clientDropdownRef = useRef<HTMLDivElement>(null);
+
+  const closedOrçamentos = useMemo(() => {
+    return Orçamentos.filter(o => o.stage === 'Contrato Fechado');
+  }, [Orçamentos]);
+
+  const filteredClients = useMemo(() => {
+    if (!clientSearch.trim()) return closedOrçamentos;
+    const q = clientSearch.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    return closedOrçamentos.filter(o =>
+      o.name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').includes(q)
+    );
+  }, [closedOrçamentos, clientSearch]);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (clientDropdownRef.current && !clientDropdownRef.current.contains(e.target as Node)) {
+        setShowClientDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const days = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
   const safeEvents = Array.isArray(events) ? events : [];
@@ -81,11 +108,13 @@ const CRMCalendario = () => {
       eventType: 'Reunião',
       date: dateStr,
       client: '',
+      clientId: '',
       city: '',
       decorator: '',
       description: '',
       equipe: ''
     });
+    setClientSearch('');
     setSelectedEvent(null);
     setIsModalOpen(true);
   };
@@ -98,11 +127,13 @@ const CRMCalendario = () => {
       eventType: event.eventType || 'Reunião',
       date: event.date || '',
       client: event.client || '',
+      clientId: event.clientId || '',
       city: event.city || '',
       decorator: event.decorator || '',
       description: event.description || '',
       equipe: event.equipe || ''
     });
+    setClientSearch(event.client || '');
     setIsModalOpen(true);
   };
 
@@ -322,18 +353,50 @@ const CRMCalendario = () => {
                     </div>
                  </div>
 
-                  <div className="space-y-2">
+                  <div className="space-y-2 relative" ref={clientDropdownRef}>
                     <label className="flex items-center gap-2 text-[9px] font-black text-[#B5FF03] uppercase tracking-widest">
                       <User size={12} strokeWidth={3} className="text-[#B5FF03]" />
                       CLIENTE
                     </label>
-                    <input
-                      type="text"
-                      value={formData.client}
-                      onChange={(e) => setFormData({ ...formData, client: e.target.value })}
-                      placeholder="Nome do cliente"
-                      className="w-full bg-[#0a0a0a] border border-[#333] rounded-md px-3 py-2 text-xs font-black text-white focus:ring-1 focus:ring-[#B5FF03] outline-none transition-all"
-                    />
+                    <div className="relative">
+                      <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500" />
+                      <input
+                        type="text"
+                        value={clientSearch}
+                        onChange={(e) => {
+                          setClientSearch(e.target.value);
+                          setFormData({ ...formData, client: e.target.value, clientId: '' });
+                          setShowClientDropdown(true);
+                        }}
+                        onFocus={() => setShowClientDropdown(true)}
+                        placeholder="Pesquise por clientes com orçamentos fechados..."
+                        className="w-full bg-[#0a0a0a] border border-[#333] rounded-md pl-9 pr-3 py-2 text-xs font-black text-white focus:ring-1 focus:ring-[#B5FF03] outline-none transition-all"
+                      />
+                    </div>
+                    {showClientDropdown && (
+                      <div className="absolute z-50 top-full mt-1 left-0 right-0 bg-[#1a1a1a] border border-[#333] rounded-md shadow-xl max-h-48 overflow-y-auto">
+                        {filteredClients.length === 0 ? (
+                          <p className="px-3 py-3 text-xs text-neutral-500 text-center">
+                            Nenhum orçamento fechado encontrado
+                          </p>
+                        ) : (
+                          filteredClients.map(o => (
+                            <button
+                              key={o.id}
+                              type="button"
+                              onClick={() => {
+                                setClientSearch(o.name);
+                                setFormData({ ...formData, client: o.name, clientId: o.id });
+                                setShowClientDropdown(false);
+                              }}
+                              className="w-full text-left px-3 py-2 text-xs text-white hover:bg-[#333] transition-colors border-b border-[#222] last:border-b-0"
+                            >
+                              {o.name}
+                            </button>
+                          ))
+                        )}
+                      </div>
+                    )}
                   </div>
 
                   <div className="space-y-2">

@@ -27,6 +27,7 @@ export interface CalendarEvent {
   id: string;
   title: string;
   client?: string;
+  clientId?: string;
   eventType?: string;
   date: string;
   decorator?: string;
