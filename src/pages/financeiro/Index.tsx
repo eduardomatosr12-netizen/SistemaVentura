@@ -13,6 +13,7 @@ interface Invoice {
   status: 'Pago' | 'Pendente' | 'Vencida' | 'Cancelado';
   source?: 'manual' | 'lead' | 'asaas';
   paymentMethod?: string;
+  installments?: string;
   lastModifiedBy?: string;
 }
 
@@ -836,12 +837,28 @@ const Financeiro = () => {
                 <label className="block text-xs font-black uppercase tracking-widest text-[#888888] mb-2">Forma de Pagamento</label>
                 <select
                   value={editingInvoice.paymentMethod || ''}
-                  onChange={(e) => setEditingInvoice({ ...editingInvoice, paymentMethod: e.target.value })}
+                  onChange={(e) => setEditingInvoice({
+                    ...editingInvoice,
+                    paymentMethod: e.target.value,
+                    installments: e.target.value !== 'parcelado' ? '' : editingInvoice.installments
+                  })}
                   className="w-full bg-[#111111] border border-[#222222] rounded px-3 py-2 text-sm text-white focus:border-[#B5FF03] outline-none transition-colors"
                 >
                   <option value="">Selecionar</option>
                   {PAYMENT_METHODS.map(pm => (
                     <option key={pm.value} value={pm.value}>{pm.label}</option>
+                  ))}
+                </select>
+              </div>
+              <div style={{ display: editingInvoice.paymentMethod === 'parcelado' ? 'block' : 'none' }}>
+                <label className="block text-xs font-black uppercase tracking-widest text-[#888888] mb-2">Qtd. Parcelas</label>
+                <select
+                  value={editingInvoice.installments || '1'}
+                  onChange={(e) => setEditingInvoice({ ...editingInvoice, installments: e.target.value })}
+                  className="w-full bg-[#111111] border border-[#222222] rounded px-3 py-2 text-sm text-white focus:border-[#B5FF03] outline-none transition-colors"
+                >
+                  {Array.from({ length: 12 }, (_, i) => i + 1).map(n => (
+                    <option key={n} value={String(n)}>{n}x</option>
                   ))}
                 </select>
               </div>
