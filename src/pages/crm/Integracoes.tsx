@@ -15,7 +15,7 @@ const CRMIntegracoes = () => {
     { id: 'whatsapp', name: 'WhatsApp', description: 'Envio de notificações automáticas e mensagens diretas', connected: false, icon: MessageSquare },
     { id: 'asaas', name: 'Asaas', description: 'Automação de cobranças e faturamento via Financeiro', connected: false, icon: CreditCard },
     { id: 'n8n', name: 'n8n', description: 'Orquestrador de fluxos de dados e automações complexas', connected: false, icon: Share2, type: 'n8n' },
-    { id: 'salesforce', name: 'Salesforce', description: 'Sincronização completa de leads e contatos', connected: true },
+    { id: 'salesforce', name: 'Salesforce', description: 'Sincronização completa de Orçamentos e contatos', connected: true },
     { id: 'google', name: 'Google Workspace', description: 'Integração com Gmail e Google Contacts', connected: false },
     { id: 'mailchimp', name: 'Mailchimp', description: 'Sincronização com listas de email', connected: false },
   ]);

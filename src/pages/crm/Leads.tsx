@@ -18,13 +18,13 @@ const formatBRL = (val: string) => {
 
 const EMPTY_LEAD: Partial<Lead> = {
   name: '', niche: '', whatsapp: '', email: '', instagram: '',
-  stage: 'Novos Leads', firstContact: '', closingDate: '',
+  stage: 'Novos Orçamentos', firstContact: '', closingDate: '',
   followUpReminder: '', address: '', gmnReviews: '', gmnStars: '',
   notes: '', value: '',
 };
 
 const STAGES = [
-  'Novos Leads',
+  'Novos Orçamentos',
   'Primeiro Contato',
   'Contato Ativo',
   'Reunião Agendada',
@@ -48,7 +48,7 @@ const STAGE_ORIGINS = [
 const baseStageStyle = 'bg-[#1a1a1a] text-white/70 text-center text-sm leading-5 rounded-full px-4 py-1.5 min-w-[120px] border border-gray-700 inline-flex items-center justify-center';
 
 const stageStyle: Record<string, string> = {
-  'Novos Leads':      baseStageStyle,
+  'Novos Orçamentos':      baseStageStyle,
   'Primeiro Contato': baseStageStyle,
   'Contato Ativo':    baseStageStyle,
   'Reunião Agendada': baseStageStyle,
@@ -99,8 +99,8 @@ const Field = ({ label, required, children }: { label: string; required?: boolea
 const inputCls =
    'w-full bg-[#1a1a1a] border border-gray-700 rounded-md py-2.5 px-3.5 text-white text-sm placeholder-gray-500 focus:outline-none focus:border-[#B5FF03] transition-colors';
 
-const CRMLeads = () => {
-  const { leads, addLead, updateLead, deleteLead, searchTerm } = useCRM();
+const CRMOrçamentos = () => {
+  const { Orçamentos, addLead, updateLead, deleteLead, searchTerm } = useCRM();
   const { filters, setStagesFilter, setNichesFilter, setOriginsFilter, setDateFilter, clearFilters, hasActiveFilters } = useFilters();
   const { role, employeeName } = useAuth();
 
@@ -114,14 +114,14 @@ const CRMLeads = () => {
   const [showNicheSuggestions, setShowNicheSuggestions] = useState(false);
 
   const uniqueNiches = useMemo(() => {
-    if (!leads || !Array.isArray(leads)) return [];
+    if (!Orçamentos || !Array.isArray(Orçamentos)) return [];
     try {
-      const niches = new Set(leads.map(l => l.niche).filter(Boolean));
+      const niches = new Set(Orçamentos.map(l => l.niche).filter(Boolean));
       return Array.from(niches).sort();
     } catch {
       return [];
     }
-  }, [leads]);
+  }, [Orçamentos]);
 
   const handleNicheSelect = (niche: string) => {
     const currentNiches = filters?.niches || [];
@@ -216,9 +216,9 @@ const CRMLeads = () => {
     }
   };
 
-  const filteredLeads = useMemo(() => {
-    if (!leads || !Array.isArray(leads)) return [];
-    let result = leads;
+  const filteredOrçamentos = useMemo(() => {
+    if (!Orçamentos || !Array.isArray(Orçamentos)) return [];
+    let result = Orçamentos;
 
     if (searchTerm) {
       result = result.filter(lead => 
@@ -270,7 +270,7 @@ const CRMLeads = () => {
     }
 
     return result;
-  }, [leads, searchTerm, filters]);
+  }, [Orçamentos, searchTerm, filters]);
 
   return (
     <>
@@ -284,8 +284,8 @@ const CRMLeads = () => {
                 <div>
                   <h2 className="text-2xl md:text-3xl font-black text-white tracking-tight mb-1">Contatos</h2>
                   <p className="text-[#B5FF03] text-xs md:text-sm">
-                    {filteredLeads.length} contato{filteredLeads.length !== 1 ? 's' : ''} encontrado{filteredLeads.length !== 1 ? 's' : ''}
-                    {hasActiveFilters && <span className="text-[#B5FF03]"> (filtrado{filteredLeads.length !== 1 ? 's' : ''})</span>}
+                    {filteredOrçamentos.length} contato{filteredOrçamentos.length !== 1 ? 's' : ''} encontrado{filteredOrçamentos.length !== 1 ? 's' : ''}
+                    {hasActiveFilters && <span className="text-[#B5FF03]"> (filtrado{filteredOrçamentos.length !== 1 ? 's' : ''})</span>}
                   </p>
                 </div>
               </div>
@@ -310,7 +310,7 @@ const CRMLeads = () => {
               {(STAGES || []).map(stage => (
                 <CheckboxFilter
                   key={stage}
-                  label={stage === 'Novos Leads' ? 'Novos Contatos' : stage}
+                  label={stage === 'Novos Orçamentos' ? 'Novos Contatos' : stage}
                   checked={(filters?.stages || []).includes(stage)}
                   onChange={() => toggleStageFilter(stage)}
                 />
@@ -426,8 +426,8 @@ const CRMLeads = () => {
               <div>
                 <h1 className="text-2xl md:text-3xl font-black text-white tracking-tight mb-1">Contatos</h1>
                 <p className="text-neutral-500 text-xs md:text-sm">
-                  {filteredLeads.length} contato{filteredLeads.length !== 1 ? 's' : ''} encontrado{filteredLeads.length !== 1 ? 's' : ''}
-                  {hasActiveFilters && <span className="text-[#B5FF03]"> (filtrado{filteredLeads.length !== 1 ? 's' : ''})</span>}
+                  {filteredOrçamentos.length} contato{filteredOrçamentos.length !== 1 ? 's' : ''} encontrado{filteredOrçamentos.length !== 1 ? 's' : ''}
+                  {hasActiveFilters && <span className="text-[#B5FF03]"> (filtrado{filteredOrçamentos.length !== 1 ? 's' : ''})</span>}
                 </p>
               </div>
             </div>
@@ -450,7 +450,7 @@ const CRMLeads = () => {
                 </tr>
               </thead>
                <tbody className="divide-y divide-[#222]">
-                {Array.isArray(filteredLeads) && filteredLeads.length > 0 ? filteredLeads.map(lead => (
+                {Array.isArray(filteredOrçamentos) && filteredOrçamentos.length > 0 ? filteredOrçamentos.map(lead => (
                    <tr key={lead?.id} className="hover:bg-[#111] transition-colors group">
                     <td className="px-3 md:px-5 py-2 md:py-4">
                       <div className="font-semibold text-white text-xs md:text-sm">{lead?.name}</div>
@@ -482,7 +482,7 @@ const CRMLeads = () => {
                      <td className="px-3 md:px-5 py-4 md:py-6">
                        <div className="flex justify-center">
                          <span className={`${stageStyle[lead?.stage] ?? baseStageStyle} ${lead?.stage ? '' : ''}`}>
-                           {lead?.stage === 'Novos Leads' ? 'Novos Contatos' : lead?.stage}
+                           {lead?.stage === 'Novos Orçamentos' ? 'Novos Contatos' : lead?.stage}
                          </span>
                        </div>
                      </td>
@@ -559,7 +559,7 @@ const CRMLeads = () => {
                       <Field label="ETAPA DO PIPELINE">
                         <select value={current.stage} onChange={e => updateField('stage', e.target.value)}
                           className={`${inputCls} appearance-none cursor-pointer`}>
-                          {STAGES.map(s => <option key={s} value={s} className="bg-[#1a1a1a] text-white">{s === 'Novos Leads' ? 'Novos Contatos' : s}</option>)}
+                          {STAGES.map(s => <option key={s} value={s} className="bg-[#1a1a1a] text-white">{s === 'Novos Orçamentos' ? 'Novos Contatos' : s}</option>)}
                         </select>
                       </Field>
                 </div>
@@ -688,8 +688,8 @@ const CRMLeads = () => {
   );
 };
 
-export default function LeadsPage() {
-  return <CRMLeads />;
+export default function OrçamentosPage() {
+  return <CRMOrçamentos />;
 }
 
 

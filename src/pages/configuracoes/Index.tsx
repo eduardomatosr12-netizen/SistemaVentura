@@ -352,7 +352,7 @@ const Configuracoes = () => {
             <AlertTriangle className="text-red-600" size={24} />
             <h3 className="font-black text-red-600 uppercase tracking-widest text-sm">Zona de Perigo</h3>
           </div>
-          <p className="text-sm text-neutral-500 font-bold leading-relaxed mb-8 max-w-md">Estas ações são irreversíveis e deletarão todos os seus dados e leads permanentemente.</p>
+          <p className="text-sm text-neutral-500 font-bold leading-relaxed mb-8 max-w-md">Estas ações são irreversíveis e deletarão todos os seus dados e Orçamentos permanentemente.</p>
           <button 
             onClick={() => setActiveModal('delete')}
             className="text-[11px] font-black uppercase tracking-[2px] bg-white border-2 border-red-100 text-red-600 px-10 py-4 rounded-2xl hover:bg-red-600 hover:text-white hover:border-red-600 transition-all shadow-xl shadow-red-100/50 active:scale-[0.98]"

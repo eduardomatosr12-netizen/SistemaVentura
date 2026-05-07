@@ -7,15 +7,15 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { useFilters } from '../../contexts/FilterContext';
 
 // Dados iniciais como fallback
-const INITIAL_LEADS: Lead[] = [
+const INITIAL_Orçamentos: Lead[] = [
   { id: '1', name: 'João Silva', niche: 'Odontologia', whatsapp: '11 99999-9999', email: 'joao@example.com', instagram: '@joaosilva', stage: 'Reunião Agendada', firstContact: '2026-04-01', closingDate: '2026-04-30', followUpReminder: '2026-04-22', address: 'São Paulo - SP', gmnReviews: '248', gmnStars: '4.7', notes: 'Cliente interessado.', value: 'R$ 5.000' },
-  { id: '2', name: 'Maria Santos', niche: 'Dermatologia', whatsapp: '11 88888-8888', email: 'maria@example.com', instagram: '@mariasan', stage: 'Novos Leads', firstContact: '2026-04-10', closingDate: '', followUpReminder: '2026-04-25', address: 'Rio de Janeiro - RJ', gmnReviews: '89', gmnStars: '4.2', notes: '', value: 'R$ 8.000' },
+  { id: '2', name: 'Maria Santos', niche: 'Dermatologia', whatsapp: '11 88888-8888', email: 'maria@example.com', instagram: '@mariasan', stage: 'Novos Orçamentos', firstContact: '2026-04-10', closingDate: '', followUpReminder: '2026-04-25', address: 'Rio de Janeiro - RJ', gmnReviews: '89', gmnStars: '4.2', notes: '', value: 'R$ 8.000' },
   { id: '3', name: 'Pedro Oliveira', niche: 'Clínica Geral', whatsapp: '11 77777-7777', email: 'pedro@example.com', instagram: '@pedrooli', stage: 'Proposta Enviada', firstContact: '2026-03-20', closingDate: '2026-05-15', followUpReminder: '2026-04-23', address: 'Belo Horizonte - MG', gmnReviews: '312', gmnStars: '4.9', notes: 'Aguardando aprovação.', value: 'R$ 12.000' },
   { id: '4', name: 'Clínica Sorriso', niche: 'Odontologia', whatsapp: '11 5555-5555', email: 'contato@sorriso.com', instagram: '@clinicasorriso', stage: 'Contrato Fechado', firstContact: '2026-03-10', closingDate: '2026-04-15', followUpReminder: '', address: 'Curitiba - PR', gmnReviews: '150', gmnStars: '4.8', notes: 'Contrato fechado!', value: 'R$ 15.000' },
 ];
 
 const STAGES = [
-  'Novos Leads',
+  'Novos Orçamentos',
   'Primeiro Contato',
   'Contato Ativo',
   'Reunião Agendada',
@@ -79,13 +79,13 @@ const sanitizeDescription = (desc: string | null | undefined): string => {
   return desc.trim().slice(0, 500);
 };
 
-const filterLeads = (leads: Lead[], filters: { stages?: string[]; niches?: string[]; dateFilter?: string }): Lead[] => {
+const filterOrçamentos = (Orçamentos: Lead[], filters: { stages?: string[]; niches?: string[]; dateFilter?: string }): Lead[] => {
   const { stages = [], niches = [], dateFilter = '' } = filters;
   const hasActiveFilters = stages.length > 0 || niches.length > 0 || dateFilter !== '';
   
-  if (!hasActiveFilters) return leads;
+  if (!hasActiveFilters) return Orçamentos;
   
-  return (leads || []).filter(lead => {
+  return (Orçamentos || []).filter(lead => {
     if (stages.length > 0 && !stages.includes(lead.stage)) return false;
     if (niches.length > 0 && !niches.includes(lead.niche)) return false;
     
@@ -120,15 +120,15 @@ const filterLeads = (leads: Lead[], filters: { stages?: string[]; niches?: strin
   });
 };
 
-const calculateStats = (leads: Lead[], icons: typeof CHART_ICONS) => {
+const calculateStats = (Orçamentos: Lead[], icons: typeof CHART_ICONS) => {
   const stats: Stat[] = [
-    { title: 'Total de Leads', value: leads.length.toString(), icon: icons.Users },
-    { title: 'Reuniões', value: leads.filter(l => l.stage === 'Reunião Agendada').length.toString(), icon: icons.Calendar, stageFilter: 'Reunião Agendada' },
-    { title: 'Contatos Ativos', value: leads.filter(l => l.stage === 'Contato Ativo').length.toString(), icon: icons.MessageSquare, stageFilter: 'Contato Ativo' },
-    { title: 'Follow-ups', value: leads.filter(l => l.stage === 'Follow Up').length.toString(), icon: icons.Clock, stageFilter: 'Follow Up' },
-    { title: 'Propostas Enviadas', value: leads.filter(l => l.stage === 'Proposta Enviada').length.toString(), icon: icons.FileText, stageFilter: 'Proposta Enviada' },
-    { title: 'Leads Perdidos', value: leads.filter(l => l.stage === 'Perdido').length.toString(), icon: icons.UserX, stageFilter: 'Perdido' },
-    { title: 'Fechados', value: leads.filter(l => l.stage === 'Contrato Fechado').length.toString(), icon: icons.CheckCircle, stageFilter: 'Contrato Fechado' },
+    { title: 'Total de Orçamentos', value: Orçamentos.length.toString(), icon: icons.Users },
+    { title: 'Reuniões', value: Orçamentos.filter(l => l.stage === 'Reunião Agendada').length.toString(), icon: icons.Calendar, stageFilter: 'Reunião Agendada' },
+    { title: 'Contatos Ativos', value: Orçamentos.filter(l => l.stage === 'Contato Ativo').length.toString(), icon: icons.MessageSquare, stageFilter: 'Contato Ativo' },
+    { title: 'Follow-ups', value: Orçamentos.filter(l => l.stage === 'Follow Up').length.toString(), icon: icons.Clock, stageFilter: 'Follow Up' },
+    { title: 'Propostas Enviadas', value: Orçamentos.filter(l => l.stage === 'Proposta Enviada').length.toString(), icon: icons.FileText, stageFilter: 'Proposta Enviada' },
+    { title: 'Orçamentos Perdidos', value: Orçamentos.filter(l => l.stage === 'Perdido').length.toString(), icon: icons.UserX, stageFilter: 'Perdido' },
+    { title: 'Fechados', value: Orçamentos.filter(l => l.stage === 'Contrato Fechado').length.toString(), icon: icons.CheckCircle, stageFilter: 'Contrato Fechado' },
   ];
   return stats;
 };
@@ -136,18 +136,18 @@ const calculateStats = (leads: Lead[], icons: typeof CHART_ICONS) => {
 const CHART_ICONS = { Users, Calendar, MessageSquare, Clock, FileText, UserX, CheckCircle };
 
 const CRMDashboard = () => {
-  const { leads: contextLeads } = useCRM();
+  const { Orçamentos: contextOrçamentos } = useCRM();
   const { filters, hasActiveFilters } = useFilters();
   const { activityLogs, isLoadingLogs, fetchActivityLogsError, fetchActivityLogs } = useActivityLogs();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // Fallback defensivo: usar dados locais se contexto estiver vazio
-  const leads = useMemo(() => {
-    if (contextLeads && Array.isArray(contextLeads) && contextLeads.length > 0) {
-      return contextLeads;
+  const Orçamentos = useMemo(() => {
+    if (contextOrçamentos && Array.isArray(contextOrçamentos) && contextOrçamentos.length > 0) {
+      return contextOrçamentos;
     }
-    return INITIAL_LEADS;
-  }, [contextLeads]);
+    return INITIAL_Orçamentos;
+  }, [contextOrçamentos]);
 
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     if (e.key === 'Escape' && isSidebarOpen) {
@@ -166,26 +166,26 @@ const CRMDashboard = () => {
     });
   }, [fetchActivityLogs]);
 
-  const filteredLeads = useMemo(() => filterLeads(leads, {
+  const filteredOrçamentos = useMemo(() => filterOrçamentos(Orçamentos, {
     stages: filters.stages,
     niches: filters.niches,
     dateFilter: filters.dateFilter,
-  }), [leads, filters]);
+  }), [Orçamentos, filters]);
 
   const chartData = useMemo((): ChartDataPoint[] => {
     return STAGES.map(stage => ({
       name: stage,
-      value: filteredLeads.filter(l => l.stage === stage).length
+      value: filteredOrçamentos.filter(l => l.stage === stage).length
     }));
-  }, [filteredLeads]);
+  }, [filteredOrçamentos]);
 
-  const stats = useMemo(() => calculateStats(filteredLeads, CHART_ICONS), [filteredLeads]);
+  const stats = useMemo(() => calculateStats(filteredOrçamentos, CHART_ICONS), [filteredOrçamentos]);
 
   const displayLogs = useMemo(() => {
     return activityLogs.slice(0, 10).filter(log => log?.id && log?.acao);
   }, [activityLogs]);
 
-  const hasChartData = chartData.length > 0 && filteredLeads.length > 0;
+  const hasChartData = chartData.length > 0 && filteredOrçamentos.length > 0;
 
   return (
     <div className="relative min-h-screen bg-black">
@@ -211,7 +211,7 @@ const CRMDashboard = () => {
                 <XCircle size={14} className="text-neutral-400 hover:text-[#B5FF03]" />
               </button>
             </div>
-            <p className="text-[10px] text-neutral-400">Aplique filtros na aba Leads para filtrar dados aqui.</p>
+            <p className="text-[10px] text-neutral-400">Aplique filtros na aba Orçamentos para filtrar dados aqui.</p>
           </div>
         </>
       )}
@@ -260,7 +260,7 @@ const CRMDashboard = () => {
         <div className="bg-[#111] border border-[#333] rounded-2xl p-4 md:p-8 shadow-sm overflow-x-auto mb-6 md:mb-10">
         <div className="mb-6 md:mb-8">
           <h2 className="text-lg md:text-xl font-bold text-white mb-1">Visão Geral do Pipeline</h2>
-          <p className="text-neutral-400 text-[10px] md:text-xs uppercase font-bold tracking-widest">Distribuição de leads por etapa</p>
+          <p className="text-neutral-400 text-[10px] md:text-xs uppercase font-bold tracking-widest">Distribuição de Orçamentos por etapa</p>
         </div>
         
         <div className="min-h-[280px] md:min-h-[400px]">

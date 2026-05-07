@@ -7,7 +7,7 @@ export type S3UploadResult = {
 export type UploadPrefix = 'lead' | 'profile' | 'task' | 'attachment' | 'document';
 
 export const UPLOAD_PREFIXES: Record<UploadPrefix, string> = {
-  lead: 'leads',
+  lead: 'Orçamentos',
   profile: 'profiles',
   task: 'tasks',
   attachment: 'attachments',

@@ -1,5 +1,5 @@
 export const STAGES = [
-  'Novos Leads',
+  'Novos Orçamentos',
   'Primeiro Contato',
   'Contato Ativo',
   'Reunião Agendada',
@@ -18,7 +18,7 @@ export interface StageConfig {
 }
 
 export const STAGE_CONFIG: Record<Stage, StageConfig> = {
-  'Novos Leads': { id: 'Novos Leads', label: 'Novos Leads', isClosed: false },
+  'Novos Orçamentos': { id: 'Novos Orçamentos', label: 'Novos Orçamentos', isClosed: false },
   'Primeiro Contato': { id: 'Primeiro Contato', label: 'Primeiro Contato', isClosed: false },
   'Contato Ativo': { id: 'Contato Ativo', label: 'Contato Ativo', isClosed: false },
   'Reunião Agendada': { id: 'Reunião Agendada', label: 'Reunião Agendada', isClosed: false },
@@ -68,21 +68,21 @@ export function formatCurrency(value: number): string {
   }).format(value || 0);
 }
 
-export function calculateTotalValue(leads: Lead[]): number {
-  return leads.reduce((acc, lead) => acc + parseMonetaryValue(lead.value), 0);
+export function calculateTotalValue(Orçamentos: Lead[]): number {
+  return Orçamentos.reduce((acc, lead) => acc + parseMonetaryValue(lead.value), 0);
 }
 
 export function isValidStage(stage: string): stage is Stage {
   return STAGES.includes(stage as Stage);
 }
 
-export function getStageLeads(leads: Lead[], stage: Stage): Lead[] {
-  return leads.filter(lead => lead.stage === stage);
+export function getStageOrçamentos(Orçamentos: Lead[], stage: Stage): Lead[] {
+  return Orçamentos.filter(lead => lead.stage === stage);
 }
 
-export function groupLeadsByStage(leads: Lead[]): Record<Stage, Lead[]> {
+export function groupOrçamentosByStage(Orçamentos: Lead[]): Record<Stage, Lead[]> {
   const grouped: Record<Stage, Lead[]> = {
-    'Novos Leads': [],
+    'Novos Orçamentos': [],
     'Primeiro Contato': [],
     'Contato Ativo': [],
     'Reunião Agendada': [],
@@ -92,7 +92,7 @@ export function groupLeadsByStage(leads: Lead[]): Record<Stage, Lead[]> {
     'Perdido': [],
   };
   
-  for (const lead of leads) {
+  for (const lead of Orçamentos) {
     if (isValidStage(lead.stage)) {
       grouped[lead.stage].push(lead);
     }

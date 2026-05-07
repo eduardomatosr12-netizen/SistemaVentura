@@ -27,7 +27,7 @@ const s3Client = new S3Client({
 });
 
 const UPLOAD_PREFIXES: Record<string, string> = {
-  lead: 'leads',
+  lead: 'Orçamentos',
   profile: 'profiles',
   task: 'tasks',
   attachment: 'attachments',

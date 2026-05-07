@@ -165,7 +165,7 @@ const DroppableColumn = memo<DroppableColumnProps>(({ stage, children, count, to
           {count === 0 && !isOver && (
             <div className="py-12 border-2 border-dashed border-[#333] rounded-md flex flex-col items-center justify-center opacity-40">
               <div className="w-8 h-8 rounded-full bg-[#222] mb-2"></div>
-              <span className="text-[9px] text-neutral-500 font-bold uppercase tracking-widest">Sem leads</span>
+              <span className="text-[9px] text-neutral-500 font-bold uppercase tracking-widest">Sem Orçamentos</span>
             </div>
           )}
         </div>
@@ -207,10 +207,10 @@ function isDateInRange(lead: Lead, dateFilter: string | undefined): boolean {
   }
 }
 
-function applyFilters(leads: Lead[], filters: { stages?: string[]; niches?: string[]; dateFilter?: string }, searchTerm: string): Lead[] {
+function applyFilters(Orçamentos: Lead[], filters: { stages?: string[]; niches?: string[]; dateFilter?: string }, searchTerm: string): Lead[] {
   const { stages, niches, dateFilter } = filters;
   
-  return leads.filter(lead => {
+  return Orçamentos.filter(lead => {
     if (stages?.length > 0 && !stages.includes(lead.stage)) return false;
     if (niches?.length > 0 && !niches.includes(lead.niche)) return false;
     if (!isDateInRange(lead, dateFilter)) return false;
@@ -228,11 +228,11 @@ function applyFilters(leads: Lead[], filters: { stages?: string[]; niches?: stri
   });
 }
 
-function searchLeads(leads: Lead[], stage: Stage, searchTerm: string): Lead[] {
-  if (!searchTerm) return leads.filter(l => l.stage === stage);
+function searchOrçamentos(Orçamentos: Lead[], stage: Stage, searchTerm: string): Lead[] {
+  if (!searchTerm) return Orçamentos.filter(l => l.stage === stage);
   
   const term = searchTerm.toLowerCase();
-  return leads.filter(l => 
+  return Orçamentos.filter(l => 
     l.stage === stage && (
       l.name?.toLowerCase().includes(term) ||
       l.niche?.toLowerCase().includes(term) ||
@@ -242,7 +242,7 @@ function searchLeads(leads: Lead[], stage: Stage, searchTerm: string): Lead[] {
 }
 
 const CRMPipeline = () => {
-  const { leads, updateLead } = useCRM();
+  const { Orçamentos, updateLead } = useCRM();
   const { filters, hasActiveFilters } = useFilters();
   const [searchTerm, setSearchTerm] = useState('');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -256,15 +256,15 @@ const CRMPipeline = () => {
     })
   );
 
-  const filteredLeads = useMemo(() => {
-    return applyFilters(leads || [], filters, '');
-  }, [leads, filters]);
+  const filteredOrçamentos = useMemo(() => {
+    return applyFilters(Orçamentos || [], filters, '');
+  }, [Orçamentos, filters]);
 
   const handleDragStart = useCallback((event: DragStartEvent) => {
     const { active } = event;
-    const lead = leads?.find(l => l.id === active.id);
+    const lead = Orçamentos?.find(l => l.id === active.id);
     setActiveLead(lead ?? null);
-  }, [leads]);
+  }, [Orçamentos]);
 
   const handleDragEnd = useCallback((event: DragEndEvent) => {
     const { active, over } = event;
@@ -280,26 +280,26 @@ const CRMPipeline = () => {
       return;
     }
     
-    const lead = leads?.find(l => l.id === leadId);
+    const lead = Orçamentos?.find(l => l.id === leadId);
     if (!lead) return;
     
     if (lead.stage !== newStage) {
       updateLead(leadId, { stage: newStage });
     }
-  }, [leads, updateLead]);
+  }, [Orçamentos, updateLead]);
 
   const columnData = useMemo(() => {
     return STAGES.map(stage => {
-      const stageLeads = searchLeads(filteredLeads, stage, searchTerm);
-      const totalValue = calculateTotalValue(stageLeads);
+      const stageOrçamentos = searchOrçamentos(filteredOrçamentos, stage, searchTerm);
+      const totalValue = calculateTotalValue(stageOrçamentos);
       return {
         stage,
-        leads: stageLeads,
-        count: stageLeads.length,
+        Orçamentos: stageOrçamentos,
+        count: stageOrçamentos.length,
         totalValue,
       };
     });
-  }, [filteredLeads, searchTerm]);
+  }, [filteredOrçamentos, searchTerm]);
 
   return (
     <div className="relative flex flex-col h-full bg-black">
@@ -313,7 +313,7 @@ const CRMPipeline = () => {
                 <XCircle size={14} className="text-neutral-400 hover:text-[#B5FF03]" />
               </button>
             </div>
-            <p className="text-[10px] text-neutral-500">Aplique filtros na aba Leads para filtrar dados aqui.</p>
+            <p className="text-[10px] text-neutral-500">Aplique filtros na aba Orçamentos para filtrar dados aqui.</p>
           </div>
         </>
       )}
@@ -347,14 +347,14 @@ const CRMPipeline = () => {
       >
         <div         className="flex-1 overflow-x-auto pb-6 scrollbar-thin scrollbar-thumb-[#333] scrollbar-track-transparent">
           <div className="flex gap-5 min-w-max h-full items-start">
-            {columnData.map(({ stage, leads: columnLeads, count, totalValue }) => (
+            {columnData.map(({ stage, Orçamentos: columnOrçamentos, count, totalValue }) => (
               <DroppableColumn 
                 key={stage} 
                 stage={stage}
                 count={count}
                 totalValue={totalValue}
               >
-                {columnLeads.map(lead => (
+                {columnOrçamentos.map(lead => (
                   <DraggableLeadCard 
                     key={lead.id} 
                     lead={lead} 

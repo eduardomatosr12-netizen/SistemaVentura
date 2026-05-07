@@ -88,7 +88,7 @@ const RadioFilter = ({ label, checked, onChange }: { label: string; checked: boo
 );
 
 const Financeiro = () => {
-  const { leads } = useCRM();
+  const { Orçamentos } = useCRM();
   const { filters } = useFilters();
   const { role, employeeName } = useAuth();
 
@@ -214,7 +214,7 @@ const Financeiro = () => {
     setIsSyncing(false);
   }, []);
     
-  const computedLeadInvoices: Invoice[] = (leads || [])
+  const computedLeadInvoices: Invoice[] = (Orçamentos || [])
     .filter(l => l.stage === 'Contrato Fechado')
     .map(l => ({
       id: `lead-${l.id}`,
@@ -228,7 +228,7 @@ const Financeiro = () => {
   const allInvoices = useMemo(() => 
     [...asaasInvoices, ...manualInvoices, ...computedLeadInvoices].sort((a, b) => 
       new Date(b.date).getTime() - new Date(a.date).getTime()
-    ), [asaasInvoices, manualInvoices, leads]);
+    ), [asaasInvoices, manualInvoices, Orçamentos]);
 
   const filteredInvoices = useMemo(() => {
     let result = allInvoices || [];
@@ -357,7 +357,7 @@ const Financeiro = () => {
       setManualInvoices(prev => [modifiedInvoice, ...prev]);
     } else {
       if (editingInvoice.source === 'lead') {
-        alert('Faturas vinculadas a leads devem ser editadas no módulo de Leads.');
+        alert('Faturas vinculadas a Orçamentos devem ser editadas no módulo de Orçamentos.');
         return;
       } else if (editingInvoice.source === 'asaas') {
         alert('Faturas do Asaas são sincronizadas automaticamente e não podem ser editadas manualmente.');

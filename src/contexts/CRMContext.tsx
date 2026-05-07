@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useCallback, useEffect, useMemo } from 'react';
 import type { ReactNode } from 'react';
-import { STAGES, STAGE_CONFIG, parseMonetaryValue, calculateTotalValue, groupLeadsByStage, type Stage } from '../lib/crmHelpers';
+import { STAGES, STAGE_CONFIG, parseMonetaryValue, calculateTotalValue, groupOrçamentosByStage, type Stage } from '../lib/crmHelpers';
 import { generateUUID } from '../lib/uuid';
 
 export interface Lead {
@@ -46,7 +46,7 @@ type LeadInput = Omit<Lead, 'id'>;
 type LeadUpdate = Partial<Omit<Lead, 'id'>>;
 
 interface CRMContextType {
-  leads: Lead[];
+  Orçamentos: Lead[];
   events: CalendarEvent[];
   searchTerm: string;
   notifications: Notification[];
@@ -54,20 +54,20 @@ interface CRMContextType {
   markNotificationsAsRead: () => void;
   addLead: (lead: LeadInput) => void;
   updateLead: (id: string, fields: LeadUpdate) => void;
-  updateLeadStage: (id: string, stage: string) => void;
+  updateOrçamentostage: (id: string, stage: string) => void;
   deleteLead: (id: string) => void;
-  getLeadsByStage: (stage: string) => Lead[];
+  getOrçamentosByStage: (stage: string) => Lead[];
   getTotalValueByStage: (stage: string) => number;
   addEvent: (event: Omit<CalendarEvent, 'id'>) => void;
   updateEvent: (id: string, event: Partial<CalendarEvent>) => void;
   deleteEvent: (id: string) => void;
-  leadsByStage: Record<Stage, Lead[]>;
+  OrçamentosByStage: Record<Stage, Lead[]>;
   totalPipelineValue: number;
 }
 
 const CRMContext = createContext<CRMContextType | undefined>(undefined);
 
-const INITIAL_LEADS: Lead[] = [
+const INITIAL_Orçamentos: Lead[] = [
   {
     id: '1', name: 'João Silva', niche: 'Odontologia', whatsapp: '11 99999-9999',
     email: 'joao@example.com', instagram: '@joaosilva', stage: 'Reunião Agendada',
@@ -77,7 +77,7 @@ const INITIAL_LEADS: Lead[] = [
   },
   {
     id: '2', name: 'Maria Santos', niche: 'Dermatologia', whatsapp: '11 88888-8888',
-    email: 'maria@example.com', instagram: '@mariasan', stage: 'Novos Leads',
+    email: 'maria@example.com', instagram: '@mariasan', stage: 'Novos Orçamentos',
     firstContact: '2026-04-10', closingDate: '', followUpReminder: '2026-04-25',
     address: 'Rio de Janeiro - RJ', gmnReviews: '89', gmnStars: '4.2',
     notes: '', value: 'R$ 8.000',
@@ -110,11 +110,11 @@ const INITIAL_EVENTS: CalendarEvent[] = [
   },
   {
     id: '2',
-    title: 'Follow-up Leads',
+    title: 'Follow-up Orçamentos',
     createdBy: 'Vendedor 1',
     activityType: 'Ligação',
     dateTime: '2026-04-21T14:00:00',
-    description: 'Retornar contato para leads qualificados.'
+    description: 'Retornar contato para Orçamentos qualificados.'
   },
   {
     id: '3',
@@ -149,8 +149,8 @@ function loadFromStorage<T>(key: string, fallback: T): T {
 // Função removida - usar generateUUID de ../lib/uuid
 
 export const CRMProvider = ({ children }: { children: ReactNode }) => {
-  const [leads, setLeads] = useState<Lead[]>(() => {
-    const storageKey = 'axium_leads_v2';
+  const [Orçamentos, setOrçamentos] = useState<Lead[]>(() => {
+    const storageKey = 'axium_Orçamentos_v2';
     let loaded: Lead[] = [];
     
     // Debug localStorage
@@ -159,17 +159,17 @@ export const CRMProvider = ({ children }: { children: ReactNode }) => {
       console.log('[DEBUG CRMProvider] raw localStorage:', stored);
     }
     
-    loaded = loadFromStorage(storageKey, INITIAL_LEADS);
-    console.log('[DEBUG CRMProvider] Carregando leads do localStorage:', loaded?.length ?? 0, loaded);
+    loaded = loadFromStorage(storageKey, INITIAL_Orçamentos);
+    console.log('[DEBUG CRMProvider] Carregando Orçamentos do localStorage:', loaded?.length ?? 0, loaded);
     
     // Fallback: se vazio ou undefined, usa dados iniciais
     if (!loaded || !Array.isArray(loaded) || loaded.length === 0) {
-      console.log('[DEBUG CRMProvider] Usando INITIAL_LEADS como fallback');
-      loaded = INITIAL_LEADS;
+      console.log('[DEBUG CRMProvider] Usando INITIAL_Orçamentos como fallback');
+      loaded = INITIAL_Orçamentos;
     }
     
     // Debug final
-    console.log('[DEBUG CRMProvider] Leads finais:', loaded?.length ?? 0);
+    console.log('[DEBUG CRMProvider] Orçamentos finais:', loaded?.length ?? 0);
     return loaded;
   });
   const [events, setEvents] = useState<CalendarEvent[]>(() => loadFromStorage('axium_events_v2', INITIAL_EVENTS));
@@ -177,16 +177,16 @@ export const CRMProvider = ({ children }: { children: ReactNode }) => {
   const [notifications, setNotifications] = useState<Notification[]>(INITIAL_NOTIFICATIONS);
 
   useEffect(() => {
-    localStorage.setItem('axium_leads_v2', JSON.stringify(leads));
-  }, [leads]);
+    localStorage.setItem('axium_Orçamentos_v2', JSON.stringify(Orçamentos));
+  }, [Orçamentos]);
 
   useEffect(() => {
     localStorage.setItem('axium_events_v2', JSON.stringify(events));
   }, [events]);
 
-  const leadsByStage = useMemo(() => groupLeadsByStage(leads), [leads]);
+  const OrçamentosByStage = useMemo(() => groupOrçamentosByStage(Orçamentos), [Orçamentos]);
   
-  const totalPipelineValue = useMemo(() => calculateTotalValue(leads), [leads]);
+  const totalPipelineValue = useMemo(() => calculateTotalValue(Orçamentos), [Orçamentos]);
 
   const markNotificationsAsRead = useCallback(() => {
     setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
@@ -196,7 +196,7 @@ export const CRMProvider = ({ children }: { children: ReactNode }) => {
     const id = generateUUID();
     const newLead: Lead = { ...lead, id };
     
-    setLeads(prev => [...prev, newLead]);
+    setOrçamentos(prev => [...prev, newLead]);
     
     setNotifications(prev => [{
       id: generateUUID(),
@@ -209,15 +209,15 @@ export const CRMProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const updateLead = useCallback((id: string, fields: LeadUpdate) => {
-    setLeads(prev => prev.map(l => l.id === id ? { ...l, ...fields } : l));
+    setOrçamentos(prev => prev.map(l => l.id === id ? { ...l, ...fields } : l));
   }, []);
 
-  const updateLeadStage = useCallback((id: string, stage: string) => {
-    setLeads(prev => prev.map(l => l.id === id ? { ...l, stage } : l));
+  const updateOrçamentostage = useCallback((id: string, stage: string) => {
+    setOrçamentos(prev => prev.map(l => l.id === id ? { ...l, stage } : l));
   }, []);
 
   const deleteLead = useCallback((id: string) => {
-    setLeads(prev => prev.filter(l => l.id !== id));
+    setOrçamentos(prev => prev.filter(l => l.id !== id));
   }, []);
 
   const addEvent = useCallback((event: Omit<CalendarEvent, 'id'>) => {
@@ -233,18 +233,18 @@ export const CRMProvider = ({ children }: { children: ReactNode }) => {
     setEvents(prev => prev.filter(e => e.id !== id));
   }, []);
 
-  const getLeadsByStage = useCallback((stage: string) => {
-    return leads.filter(l => l.stage === stage);
-  }, [leads]);
+  const getOrçamentosByStage = useCallback((stage: string) => {
+    return Orçamentos.filter(l => l.stage === stage);
+  }, [Orçamentos]);
 
   const getTotalValueByStage = useCallback((stage: string) => {
-    return leads
+    return Orçamentos
       .filter(l => l.stage === stage)
       .reduce((acc, lead) => acc + parseMonetaryValue(lead.value), 0);
-  }, [leads]);
+  }, [Orçamentos]);
 
   const value = useMemo(() => ({
-    leads,
+    Orçamentos,
     events,
     searchTerm,
     notifications,
@@ -252,31 +252,31 @@ export const CRMProvider = ({ children }: { children: ReactNode }) => {
     markNotificationsAsRead,
     addLead,
     updateLead,
-    updateLeadStage,
+    updateOrçamentostage,
     deleteLead,
-    getLeadsByStage,
+    getOrçamentosByStage,
     getTotalValueByStage,
     addEvent,
     updateEvent,
     deleteEvent,
-    leadsByStage,
+    OrçamentosByStage,
     totalPipelineValue,
   }), [
-    leads,
+    Orçamentos,
     events,
     searchTerm,
     notifications,
     markNotificationsAsRead,
     addLead,
     updateLead,
-    updateLeadStage,
+    updateOrçamentostage,
     deleteLead,
-    getLeadsByStage,
+    getOrçamentosByStage,
     getTotalValueByStage,
     addEvent,
     updateEvent,
     deleteEvent,
-    leadsByStage,
+    OrçamentosByStage,
     totalPipelineValue,
   ]);
 

@@ -10,7 +10,7 @@ interface TopHeaderProps {
 
 const routeTitles: Record<string, { title: string; subtitle: string }> = {
   '/crm/painel': { title: 'Painel', subtitle: 'Visão geral das oportunidades' },
-  '/crm/leads': { title: 'Orçamentos', subtitle: 'Gestão de contatos e funil' },
+  '/crm/Orçamentos': { title: 'Orçamentos', subtitle: 'Gestão de contatos e funil' },
   '/crm/pipeline': { title: 'Pipeline', subtitle: 'Progresso das oportunidades' },
   '/crm/calendario': { title: 'Calendário', subtitle: 'Compromissos e agendamentos' },
   '/crm/importar': { title: 'Importar', subtitle: 'Importação de dados externos' },

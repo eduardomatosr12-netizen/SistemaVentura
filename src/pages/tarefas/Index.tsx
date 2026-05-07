@@ -676,7 +676,7 @@ const Tarefas = () => {
                   type="text"
                   value={newBoardTitle}
                   onChange={(e) => setNewBoardTitle(e.target.value)}
-                  placeholder="Ex: Projetos, Vendas, Leads..."
+                  placeholder="Ex: Projetos, Vendas, Orçamentos..."
                   className="w-full px-4 py-3 border-2 border-[#333] rounded-lg font-bold text-white focus:border-[#B5FF03] outline-none transition-colors bg-[#111]"
                 />
               </div>
