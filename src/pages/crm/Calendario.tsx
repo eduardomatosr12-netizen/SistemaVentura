@@ -330,20 +330,40 @@ const CRMCalendario = () => {
                <div className="p-8 space-y-6">
                  <div className="grid grid-cols-2 gap-6">
                    <div className="space-y-2">
-                      <label className="flex items-center gap-2 text-[9px] font-black text-[#B5FF03] uppercase tracking-widest">
-                        <MessageSquare size={12} strokeWidth={3} className="text-[#B5FF03]" />
-                        TIPO DE EVENTO
-                      </label>
-                      <select
-                        value={formData.eventType}
-                        onChange={(e) => setFormData({ ...formData, eventType: e.target.value })}
-                        className="w-full bg-[#0a0a0a] border border-[#333] rounded-md px-3 py-2 text-xs font-black text-white focus:ring-1 focus:ring-[#B5FF03] outline-none transition-all"
-                      >
-                        <option value="Reunião">Reunião</option>
-                        <option value="Ligação">Ligação</option>
-                        <option value="Treinamento">Treinamento</option>
-                        <option value="Outro">Outro</option>
-                      </select>
+                       <label className="flex items-center gap-2 text-[9px] font-black text-[#B5FF03] uppercase tracking-widest">
+                         <MessageSquare size={12} strokeWidth={3} className="text-[#B5FF03]" />
+                         TIPO DE EVENTO
+                       </label>
+                       {(() => {
+                         const predefined = ['Aniversário', 'Casamento', 'Corporativo', 'Privado', 'Outros'];
+                         const isCustom = formData.eventType && !predefined.includes(formData.eventType);
+                         return (
+                           <>
+                             <select
+                               value={isCustom ? 'Outros' : (formData.eventType || '')}
+                               onChange={(e) => setFormData({ ...formData, eventType: e.target.value })}
+                               className="w-full bg-[#0a0a0a] border border-[#333] rounded-md px-3 py-2 text-xs font-black text-white focus:ring-1 focus:ring-[#B5FF03] outline-none transition-all"
+                             >
+                               <option value="">Selecione...</option>
+                               <option value="Aniversário">Aniversário</option>
+                               <option value="Casamento">Casamento</option>
+                               <option value="Corporativo">Corporativo</option>
+                               <option value="Privado">Privado</option>
+                               <option value="Outros">Outros</option>
+                             </select>
+                             {(formData.eventType === 'Outros' || isCustom) && (
+                               <input
+                                 type="text"
+                                 value={isCustom ? formData.eventType : ''}
+                                 onChange={(e) => setFormData({ ...formData, eventType: e.target.value })}
+                                 className="w-full bg-[#0a0a0a] border border-[#333] rounded-md px-3 py-2 mt-2 text-xs font-black text-white focus:ring-1 focus:ring-[#B5FF03] outline-none transition-all"
+                                 placeholder="Especifique o Evento"
+                                 required
+                               />
+                             )}
+                           </>
+                         );
+                       })()}
                    </div>
                     <div className="space-y-2">
                       <label className="flex items-center gap-2 text-[9px] font-black text-[#B5FF03] uppercase tracking-widest">
