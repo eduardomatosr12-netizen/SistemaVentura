@@ -21,7 +21,7 @@ const formatBRL = (val: string) => {
 const EMPTY_LEAD: Partial<Lead> = {
   name: '', niche: '', whatsapp: '', email: '', instagram: '',
   stage: 'Novos Orçamentos', firstContact: '', closingDate: '',
-  followUpReminder: '', address: '', gmnReviews: '', gmnStars: '',
+  followUpReminder: '', address: '',
   notes: '', value: '', items: [],
 };
 
@@ -548,7 +548,7 @@ const CRMOrçamentos = () => {
             <table className="w-full text-xs md:text-sm">
               <thead>
                 <tr className="border-b border-[#1a1a1a] bg-[#111]">
-                  {['NOME', 'WHATSAPP', 'INSTAGRAM', 'GMN ⭐', 'VALOR', 'ETAPA DO PIPELINE', 'AÇÕES'].map(h => (
+                  {['NOME', 'WHATSAPP', 'INSTAGRAM', 'VALOR', 'ETAPA DO PIPELINE', 'AÇÕES'].map(h => (
                     <th key={h} className="px-3 md:px-5 py-2 md:py-3.5 text-left text-[10px] md:text-[11px] text-[#B5FF03] font-semibold uppercase tracking-wider last:text-center whitespace-nowrap">
                       {h}
                     </th>
@@ -580,11 +580,7 @@ const CRMOrçamentos = () => {
                       )}
                     </td>
                      <td className="px-3 md:px-5 py-2 md:py-4 text-neutral-400 text-xs md:text-sm whitespace-nowrap">{lead?.instagram}</td>
-                    <td className="px-3 md:px-5 py-2 md:py-4">
-                       <div className="text-white font-semibold text-xs md:text-sm">{lead?.gmnStars} ⭐</div>
-                       <div className="text-[10px] md:text-xs text-neutral-400">{lead?.gmnReviews} avaliações</div>
-                    </td>
-                      <td className="px-3 md:px-5 py-2 md:py-4 text-white font-medium text-xs md:text-sm whitespace-nowrap">{lead?.value || '—'}</td>
+                     <td className="px-3 md:px-5 py-2 md:py-4 text-white font-medium text-xs md:text-sm whitespace-nowrap">{lead?.value || '—'}</td>
                      <td className="px-3 md:px-5 py-4 md:py-6">
                        <div className="flex justify-center">
                          <span className={`${stageStyle[lead?.stage] ?? baseStageStyle} ${lead?.stage ? '' : ''}`}>
@@ -605,7 +601,7 @@ const CRMOrçamentos = () => {
                   </tr>
                 )) : (
                   <tr>
-                     <td colSpan={7} className="px-3 md:px-5 py-8 md:py-12 text-center text-neutral-400 font-medium italic text-xs md:text-sm">
+                     <td colSpan={6} className="px-3 md:px-5 py-8 md:py-12 text-center text-neutral-400 font-medium italic text-xs md:text-sm">
                       {hasActiveFilters ? 'Nenhum lead encontrado com os filtros aplicados' : `Nenhum lead encontrado para "${searchTerm}"`}
                     </td>
                   </tr>
@@ -644,12 +640,6 @@ const CRMOrçamentos = () => {
                   <div className="flex items-center gap-2 text-xs text-neutral-300">
                     <span className="text-neutral-500 font-medium">Instagram:</span>
                     <span>{lead?.instagram || '—'}</span>
-                  </div>
-
-                  <div className="flex items-center gap-2 text-xs">
-                    <span className="text-neutral-500 font-medium">GMN:</span>
-                    <span className="text-white font-semibold">{lead?.gmnStars} ⭐</span>
-                    <span className="text-neutral-400">({lead?.gmnReviews} avaliações)</span>
                   </div>
 
                   <div className="flex items-center gap-2 text-xs">

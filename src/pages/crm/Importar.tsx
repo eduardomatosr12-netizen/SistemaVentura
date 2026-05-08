@@ -193,8 +193,6 @@ const Importar = () => {
           closingDate: '',
           followUpReminder: '',
           address: '',
-          gmnReviews: '',
-          gmnStars: '',
           notes: '',
           value: '',
         };
@@ -215,8 +213,6 @@ const Importar = () => {
         origin: '',
         closingDate: '',
         followUpReminder: '',
-        gmnReviews: '',
-        gmnStars: '',
       };
     });
 
