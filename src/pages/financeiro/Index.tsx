@@ -48,8 +48,10 @@ const PAYMENT_METHODS = [
   { value: 'parcelado', label: 'Parcelado' },
 ];
 
-const paymentMethodLabel = (value?: string) =>
-  PAYMENT_METHODS.find(pm => pm.value === value)?.label || value || '—';
+const paymentMethodLabel = (value?: string, installments?: string) => {
+  if (value === 'parcelado' && installments) return `Parcelado ${installments}x`;
+  return PAYMENT_METHODS.find(pm => pm.value === value)?.label || value || '—';
+};
 
 const INVOICE_STATUSES = ['Pago', 'Pendente', 'Vencida', 'Cancelado'];
 const EXPENSE_STATUSES = ['Pago', 'Pendente', 'Cancelado'];
@@ -702,7 +704,7 @@ const Financeiro = () => {
                           {invoice.status}
                         </span>
                       </td>
-                      <td className="p-4 text-sm text-[#888888]">{paymentMethodLabel(invoice.paymentMethod)}</td>
+                      <td className="p-4 text-sm text-[#888888]">{paymentMethodLabel(invoice.paymentMethod, invoice.installments)}</td>
                       <td className="p-4 text-right">
                         <button
                           onClick={() => handleOpenInvoiceModal(invoice)}
@@ -734,7 +736,7 @@ const Financeiro = () => {
                     <div><span className="text-neutral-500">ID:</span> <span className="text-white">{invoice.id}</span></div>
                     <div><span className="text-neutral-500">Valor:</span> <span className="text-white">{invoice.amount}</span></div>
                     <div><span className="text-neutral-500">Data:</span> <span className="text-white">{invoice.date}</span></div>
-                    <div><span className="text-neutral-500">Pagamento:</span> <span className="text-white">{paymentMethodLabel(invoice.paymentMethod)}</span></div>
+                    <div><span className="text-neutral-500">Pagamento:</span> <span className="text-white">{paymentMethodLabel(invoice.paymentMethod, invoice.installments)}</span></div>
                   </div>
                   <div className="flex justify-end gap-2 pt-2 border-t border-[#222]">
                     <button onClick={() => handleOpenInvoiceModal(invoice)} className="text-[#B5FF03] p-2 min-h-[44px]"><Pencil size={18} /></button>
