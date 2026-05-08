@@ -763,21 +763,10 @@ const CRMOrçamentos = () => {
                   </Field>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
-                  <Field label="VALOR DO CONTRATO">
-                    <input 
-                      type="text" 
-                      value={current.value} 
-                      onChange={e => updateField('value', formatBRL(e.target.value))}
-                      className={inputCls} 
-                      placeholder="R$ 0,00" 
-                    />
-                  </Field>
-                  <Field label="DECORADOR">
+                <Field label="DECORADOR">
                     <input type="text" value={current.followUpReminder} onChange={e => updateField('followUpReminder', e.target.value)}
                       className={inputCls} placeholder="Nome do decorador" />
                   </Field>
-                </div>
 
                  <Field label="OBSERVAÇÕES">
                    <textarea value={current.notes} onChange={e => updateField('notes', e.target.value)}
@@ -790,22 +779,30 @@ const CRMOrçamentos = () => {
                      <Package size={14} /> ITENS DO ORÇAMENTO
                    </label>
 
-                   {current.items && current.items.length > 0 && (
-                     <div className="space-y-2 mb-4">
-                       {current.items.map(item => (
-                         <div key={item.id} className="flex items-center gap-2 bg-[#1a1a1a] border border-[#333] rounded-md px-3 py-2">
-                           <span className="flex-1 text-white text-sm font-medium truncate">{item.descricao}</span>
-                           <span className="text-neutral-400 text-xs whitespace-nowrap">{item.quantidade}x</span>
-                           <span className="text-white text-xs font-bold whitespace-nowrap">
-                             {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(item.valorUnitario)}
-                           </span>
-                           <button type="button" onClick={() => removeItem(item.id)} className="text-neutral-500 hover:text-red-500 transition-colors p-1">
-                             <X size={14} />
-                           </button>
-                         </div>
-                       ))}
-                     </div>
-                   )}
+                    {current.items && current.items.length > 0 && (
+                      <div className="space-y-2 mb-4">
+                        {current.items.map(item => (
+                          <div key={item.id} className="flex items-center gap-2 bg-[#1a1a1a] border border-[#333] rounded-md px-3 py-2">
+                            <span className="flex-1 text-white text-sm font-medium truncate">{item.descricao}</span>
+                            <span className="text-neutral-400 text-xs whitespace-nowrap">{item.quantidade}x</span>
+                            <span className="text-white text-xs font-bold whitespace-nowrap">
+                              {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(item.valorUnitario)}
+                            </span>
+                            <button type="button" onClick={() => removeItem(item.id)} className="text-neutral-500 hover:text-red-500 transition-colors p-1">
+                              <X size={14} />
+                            </button>
+                          </div>
+                        ))}
+                        <div className="flex items-center justify-end gap-2 bg-[#111] border border-[#B5FF03]/30 rounded-md px-4 py-3 mt-3">
+                          <span className="text-xs font-black uppercase tracking-widest text-[#B5FF03]">Total</span>
+                          <span className="text-sm font-black text-white">
+                            {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
+                              (current.items || []).reduce((sum, item) => sum + item.quantidade * item.valorUnitario, 0)
+                            )}
+                          </span>
+                        </div>
+                      </div>
+                    )}
 
                    <div className="flex items-center gap-2 relative" ref={invDropdownRef}>
                      <div className="flex-1 relative">
