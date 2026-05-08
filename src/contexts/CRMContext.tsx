@@ -44,15 +44,6 @@ export interface CalendarEvent {
   equipe?: string;
 }
 
-export interface Notification {
-  id: string;
-  title: string;
-  description: string;
-  time: string;
-  isRead: boolean;
-  type: 'lead' | 'meeting' | 'system';
-}
-
 type LeadInput = Omit<Lead, 'id'>;
 type LeadUpdate = Partial<Omit<Lead, 'id'>>;
 
@@ -60,9 +51,7 @@ interface CRMContextType {
   Orçamentos: Lead[];
   events: CalendarEvent[];
   searchTerm: string;
-  notifications: Notification[];
   setSearchTerm: (term: string) => void;
-  markNotificationsAsRead: () => void;
   addLead: (lead: LeadInput) => void;
   updateLead: (id: string, fields: LeadUpdate) => void;
   updateOrçamentostage: (id: string, stage: string) => void;
@@ -137,12 +126,6 @@ const INITIAL_EVENTS: CalendarEvent[] = [
   }
 ];
 
-const INITIAL_NOTIFICATIONS: Notification[] = [
-  { id: '1', title: 'Novo Lead Criado', description: 'O lead "Clínica Saúde" foi adicionado via importação.', time: '5 min atrás', isRead: false, type: 'lead' },
-  { id: '2', title: 'Reunião em breve', description: 'Sua reunião com João Silva começa em 15 minutos.', time: '10 min atrás', isRead: false, type: 'meeting' },
-  { id: '3', title: 'Follow-up pendente', description: 'Você tem 3 follow-ups agendados para hoje.', time: '1 hora atrás', isRead: true, type: 'system' },
-];
-
 function loadFromStorage<T>(key: string, fallback: T): T {
   if (typeof window === 'undefined') return fallback;
   
@@ -156,8 +139,6 @@ function loadFromStorage<T>(key: string, fallback: T): T {
     return fallback;
   }
 }
-
-// Função removida - usar generateUUID de ../lib/uuid
 
 export const CRMProvider = ({ children }: { children: ReactNode }) => {
   const [Orçamentos, setOrçamentos] = useState<Lead[]>(() => {
@@ -185,7 +166,6 @@ export const CRMProvider = ({ children }: { children: ReactNode }) => {
   });
   const [events, setEvents] = useState<CalendarEvent[]>(() => loadFromStorage('axium_events_v2', INITIAL_EVENTS));
   const [searchTerm, setSearchTerm] = useState('');
-  const [notifications, setNotifications] = useState<Notification[]>(INITIAL_NOTIFICATIONS);
 
   useEffect(() => {
     localStorage.setItem('axium_Orçamentos_v2', JSON.stringify(Orçamentos));
@@ -199,24 +179,11 @@ export const CRMProvider = ({ children }: { children: ReactNode }) => {
   
   const totalPipelineValue = useMemo(() => calculateTotalValue(Orçamentos), [Orçamentos]);
 
-  const markNotificationsAsRead = useCallback(() => {
-    setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
-  }, []);
-
   const addLead = useCallback((lead: LeadInput) => {
     const id = generateUUID();
     const newLead: Lead = { ...lead, id };
     
     setOrçamentos(prev => [...prev, newLead]);
-    
-    setNotifications(prev => [{
-      id: generateUUID(),
-      title: 'Novo Lead',
-      description: `${lead.name} foi adicionado ao sistema.`,
-      time: 'Agora',
-      isRead: false,
-      type: 'lead'
-    } as Notification, ...prev]);
   }, []);
 
   const updateLead = useCallback((id: string, fields: LeadUpdate) => {
@@ -258,9 +225,7 @@ export const CRMProvider = ({ children }: { children: ReactNode }) => {
     Orçamentos,
     events,
     searchTerm,
-    notifications,
     setSearchTerm,
-    markNotificationsAsRead,
     addLead,
     updateLead,
     updateOrçamentostage,
@@ -276,8 +241,6 @@ export const CRMProvider = ({ children }: { children: ReactNode }) => {
     Orçamentos,
     events,
     searchTerm,
-    notifications,
-    markNotificationsAsRead,
     addLead,
     updateLead,
     updateOrçamentostage,
