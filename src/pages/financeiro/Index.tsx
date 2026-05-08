@@ -45,7 +45,7 @@ const PAYMENT_METHODS = [
   { value: 'pix', label: 'Pix' },
   { value: 'credito', label: 'Cartão de Crédito' },
   { value: 'boleto', label: 'Boleto' },
-  { value: 'parcelado', label: 'Parcelado (até 12x)' },
+  { value: 'parcelado', label: 'Parcelado' },
 ];
 
 const paymentMethodLabel = (value?: string) =>
