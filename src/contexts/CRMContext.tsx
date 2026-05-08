@@ -36,6 +36,8 @@ export interface CalendarEvent {
   clientId?: string;
   eventType?: string;
   date: string;
+  time?: string;
+  local?: string;
   decorator?: string;
   city?: string;
   description?: string;
