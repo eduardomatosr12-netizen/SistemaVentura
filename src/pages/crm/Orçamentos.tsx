@@ -548,8 +548,8 @@ const CRMOrçamentos = () => {
             <table className="w-full text-xs md:text-sm">
               <thead>
                 <tr className="border-b border-[#1a1a1a] bg-[#111]">
-                  {['NOME', 'WHATSAPP', 'INSTAGRAM', 'VALOR', 'ETAPA DO PIPELINE', 'AÇÕES'].map(h => (
-                    <th key={h} className="px-3 md:px-5 py-2 md:py-3.5 text-left text-[10px] md:text-[11px] text-[#B5FF03] font-semibold uppercase tracking-wider last:text-center whitespace-nowrap">
+                  {['NOME', 'WHATSAPP', 'INSTAGRAM', 'VALOR', 'ETAPA DO PIPELINE', 'AÇÕES'].map((h, i) => (
+                    <th key={h} className={`px-3 md:px-5 py-2 md:py-3.5 text-[10px] md:text-[11px] text-[#B5FF03] font-semibold uppercase tracking-wider whitespace-nowrap ${i >= 4 ? 'text-center' : 'text-left'}`}>
                       {h}
                     </th>
                   ))}
@@ -581,13 +581,11 @@ const CRMOrçamentos = () => {
                     </td>
                      <td className="px-3 md:px-5 py-2 md:py-4 text-neutral-400 text-xs md:text-sm whitespace-nowrap">{lead?.instagram}</td>
                      <td className="px-3 md:px-5 py-2 md:py-4 text-white font-medium text-xs md:text-sm whitespace-nowrap">{lead?.value || '—'}</td>
-                     <td className="px-3 md:px-5 py-4 md:py-6">
-                       <div className="flex justify-center">
-                         <span className={`${stageStyle[lead?.stage] ?? baseStageStyle} ${lead?.stage ? '' : ''}`}>
-                           {lead?.stage === 'Novos Orçamentos' ? 'Novos Contatos' : lead?.stage}
-                         </span>
-                       </div>
-                     </td>
+                     <td className="px-3 md:px-5 py-4 md:py-6 text-center">
+                        <span className={`${stageStyle[lead?.stage] ?? baseStageStyle}`}>
+                          {lead?.stage === 'Novos Orçamentos' ? 'Novos Contatos' : lead?.stage}
+                        </span>
+                      </td>
                     <td className="px-3 md:px-5 py-2 md:py-4">
                       <div className="flex items-center justify-center gap-0.5 md:gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                          <button onClick={() => openEdit(lead)} className="p-1 md:p-1.5 text-neutral-400 hover:text-white hover:bg-[#111] rounded-md transition-all">
@@ -647,8 +645,8 @@ const CRMOrçamentos = () => {
                     <span className="text-white font-medium">{lead?.value || '—'}</span>
                   </div>
 
-                  <div className="flex justify-center pt-1">
-                    <span className={`${stageStyle[lead?.stage] ?? baseStageStyle} ${lead?.stage ? '' : ''}`}>
+                  <div className="flex justify-center pt-1 w-full">
+                    <span className={`${stageStyle[lead?.stage] ?? baseStageStyle}`}>
                       {lead?.stage === 'Novos Orçamentos' ? 'Novos Contatos' : lead?.stage}
                     </span>
                   </div>
