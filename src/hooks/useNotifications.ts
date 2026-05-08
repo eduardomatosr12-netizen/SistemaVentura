@@ -13,6 +13,7 @@ export interface AppNotification {
 }
 
 const READ_STATE_KEY = 'axium_notifications_read';
+const DISMISSED_KEY = 'axium_notifications_dismissed';
 const MAX_NOTIFICATIONS = 50;
 
 function formatRelativeTime(dateStr: string): string {
@@ -43,9 +44,23 @@ function saveReadMap(map: Record<string, boolean>): void {
   localStorage.setItem(READ_STATE_KEY, JSON.stringify(map));
 }
 
+function loadDismissed(): Set<string> {
+  try {
+    const raw = localStorage.getItem(DISMISSED_KEY);
+    return new Set<string>(raw ? JSON.parse(raw) : []);
+  } catch {
+    return new Set();
+  }
+}
+
+function saveDismissed(set: Set<string>): void {
+  localStorage.setItem(DISMISSED_KEY, JSON.stringify([...set]));
+}
+
 export function useNotifications() {
   const { Orçamentos, events } = useCRM();
   const [readMap, setReadMap] = useState<Record<string, boolean>>(loadReadMap);
+  const [dismissed, setDismissed] = useState<Set<string>>(loadDismissed);
   const notificationsRef = useRef<AppNotification[]>([]);
 
   const notifications = useMemo<AppNotification[]>(() => {
@@ -161,8 +176,8 @@ export function useNotifications() {
     } catch {}
 
     list.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-    return list.slice(0, MAX_NOTIFICATIONS);
-  }, [Orçamentos, events, readMap]);
+    return list.slice(0, MAX_NOTIFICATIONS).filter(n => !dismissed.has(n.id));
+  }, [Orçamentos, events, readMap, dismissed]);
 
   notificationsRef.current = notifications;
 
@@ -193,5 +208,34 @@ export function useNotifications() {
     });
   }, []);
 
-  return { notifications, unreadCount, markAsRead, markAllAsRead };
+  const dismissNotification = useCallback((id: string) => {
+    setDismissed(prev => {
+      if (prev.has(id)) return prev;
+      const next = new Set(prev);
+      next.add(id);
+      saveDismissed(next);
+      return next;
+    });
+  }, []);
+
+  const dismissAll = useCallback(() => {
+    setDismissed(prev => {
+      const next = new Set(prev);
+      for (const n of notificationsRef.current) {
+        next.add(n.id);
+      }
+      saveDismissed(next);
+      return next;
+    });
+    setReadMap(prev => {
+      const next = { ...prev };
+      for (const n of notificationsRef.current) {
+        next[n.id] = true;
+      }
+      saveReadMap(next);
+      return next;
+    });
+  }, []);
+
+  return { notifications, unreadCount, markAsRead, markAllAsRead, dismissNotification, dismissAll };
 }

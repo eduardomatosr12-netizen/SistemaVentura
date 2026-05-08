@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Bell, User, Calendar as CalendarIcon, Clock, Menu, LogOut, UserPlus, FileText, CheckCircle, Package, DollarSign } from 'lucide-react';
+import { Bell, User, Calendar as CalendarIcon, Clock, Menu, LogOut, UserPlus, FileText, CheckCircle, Package, DollarSign, X } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNotifications } from '../hooks/useNotifications';
 import type { AppNotification } from '../hooks/useNotifications';
@@ -35,10 +35,11 @@ const TopHeader = ({ onMenuClick }: TopHeaderProps) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
-  const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
+  const { notifications, unreadCount, markAsRead, markAllAsRead, dismissNotification, dismissAll } = useNotifications();
 
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const [leavingIds, setLeavingIds] = useState<Set<string>>(new Set());
   const notificationRef = useRef<HTMLDivElement>(null);
   const userMenuRef = useRef<HTMLDivElement>(null);
 
@@ -71,8 +72,21 @@ const TopHeader = ({ onMenuClick }: TopHeaderProps) => {
     navigate(n.link);
   };
 
+  const handleDismiss = (id: string) => {
+    setLeavingIds(prev => new Set(prev).add(id));
+    setTimeout(() => {
+      dismissNotification(id);
+      setLeavingIds(prev => { const next = new Set(prev); next.delete(id); return next; });
+    }, 300);
+  };
+
   const handleClearAll = () => {
-    markAllAsRead();
+    const ids = notifications.map(n => n.id);
+    setLeavingIds(new Set(ids));
+    setTimeout(() => {
+      dismissAll();
+      setLeavingIds(new Set());
+    }, 300);
   };
 
   return (
@@ -119,18 +133,25 @@ const TopHeader = ({ onMenuClick }: TopHeaderProps) => {
                  {notifications.length > 0 ? (
                    notifications.map((n) => {
                      const Icon = notificationIcon(n.type);
+                     const isLeaving = leavingIds.has(n.id);
                      return (
                        <div
                          key={n.id}
-                         onClick={() => handleNotificationClick(n)}
-                         className={`p-5 hover:bg-[#222] transition-colors cursor-pointer group ${!n.isRead ? 'bg-[#222]/50' : ''}`}
+                         onClick={() => !isLeaving && handleNotificationClick(n)}
+                         className={`relative p-5 hover:bg-[#222] transition-all duration-300 cursor-pointer group ${!n.isRead ? 'bg-[#222]/50' : ''} ${isLeaving ? 'opacity-0 -translate-x-4 scale-95 pointer-events-none' : 'opacity-100 translate-x-0 scale-100'}`}
                        >
+                         <button
+                           onClick={(e) => { e.stopPropagation(); handleDismiss(n.id); }}
+                           className="absolute top-2 right-2 w-5 h-5 flex items-center justify-center rounded-full bg-neutral-800 hover:bg-red-900/50 text-neutral-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all duration-200 z-10"
+                         >
+                           <X size={10} strokeWidth={3} />
+                         </button>
                          <div className="flex gap-4">
                            <div className="w-8 h-8 rounded-md flex items-center justify-center shrink-0 bg-[#111] text-[#B5FF03] border border-[#222222]">
                              <Icon size={14} />
                            </div>
-                           <div className="space-y-1">
-                             <p className="text-xs font-black text-white leading-tight group-hover:underline">{n.title}</p>
+                           <div className="space-y-1 flex-1 min-w-0">
+                             <p className="text-xs font-black text-white leading-tight group-hover:underline pr-4">{n.title}</p>
                              <p className="text-[11px] text-neutral-400 font-bold leading-relaxed">{n.description}</p>
                              <div className="flex items-center gap-1.5 text-[9px] text-neutral-500 font-black uppercase tracking-tight mt-2">
                                <Clock size={10} strokeWidth={3} />
@@ -143,7 +164,7 @@ const TopHeader = ({ onMenuClick }: TopHeaderProps) => {
                    })
                  ) : (
                    <div className="p-12 text-center">
-                     <p className="text-[10px] text-neutral-500 font-black uppercase tracking-widest italic">Nenhuma notificação</p>
+                     <p className="text-[10px] text-neutral-500 font-black uppercase tracking-widest italic">Você não tem novas notificações no momento</p>
                    </div>
                  )}
                </div>
