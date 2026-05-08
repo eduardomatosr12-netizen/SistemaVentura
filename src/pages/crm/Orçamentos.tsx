@@ -695,14 +695,36 @@ const CRMOrçamentos = () => {
                       required className={inputCls} placeholder="Ex: João Silva" />
                   </Field>
                   <Field label="TIPO DE EVENTO">
-                    <select value={current.niche} onChange={e => updateField('niche', e.target.value)}
-                      className={`${inputCls} appearance-none cursor-pointer`}>
-                      <option value="">Selecione...</option>
-                      <option value="Casamento">Casamento</option>
-                      <option value="15 Anos">15 Anos</option>
-                      <option value="Corporativo">Corporativo</option>
-                      <option value="Outros">Outros</option>
-                    </select>
+                    {(() => {
+                      const predefined = ['Aniversário', 'Casamento', 'Corporativo', 'Privado', 'Outros'];
+                      const isCustom = current.niche && !predefined.includes(current.niche);
+                      return (
+                        <>
+                          <select
+                            value={isCustom ? 'Outros' : (current.niche || '')}
+                            onChange={e => updateField('niche', e.target.value)}
+                            className={`${inputCls} appearance-none cursor-pointer`}
+                          >
+                            <option value="">Selecione...</option>
+                            <option value="Aniversário">Aniversário</option>
+                            <option value="Casamento">Casamento</option>
+                            <option value="Corporativo">Corporativo</option>
+                            <option value="Privado">Privado</option>
+                            <option value="Outros">Outros</option>
+                          </select>
+                          {(current.niche === 'Outros' || isCustom) && (
+                            <input
+                              type="text"
+                              value={isCustom ? current.niche : ''}
+                              onChange={e => updateField('niche', e.target.value)}
+                              className={`${inputCls} mt-2`}
+                              placeholder="Especifique o Evento"
+                              required
+                            />
+                          )}
+                        </>
+                      );
+                    })()}
                   </Field>
                 </div>
 
