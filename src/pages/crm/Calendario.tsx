@@ -4,6 +4,28 @@ import type { CalendarEvent } from '../../contexts/CRMContext';
 import { generateUUID } from '../../lib/uuid';
 import { X, ExternalLink, Clock, User, Users, MessageSquare, Plus, Trash2, Calendar as CalendarIcon, Link as LinkIcon, FileText, ChevronLeft, ChevronRight, Search, MapPin } from 'lucide-react';
 
+const toBR = (iso: string): string => {
+  if (!iso) return '';
+  if (/^\d{2}\/\d{2}\/\d{4}$/.test(iso)) return iso;
+  const m = iso.match(/^\d{4}-\d{2}-\d{2}/);
+  if (!m) return iso;
+  const [y, mo, d] = m[0].split('-');
+  return `${d}/${mo}/${y}`;
+};
+
+const toISO = (br: string): string => {
+  const m = br.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (!m) return '';
+  return `${m[3]}-${m[2]}-${m[1]}`;
+};
+
+const maskDate = (raw: string): string => {
+  const digits = raw.replace(/\D/g, '').slice(0, 8);
+  if (digits.length <= 2) return digits;
+  if (digits.length <= 4) return `${digits.slice(0, 2)}/${digits.slice(2)}`;
+  return `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4, 8)}`;
+};
+
 const CRMCalendario = () => {
   const { events, addEvent, updateEvent, deleteEvent, Orçamentos } = useCRM();
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
@@ -33,6 +55,11 @@ const CRMCalendario = () => {
   const [showClientDropdown, setShowClientDropdown] = useState(false);
   const clientDropdownRef = useRef<HTMLDivElement>(null);
 
+  const [equipeMembers, setEquipeMembers] = useState<string[]>([]);
+  const [equipeSearch, setEquipeSearch] = useState('');
+  const [showEquipeDropdown, setShowEquipeDropdown] = useState(false);
+  const equipeDropdownRef = useRef<HTMLDivElement>(null);
+
   const closedOrçamentos = useMemo(() => {
     return Orçamentos.filter(o => o.stage === 'Contrato Fechado');
   }, [Orçamentos]);
@@ -57,9 +84,19 @@ const CRMCalendario = () => {
       if (clientDropdownRef.current && !clientDropdownRef.current.contains(e.target as Node)) {
         setShowClientDropdown(false);
       }
+      if (equipeDropdownRef.current && !equipeDropdownRef.current.contains(e.target as Node)) {
+        setShowEquipeDropdown(false);
+      }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    const cached = localStorage.getItem('axium_equipe_members');
+    if (cached) {
+      try { setEquipeMembers(JSON.parse(cached)); } catch { /* ignore */ }
+    }
   }, []);
 
   const days = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
@@ -109,13 +146,15 @@ const CRMCalendario = () => {
   };
 
   const handleOpenCreate = () => {
-    const defaultDate = new Date(currentYear, currentMonth, today.getDate());
-    const dateStr = defaultDate.toISOString().slice(0, 10);
+    const d = new Date(currentYear, currentMonth, today.getDate());
+    const dd = String(d.getDate()).padStart(2, '0');
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const yyyy = d.getFullYear();
     setModalMode('create');
     setFormData({
       title: '',
       eventType: 'Reunião',
-      date: dateStr,
+      date: `${dd}/${mm}/${yyyy}`,
       time: '',
       local: '',
       client: '',
@@ -136,7 +175,7 @@ const CRMCalendario = () => {
     setFormData({
       title: event.title || '',
       eventType: event.eventType || 'Reunião',
-      date: event.date || '',
+      date: toBR(event.date || ''),
       time: event.time || '',
       local: event.local || '',
       client: event.client || '',
@@ -377,13 +416,15 @@ const CRMCalendario = () => {
                             <CalendarIcon size={12} strokeWidth={3} className="text-[#B5FF03]" />
                             DATA
                           </label>
-                          <input
-                            required
-                            type="date"
-                            value={formData.date}
-                            onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                            className="w-full bg-[#0a0a0a] border border-[#333] rounded-md px-3 py-2 text-xs font-black text-white focus:ring-1 focus:ring-[#B5FF03] outline-none transition-all [color-scheme:dark]"
-                          />
+                           <input
+                             required
+                             type="text"
+                             inputMode="numeric"
+                             value={formData.date}
+                             onChange={(e) => setFormData({ ...formData, date: maskDate(e.target.value) })}
+                             placeholder="DD/MM/AAAA"
+                             className="w-full bg-[#0a0a0a] border border-[#333] rounded-md px-3 py-2.5 text-xs font-black text-white focus:ring-1 focus:ring-[#B5FF03] outline-none transition-all tracking-wider"
+                           />
                        </div>
                        <div className="space-y-2">
                           <label className="flex items-center gap-2 text-[9px] font-black text-[#B5FF03] uppercase tracking-widest">
@@ -481,18 +522,67 @@ const CRMCalendario = () => {
                      />
                    </div>
 
-                   <div className="space-y-2">
+                   <div className="space-y-2 relative" ref={equipeDropdownRef}>
                      <label className="flex items-center gap-2 text-[9px] font-black text-[#B5FF03] uppercase tracking-widest">
                        <Users size={12} strokeWidth={3} className="text-[#B5FF03]" />
                        EQUIPE
                     </label>
+                    <div className="flex flex-wrap gap-1.5 mb-2 min-h-[28px]">
+                      {(formData.equipe ? formData.equipe.split(',').map(s => s.trim()).filter(Boolean) : []).map(name => (
+                        <span key={name} className="inline-flex items-center gap-1 bg-[#1a1a1a] border border-[#B5FF03] rounded-md px-2 py-1 text-[10px] font-bold text-white">
+                          {name}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const current = formData.equipe.split(',').map(s => s.trim()).filter(Boolean);
+                              const next = current.filter(n => n !== name);
+                              setFormData({ ...formData, equipe: next.join(', ') });
+                            }}
+                            className="text-neutral-500 hover:text-red-400 transition-colors"
+                          >
+                            <X size={10} strokeWidth={3} />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
                     <input
                       type="text"
-                      value={formData.equipe}
-                      onChange={(e) => setFormData({ ...formData, equipe: e.target.value })}
-                      placeholder="Liste os membros da equipe para este evento"
+                      value={equipeSearch}
+                      onChange={(e) => { setEquipeSearch(e.target.value); setShowEquipeDropdown(true); }}
+                      onFocus={() => setShowEquipeDropdown(true)}
+                      placeholder="Selecione os membros da equipe..."
                       className="w-full bg-[#0a0a0a] border border-[#333] rounded-md px-3 py-2 text-xs font-black text-white focus:ring-1 focus:ring-[#B5FF03] outline-none transition-all"
                     />
+                    {showEquipeDropdown && (
+                      <div className="absolute z-50 top-full mt-1 left-0 right-0 bg-[#1a1a1a] border border-[#333] rounded-md shadow-xl max-h-48 overflow-y-auto">
+                        {(() => {
+                          const selected = formData.equipe ? formData.equipe.split(',').map(s => s.trim()).filter(Boolean) : [];
+                          const q = equipeSearch.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+                          const available = equipeMembers.filter(
+                            n => !selected.includes(n) && n.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').includes(q)
+                          );
+                          return available.length === 0 ? (
+                            <p className="px-3 py-3 text-xs text-neutral-500 text-center">Nenhum membro encontrado</p>
+                          ) : (
+                            available.map(name => (
+                              <button
+                                key={name}
+                                type="button"
+                                onClick={() => {
+                                  const current = formData.equipe.split(',').map(s => s.trim()).filter(Boolean);
+                                  setFormData({ ...formData, equipe: [...current, name].join(', ') });
+                                  setEquipeSearch('');
+                                  setShowEquipeDropdown(false);
+                                }}
+                                className="w-full text-left px-3 py-2 text-xs text-white hover:bg-[#333] transition-colors border-b border-[#222] last:border-b-0"
+                              >
+                                {name}
+                              </button>
+                            ))
+                          );
+                        })()}
+                      </div>
+                    )}
                   </div>
 
                   <div className="space-y-2">
