@@ -1,5 +1,5 @@
 ﻿import { useState, useRef } from 'react';
-import { Upload, Download, CheckCircle, AlertCircle, ArrowRight } from 'lucide-react';
+import { Upload, CheckCircle, AlertCircle, ArrowRight } from 'lucide-react';
 import Papa from 'papaparse';
 import * as XLSX from 'xlsx';
 import { generateUUID } from '../../lib/uuid';
@@ -52,30 +52,6 @@ const ROUTE_MAP: Record<string, string> = {
 };
 
 type ImportType = keyof typeof COLUMNS_BY_TYPE;
-
-function generateCSVTemplate(type: ImportType): string {
-  const config = COLUMNS_BY_TYPE[type];
-  const headers = config.headers;
-  const sampleRows: Record<string, string[]> = {
-    Estoque: ['Mesa de Centro', 'Móveis', '10', '5', 'Móveis LTDA', '2026-05-01', '850,00'],
-    Clientes: ['João Silva', 'joao@email.com', '11 99999-9999', '@joaosilva', 'Odontologia', 'Instagram'],
-    Orçamentos: ['Maria Santos', 'São Paulo', '2026-05-15', '5000', 'Casamento', 'Cliente solicitou orçamento'],
-  };
-  return [headers.join(','), (sampleRows[type] || []).join(',')].join('\n');
-}
-
-function downloadCSV(type: ImportType) {
-  const csv = generateCSVTemplate(type);
-  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = `modelo_${type.toLowerCase()}.csv`;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  URL.revokeObjectURL(url);
-}
 
 function parseCSVFile(file: File): Promise<Record<string, string>[]> {
   return new Promise((resolve, reject) => {
@@ -384,15 +360,6 @@ const Importar = () => {
           <p className="text-neutral-400 text-sm font-bold">Formatos suportados: .csv, .xlsx</p>
         </div>
 
-        <div className="flex justify-center">
-          <button
-            onClick={() => downloadCSV(selectedType)}
-            className="flex items-center gap-2 px-6 py-3 bg-[#B5FF03] text-black font-black rounded-lg hover:bg-[#a1e600] transition-all"
-          >
-            <Download size={16} />
-            Baixar modelo {selectedType}
-          </button>
-        </div>
       </div>
     </div>
   );

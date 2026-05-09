@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase, PROFILES_TABLE } from '../../lib/supabase';
-import { isValidUUID } from '../../lib/uuid';
+import { generateUUID, isValidUUID } from '../../lib/uuid';
 import { useNavigate } from 'react-router-dom';
 
 interface Employee {
@@ -19,6 +19,9 @@ interface Employee {
 }
 
 type ModalType = 'perfil' | 'equipe';
+
+const PROFILE_CACHE_KEY = 'axium_profile_cache';
+const EMPLOYEES_KEY = 'axium_employees_local';
 
 const Configuracoes = () => {
   const { user, logout } = useAuth();
@@ -81,7 +84,21 @@ const Configuracoes = () => {
           }
         }
       } catch (err) {
-        console.error('[CONFIG] Erro ao carregar perfil:', err);
+        console.warn('[CONFIG] Erro ao carregar perfil, tentando cache local:', err);
+        const cached = localStorage.getItem(PROFILE_CACHE_KEY);
+        if (cached) {
+          try {
+            const parsed = JSON.parse(cached);
+            setProfileData({
+              name: parsed.nome || '',
+              email: parsed.email || user.email || '',
+              phone: parsed.telefone || '(11) 99999-9999',
+              avatar: parsed.avatar || ''
+            });
+            if (parsed.avatar) setAvatarPreview(parsed.avatar);
+            return;
+          } catch { /* ignore */ }
+        }
         setProfileData({ name: '', email: user.email || '', phone: '(11) 99999-9999', avatar: '' });
       }
     };
@@ -99,9 +116,16 @@ const Configuracoes = () => {
         .order('created_at', { ascending: true });
       
       if (error) throw error;
-      setEmployees(data || []);
+      if (data) {
+        setEmployees(data);
+        localStorage.setItem(EMPLOYEES_KEY, JSON.stringify(data));
+      }
     } catch (err) {
-      console.error('[CONFIG] Erro ao carregar funcionários:', err);
+      console.warn('[CONFIG] Supabase indisponível, usando cache local:', err);
+      const cached = localStorage.getItem(EMPLOYEES_KEY);
+      if (cached) {
+        try { setEmployees(JSON.parse(cached)); } catch { /* ignore */ }
+      }
     } finally {
       setIsLoadingEmployees(false);
     }
@@ -112,6 +136,14 @@ const Configuracoes = () => {
       loadEmployees();
     }
   }, [user?.id]);
+
+  useEffect(() => {
+    try {
+      if (employees.length > 0) {
+        localStorage.setItem('axium_equipe_members', JSON.stringify(employees.map(e => e.name)));
+      }
+    } catch {}
+  }, [employees]);
 
   const handleAddEmployee = async () => {
     if (!newEmployee.name.trim()) {
@@ -124,6 +156,14 @@ const Configuracoes = () => {
       console.error('[CONFIG] user.id inválido:', user?.id);
       return;
     }
+
+    const newMember = {
+      id: generateUUID(),
+      user_id: user.id,
+      name: newEmployee.name.trim(),
+      role: newEmployee.role,
+      created_at: new Date().toISOString(),
+    };
 
     try {
       const { data, error } = await supabase
@@ -138,15 +178,23 @@ const Configuracoes = () => {
 
       if (error) throw error;
 
-      setEmployees([...employees, data]);
-      setNewEmployee({ name: '', role: 'tecnico' });
-      setInviteSuccess('Funcionário adicionado!');
-      setInviteError('');
-      setTimeout(() => setInviteSuccess(''), 3000);
+      setEmployees(prev => [...prev, data]);
     } catch (err: any) {
-      console.error('[CONFIG] Erro ao adicionar funcionário:', err);
-      setInviteError(err.message || 'Erro ao adicionar funcionário');
+      console.warn('[CONFIG] Supabase indisponível, salvando localmente:', err);
+      setEmployees(prev => {
+        const updated = [...prev, newMember];
+        localStorage.setItem(EMPLOYEES_KEY, JSON.stringify(updated));
+        return updated;
+      });
     }
+
+    setNewEmployee({ name: '', role: 'tecnico' });
+    setInviteSuccess('Membro adicionado com sucesso');
+    setInviteError('');
+    setTimeout(() => {
+      setInviteSuccess('');
+      setActiveModal(null);
+    }, 1500);
   };
 
   const handleRemoveEmployee = async (id: string) => {
@@ -159,12 +207,15 @@ const Configuracoes = () => {
         .eq('id', id);
 
       if (error) throw error;
-
-      setEmployees(employees.filter(emp => emp.id !== id));
     } catch (err: any) {
-      console.error('[CONFIG] Erro ao remover funcionário:', err);
-      setInviteError(err.message || 'Erro ao remover funcionário');
+      console.warn('[CONFIG] Supabase indisponível, removendo localmente:', err);
     }
+
+    setEmployees(prev => {
+      const updated = prev.filter(emp => emp.id !== id);
+      localStorage.setItem(EMPLOYEES_KEY, JSON.stringify(updated));
+      return updated;
+    });
   };
 
   const handleSaveProfile = async (e: React.FormEvent) => {
@@ -192,59 +243,62 @@ const Configuracoes = () => {
     setProfileError('');
     setProfileSuccess('');
     
+    const finalAvatar = avatarPreview || profileData.avatar;
+
+    const profileCache = {
+      nome: profileData.name.trim(),
+      telefone: profileData.phone.trim(),
+      email: profileData.email.trim(),
+      avatar: finalAvatar,
+    };
+
     try {
-      console.log('[CONFIG] Tentando salvar no Supabase...');
-      
-      const updateData: Record<string, unknown> = { 
+      const updateData: Record<string, unknown> = {
         nome: profileData.name.trim(),
-        telefone: profileData.phone.trim()
+        telefone: profileData.phone.trim(),
       };
-      
-      if (avatarPreview && avatarPreview !== profileData.avatar) {
-        updateData.avatar = avatarPreview;
+
+      if (finalAvatar && finalAvatar !== profileData.avatar) {
+        updateData.avatar = finalAvatar;
       }
-      
-      console.log('[CONFIG] Dados a salvar:', updateData);
-      
-      const { data, error } = await supabase
+
+      const { error } = await supabase
         .from(PROFILES_TABLE)
         .update(updateData)
         .eq('user_id', user.id)
         .select()
         .single();
-      
-      console.log('[CONFIG] Resposta do Supabase:', { data, error });
-      
-      if (error) {
-        console.error('[CONFIG] Erro do Supabase:', error);
-        throw error;
-      }
-      
-      console.log('[CONFIG] Perfil salvo com sucesso!');
-      setProfileSuccess('Perfil atualizado com sucesso!');
-      setProfileData(prev => ({ ...prev, avatar: avatarPreview || prev.avatar, email: profileData.email.trim() || prev.email }));
-      setTimeout(() => {
-        console.log('[CONFIG] Fechando modal...');
-        setProfileSuccess('');
-        setActiveModal(null);
-      }, 1500);
+
+      if (error) throw error;
     } catch (err: any) {
-      console.error('[CONFIG] Erro ao salvar perfil:', err);
-      const errorMessage = err.message || 'Erro ao salvar perfil. Tente novamente.';
-      setProfileError(errorMessage);
-    } finally {
-      console.log('[CONFIG] Finalizando, isSavingProfile:', false);
-      setIsSavingProfile(false);
+      console.warn('[CONFIG] Supabase indisponível, salvando perfil localmente:', err);
     }
+
+    localStorage.setItem(PROFILE_CACHE_KEY, JSON.stringify(profileCache));
+
+    setProfileSuccess('Perfil atualizado com sucesso!');
+    setProfileData(prev => ({ ...prev, avatar: finalAvatar, email: profileData.email.trim() || prev.email }));
+    setTimeout(() => {
+      setProfileSuccess('');
+      setActiveModal(null);
+    }, 1500);
+    setIsSavingProfile(false);
   };
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     
-    const validTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+    const validTypes = ['image/jpeg', 'image/png'];
+    const maxSize = 2 * 1024 * 1024;
+
     if (!validTypes.includes(file.type)) {
-      setProfileError('Apenas PNG ou JPG são aceitos');
+      setProfileError('Apenas arquivos PNG ou JPG são aceitos.');
+      return;
+    }
+
+    if (file.size > maxSize) {
+      setProfileError('A imagem deve ter no máximo 2MB.');
       return;
     }
     
@@ -268,9 +322,21 @@ const Configuracoes = () => {
       setAvatarPreview(publicUrl);
       setProfileSuccess('Avatar atualizado! Clique em Salvar para confirmar.');
       setTimeout(() => setProfileSuccess(''), 3000);
-    } catch (err: any) {
-      console.error('[CONFIG] Erro ao fazer upload:', err);
-      setProfileError('Erro ao fazer upload. Tente novamente.');
+    } catch {
+      console.warn('[CONFIG] Upload direto falhou, usando Base64 como fallback');
+      try {
+        const base64 = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result as string);
+          reader.onerror = () => reject(new Error('Erro ao ler arquivo'));
+          reader.readAsDataURL(file);
+        });
+        setAvatarPreview(base64);
+        setProfileSuccess('Avatar carregado via Base64! Clique em Salvar para confirmar.');
+        setTimeout(() => setProfileSuccess(''), 3000);
+      } catch {
+        setProfileError('Erro ao processar a imagem. Tente novamente.');
+      }
     } finally {
       setIsUploadingAvatar(false);
     }
@@ -358,31 +424,31 @@ const Configuracoes = () => {
           <div className="bg-[#0a0a0a] border border-[#222222] rounded-[40px] shadow-2xl w-full max-w-2xl overflow-hidden transform animate-in slide-in-from-bottom-8 duration-500">
             {activeModal === 'perfil' ? (
               <form onSubmit={handleSaveProfile}>
-                <div className="px-12 py-10 border-b border-neutral-100 flex justify-between items-start bg-neutral-50/30">
+                <div className="px-12 py-10 border-b border-[#222222] flex justify-between items-start">
                   <div>
-                    <span className="text-[10px] font-black text-neutral-400 uppercase tracking-[3px] mb-3 block">Preferências do Sistema</span>
-                    <h2 className="text-4xl font-black text-black tracking-tighter">Configurações de Perfil</h2>
+                    <span className="text-[10px] font-black text-[#888888] uppercase tracking-[3px] mb-3 block">Preferências do Sistema</span>
+                    <h2 className="text-4xl font-black text-white tracking-tighter">Configurações de Perfil</h2>
                   </div>
-                  <button type="button" onClick={() => { setActiveModal(null); setProfileError(''); setProfileSuccess(''); }} className="p-3 hover:bg-white rounded-2xl transition-colors text-neutral-300 hover:text-black border border-transparent hover:border-neutral-200 shadow-sm">
+                  <button type="button" onClick={() => { setActiveModal(null); setProfileError(''); setProfileSuccess(''); }} className="p-3 hover:bg-[#111111] rounded-2xl transition-colors text-[#888888] hover:text-white border border-transparent hover:border-[#222222]">
                     <X size={24} />
                   </button>
                 </div>
                 <div className="p-12 space-y-10 max-h-[60vh] overflow-y-auto custom-scrollbar">
                   {profileError && (
-                    <div className="p-4 bg-red-50 border border-red-100 rounded-2xl flex items-center gap-3 text-red-600 text-sm font-medium">
+                    <div className="p-4 bg-[#111111] border border-red-500/30 rounded-2xl flex items-center gap-3 text-red-400 text-sm font-medium">
                       <AlertCircle size={20} />
                       {profileError}
                     </div>
                   )}
                   {profileSuccess && (
-                    <div className="p-4 bg-green-50 border border-green-100 rounded-2xl flex items-center gap-3 text-green-600 text-sm font-medium">
+                    <div className="p-4 bg-[#111111] border border-[#B5FF03]/30 rounded-2xl flex items-center gap-3 text-[#B5FF03] text-sm font-medium">
                       <CheckCircle2 size={20} />
                       {profileSuccess}
                     </div>
                   )}
                   <div className="space-y-8">
                     <div className="flex items-center gap-8 mb-4">
-                      <div className="w-24 h-24 bg-black rounded-3xl flex items-center justify-center relative group/avatar cursor-pointer overflow-hidden" onClick={() => avatarInputRef.current?.click()}>
+                      <div className="w-24 h-24 bg-[#1a1a1a] rounded-3xl flex items-center justify-center relative group/avatar cursor-pointer overflow-hidden" onClick={() => avatarInputRef.current?.click()}>
                         {avatarPreview ? (
                           <img src={avatarPreview} alt="Avatar" className="w-full h-full object-cover" />
                         ) : (
@@ -394,25 +460,25 @@ const Configuracoes = () => {
                         <input ref={avatarInputRef} type="file" accept="image/jpeg,image/png,image/jpg" onChange={handleAvatarUpload} className="hidden" />
                       </div>
                       <div className="space-y-2">
-                        <h4 className="font-black text-black text-lg">Avatar do Administrador</h4>
-                        <p className="text-xs text-neutral-400 font-medium">Clique para fazer upload de um novo arquivo PNG ou JPG.</p>
+                        <h4 className="font-black text-white text-lg">Avatar do Administrador</h4>
+                        <p className="text-xs text-[#888888] font-medium">Clique para fazer upload de um novo arquivo PNG ou JPG.</p>
                       </div>
                     </div>
                     <div className="grid grid-cols-2 gap-8">
                       <div className="space-y-3">
-                        <label className="text-[10px] font-black text-neutral-400 uppercase tracking-widest ml-1">Nome Completo</label>
-                        <input type="text" value={profileData.name} onChange={(e) => setProfileData({...profileData, name: e.target.value})} className="w-full bg-neutral-50 border-2 border-neutral-100 rounded-2xl px-6 py-4 font-bold text-black focus:border-black outline-none transition-all" placeholder="Seu nome completo" />
+                        <label className="text-[10px] font-black text-[#888888] uppercase tracking-widest ml-1">Nome Completo</label>
+                        <input type="text" value={profileData.name} onChange={(e) => setProfileData({...profileData, name: e.target.value})} className="w-full bg-[#1a1a1a] border border-[#222222] rounded-xl px-4 py-3.5 font-bold text-white placeholder-[#555555] focus:border-[#B5FF03] outline-none transition-all" placeholder="Seu nome completo" />
                       </div>
                       <div className="space-y-3">
-                        <label className="text-[10px] font-black text-neutral-400 uppercase tracking-widest ml-1">Email Profissional</label>
-                        <input type="email" value={profileData.email} onChange={(e) => setProfileData({...profileData, email: e.target.value})} className="w-full bg-neutral-50 border-2 border-neutral-100 rounded-2xl px-6 py-4 font-bold text-black focus:border-black outline-none transition-all" placeholder="seu@email.com" />
+                        <label className="text-[10px] font-black text-[#888888] uppercase tracking-widest ml-1">Email Profissional</label>
+                        <input type="email" value={profileData.email} onChange={(e) => setProfileData({...profileData, email: e.target.value})} className="w-full bg-[#1a1a1a] border border-[#222222] rounded-xl px-4 py-3.5 font-bold text-white placeholder-[#555555] focus:border-[#B5FF03] outline-none transition-all" placeholder="seu@email.com" />
                       </div>
                     </div>
                   </div>
                 </div>
-                <div className="px-12 py-10 bg-neutral-50 flex gap-4">
-                  <button type="button" onClick={() => setActiveModal(null)} className="flex-1 py-5 rounded-[20px] font-black text-[11px] uppercase tracking-widest text-neutral-400 hover:text-black hover:bg-neutral-100 transition-all border border-transparent hover:border-neutral-200">Cancelar</button>
-                  <button type="submit" disabled={isSavingProfile} className="flex-[2] text-white py-5 rounded-[20px] font-black text-[11px] uppercase tracking-widest hover:brightness-90 transition-all active:scale-[0.98] shadow-2xl flex items-center justify-center gap-3" style={{ backgroundColor: 'var(--primary)' }}>
+                <div className="px-12 py-10 border-t border-[#222222] flex gap-4">
+                  <button type="button" onClick={() => setActiveModal(null)} className="flex-1 py-4 rounded-[20px] font-black text-[11px] uppercase tracking-widest text-[#888888] hover:text-white hover:bg-[#111111] transition-all border border-transparent hover:border-[#222222]">Cancelar</button>
+                  <button type="submit" disabled={isSavingProfile} className="flex-[2] py-4 rounded-[20px] bg-[#B5FF03] text-black font-black text-[11px] uppercase tracking-widest hover:bg-[#a1e600] transition-all active:scale-[0.98] flex items-center justify-center gap-3">
                     {isSavingProfile ? <><RefreshCw size={18} className="animate-spin" /> Salvando...</> : <><Save size={18} /> Salvar Perfil</>}
                   </button>
                 </div>
