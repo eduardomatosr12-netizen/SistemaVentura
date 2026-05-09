@@ -37,8 +37,8 @@ const STORAGE_KEY = 'auth_user';
 const EMPLOYEES = ['Maria', 'João', 'Pedro', 'Ana'];
 
 const CREDENTIALS: Record<string, { password: string; role: UserRole; name: string }> = {
-  'axium.contato@gmail.com': {
-    password: 'axium@26',
+  'joseleonardomcc@gmail.com': {
+    password: 'Brasil2016v',
     role: 'admin',
     name: 'Administrador'
   }
