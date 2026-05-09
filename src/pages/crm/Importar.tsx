@@ -3,6 +3,8 @@ import { Upload, Download, CheckCircle, AlertCircle, ArrowRight } from 'lucide-r
 import Papa from 'papaparse';
 import * as XLSX from 'xlsx';
 import { generateUUID } from '../../lib/uuid';
+import { getBoards, saveBoards } from '../../lib/inventory';
+import { useCRM } from '../../contexts/CRMContext';
 
 const COLUMNS_BY_TYPE: Record<string, { headers: string[]; map: Record<string, string> }> = {
   Estoque: {
@@ -125,6 +127,7 @@ const Importar = () => {
   const [toast, setToast] = useState<Toast | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { addLead } = useCRM();
 
   const showToast = (t: Toast) => {
     setToast(t);
@@ -133,14 +136,23 @@ const Importar = () => {
 
   const processEstoque = (rows: Record<string, string>[]) => {
     const config = COLUMNS_BY_TYPE.Estoque;
-    const storageKey = 'axium_boards_v3';
-    const stored = localStorage.getItem(storageKey);
-    const boards = stored ? JSON.parse(stored) : [];
+    const boards = getBoards();
 
-    const inventoryBoard = boards.find((b: { id: string }) => b.id === 'board-1');
+    let inventoryBoard = boards.find((b) => b.id === 'board-1');
     if (!inventoryBoard) {
-      showToast({ type: 'error', message: 'Board de inventário não encontrado.' });
-      return;
+      inventoryBoard = {
+        id: 'board-1',
+        title: 'Inventário',
+        color: '#B5FF03',
+        columns: config.headers.map((h, i) => ({
+          id: `col-${i + 1}`,
+          title: h,
+          type: i === 2 || i === 3 || i === 6 ? 'number' : i === 5 ? 'date' : 'text',
+          width: 150,
+        })),
+        rows: [],
+      };
+      boards.push(inventoryBoard);
     }
 
     const newRows = rows.map((row) => {
@@ -163,25 +175,20 @@ const Importar = () => {
     });
 
     inventoryBoard.rows = [...(inventoryBoard.rows || []), ...newRows];
-    localStorage.setItem(storageKey, JSON.stringify(boards));
+    saveBoards(boards);
     showToast({
       type: 'success',
-      message: `${newRows.length} item(ns) importado(s) para o Estoque!`,
+      message: `${newRows.length} registros importados com sucesso em Estoque`,
       action: { label: 'Ver registros importados', href: ROUTE_MAP.Estoque },
     });
   };
 
   const processOrcamentos = (rows: Record<string, string>[], isCliente: boolean) => {
-    const storageKey = 'axium_Orçamentos_v2';
-    const stored = localStorage.getItem(storageKey);
-    const existing: { id: string; stage: string; name?: string; email?: string; whatsapp?: string; instagram?: string; niche?: string; origin?: string; address?: string; firstContact?: string; value?: string; notes?: string; }[] = stored ? JSON.parse(stored) : [];
-
     const now = new Date().toISOString().slice(0, 10);
 
     const newRecords = rows.map((row) => {
       if (isCliente) {
         return {
-          id: generateUUID(),
           name: (row['Nome'] || row['nome'] || '').trim(),
           email: (row['Email'] || row['email'] || '').trim(),
           whatsapp: (row['Telefone'] || row['telefone'] || row['WhatsApp'] || row['whatsapp'] || '').trim(),
@@ -199,7 +206,6 @@ const Importar = () => {
       }
 
       return {
-        id: generateUUID(),
         name: (row['Cliente'] || row['cliente'] || row['Nome'] || row['nome'] || '').trim(),
         address: (row['Cidade'] || row['cidade'] || '').trim(),
         firstContact: (row['Data'] || row['data'] || now).trim(),
@@ -216,11 +222,13 @@ const Importar = () => {
       };
     });
 
-    const updated = [...existing, ...newRecords];
-    localStorage.setItem(storageKey, JSON.stringify(updated));
+    for (const record of newRecords) {
+      addLead(record);
+    }
+
     showToast({
       type: 'success',
-      message: `${newRecords.length} registro(s) importado(s) para ${isCliente ? 'Clientes' : 'Orçamentos'}!`,
+      message: `${newRecords.length} registros importados com sucesso em ${isCliente ? 'Clientes' : 'Orçamentos'}`,
       action: { label: 'Ver registros importados', href: ROUTE_MAP.Orçamentos },
     });
   };
@@ -230,7 +238,7 @@ const Importar = () => {
     const fileHeaders = Object.keys(rows[0]).map((h) => h.trim().toLowerCase());
     const required = expected.map((h) => h.toLowerCase());
     const matched = required.filter((r) => fileHeaders.includes(r));
-    if (matched.length < Math.ceil(required.length * 0.4)) {
+    if (matched.length < Math.ceil(required.length * 0.6)) {
       return `Os cabeçalhos do arquivo não correspondem ao tipo "${selectedType}". Esperado: ${expected.join(', ')}`;
     }
     return null;

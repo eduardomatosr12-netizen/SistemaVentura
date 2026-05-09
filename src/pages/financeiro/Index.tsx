@@ -118,7 +118,7 @@ const Financeiro = () => {
   }, [financeData]);
 
   const [filtersState, setFiltersState] = useState({
-    period: '' as '' | 'this_month' | 'last_month' | '90_days' | 'custom',
+    period: '' as '' | 'today' | 'this_week' | 'this_month' | 'last_month' | '90_days' | 'this_year' | 'custom',
     customDateStart: '',
     customDateEnd: '',
     statuses: [] as string[],
@@ -141,8 +141,18 @@ const Financeiro = () => {
   const getDateRange = () => {
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      
-    if (filtersState.period === 'this_month') {
+
+    if (filtersState.period === 'today') {
+      return { start: today, end: today };
+    } else if (filtersState.period === 'this_week') {
+      const dayOfWeek = today.getDay();
+      const diff = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+      const start = new Date(today);
+      start.setDate(today.getDate() - diff);
+      const end = new Date(today);
+      end.setDate(start.getDate() + 6);
+      return { start, end };
+    } else if (filtersState.period === 'this_month') {
       const start = new Date(now.getFullYear(), now.getMonth(), 1);
       const end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
       return { start, end };
@@ -154,6 +164,10 @@ const Financeiro = () => {
       const start = new Date(today);
       start.setDate(start.getDate() - 90);
       return { start, end: today };
+    } else if (filtersState.period === 'this_year') {
+      const start = new Date(now.getFullYear(), 0, 1);
+      const end = new Date(now.getFullYear(), 11, 31);
+      return { start, end };
     } else if (filtersState.period === 'custom' && filtersState.customDateStart && filtersState.customDateEnd) {
       return { 
         start: new Date(filtersState.customDateStart), 
@@ -490,6 +504,16 @@ const Financeiro = () => {
 
       <FilterSection title="Período">
         <RadioFilter
+          label="Hoje"
+          checked={filtersState.period === 'today'}
+          onChange={() => setFiltersState(prev => ({ ...prev, period: prev.period === 'today' ? '' : 'today' }))}
+        />
+        <RadioFilter
+          label="Esta Semana"
+          checked={filtersState.period === 'this_week'}
+          onChange={() => setFiltersState(prev => ({ ...prev, period: prev.period === 'this_week' ? '' : 'this_week' }))}
+        />
+        <RadioFilter
           label="Este Mês"
           checked={filtersState.period === 'this_month'}
           onChange={() => setFiltersState(prev => ({ ...prev, period: prev.period === 'this_month' ? '' : 'this_month' }))}
@@ -504,6 +528,38 @@ const Financeiro = () => {
           checked={filtersState.period === '90_days'}
           onChange={() => setFiltersState(prev => ({ ...prev, period: prev.period === '90_days' ? '' : '90_days' }))}
         />
+        <RadioFilter
+          label="Este Ano"
+          checked={filtersState.period === 'this_year'}
+          onChange={() => setFiltersState(prev => ({ ...prev, period: prev.period === 'this_year' ? '' : 'this_year' }))}
+        />
+        <RadioFilter
+          label="Personalizado"
+          checked={filtersState.period === 'custom'}
+          onChange={() => setFiltersState(prev => ({ ...prev, period: prev.period === 'custom' ? '' : 'custom' }))}
+        />
+        {filtersState.period === 'custom' && (
+          <div className="space-y-3 pt-2 pl-1">
+            <div>
+              <label className="text-xs text-[#888888] uppercase tracking-widest mb-1 block">De:</label>
+              <input
+                type="date"
+                value={filtersState.customDateStart}
+                onChange={(e) => setFiltersState(prev => ({ ...prev, customDateStart: e.target.value }))}
+                className="w-full bg-[#111111] border border-[#222222] rounded px-3 py-2 text-sm text-white focus:border-[#B5FF03] outline-none transition-colors"
+              />
+            </div>
+            <div>
+              <label className="text-xs text-[#888888] uppercase tracking-widest mb-1 block">Até:</label>
+              <input
+                type="date"
+                value={filtersState.customDateEnd}
+                onChange={(e) => setFiltersState(prev => ({ ...prev, customDateEnd: e.target.value }))}
+                className="w-full bg-[#111111] border border-[#222222] rounded px-3 py-2 text-sm text-white focus:border-[#B5FF03] outline-none transition-colors"
+              />
+            </div>
+          </div>
+        )}
       </FilterSection>
 
       <FilterSection title="Status">
