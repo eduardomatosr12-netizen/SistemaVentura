@@ -39,7 +39,7 @@ const Sidebar = ({ isOpen = false, onClose }: SidebarProps) => {
         />
       )}
       
-       <aside className={`fixed md:hidden left-0 top-0 h-screen w-[85%] max-w-80 bg-black border-r border-[#333] flex-col overflow-y-auto z-50 transform transition-transform duration-300 ease-out ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+       <aside className={`fixed md:hidden left-0 top-0 h-screen w-[85%] max-w-80 bg-black border-r border-[#333] flex-col overflow-y-auto z-50 transform transition-transform duration-300 ease-out safe-area-top ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <button
           onClick={onClose}
            className="absolute top-4 right-4 p-2 rounded-md hover:bg-[#222]"

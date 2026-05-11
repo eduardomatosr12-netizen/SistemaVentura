@@ -360,7 +360,7 @@ const Board = ({
                                 {opt.label}
                               </button>
                             )}
-                            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <div className="flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                               <button
                                 type="button"
                                 onClick={(e) => { e.stopPropagation(); setEditingCatId(opt.id); setEditingCatLabel(opt.label); setAddingCategory(false); }}
@@ -622,7 +622,7 @@ const Board = ({
                 });
                 window.dispatchEvent(event);
               }}
-              className="absolute inset-0 opacity-0 group-hover:opacity-100 bg-black/40 flex items-center justify-center transition-opacity"
+              className="absolute inset-0 opacity-100 md:opacity-0 md:group-hover:opacity-100 bg-black/40 flex items-center justify-center transition-opacity"
             >
               <Edit3 size={14} className="text-white" />
             </button>
@@ -660,7 +660,7 @@ const Board = ({
                       {col.id !== 'col-1' && (
                         <button
                           onClick={() => handleDeleteColumn(col.id)}
-                          className="opacity-0 group-hover:opacity-100 transition-opacity text-neutral-400 hover:text-red-500 ml-2 cursor-pointer"
+                          className="opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity text-neutral-400 hover:text-red-500 ml-2 cursor-pointer"
                           title="Excluir coluna"
                         >
                           <Trash2 size={14} />

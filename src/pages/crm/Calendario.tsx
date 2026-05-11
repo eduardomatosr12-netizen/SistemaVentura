@@ -60,6 +60,8 @@ const CRMCalendario = () => {
   const [showEquipeDropdown, setShowEquipeDropdown] = useState(false);
   const equipeDropdownRef = useRef<HTMLDivElement>(null);
 
+  const [dateDisplay, setDateDisplay] = useState('');
+
   const closedOrçamentos = useMemo(() => {
     return Orçamentos.filter(o => o.stage === 'Contrato Fechado');
   }, [Orçamentos]);
@@ -71,6 +73,16 @@ const CRMCalendario = () => {
       o.name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').includes(q)
     );
   }, [closedOrçamentos, clientSearch]);
+
+  const parseDate = (val: string): Date | null => {
+    if (!val) return null;
+    if (/^\d{2}\/\d{2}\/\d{4}$/.test(val)) {
+      const [d, m, y] = val.split('/');
+      return new Date(+y, +m - 1, +d);
+    }
+    const d = new Date(val + 'T12:00:00');
+    return isNaN(d.getTime()) ? null : d;
+  };
 
   const buildItemsDescription = (lead: typeof Orçamentos[number]): string => {
     const items = lead.items;
@@ -98,6 +110,17 @@ const CRMCalendario = () => {
       try { setEquipeMembers(JSON.parse(cached)); } catch { /* ignore */ }
     }
   }, []);
+
+  useEffect(() => {
+    if (!formData.clientId) return;
+    const lead = closedOrçamentos.find(o => o.id === formData.clientId);
+    if (lead) {
+      const itemsDesc = buildItemsDescription(lead);
+      if (itemsDesc) {
+        setFormData(prev => ({ ...prev, description: itemsDesc }));
+      }
+    }
+  }, [formData.clientId]);
 
   const days = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
   const safeEvents = Array.isArray(events) ? events : [];
@@ -127,11 +150,11 @@ const CRMCalendario = () => {
 
   const formatDate = (dateStr?: string) => {
     if (!dateStr) return '--/--';
-    const date = new Date(dateStr + 'T12:00:00');
-    if (isNaN(date.getTime())) return '--/--';
+    const date = parseDate(dateStr);
+    if (!date) return '--/--';
     try {
       return date.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
-    } catch (e) {
+    } catch {
       return '--/--';
     }
   };
@@ -139,8 +162,8 @@ const CRMCalendario = () => {
   const getEventsForDay = (day: number) => {
     return safeEvents.filter(e => {
       if (!e?.date) return false;
-      const d = new Date(e.date + 'T12:00:00');
-      if (isNaN(d.getTime())) return false;
+      const d = parseDate(e.date);
+      if (!d) return false;
       return d.getDate() === day && d.getMonth() === currentMonth && d.getFullYear() === currentYear;
     });
   };
@@ -150,11 +173,12 @@ const CRMCalendario = () => {
     const dd = String(d.getDate()).padStart(2, '0');
     const mm = String(d.getMonth() + 1).padStart(2, '0');
     const yyyy = d.getFullYear();
+    const iso = `${yyyy}-${mm}-${dd}`;
     setModalMode('create');
     setFormData({
       title: '',
-      eventType: 'Reunião',
-      date: `${dd}/${mm}/${yyyy}`,
+      eventType: '',
+      date: iso,
       time: '',
       local: '',
       client: '',
@@ -164,6 +188,7 @@ const CRMCalendario = () => {
       description: '',
       equipe: ''
     });
+    setDateDisplay(`${dd}/${mm}/${yyyy}`);
     setClientSearch('');
     setSelectedEvent(null);
     setIsModalOpen(true);
@@ -172,10 +197,11 @@ const CRMCalendario = () => {
   const handleOpenEdit = (event: CalendarEvent) => {
     setModalMode('edit');
     setSelectedEvent(event);
+    const brDate = toBR(event.date || '');
     setFormData({
       title: event.title || '',
       eventType: event.eventType || 'Reunião',
-      date: toBR(event.date || ''),
+      date: toISO(brDate) || event.date || '',
       time: event.time || '',
       local: event.local || '',
       client: event.client || '',
@@ -185,6 +211,7 @@ const CRMCalendario = () => {
       description: event.description || '',
       equipe: event.equipe || ''
     });
+    setDateDisplay(brDate);
     setClientSearch(event.client || '');
     setIsModalOpen(true);
   };
@@ -384,28 +411,35 @@ const CRMCalendario = () => {
                           const isCustom = formData.eventType && !predefined.includes(formData.eventType);
                           return (
                             <>
-                              <select
-                                value={isCustom ? 'Outros' : (formData.eventType || '')}
-                                onChange={(e) => setFormData({ ...formData, eventType: e.target.value })}
-                                className="w-full bg-[#0a0a0a] border border-[#333] rounded-md px-3 py-2 text-xs font-black text-white focus:ring-1 focus:ring-[#B5FF03] outline-none transition-all"
-                              >
-                                <option value="">Selecione...</option>
-                                <option value="Aniversário">Aniversário</option>
-                                <option value="Casamento">Casamento</option>
-                                <option value="Corporativo">Corporativo</option>
-                                <option value="Privado">Privado</option>
-                                <option value="Outros">Outros</option>
-                              </select>
-                              {(formData.eventType === 'Outros' || isCustom) && (
-                                <input
-                                  type="text"
-                                  value={isCustom ? formData.eventType : ''}
-                                  onChange={(e) => setFormData({ ...formData, eventType: e.target.value })}
-                                  className="w-full bg-[#0a0a0a] border border-[#333] rounded-md px-3 py-2 mt-2 text-xs font-black text-white focus:ring-1 focus:ring-[#B5FF03] outline-none transition-all"
-                                  placeholder="Especifique o tipo de evento"
-                                  required
-                                />
-                              )}
+                               <select
+                                 value={isCustom ? 'Outros' : (formData.eventType || '')}
+                                 onChange={(e) => {
+                                   const val = e.target.value;
+                                   if (val === 'Outros') {
+                                     setFormData({ ...formData, eventType: '' });
+                                   } else {
+                                     setFormData({ ...formData, eventType: val });
+                                   }
+                                 }}
+                                 className="w-full bg-[#0a0a0a] border border-[#333] rounded-md px-3 py-2 text-xs font-black text-white focus:ring-1 focus:ring-[#B5FF03] outline-none transition-all"
+                               >
+                                 <option value="">Selecione...</option>
+                                 <option value="Aniversário">Aniversário</option>
+                                 <option value="Casamento">Casamento</option>
+                                 <option value="Corporativo">Corporativo</option>
+                                 <option value="Privado">Privado</option>
+                                 <option value="Outros">Outros</option>
+                               </select>
+                               {(formData.eventType === '' || isCustom) && (
+                                 <input
+                                   type="text"
+                                   value={isCustom ? formData.eventType : ''}
+                                   onChange={(e) => setFormData({ ...formData, eventType: e.target.value })}
+                                   className="w-full bg-[#0a0a0a] border border-[#333] rounded-md px-3 py-2 mt-2 text-xs font-black text-white focus:ring-1 focus:ring-[#B5FF03] outline-none transition-all"
+                                   placeholder="Especifique o tipo de evento"
+                                   required
+                                 />
+                               )}
                             </>
                           );
                         })()}
@@ -420,8 +454,13 @@ const CRMCalendario = () => {
                              required
                              type="text"
                              inputMode="numeric"
-                             value={formData.date}
-                             onChange={(e) => setFormData({ ...formData, date: maskDate(e.target.value) })}
+                             value={dateDisplay}
+                             onChange={(e) => {
+                               const masked = maskDate(e.target.value);
+                               setDateDisplay(masked);
+                               const iso = toISO(masked);
+                               if (iso) setFormData(prev => ({ ...prev, date: iso }));
+                             }}
                              placeholder="DD/MM/AAAA"
                              className="w-full bg-[#0a0a0a] border border-[#333] rounded-md px-3 py-2.5 text-xs font-black text-white focus:ring-1 focus:ring-[#B5FF03] outline-none transition-all tracking-wider"
                            />

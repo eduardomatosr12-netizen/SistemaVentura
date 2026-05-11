@@ -140,10 +140,10 @@ const TopHeader = ({ onMenuClick }: TopHeaderProps) => {
                          onClick={() => !isLeaving && handleNotificationClick(n)}
                          className={`relative p-5 hover:bg-[#222] transition-all duration-300 cursor-pointer group ${!n.isRead ? 'bg-[#222]/50' : ''} ${isLeaving ? 'opacity-0 -translate-x-4 scale-95 pointer-events-none' : 'opacity-100 translate-x-0 scale-100'}`}
                        >
-                         <button
-                           onClick={(e) => { e.stopPropagation(); handleDismiss(n.id); }}
-                           className="absolute top-2 right-2 w-5 h-5 flex items-center justify-center rounded-full bg-neutral-800 hover:bg-red-900/50 text-neutral-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all duration-200 z-10"
-                         >
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleDismiss(n.id); }}
+                            className="absolute top-2 right-2 w-5 h-5 flex items-center justify-center rounded-full bg-neutral-800 hover:bg-red-900/50 text-neutral-500 hover:text-red-400 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all duration-200 z-10"
+                          >
                            <X size={10} strokeWidth={3} />
                          </button>
                          <div className="flex gap-4">
