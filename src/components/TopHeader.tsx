@@ -11,8 +11,8 @@ interface TopHeaderProps {
 
 const routeTitles: Record<string, { title: string; subtitle: string }> = {
   '/crm/painel': { title: 'Painel', subtitle: 'Visão geral das oportunidades' },
-  '/crm/orcamentos': { title: 'Orçamentos', subtitle: 'Gestão de contatos e funil' },
-  '/crm/pipeline': { title: 'Pipeline', subtitle: 'Progresso das oportunidades' },
+  '/crm/orcamentos': { title: 'Clientes', subtitle: 'Gestão de contatos e funil' },
+  '/crm/pipeline': { title: 'Etapas', subtitle: 'Progresso das oportunidades' },
   '/crm/calendario': { title: 'Calendário', subtitle: 'Compromissos e agendamentos' },
   '/crm/importar': { title: 'Importar', subtitle: 'Importação de dados externos' },
   '/financeiro': { title: 'Financeiro', subtitle: 'Receitas, despesas e fluxo de caixa' },
