@@ -18,6 +18,7 @@ import CRMImportar from './pages/crm/Importar';
 import Financeiro from './pages/financeiro/Index';
 import Tarefas from './pages/tarefas/Index';
 import Configuracoes from './pages/configuracoes/Index';
+import TemplatesWhatsApp from './pages/configuracoes/TemplatesWhatsApp';
 
 function AppRoutes() {
   const { isAuthenticated } = useAuth();
@@ -136,6 +137,16 @@ function AppRoutes() {
           <ProtectedRoute allowedRoles={['admin']}>
             <MainLayout>
               <Configuracoes />
+            </MainLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/configuracoes/templates-whatsapp"
+        element={
+          <ProtectedRoute allowedRoles={['admin']}>
+            <MainLayout>
+              <TemplatesWhatsApp />
             </MainLayout>
           </ProtectedRoute>
         }

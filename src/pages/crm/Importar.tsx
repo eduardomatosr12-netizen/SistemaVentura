@@ -1,5 +1,5 @@
 ﻿import { useState, useRef } from 'react';
-import { Upload, CheckCircle, AlertCircle, ArrowRight } from 'lucide-react';
+import { Upload, CheckCircle, AlertCircle, ArrowRight, Download, FileSpreadsheet } from 'lucide-react';
 import Papa from 'papaparse';
 import * as XLSX from 'xlsx';
 import { generateUUID } from '../../lib/uuid';
@@ -82,6 +82,58 @@ function parseXLSXFile(file: File): Promise<Record<string, string>[]> {
     reader.onerror = () => reject(new Error('Erro ao ler arquivo'));
     reader.readAsBinaryString(file);
   });
+}
+
+function generateSampleRow(headers: string[]): Record<string, string> {
+  const samples: Record<string, string> = {
+    'ITEM': 'Mesa Redonda',
+    'CATEGORIA': 'Decoração',
+    'QTD. ATUAL': '10',
+    'ESTOQUE MÍNIMO': '2',
+    'FORNECEDOR': 'Fornecedor A',
+    'ÚLTIMA ENTRADA': '01/01/2026',
+    'VALOR UNIT.': '150,00',
+    'Nome': 'João Silva',
+    'Email': 'joao@email.com',
+    'Telefone': '11999999999',
+    'Instagram': '@joaosilva',
+    'Nicho': 'Odontologia',
+    'Origem': 'Instagram',
+    'Cliente': 'Maria Santos',
+    'Cidade': 'São Paulo - SP',
+    'Data': '15/06/2026',
+    'Valor': 'R$ 5.000',
+    'Categoria': 'Decoração',
+    'Observações': 'Cliente solicitou orçamento',
+  };
+  const row: Record<string, string> = {};
+  for (const h of headers) {
+    row[h] = samples[h] ?? '';
+  }
+  return row;
+}
+
+function downloadCSV(headers: string[], filename: string) {
+  const sampleRow = generateSampleRow(headers);
+  const allRows = [headers, headers.map(h => sampleRow[h] || '')];
+  const csv = allRows.map(row => row.map(cell => `"${cell.replace(/"/g, '""')}"`).join(',')).join('\n');
+  const bom = '\uFEFF';
+  const blob = new Blob([bom + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${filename}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function downloadXLSX(headers: string[], filename: string) {
+  const sampleRow = generateSampleRow(headers);
+  const data = [headers, headers.map(h => sampleRow[h] || '')];
+  const ws = XLSX.utils.aoa_to_sheet(data);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Modelo');
+  XLSX.writeFile(wb, `${filename}.xlsx`);
 }
 
 function matchHeader(header: string, expected: string[]): string | null {
@@ -335,6 +387,43 @@ const Importar = () => {
                 {type}
               </button>
             ))}
+          </div>
+        </div>
+
+        <div className="bg-[#111] border border-[#333] rounded-2xl p-6">
+          <h3 className="text-[10px] font-black text-[#B5FF03] uppercase tracking-widest mb-4">Baixar Modelo de Planilha</h3>
+          <p className="text-xs text-neutral-400 mb-4">
+            Baixe um arquivo modelo com os cabeçalhos corretos para o tipo selecionado.
+          </p>
+          <div className="flex flex-wrap gap-3">
+            <button
+              onClick={() => {
+                const config = COLUMNS_BY_TYPE[selectedType];
+                downloadCSV(config.headers, `modelo_${selectedType.toLowerCase()}`);
+              }}
+              className="flex items-center gap-2 px-4 py-2.5 bg-[#1a1a1a] border border-[#333] rounded-lg text-xs font-bold text-neutral-300 hover:text-white hover:border-[#B5FF03] transition-all"
+            >
+              <Download size={14} /> CSV
+            </button>
+            <button
+              onClick={() => {
+                const config = COLUMNS_BY_TYPE[selectedType];
+                downloadXLSX(config.headers, `modelo_${selectedType.toLowerCase()}`);
+              }}
+              className="flex items-center gap-2 px-4 py-2.5 bg-[#1a1a1a] border border-[#333] rounded-lg text-xs font-bold text-neutral-300 hover:text-white hover:border-[#B5FF03] transition-all"
+            >
+              <FileSpreadsheet size={14} /> XLSX
+            </button>
+          </div>
+          <div className="mt-4 p-3 bg-[#0a0a0a] border border-[#222] rounded-xl">
+            <p className="text-[10px] font-bold text-neutral-500 uppercase tracking-wider mb-2">Colunas do modelo:</p>
+            <div className="flex flex-wrap gap-1.5">
+              {COLUMNS_BY_TYPE[selectedType].headers.map(h => (
+                <span key={h} className="px-2 py-1 bg-[#222] rounded text-[10px] font-medium text-neutral-400">
+                  {h}
+                </span>
+              ))}
+            </div>
           </div>
         </div>
 
