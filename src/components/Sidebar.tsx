@@ -13,11 +13,11 @@ const Sidebar = ({ isOpen = false, onClose }: SidebarProps) => {
   const { user, hasPermission, logout } = useAuth();
 
   const mainMenuItems = [
-    { id: 'crm', label: 'CRM', icon: BarChart3, path: '/crm', allowedRoles: ['admin', 'manager', 'user'] as const },
-    { id: 'financeiro', label: 'Financeiro', icon: DollarSign, path: '/financeiro', allowedRoles: ['admin', 'manager'] as const },
-    { id: 'tarefas', label: 'Estoque', icon: Package, path: '/tarefas', allowedRoles: ['admin', 'manager', 'user'] as const },
-    { id: 'configuracoes', label: 'Configurações', icon: Settings, path: '/configuracoes', allowedRoles: ['admin'] as const },
     { id: 'templates-whatsapp', label: 'Templates WhatsApp', icon: MessageCircle, path: '/configuracoes/templates-whatsapp', allowedRoles: ['admin'] as const },
+    { id: 'crm', label: 'CRM', icon: BarChart3, path: '/crm', allowedRoles: ['admin', 'manager', 'user'] as const },
+    { id: 'tarefas', label: 'Estoque', icon: Package, path: '/tarefas', allowedRoles: ['admin', 'manager', 'user'] as const },
+    { id: 'financeiro', label: 'Financeiro', icon: DollarSign, path: '/financeiro', allowedRoles: ['admin', 'manager'] as const },
+    { id: 'configuracoes', label: 'Configurações', icon: Settings, path: '/configuracoes', allowedRoles: ['admin'] as const },
   ];
 
   const visibleMenuItems = mainMenuItems.filter(item => 
