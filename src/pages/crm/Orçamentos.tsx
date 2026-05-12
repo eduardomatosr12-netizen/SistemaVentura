@@ -511,7 +511,7 @@ const CRMOrçamentos = () => {
         </>
       )}
 
-      <main className="flex-1 overflow-hidden">
+      <main className="flex-1 overflow-y-auto">
         <div className="p-4 md:p-6">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-start gap-4 mb-2 md:mb-4">
             <div className="flex items-center gap-3">
@@ -671,7 +671,7 @@ const CRMOrçamentos = () => {
       </main>
 
       {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 md:p-4 bg-black/30 backdrop-blur-sm">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 md:p-4 bg-black/30 backdrop-blur-sm">
           <div className="bg-[#111] border border-[#333] w-full max-w-sm md:max-w-2xl rounded-2xl shadow-xl overflow-hidden max-h-[90vh] flex flex-col">
             <div className="flex justify-between items-start md:items-center gap-3 px-4 md:px-7 py-3 md:py-5 border-b border-slate-100 shrink-0">
               <div>

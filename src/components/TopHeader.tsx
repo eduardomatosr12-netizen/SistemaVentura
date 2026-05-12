@@ -124,7 +124,7 @@ const TopHeader = ({ onMenuClick }: TopHeaderProps) => {
 
           {/* Notifications Panel */}
           {isNotificationsOpen && (
-            <div className="absolute right-0 mt-3 w-80 bg-[#111] border border-[#333] rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 origin-top-right">
+            <div className="absolute right-0 mt-3 w-80 max-w-[calc(100vw-16px)] bg-[#111] border border-[#333] rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 origin-top-right">
                <div className="px-6 py-4 border-b border-[#333] flex justify-between items-center bg-[#111]">
                  <h3 className="text-[10px] font-black text-white uppercase tracking-widest">Notificações</h3>
                  <span className="text-[9px] font-black bg-[#222] text-neutral-400 px-2 py-0.5 rounded uppercase">{unreadCount} nova{unreadCount !== 1 ? 's' : ''}</span>

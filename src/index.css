@@ -92,6 +92,13 @@ body {
   padding-top: env(safe-area-inset-top, 0px);
 }
 
+/* Prevent iOS zoom on input focus */
+@media screen and (max-width: 768px) {
+  input, textarea, select {
+    font-size: 16px !important;
+  }
+}
+
 @layer components {
   /* ---- Sidebar navigation items ---- */
   .sidebar-item {

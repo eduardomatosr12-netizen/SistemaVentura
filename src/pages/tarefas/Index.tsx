@@ -979,7 +979,7 @@ const Tarefas = () => {
             </button>
           </div>
 
-          <div className="bg-[#111111] border border-[#222222] rounded-lg overflow-hidden">
+          <div className="bg-[#111111] border border-[#222222] rounded-lg overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="border-b border-[#222222]">
@@ -1065,7 +1065,7 @@ const Tarefas = () => {
       )}
 
       {showRentalModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
           <div className="bg-[#111] border border-[#333] rounded-2xl p-8 max-w-full md:max-w-2xl w-full shadow-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xl font-black text-white">{isNewRental ? 'Novo Aluguel' : 'Editar Aluguel'}</h3>
@@ -1240,7 +1240,7 @@ const Tarefas = () => {
       )}
 
       {showCreateTaskModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
           <div className="bg-[#111] border border-[#333] rounded-2xl p-8 max-w-full md:max-w-md w-full shadow-2xl">
             <h3 className="text-xl font-black text-white mb-6">Qual categoria deseja adicionar o item?</h3>
             <div className="space-y-3">
@@ -1266,7 +1266,7 @@ const Tarefas = () => {
       )}
 
       {showNewBoardModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
           <div className="bg-[#111] border border-[#333] rounded-2xl p-8 max-w-full md:max-w-md w-full shadow-2xl">
             <h3 className="text-xl font-black text-white mb-6">Nova Categoria</h3>
             <div className="space-y-5">
@@ -1314,7 +1314,7 @@ const Tarefas = () => {
       )}
 
       {showAddColumnModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
           <div className="bg-[#111] border border-[#333] rounded-2xl p-8 max-w-full md:max-w-md w-full shadow-2xl">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xl font-black text-white">Adicionar Coluna</h3>
@@ -1378,7 +1378,7 @@ const Tarefas = () => {
       )}
 
       {editingNote && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
           <div className="bg-[#111] border border-[#333] rounded-2xl p-8 max-w-full md:max-w-2xl w-full shadow-2xl">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xl font-black text-white">Editar Notas</h3>

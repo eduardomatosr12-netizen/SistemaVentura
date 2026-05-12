@@ -313,7 +313,7 @@ const CRMPipeline = () => {
       {isSidebarOpen && (
         <>
           <div className="fixed inset-0 bg-black/20 z-40" onClick={() => setIsSidebarOpen(false)} />
-          <div className="absolute top-14 left-4 w-[280px] bg-[#111] border border-[#333] rounded-xl shadow-xl z-50 p-3">
+          <div className="absolute top-14 left-4 w-[280px] bg-[#111] border border-[#333] rounded-xl shadow-xl z-[100] p-3">
             <div className="flex items-center justify-between mb-2">
               <span className="text-[10px] font-black text-white uppercase tracking-widest">Filtros</span>
               <button onClick={() => setIsSidebarOpen(false)}                 className="p-1 hover:bg-[#222] rounded-md">

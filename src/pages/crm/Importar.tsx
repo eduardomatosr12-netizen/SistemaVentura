@@ -427,11 +427,12 @@ const Importar = () => {
           </div>
         </div>
 
-        <div
+        <button
+          type="button"
           onClick={handleClick}
           onDrop={handleDrop}
           onDragOver={handleDragOver}
-          className="bg-[#0a0a0a] border-2 border-dashed border-[#333] rounded-2xl p-16 text-center cursor-pointer hover:border-[#B5FF03] transition-all group"
+          className="w-full bg-[#0a0a0a] border-2 border-dashed border-[#333] rounded-2xl p-16 text-center cursor-pointer hover:border-[#B5FF03] transition-all group"
         >
           <input
             ref={fileInputRef}
@@ -447,7 +448,7 @@ const Importar = () => {
             {isProcessing ? 'Processando...' : 'Clique ou arraste o arquivo CSV'}
           </h3>
           <p className="text-neutral-400 text-sm font-bold">Formatos suportados: .csv, .xlsx</p>
-        </div>
+        </button>
 
       </div>
     </div>

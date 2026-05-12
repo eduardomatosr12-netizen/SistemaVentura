@@ -464,7 +464,7 @@ const Configuracoes = () => {
                         <p className="text-xs text-[#888888] font-medium">Clique para fazer upload de um novo arquivo PNG ou JPG.</p>
                       </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-8">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                       <div className="space-y-3">
                         <label className="text-[10px] font-black text-[#888888] uppercase tracking-widest ml-1">Nome Completo</label>
                         <input type="text" value={profileData.name} onChange={(e) => setProfileData({...profileData, name: e.target.value})} className="w-full bg-[#1a1a1a] border border-[#222222] rounded-xl px-4 py-3.5 font-bold text-white placeholder-[#555555] focus:border-[#B5FF03] outline-none transition-all" placeholder="Seu nome completo" />

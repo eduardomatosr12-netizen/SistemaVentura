@@ -269,7 +269,7 @@ const CRMCalendario = () => {
          </button>
        </div>
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-3 md:gap-6">
-        <div className="lg:col-span-3 bg-[#000000] border border-[#1a1a1a] rounded-md p-6 shadow-sm overflow-hidden">
+        <div className="lg:col-span-3 bg-[#000000] border border-[#1a1a1a] rounded-md p-6 shadow-sm overflow-x-auto">
           {/* Calendar Grid Header */}
           <div className="grid grid-cols-7 gap-1 mb-4">
              {days.map((day) => (
@@ -341,12 +341,13 @@ const CRMCalendario = () => {
                PRÓXIMOS EVENTOS
              </h3>
              <div className="space-y-5">
-               {safeEvents.slice(0, 5).map((event) => (
-                 <div
-                   key={event?.id || generateUUID()}
-                   className="group cursor-pointer"
-                   onClick={() => handleOpenEdit(event)}
-                 >
+                {safeEvents.slice(0, 5).map((event) => (
+                  <button
+                    type="button"
+                    key={event?.id || generateUUID()}
+                    className="group w-full text-left"
+                    onClick={() => handleOpenEdit(event)}
+                  >
                    <div className="flex items-start gap-3">
                      <div className="w-1.5 h-1.5 rounded-full bg-[#B5FF03] mt-2 shrink-0" />
                      <div>
@@ -360,10 +361,10 @@ const CRMCalendario = () => {
                           </span>
                        </div>
                      </div>
-                   </div>
-                 </div>
-               ))}
-               {safeEvents.length === 0 && (
+                    </div>
+                  </button>
+                ))}
+                {safeEvents.length === 0 && (
                  <p className="text-[10px] text-neutral-500 text-center font-bold uppercase tracking-widest py-4 italic">Sem eventos</p>
                )}
              </div>
@@ -373,7 +374,7 @@ const CRMCalendario = () => {
 
        {/* Event Modal (Create/Edit) */}
        {isModalOpen && (
-         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
            <div className="bg-[#111] border border-[#333] rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden transform animate-in slide-in-from-bottom-4 duration-300">
              <form onSubmit={handleSave}>
                <div className="px-8 py-7 border-b border-[#333] flex justify-between items-start bg-[#111]">

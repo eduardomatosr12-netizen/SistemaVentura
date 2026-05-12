@@ -735,7 +735,7 @@ const Financeiro = () => {
         <div className="flex-1 p-6">
           {activeTab === 'receitas' ? (
             <>
-            <div className="bg-[#111111] border border-[#222222] rounded-lg overflow-hidden">
+            <div className="bg-[#111111] border border-[#222222] rounded-lg overflow-x-auto">
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-[#222222]">
@@ -806,7 +806,7 @@ const Financeiro = () => {
             </>
           ) : (
             <>
-            <div className="bg-[#111111] border border-[#222222] rounded-lg overflow-hidden">
+            <div className="bg-[#111111] border border-[#222222] rounded-lg overflow-x-auto">
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-[#222222]">
@@ -887,7 +887,7 @@ const Financeiro = () => {
         {isSidebarOpen && (
           <>
             <div className="fixed inset-0 z-40 bg-black/60 md:hidden" onClick={() => setIsSidebarOpen(false)} />
-            <div className="fixed inset-x-0 bottom-0 z-50 bg-[#0a0a0a] border-t border-[#222] rounded-t-2xl p-4 max-h-[70vh] overflow-y-auto md:hidden">
+            <div className="fixed inset-x-0 bottom-0 z-[100] bg-[#0a0a0a] border-t border-[#222] rounded-t-2xl p-4 max-h-[70vh] overflow-y-auto md:hidden">
               {filterContent}
             </div>
             <div className="hidden md:block w-64 bg-[#0a0a0a] border-l border-[#222222] p-4 overflow-y-auto max-h-screen sticky top-0">
@@ -899,7 +899,7 @@ const Financeiro = () => {
 
       {/* Invoice Modal */}
       {isInvoiceModalOpen && editingInvoice && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[100] p-4">
           <div className="bg-[#0a0a0a] border border-[#222222] rounded-lg w-full max-w-full md:max-w-md p-6">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-lg font-black uppercase tracking-widest text-white">
@@ -1005,7 +1005,7 @@ const Financeiro = () => {
 
       {/* Expense Modal */}
       {isExpenseModalOpen && editingExpense && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[100] p-4">
           <div className="bg-[#0a0a0a] border border-[#222222] rounded-lg w-full max-w-full md:max-w-md p-6">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-lg font-black uppercase tracking-widest text-white">

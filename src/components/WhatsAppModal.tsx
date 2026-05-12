@@ -98,7 +98,7 @@ const WhatsAppModal = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 md:p-4 bg-black/60 backdrop-blur-sm" onClick={onClose}>
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 md:p-4 bg-black/60 backdrop-blur-sm" onClick={onClose}>
       <div
         className="bg-[#111] border border-[#333] rounded-2xl w-full max-w-lg shadow-2xl max-h-[90vh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
