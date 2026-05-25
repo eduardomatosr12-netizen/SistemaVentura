@@ -95,6 +95,19 @@ const CRMDashboard = () => {
     setInvSearchOpen(false);
   };
 
+  const handleInlineItemSelect = (itemId: string, itemName: string) => {
+    const info = findInventoryItem(itemName);
+    const unitValue = info && info.row.values['col-7'] ? Number(info.row.values['col-7']) || 0 : 0;
+    setFormData(prev => ({
+      ...prev,
+      orcamentoItems: prev.orcamentoItems.map(i =>
+        i.id === itemId ? { ...i, descricao: itemName, valorUnitario: unitValue } : i
+      ),
+    }));
+    setEditingItemId(null);
+    setInlineItemSearch('');
+  };
+
   const handleRemoveItem = (id: string) => {
     setFormData(prev => ({
       ...prev,
@@ -134,6 +147,8 @@ const CRMDashboard = () => {
   const [invStockItems, setInvStockItems] = useState<{ name: string; qty: number; category: string }[]>([]);
   const [invSearch, setInvSearch] = useState('');
   const [invSearchOpen, setInvSearchOpen] = useState(false);
+  const [editingItemId, setEditingItemId] = useState<string | null>(null);
+  const [inlineItemSearch, setInlineItemSearch] = useState('');
   const invSearchRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -160,6 +175,10 @@ const CRMDashboard = () => {
       }
       if (invSearchRef.current && !invSearchRef.current.contains(e.target as Node)) {
         setInvSearchOpen(false);
+      }
+      if (editingItemId) {
+        setEditingItemId(null);
+        setInlineItemSearch('');
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -831,8 +850,56 @@ const CRMDashboard = () => {
                                 <Trash2 size={12} className="text-red-400" />
                               </button>
                             </div>
-                            <div className="flex items-center gap-2">
-                              <span className="text-sm text-white font-medium truncate">{item.descricao}</span>
+                            <div className="relative">
+                              <button
+                                type="button"
+                                onClick={() => { setEditingItemId(editingItemId === item.id ? null : item.id); setInlineItemSearch(''); }}
+                                className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-sm text-left text-white flex items-center justify-between gap-2 hover:border-[#B5FF03] transition-colors"
+                              >
+                                <span className="truncate">{item.descricao}</span>
+                                <ChevronDown size={12} className="text-neutral-500 shrink-0" />
+                              </button>
+                              {editingItemId === item.id && (
+                                <div className="absolute top-full left-0 right-0 mt-1 bg-[#1a1a1a] border border-[#333] rounded-lg overflow-hidden z-50 shadow-xl">
+                                  <div className="flex items-center bg-[#111] border-b border-[#333]">
+                                    <Search size={12} className="text-neutral-500 ml-3 shrink-0" />
+                                    <input
+                                      type="text"
+                                      value={inlineItemSearch}
+                                      onChange={e => setInlineItemSearch(e.target.value)}
+                                      placeholder="Buscar item..."
+                                      className="w-full bg-transparent border-none px-2 py-2 text-xs text-white placeholder-neutral-600 outline-none"
+                                      autoFocus
+                                      autoComplete="off"
+                                    />
+                                  </div>
+                                  <div className="max-h-40 overflow-y-auto">
+                                    {(inlineItemSearch.trim()
+                                      ? filteredInvItems.filter(i =>
+                                          i.name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').includes(
+                                            inlineItemSearch.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+                                          )
+                                        )
+                                      : invStockItems
+                                    ).slice(0, 30).map(opt => {
+                                      const optAvailable = getAvailableQuantity(opt.name, formData.date || new Date().toISOString().split('T')[0]);
+                                      return (
+                                        <button
+                                          type="button"
+                                          key={opt.name}
+                                          onClick={() => handleInlineItemSelect(item.id, opt.name)}
+                                          className={`w-full text-left px-3 py-2 text-xs text-white hover:bg-[#333] transition-colors flex items-center justify-between gap-2 ${item.descricao === opt.name ? 'bg-[#2a2a2a] border-l-2 border-[#B5FF03]' : ''}`}
+                                        >
+                                          <span className="truncate">{opt.name}</span>
+                                          <span className={`text-[9px] shrink-0 ${optAvailable > 0 ? 'text-neutral-500' : 'text-red-400'}`}>
+                                            Disp: {optAvailable}
+                                          </span>
+                                        </button>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              )}
                             </div>
                             <div className="grid grid-cols-2 gap-2">
                               <div>
