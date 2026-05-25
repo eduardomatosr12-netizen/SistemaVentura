@@ -5,6 +5,7 @@ import { useCRM } from '../../contexts/CRMContext';
 import type { CalendarEvent, Lead, OrcamentoItem } from '../../contexts/CRMContext';
 import { useActivityLogs } from '../../contexts/ActivityContext';
 import { generateUUID } from '../../lib/uuid';
+import { getAllInventoryItems, getAvailableQuantity, findInventoryItem } from '../../lib/inventory';
 
 const ACTION_ICONS: Record<string, LucideIcon> = {
   lead_criado: UserPlus,
@@ -81,11 +82,17 @@ const CRMDashboard = () => {
   });
   const [selectedClientId, setSelectedClientId] = useState('');
 
-  const handleAddItem = () => {
+  const handleSelectInventoryItem = (itemName: string) => {
+    const info = findInventoryItem(itemName);
+    const unitValue = info && info.row.values['col-7'] ? Number(info.row.values['col-7']) || 0 : 0;
+    const available = getAvailableQuantity(itemName, formData.date || new Date().toISOString().split('T')[0]);
+    const maxQty = Math.max(1, available);
     setFormData(prev => ({
       ...prev,
-      orcamentoItems: [...prev.orcamentoItems, { id: generateUUID(), descricao: '', quantidade: 1, valorUnitario: 0 }],
+      orcamentoItems: [...prev.orcamentoItems, { id: generateUUID(), descricao: itemName, quantidade: 1, valorUnitario: unitValue }],
     }));
+    setInvSearch('');
+    setInvSearchOpen(false);
   };
 
   const handleRemoveItem = (id: string) => {
@@ -98,9 +105,21 @@ const CRMDashboard = () => {
   const handleItemChange = (id: string, field: keyof OrcamentoItem, value: string | number) => {
     setFormData(prev => ({
       ...prev,
-      orcamentoItems: prev.orcamentoItems.map(i =>
-        i.id === id ? { ...i, [field]: field === 'descricao' ? value : Number(value) || 0 } : i
-      ),
+      orcamentoItems: prev.orcamentoItems.map(i => {
+        if (i.id !== id) return i;
+        const updated = { ...i, [field]: field === 'descricao' ? value : Number(value) || 0 };
+        if (field === 'quantidade' || field === 'descricao') {
+          const itemName = field === 'descricao' ? String(value) : i.descricao;
+          if (itemName) {
+            const available = getAvailableQuantity(itemName, formData.date || new Date().toISOString().split('T')[0]);
+            if (field === 'quantidade') {
+              const qty = Number(value) || 0;
+              updated.quantidade = Math.min(qty, Math.max(1, available));
+            }
+          }
+        }
+        return updated;
+      }),
     }));
   };
 
@@ -111,6 +130,26 @@ const CRMDashboard = () => {
   const eventTypeRef = useRef<HTMLDivElement>(null);
   const clientSearchRef = useRef<HTMLDivElement>(null);
 
+  // Inventory integration
+  const [invStockItems, setInvStockItems] = useState<{ name: string; qty: number; category: string }[]>([]);
+  const [invSearch, setInvSearch] = useState('');
+  const [invSearchOpen, setInvSearchOpen] = useState(false);
+  const invSearchRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (isCreateOpen) {
+      setInvStockItems(getAllInventoryItems());
+    }
+  }, [isCreateOpen]);
+
+  const filteredInvItems = useMemo(() => {
+    if (!invSearch.trim()) return [];
+    const q = invSearch.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    return invStockItems.filter(i =>
+      i.name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').includes(q)
+    ).slice(0, 40);
+  }, [invStockItems, invSearch]);
+
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (eventTypeRef.current && !eventTypeRef.current.contains(e.target as Node)) {
@@ -118,6 +157,9 @@ const CRMDashboard = () => {
       }
       if (clientSearchRef.current && !clientSearchRef.current.contains(e.target as Node)) {
         setClientSearchOpen(false);
+      }
+      if (invSearchRef.current && !invSearchRef.current.contains(e.target as Node)) {
+        setInvSearchOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -137,6 +179,8 @@ const CRMDashboard = () => {
     setFormData(prev => ({ ...prev, date: dateStr, eventType: '', city: '', observacao: '', orcamentoItems: [] }));
     setSelectedClientId('');
     setClientSearch('');
+    setInvSearch('');
+    setInvSearchOpen(false);
     setCreateMode('novo_cliente');
     setIsCreateOpen(true);
   };
@@ -711,45 +755,107 @@ const CRMDashboard = () => {
                   <div className="border-t border-[#222] pt-3">
                     <div className="flex items-center justify-between mb-3">
                       <p className="text-[9px] font-black uppercase tracking-widest text-neutral-400">Itens do Orçamento</p>
-                      <button type="button" onClick={handleAddItem}
+                      <button type="button" onClick={() => { setInvSearch(''); setInvSearchOpen(true); }}
                         className="flex items-center gap-1 text-[10px] font-bold text-[#B5FF03] hover:text-white transition-colors">
                         <Plus size={12} /> Adicionar Item
                       </button>
                     </div>
-                    <div className="space-y-2">
-                      {formData.orcamentoItems.map((item, idx) => (
-                        <div key={item.id} className="bg-[#1a1a1a] border border-[#333] rounded-lg p-3 space-y-2">
-                          <div className="flex items-center justify-between">
-                            <span className="text-[9px] font-black uppercase tracking-widest text-neutral-500">Item {idx + 1}</span>
-                            <button type="button" onClick={() => handleRemoveItem(item.id)}
-                              className="p-1 hover:bg-[#333] rounded-md transition-colors">
-                              <Trash2 size={12} className="text-red-400" />
-                            </button>
-                          </div>
-                          <input type="text" value={item.descricao} onChange={e => handleItemChange(item.id, 'descricao', e.target.value)}
-                            placeholder="Descrição do produto/equipamento"
-                            className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-sm text-white placeholder-neutral-600 focus:border-[#B5FF03] outline-none" />
-                          <div className="grid grid-cols-2 gap-2">
-                            <div>
-                              <label className="block text-[8px] font-black uppercase tracking-widest text-neutral-500 mb-1">Qtd</label>
-                              <input type="number" min="1" value={item.quantidade} onChange={e => handleItemChange(item.id, 'quantidade', e.target.value)}
-                                className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-1.5 text-sm text-white focus:border-[#B5FF03] outline-none" />
-                            </div>
-                            <div>
-                              <label className="block text-[8px] font-black uppercase tracking-widest text-neutral-500 mb-1">Valor Unit.</label>
-                              <input type="number" min="0" step="0.01" value={item.valorUnitario} onChange={e => handleItemChange(item.id, 'valorUnitario', e.target.value)}
-                                className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-1.5 text-sm text-white focus:border-[#B5FF03] outline-none" />
-                            </div>
-                          </div>
-                          <div className="text-right">
-                            <span className="text-[10px] text-neutral-400">Total: </span>
-                            <span className="text-[11px] text-white font-bold">R$ {(item.quantidade * item.valorUnitario).toFixed(2)}</span>
-                          </div>
+
+                    {/* Inventory search combobox */}
+                    {invSearchOpen && (
+                      <div ref={invSearchRef} className="mb-3">
+                        <div className="flex items-center bg-[#111] border border-[#333] rounded-lg overflow-hidden focus-within:border-[#B5FF03] transition-colors">
+                          <Search size={14} className="text-neutral-500 ml-3 shrink-0" />
+                          <input
+                            type="text"
+                            value={invSearch}
+                            onChange={e => setInvSearch(e.target.value)}
+                            onFocus={() => setInvSearchOpen(true)}
+                            placeholder="Buscar item no estoque..."
+                            className="w-full bg-transparent border-none px-2 py-2 text-sm text-white placeholder-neutral-600 outline-none"
+                            autoFocus
+                            autoComplete="off"
+                          />
+                          <button type="button" onClick={() => setInvSearchOpen(false)}
+                            className="p-2 hover:bg-[#222] transition-colors">
+                            <X size={14} className="text-neutral-500" />
+                          </button>
                         </div>
-                      ))}
-                      {formData.orcamentoItems.length === 0 && (
+                        {invSearch.trim() && (
+                          <div className="mt-1 bg-[#1a1a1a] border border-[#333] rounded-lg max-h-44 overflow-y-auto shadow-xl">
+                            {filteredInvItems.length === 0 ? (
+                              <div className="px-3 py-2 text-xs text-neutral-500 italic">Nenhum item encontrado no estoque</div>
+                            ) : (
+                              filteredInvItems.map(item => {
+                                const available = getAvailableQuantity(item.name, formData.date || new Date().toISOString().split('T')[0]);
+                                return (
+                                  <button
+                                    type="button"
+                                    key={item.name}
+                                    onClick={() => handleSelectInventoryItem(item.name)}
+                                    className="w-full text-left px-3 py-2 text-sm text-white hover:bg-[#333] transition-colors flex items-center justify-between gap-2"
+                                  >
+                                    <div className="flex items-center gap-2 min-w-0">
+                                      <span className="truncate">{item.name}</span>
+                                      {item.category && (
+                                        <span className="text-[9px] text-neutral-500 uppercase shrink-0">{item.category}</span>
+                                      )}
+                                    </div>
+                                    <div className="flex items-center gap-3 shrink-0">
+                                      <span className={`text-[10px] font-bold ${available > 0 ? 'text-neutral-400' : 'text-red-400'}`}>
+                                        Disp: {available}
+                                      </span>
+                                    </div>
+                                  </button>
+                                );
+                              })
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    <div className="space-y-2">
+                      {formData.orcamentoItems.map((item, idx) => {
+                        const available = getAvailableQuantity(item.descricao, formData.date || new Date().toISOString().split('T')[0]);
+                        const maxQty = Math.max(1, available);
+                        return (
+                          <div key={item.id} className="bg-[#1a1a1a] border border-[#333] rounded-lg p-3 space-y-2">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2 min-w-0">
+                                <span className="text-[9px] font-black uppercase tracking-widest text-neutral-500 shrink-0">Item {idx + 1}</span>
+                                <span className="text-[9px] text-neutral-500">| Disp: {available}</span>
+                              </div>
+                              <button type="button" onClick={() => handleRemoveItem(item.id)}
+                                className="p-1 hover:bg-[#333] rounded-md transition-colors">
+                                <Trash2 size={12} className="text-red-400" />
+                              </button>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-sm text-white font-medium truncate">{item.descricao}</span>
+                            </div>
+                            <div className="grid grid-cols-2 gap-2">
+                              <div>
+                                <label className="block text-[8px] font-black uppercase tracking-widest text-neutral-500 mb-1">Qtd (máx: {maxQty})</label>
+                                <input type="number" min="1" max={maxQty} value={item.quantidade} onChange={e => handleItemChange(item.id, 'quantidade', e.target.value)}
+                                  className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-1.5 text-sm text-white focus:border-[#B5FF03] outline-none" />
+                              </div>
+                              <div>
+                                <label className="block text-[8px] font-black uppercase tracking-widest text-neutral-500 mb-1">Valor Unit.</label>
+                                <input type="number" min="0" step="0.01" value={item.valorUnitario} onChange={e => handleItemChange(item.id, 'valorUnitario', e.target.value)}
+                                  className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-1.5 text-sm text-white focus:border-[#B5FF03] outline-none" />
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <span className="text-[10px] text-neutral-400">Total: </span>
+                              <span className="text-[11px] text-white font-bold">R$ {(item.quantidade * item.valorUnitario).toFixed(2)}</span>
+                            </div>
+                          </div>
+                        );
+                      })}
+                      {formData.orcamentoItems.length === 0 && !invSearchOpen && (
                         <div className="text-center py-3 bg-[#111] border border-dashed border-[#333] rounded-lg">
-                          <p className="text-[10px] text-neutral-500 italic">Nenhum item adicionado</p>
+                          <p className="text-[10px] text-neutral-500 italic">Clique em "Adicionar Item" para buscar no estoque</p>
                         </div>
                       )}
                     </div>
