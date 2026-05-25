@@ -1,9 +1,10 @@
 import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
-import { Calendar, UserPlus, ArrowRight, CheckSquare, Activity, AlertCircle, LayoutDashboard, X, ChevronLeft, ChevronRight, ChevronDown, Search, User, Phone, Mail, CreditCard, CalendarDays, Clock } from 'lucide-react';
+import { Calendar, UserPlus, ArrowRight, CheckSquare, Activity, AlertCircle, LayoutDashboard, X, ChevronLeft, ChevronRight, ChevronDown, Search, User, Phone, Mail, CreditCard, CalendarDays, Clock, Plus, Trash2, MapPin } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { useCRM } from '../../contexts/CRMContext';
-import type { CalendarEvent, Lead } from '../../contexts/CRMContext';
+import type { CalendarEvent, Lead, OrcamentoItem } from '../../contexts/CRMContext';
 import { useActivityLogs } from '../../contexts/ActivityContext';
+import { generateUUID } from '../../lib/uuid';
 
 const ACTION_ICONS: Record<string, LucideIcon> = {
   lead_criado: UserPlus,
@@ -75,9 +76,33 @@ const CRMDashboard = () => {
   const [createDate, setCreateDate] = useState('');
   const [formData, setFormData] = useState({
     name: '', whatsapp: '', email: '', cpf: '',
-    eventType: '', date: '', time: '',
+    eventType: '', date: '', time: '', city: '', observacao: '',
+    orcamentoItems: [] as OrcamentoItem[],
   });
   const [selectedClientId, setSelectedClientId] = useState('');
+
+  const handleAddItem = () => {
+    setFormData(prev => ({
+      ...prev,
+      orcamentoItems: [...prev.orcamentoItems, { id: generateUUID(), descricao: '', quantidade: 1, valorUnitario: 0 }],
+    }));
+  };
+
+  const handleRemoveItem = (id: string) => {
+    setFormData(prev => ({
+      ...prev,
+      orcamentoItems: prev.orcamentoItems.filter(i => i.id !== id),
+    }));
+  };
+
+  const handleItemChange = (id: string, field: keyof OrcamentoItem, value: string | number) => {
+    setFormData(prev => ({
+      ...prev,
+      orcamentoItems: prev.orcamentoItems.map(i =>
+        i.id === id ? { ...i, [field]: field === 'descricao' ? value : Number(value) || 0 } : i
+      ),
+    }));
+  };
 
   // Custom dropdown state
   const [eventTypeOpen, setEventTypeOpen] = useState(false);
@@ -109,7 +134,7 @@ const CRMDashboard = () => {
 
   const openCreateModal = (dateStr: string) => {
     setCreateDate(dateStr);
-    setFormData(prev => ({ ...prev, date: dateStr, eventType: '' }));
+    setFormData(prev => ({ ...prev, date: dateStr, eventType: '', city: '', observacao: '', orcamentoItems: [] }));
     setSelectedClientId('');
     setClientSearch('');
     setCreateMode('novo_cliente');
@@ -130,9 +155,10 @@ const CRMDashboard = () => {
         firstContact: formData.date || new Date().toISOString().split('T')[0],
         closingDate: '',
         followUpReminder: '',
-        address: '',
-        notes: '',
-        value: '',
+        address: formData.city || '',
+        notes: formData.observacao || '',
+        value: formData.orcamentoItems.reduce((sum, item) => sum + item.quantidade * item.valorUnitario, 0).toString(),
+        items: formData.orcamentoItems.length > 0 ? formData.orcamentoItems : undefined,
       };
       addLead(leadInput);
       addEvent({
@@ -144,6 +170,8 @@ const CRMDashboard = () => {
         eventType: formData.eventType,
         date: formData.date,
         time: formData.time,
+        city: formData.city,
+        description: formData.observacao,
         status: 'pendente',
       });
     } else {
@@ -159,6 +187,8 @@ const CRMDashboard = () => {
         eventType: formData.eventType,
         date: formData.date,
         time: formData.time,
+        city: formData.city,
+        description: formData.observacao,
         status: 'pendente',
       });
     }
@@ -645,7 +675,7 @@ const CRMDashboard = () => {
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className="block text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-1.5 flex items-center gap-1.5">
-                        <CalendarDays size={12} /> Data
+                        <CalendarDays size={12} /> Data do Evento
                       </label>
                       <input type="date" value={formData.date} onChange={e => setFormData(prev => ({ ...prev, date: e.target.value }))}
                         className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-sm text-white focus:border-[#B5FF03] outline-none" required />
@@ -656,6 +686,72 @@ const CRMDashboard = () => {
                       </label>
                       <input type="time" value={formData.time} onChange={e => setFormData(prev => ({ ...prev, time: e.target.value }))}
                         className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-sm text-white focus:border-[#B5FF03] outline-none" />
+                    </div>
+                  </div>
+                  {/* Cidade */}
+                  <div>
+                    <label className="block text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-1.5 flex items-center gap-1.5">
+                      <MapPin size={12} /> Cidade
+                    </label>
+                    <input type="text" value={formData.city} onChange={e => setFormData(prev => ({ ...prev, city: e.target.value }))}
+                      placeholder="Ex: São Paulo, SP"
+                      className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-sm text-white placeholder-neutral-600 focus:border-[#B5FF03] outline-none" />
+                  </div>
+                  {/* Observação */}
+                  <div>
+                    <label className="block text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-1.5 flex items-center gap-1.5">
+                      <AlertCircle size={12} /> Observação
+                    </label>
+                    <textarea value={formData.observacao} onChange={e => setFormData(prev => ({ ...prev, observacao: e.target.value }))}
+                      placeholder="Informações adicionais sobre o evento..."
+                      rows={3}
+                      className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-sm text-white placeholder-neutral-600 focus:border-[#B5FF03] outline-none resize-none" />
+                  </div>
+                  {/* Itens do Orçamento */}
+                  <div className="border-t border-[#222] pt-3">
+                    <div className="flex items-center justify-between mb-3">
+                      <p className="text-[9px] font-black uppercase tracking-widest text-neutral-400">Itens do Orçamento</p>
+                      <button type="button" onClick={handleAddItem}
+                        className="flex items-center gap-1 text-[10px] font-bold text-[#B5FF03] hover:text-white transition-colors">
+                        <Plus size={12} /> Adicionar Item
+                      </button>
+                    </div>
+                    <div className="space-y-2">
+                      {formData.orcamentoItems.map((item, idx) => (
+                        <div key={item.id} className="bg-[#1a1a1a] border border-[#333] rounded-lg p-3 space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-[9px] font-black uppercase tracking-widest text-neutral-500">Item {idx + 1}</span>
+                            <button type="button" onClick={() => handleRemoveItem(item.id)}
+                              className="p-1 hover:bg-[#333] rounded-md transition-colors">
+                              <Trash2 size={12} className="text-red-400" />
+                            </button>
+                          </div>
+                          <input type="text" value={item.descricao} onChange={e => handleItemChange(item.id, 'descricao', e.target.value)}
+                            placeholder="Descrição do produto/equipamento"
+                            className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-sm text-white placeholder-neutral-600 focus:border-[#B5FF03] outline-none" />
+                          <div className="grid grid-cols-2 gap-2">
+                            <div>
+                              <label className="block text-[8px] font-black uppercase tracking-widest text-neutral-500 mb-1">Qtd</label>
+                              <input type="number" min="1" value={item.quantidade} onChange={e => handleItemChange(item.id, 'quantidade', e.target.value)}
+                                className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-1.5 text-sm text-white focus:border-[#B5FF03] outline-none" />
+                            </div>
+                            <div>
+                              <label className="block text-[8px] font-black uppercase tracking-widest text-neutral-500 mb-1">Valor Unit.</label>
+                              <input type="number" min="0" step="0.01" value={item.valorUnitario} onChange={e => handleItemChange(item.id, 'valorUnitario', e.target.value)}
+                                className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-1.5 text-sm text-white focus:border-[#B5FF03] outline-none" />
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <span className="text-[10px] text-neutral-400">Total: </span>
+                            <span className="text-[11px] text-white font-bold">R$ {(item.quantidade * item.valorUnitario).toFixed(2)}</span>
+                          </div>
+                        </div>
+                      ))}
+                      {formData.orcamentoItems.length === 0 && (
+                        <div className="text-center py-3 bg-[#111] border border-dashed border-[#333] rounded-lg">
+                          <p className="text-[10px] text-neutral-500 italic">Nenhum item adicionado</p>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
