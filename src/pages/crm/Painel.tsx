@@ -54,8 +54,8 @@ const statusBg: Record<string, string> = {
 };
 
 const EVENT_TYPES = [
-  { value: 'Aniver', label: 'Aniver (Aniversário)' },
-  { value: 'Casam', label: 'Casam (Casamento)' },
+  { value: 'Aniver', label: 'Aniversário' },
+  { value: 'Casam', label: 'Casamento' },
   { value: 'Corporativo', label: 'Corporativo' },
   { value: 'Privado', label: 'Privado' },
   { value: 'Outros', label: 'Outros' },
