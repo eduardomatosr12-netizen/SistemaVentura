@@ -42,7 +42,7 @@ const TopHeader = ({ onMenuClick }: TopHeaderProps) => {
   const notificationRef = useRef<HTMLDivElement>(null);
   const userMenuRef = useRef<HTMLDivElement>(null);
 
-  const route = routeTitles[location.pathname] ?? { title: 'Universo Axium', subtitle: '' };
+  const route = routeTitles[location.pathname] ?? { title: 'Ventura Luz e Efeitos', subtitle: '' };
 
   const userDisplayName = user?.fullName || user?.email?.split('@')[0] || 'Usuário';
   const initials = userDisplayName.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase();
