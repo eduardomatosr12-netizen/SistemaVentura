@@ -110,7 +110,7 @@ const Financeiro = () => {
   };
 
   const [financeData, setFinanceData] = useState(getStoredFinance);
-  const [activeTab, setActiveTab] = useState<'receitas' | 'fluxo'>('receitas');
+  const [activeTab, setActiveTab] = useState<'receitas' | 'fluxo' | 'projecao'>('receitas');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   
   useEffect(() => {
@@ -727,13 +727,23 @@ const Financeiro = () => {
           >
             Fluxo de Caixa ({filteredExpenses.length})
           </button>
+          <button
+            onClick={() => setActiveTab('projecao')}
+            className={`py-3 px-1 border-b-2 font-bold text-xs uppercase tracking-widest transition-colors ${
+              activeTab === 'projecao'
+                ? 'border-[#B5FF03] text-[#B5FF03]'
+                : 'border-transparent text-[#888888] hover:text-white'
+            }`}
+          >
+            Projeção (Parcelas)
+          </button>
         </div>
       </div>
 
       {/* Main Content */}
       <div className="flex relative">
         <div className="flex-1 p-6">
-          {activeTab === 'receitas' ? (
+          {activeTab === 'receitas' && (
             <>
             <div className="bg-[#111111] border border-[#222222] rounded-lg overflow-x-auto">
               <table className="w-full">
@@ -804,7 +814,8 @@ const Financeiro = () => {
               )}
             </div>
             </>
-          ) : (
+          )}
+          {activeTab === 'fluxo' && (
             <>
             <div className="bg-[#111111] border border-[#222222] rounded-lg overflow-x-auto">
               <table className="w-full">
@@ -878,6 +889,70 @@ const Financeiro = () => {
               {filteredExpenses.length === 0 && (
                 <p className="text-center text-sm text-[#888888] py-8">Nenhuma despesa encontrada</p>
               )}
+            </div>
+            </>
+          )}
+          {activeTab === 'projecao' && (
+            <>
+            <div className="mb-4">
+              <h2 className="text-lg font-black text-white mb-1">Projeção de Receitas</h2>
+              <p className="text-xs text-neutral-400">Faturamento futuro projetado com base em contratos parcelados.</p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+              {(() => {
+                const projectedInvoices = allInvoices.filter(inv => inv.paymentMethod === 'parcelado' && inv.status !== 'Cancelado');
+                const projectionByMonth: Record<string, number> = {};
+                projectedInvoices.forEach(inv => {
+                  if (!inv.date || inv.date === '—') return;
+                  const monthKey = inv.date.substring(0, 7);
+                  projectionByMonth[monthKey] = (projectionByMonth[monthKey] || 0) + parseBRL(inv.amount);
+                });
+                const sortedMonths = Object.entries(projectionByMonth).sort(([a], [b]) => a.localeCompare(b));
+                return sortedMonths.slice(0, 12).map(([month, total]) => {
+                  const monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+                  const [y, m] = month.split('-');
+                  return (
+                    <div key={month} className="bg-[#111111] border border-[#222222] rounded-lg p-4">
+                      <div className="text-xs text-neutral-500 font-bold uppercase tracking-widest mb-1">
+                        {monthNames[parseInt(m) - 1]} {y}
+                      </div>
+                      <div className="text-lg font-black text-[#B5FF03]">{formatCurrency(total)}</div>
+                      <div className="text-[10px] text-neutral-500">{projectedInvoices.filter(inv => inv.date?.startsWith(month)).length} parcela(s)</div>
+                    </div>
+                  );
+                });
+              })()}
+            </div>
+            <div className="bg-[#111111] border border-[#222222] rounded-lg overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-[#222222]">
+                    <th className="text-left p-4 text-xs font-black uppercase tracking-widest text-[#B5FF03]">Cliente</th>
+                    <th className="text-left p-4 text-xs font-black uppercase tracking-widest text-[#B5FF03]">Valor</th>
+                    <th className="text-left p-4 text-xs font-black uppercase tracking-widest text-[#B5FF03]">Data Prevista</th>
+                    <th className="text-left p-4 text-xs font-black uppercase tracking-widest text-[#B5FF03]">Parcela</th>
+                    <th className="text-left p-4 text-xs font-black uppercase tracking-widest text-[#B5FF03]">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {allInvoices.filter(inv => inv.paymentMethod === 'parcelado').sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()).map(inv => (
+                    <tr key={inv.id} className="border-b border-[#222222] hover:bg-[#1a1a1a]">
+                      <td className="p-4 text-sm text-white">{inv.client}</td>
+                      <td className="p-4 text-sm text-white">{inv.amount}</td>
+                      <td className="p-4 text-sm text-[#888888]">{inv.date}</td>
+                      <td className="p-4 text-sm text-[#888888]">{inv.installments ? `${inv.installments}x` : '—'}</td>
+                      <td className="p-4">
+                        <span className={`px-2 py-1 rounded-full text-xs ${statusStyle[inv.status] || statusStyle.Pendente}`}>
+                          {inv.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                  {allInvoices.filter(inv => inv.paymentMethod === 'parcelado').length === 0 && (
+                    <tr><td colSpan={5} className="p-8 text-center text-sm text-[#888888]">Nenhuma projeção disponível.</td></tr>
+                  )}
+                </tbody>
+              </table>
             </div>
             </>
           )}

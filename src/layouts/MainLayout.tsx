@@ -2,21 +2,20 @@ import type { ReactNode } from 'react';
 import { useState, useEffect } from 'react';
 import { useLocation, useNavigate, Link } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
-import CRMSubmenu from '../components/CRMSubmenu';
 import TopHeader from '../components/TopHeader';
 import { useAuth } from '../contexts/AuthContext';
-import { BarChart3, Users, Lock, DollarSign, Package } from 'lucide-react';
+import { LayoutDashboard, GitBranch, Users, Calendar, Clock, Phone, DollarSign, Package } from 'lucide-react';
 
 type UserRole = 'admin' | 'employee';
 
 interface MainLayoutProps {
   children: ReactNode;
+  hideSubmenu?: boolean;
 }
 
-const MainLayout = ({ children }: MainLayoutProps) => {
+const MainLayout = ({ children, hideSubmenu }: MainLayoutProps) => {
   const location = useLocation();
   const navigate = useNavigate();
-  const isCRMRoute = location.pathname.startsWith('/crm');
   const [sidebarOpen, setSidebarOpen] = useState(false);
   
   const { 
@@ -66,7 +65,7 @@ const MainLayout = ({ children }: MainLayoutProps) => {
     return (
       <div className="h-screen flex items-center justify-center bg-black p-4">
         <div className="w-full max-w-md">
-            <div className="bg-[#111] rounded-3xl shadow-xl p-8 md:p-12 border border-[#333]">
+          <div className="bg-[#111] rounded-3xl shadow-xl p-8 md:p-12 border border-[#333]">
             <div className="text-center mb-8">
               <img
                 src="/logo.png"
@@ -88,7 +87,7 @@ const MainLayout = ({ children }: MainLayoutProps) => {
                       : 'border-[#333] hover:border-[#555]'
                   }`}
                 >
-                  <BarChart3 className={`w-6 h-6 ${loginRole === 'admin' ? 'text-[#B5FF03]' : 'text-neutral-400'}`} />
+                  <LayoutDashboard className={`w-6 h-6 ${loginRole === 'admin' ? 'text-[#B5FF03]' : 'text-neutral-400'}`} />
                   <span className={`text-xs font-bold uppercase tracking-wider ${loginRole === 'admin' ? 'text-[#B5FF03]' : 'text-neutral-400'}`}>Admin</span>
                 </button>
                 <button
@@ -111,8 +110,8 @@ const MainLayout = ({ children }: MainLayoutProps) => {
                   <select
                     value={employeeName || ''}
                     onChange={(e) => selectEmployee(e.target.value)}
-                  className="w-full bg-[#111] border-2 border-[#333] rounded-xl px-4 py-3 font-bold text-white focus:border-[#B5FF03] outline-none"
-                   >
+                    className="w-full bg-[#111] border-2 border-[#333] rounded-xl px-4 py-3 font-bold text-white focus:border-[#B5FF03] outline-none"
+                  >
                     {availableEmployees.map(emp => (
                       <option key={emp} value={emp}>{emp}</option>
                     ))}
@@ -121,16 +120,16 @@ const MainLayout = ({ children }: MainLayoutProps) => {
               ) : null}
 
               <div className="space-y-3">
-                 <label className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest ml-1 flex items-center gap-2">
-                   <Lock className="w-3 h-3" /> Senha
-                 </label>
-                 <input
-                   type="password"
-                   value={loginPassword}
-                   onChange={(e) => setLoginPassword(e.target.value)}
-                   placeholder={loginRole === 'admin' ? 'admin123' : 'func123'}
-                   className="w-full bg-[#111] border-2 border-[#333] rounded-xl px-4 py-3 font-bold text-white focus:border-[#B5FF03] outline-none"
-                 />
+                <label className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest ml-1 flex items-center gap-2">
+                  <Users className="w-3 h-3" /> Senha
+                </label>
+                <input
+                  type="password"
+                  value={loginPassword}
+                  onChange={(e) => setLoginPassword(e.target.value)}
+                  placeholder={loginRole === 'admin' ? 'admin123' : 'func123'}
+                  className="w-full bg-[#111] border-2 border-[#333] rounded-xl px-4 py-3 font-bold text-white focus:border-[#B5FF03] outline-none"
+                />
               </div>
 
               {loginError && (
@@ -142,17 +141,17 @@ const MainLayout = ({ children }: MainLayoutProps) => {
               <button
                 type="submit"
                 disabled={isLoggingIn}
-                 className="w-full py-4 bg-[#B5FF03] text-black rounded-xl font-black text-sm uppercase tracking-widest hover:bg-[#a1e600] transition-all disabled:opacity-50"
+                className="w-full py-4 bg-[#B5FF03] text-black rounded-xl font-black text-sm uppercase tracking-widest hover:bg-[#a1e600] transition-all disabled:opacity-50"
               >
                 {isLoggingIn ? 'Entrando...' : 'Entrar'}
               </button>
             </form>
 
-             <div className="mt-8 pt-6 border-t border-[#333] text-center">
-               <p className="text-xs text-neutral-500">
-                 Admin: admin123 | Funcionário: func123
-               </p>
-             </div>
+            <div className="mt-8 pt-6 border-t border-[#333] text-center">
+              <p className="text-xs text-neutral-500">
+                Admin: admin123 | Funcionário: func123
+              </p>
+            </div>
           </div>
         </div>
       </div>
@@ -166,12 +165,6 @@ const MainLayout = ({ children }: MainLayoutProps) => {
       <main className="flex-1 ml-0 md:ml-64 flex flex-col overflow-y-auto w-full bg-black">
         <TopHeader onMenuClick={() => setSidebarOpen(true)} />
 
-        {isCRMRoute && (
-          <div className="sticky top-[61px] z-20">
-            <CRMSubmenu />
-          </div>
-        )}
-
         <div className="flex-1 bg-black w-full">
           <div className="px-4 p-4 md:p-8 w-full pb-20 md:pb-4">
             {children}
@@ -180,17 +173,25 @@ const MainLayout = ({ children }: MainLayoutProps) => {
       </main>
 
       <nav className="fixed bottom-0 left-0 right-0 z-50 bg-black border-t border-[#333] flex md:hidden justify-around items-center h-16 safe-area-bottom">
-        <Link to="/crm" className={`flex flex-col items-center gap-0.5 px-3 py-2 ${location.pathname.startsWith('/crm') ? 'text-[#B5FF03]' : 'text-neutral-400'}`}>
-          <BarChart3 size={20} />
-          <span className="text-[10px] font-bold uppercase tracking-wider">CRM</span>
+        <Link to="/home" className={`flex flex-col items-center gap-0.5 px-3 py-2 ${location.pathname === '/home' ? 'text-[#B5FF03]' : 'text-neutral-400'}`}>
+          <LayoutDashboard size={20} />
+          <span className="text-[10px] font-bold uppercase tracking-wider">Home</span>
+        </Link>
+        <Link to="/pipeline" className={`flex flex-col items-center gap-0.5 px-3 py-2 ${location.pathname === '/pipeline' ? 'text-[#B5FF03]' : 'text-neutral-400'}`}>
+          <GitBranch size={20} />
+          <span className="text-[10px] font-bold uppercase tracking-wider">Pipeline</span>
+        </Link>
+        <Link to="/contatos" className={`flex flex-col items-center gap-0.5 px-3 py-2 ${location.pathname === '/contatos' ? 'text-[#B5FF03]' : 'text-neutral-400'}`}>
+          <Users size={20} />
+          <span className="text-[10px] font-bold uppercase tracking-wider">Contatos</span>
+        </Link>
+        <Link to="/calendario" className={`flex flex-col items-center gap-0.5 px-3 py-2 ${location.pathname === '/calendario' ? 'text-[#B5FF03]' : 'text-neutral-400'}`}>
+          <Calendar size={20} />
+          <span className="text-[10px] font-bold uppercase tracking-wider">Calendário</span>
         </Link>
         <Link to="/financeiro" className={`flex flex-col items-center gap-0.5 px-3 py-2 ${location.pathname.startsWith('/financeiro') ? 'text-[#B5FF03]' : 'text-neutral-400'}`}>
           <DollarSign size={20} />
           <span className="text-[10px] font-bold uppercase tracking-wider">Financeiro</span>
-        </Link>
-        <Link to="/tarefas" className={`flex flex-col items-center gap-0.5 px-3 py-2 ${location.pathname.startsWith('/tarefas') ? 'text-[#B5FF03]' : 'text-neutral-400'}`}>
-          <Package size={20} />
-          <span className="text-[10px] font-bold uppercase tracking-wider">Estoque</span>
         </Link>
       </nav>
     </div>

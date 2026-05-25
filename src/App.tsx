@@ -28,7 +28,7 @@ function AppRoutes() {
       {/* Login Route */}
       <Route
         path="/login"
-        element={isAuthenticated ? <Navigate to="/crm/painel" replace /> : <Login />}
+        element={isAuthenticated ? <Navigate to="/home" replace /> : <Login />}
       />
 
       {/* Unauthorized Route */}
@@ -39,7 +39,7 @@ function AppRoutes() {
             <div className="text-center">
               <h1 className="text-2xl font-black text-black mb-2">Acesso Negado</h1>
               <p className="text-neutral-500">Você não tem permissão para acessar esta página.</p>
-              <a href="/crm/painel" className="text-black underline mt-4 block">Voltar ao início</a>
+              <a href="/home" className="text-black underline mt-4 block">Voltar ao início</a>
             </div>
           </div>
         }
@@ -51,79 +51,106 @@ function AppRoutes() {
         element={<UpdatePassword />}
       />
 
-      {/* Protected Routes - CRM - All authenticated users */}
+      {/* HOME - Página Principal (Dashboard) */}
       <Route
-        path="/crm/painel"
+        path="/home"
         element={
           <ProtectedRoute allowedRoles={['admin', 'manager', 'user']}>
-            <MainLayout>
+            <MainLayout hideSubmenu>
               <CRMPainel />
             </MainLayout>
           </ProtectedRoute>
         }
       />
+
+      {/* PIPELINE - Independente */}
       <Route
-        path="/crm/orcamentos"
+        path="/pipeline"
         element={
           <ProtectedRoute allowedRoles={['admin', 'manager', 'user']}>
-            <MainLayout>
-                <OrçamentosPage />
-            </MainLayout>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/crm/pipeline"
-        element={
-          <ProtectedRoute allowedRoles={['admin', 'manager', 'user']}>
-            <MainLayout>
+            <MainLayout hideSubmenu>
               <CRMPipeline />
             </MainLayout>
           </ProtectedRoute>
         }
       />
+
+      {/* CONTATOS - Independente */}
       <Route
-        path="/crm/calendario"
+        path="/contatos"
         element={
           <ProtectedRoute allowedRoles={['admin', 'manager', 'user']}>
-            <MainLayout>
+            <MainLayout hideSubmenu>
+              <OrçamentosPage />
+            </MainLayout>
+          </ProtectedRoute>
+        }
+      />
+
+      {/* REUNIÃO - Independente (mesmo layout de calendário) */}
+      <Route
+        path="/reuniao"
+        element={
+          <ProtectedRoute allowedRoles={['admin', 'manager', 'user']}>
+            <MainLayout hideSubmenu>
               <CRMCalendario />
             </MainLayout>
           </ProtectedRoute>
         }
       />
+
+      {/* CALENDÁRIO - Independente */}
       <Route
-        path="/crm/importar"
+        path="/calendario"
         element={
-          <ProtectedRoute allowedRoles={['admin', 'manager']}>
-            <MainLayout>
-              <CRMImportar />
+          <ProtectedRoute allowedRoles={['admin', 'manager', 'user']}>
+            <MainLayout hideSubmenu>
+              <CRMCalendario />
             </MainLayout>
           </ProtectedRoute>
         }
       />
-      
-      {/* Redirect /crm to /crm/painel */}
-      <Route path="/crm" element={<Navigate to="/crm/painel" replace />} />
+
+      {/* CLIENTES - Independente */}
+      <Route
+        path="/clientes"
+        element={
+          <ProtectedRoute allowedRoles={['admin', 'manager', 'user']}>
+            <MainLayout hideSubmenu>
+              <OrçamentosPage />
+            </MainLayout>
+          </ProtectedRoute>
+        }
+      />
+
+      {/* Legacy CRM routes - keep for backward compatibility */}
+      <Route path="/crm/painel" element={<Navigate to="/home" replace />} />
+      <Route path="/crm/pipeline" element={<Navigate to="/pipeline" replace />} />
+      <Route path="/crm/orcamentos" element={<Navigate to="/contatos" replace />} />
+      <Route path="/crm/calendario" element={<Navigate to="/calendario" replace />} />
+      <Route path="/crm/reuniao" element={<Navigate to="/reuniao" replace />} />
+      <Route path="/crm/clientes" element={<Navigate to="/clientes" replace />} />
+      <Route path="/crm/importar" element={<Navigate to="/home" replace />} />
+      <Route path="/crm" element={<Navigate to="/home" replace />} />
 
       {/* Protected Routes - Financeiro - Only admin/manager */}
       <Route
         path="/financeiro"
         element={
           <ProtectedRoute allowedRoles={['admin', 'manager']}>
-            <MainLayout>
+            <MainLayout hideSubmenu>
               <Financeiro />
             </MainLayout>
           </ProtectedRoute>
         }
       />
 
-      {/* Protected Routes - Tarefas - All authenticated users */}
+      {/* Protected Routes - Estoque - All authenticated users */}
       <Route
         path="/tarefas"
         element={
           <ProtectedRoute allowedRoles={['admin', 'manager', 'user']}>
-            <MainLayout>
+            <MainLayout hideSubmenu>
               <Tarefas />
             </MainLayout>
           </ProtectedRoute>
@@ -135,7 +162,7 @@ function AppRoutes() {
         path="/configuracoes"
         element={
           <ProtectedRoute allowedRoles={['admin']}>
-            <MainLayout>
+            <MainLayout hideSubmenu>
               <Configuracoes />
             </MainLayout>
           </ProtectedRoute>
@@ -145,7 +172,7 @@ function AppRoutes() {
         path="/configuracoes/templates-whatsapp"
         element={
           <ProtectedRoute allowedRoles={['admin']}>
-            <MainLayout>
+            <MainLayout hideSubmenu>
               <TemplatesWhatsApp />
             </MainLayout>
           </ProtectedRoute>
@@ -153,10 +180,10 @@ function AppRoutes() {
       />
 
       {/* Root redirect to login or dashboard based on auth */}
-      <Route path="/" element={<Navigate to={isAuthenticated ? '/crm/painel' : '/login'} replace />} />
+      <Route path="/" element={<Navigate to={isAuthenticated ? '/home' : '/login'} replace />} />
 
       {/* Fallback for unknown routes */}
-      <Route path="*" element={<Navigate to="/crm/painel" replace />} />
+      <Route path="*" element={<Navigate to="/home" replace />} />
     </Routes>
   );
 }

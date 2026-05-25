@@ -42,6 +42,12 @@ export interface CalendarEvent {
   city?: string;
   description?: string;
   equipe?: string;
+  clientEmail?: string;
+  clientPhone?: string;
+  clientCpf?: string;
+  status?: 'confirmado' | 'pendente' | 'cancelado' | 'realizado';
+  dataMontagem?: string;
+  dataDesmontagem?: string;
 }
 
 type LeadInput = Omit<Lead, 'id'>;

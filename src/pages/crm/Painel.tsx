@@ -1,10 +1,12 @@
 import { useEffect, useState, useMemo, useCallback } from 'react';
-import { Users, Calendar, MessageSquare, Clock, UserX, CheckCircle, UserPlus, ArrowRight, CheckSquare, Activity, AlertCircle, FileText, Filter, XCircle } from 'lucide-react';
+import { Users, Calendar, MessageSquare, Clock, UserX, CheckCircle, UserPlus, ArrowRight, CheckSquare, Activity, AlertCircle, FileText, Filter, XCircle, LayoutDashboard, MapPin } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { useCRM, type Lead } from '../../contexts/CRMContext';
+import type { CalendarEvent } from '../../contexts/CRMContext';
 import { useActivityLogs } from '../../contexts/ActivityContext';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useFilters } from '../../contexts/FilterContext';
+import { Link } from 'react-router-dom';
 
 // Dados iniciais como fallback
 const INITIAL_Orçamentos: Lead[] = [
@@ -48,26 +50,23 @@ const ACTION_ICONS: ActionIconConfig = {
   tarefa_concluida: CheckSquare,
 };
 
-  const CHART_CONFIG = {
-    margin: { top: 20, right: 10, left: 0, bottom: 60 },
-    barSize: 40,
-    colors: {
-      fill: '#B5FF03',
-      grid: '#333',
-      stroke: '#666',
-      tooltip: { bg: '#111', border: '#333', text: '#fff', fontSize: '12px' },
-    },
-  };
+const CHART_CONFIG = {
+  margin: { top: 20, right: 10, left: 0, bottom: 60 },
+  barSize: 40,
+  colors: {
+    fill: '#B5FF03',
+    grid: '#333',
+    stroke: '#666',
+    tooltip: { bg: '#111', border: '#333', text: '#fff', fontSize: '12px' },
+  },
+};
 
 const formatRelativeTime = (timestamp: string): string => {
   if (!timestamp || typeof timestamp !== 'string') return '';
-  
   const date = new Date(timestamp);
   if (isNaN(date.getTime())) return '';
-  
   const now = new Date();
   const diff = Math.floor((now.getTime() - date.getTime()) / 60000);
-  
   if (diff < 1) return 'agora';
   if (diff < 60) return `${diff}min`;
   if (diff < 1440) return `${Math.floor(diff / 60)}h`;
@@ -82,23 +81,18 @@ const sanitizeDescription = (desc: string | null | undefined): string => {
 const filterOrçamentos = (Orçamentos: Lead[], filters: { stages?: string[]; niches?: string[]; dateFilter?: string }): Lead[] => {
   const { stages = [], niches = [], dateFilter = '' } = filters;
   const hasActiveFilters = stages.length > 0 || niches.length > 0 || dateFilter !== '';
-  
   if (!hasActiveFilters) return Orçamentos;
-  
   return (Orçamentos || []).filter(lead => {
     if (stages.length > 0 && !stages.includes(lead.stage)) return false;
     if (niches.length > 0 && !niches.includes(lead.niche)) return false;
-    
     if (dateFilter) {
       const now = new Date();
       const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      
       if (dateFilter === 'today') {
         if (!lead.firstContact) return false;
         const leadDate = new Date(lead.firstContact);
         return leadDate.toDateString() === today.toDateString();
       }
-      
       if (dateFilter === 'week') {
         const weekAgo = new Date(today);
         weekAgo.setDate(weekAgo.getDate() - 7);
@@ -106,7 +100,6 @@ const filterOrçamentos = (Orçamentos: Lead[], filters: { stages?: string[]; ni
         const leadDate = new Date(lead.firstContact);
         return leadDate >= weekAgo;
       }
-      
       if (dateFilter === 'month') {
         const monthAgo = new Date(today);
         monthAgo.setMonth(monthAgo.getMonth() - 1);
@@ -115,7 +108,6 @@ const filterOrçamentos = (Orçamentos: Lead[], filters: { stages?: string[]; ni
         return leadDate >= monthAgo;
       }
     }
-    
     return true;
   });
 };
@@ -136,7 +128,7 @@ const calculateStats = (Orçamentos: Lead[], icons: typeof CHART_ICONS) => {
 const CHART_ICONS = { Users, Calendar, MessageSquare, Clock, FileText, UserX, CheckCircle };
 
 const CRMDashboard = () => {
-  const { Orçamentos: contextOrçamentos } = useCRM();
+  const { Orçamentos: contextOrçamentos, events } = useCRM();
   const { filters, hasActiveFilters } = useFilters();
   const { activityLogs, isLoadingLogs, fetchActivityLogsError, fetchActivityLogs } = useActivityLogs();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -187,6 +179,42 @@ const CRMDashboard = () => {
 
   const hasChartData = chartData.length > 0 && filteredOrçamentos.length > 0;
 
+  // Calendar widget helpers
+  const today = new Date();
+  const safeEvents = Array.isArray(events) ? events : [];
+  
+  const getEventsForDay = (day: number) => {
+    return safeEvents.filter(e => {
+      if (!e?.date) return false;
+      const d = new Date(e.date + 'T12:00:00');
+      if (isNaN(d.getTime())) return false;
+      return d.getDate() === day && d.getMonth() === today.getMonth() && d.getFullYear() === today.getFullYear();
+    });
+  };
+
+  const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
+  const firstDay = new Date(today.getFullYear(), today.getMonth(), 1).getDay();
+  const startOffset = firstDay === 0 ? 6 : firstDay - 1;
+
+  const dayNames = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+
+  const getStatusColor = (status?: string) => {
+    switch (status) {
+      case 'confirmado': return '#B5FF03';
+      case 'pendente': return '#f59e0b';
+      case 'cancelado': return '#ef4444';
+      case 'realizado': return '#3b82f6';
+      default: return '#6b7280';
+    }
+  };
+
+  const upcomingEvents = useMemo(() => {
+    return safeEvents
+      .filter(e => e.date && new Date(e.date + 'T12:00:00') >= new Date())
+      .sort((a, b) => new Date(a.date + 'T12:00:00').getTime() - new Date(b.date + 'T12:00:00').getTime())
+      .slice(0, 5);
+  }, [safeEvents]);
+
   return (
     <div className="relative min-h-screen bg-black">
       {isSidebarOpen && (
@@ -197,21 +225,21 @@ const CRMDashboard = () => {
             aria-hidden="true"
           />
           <div
-             className="absolute top-14 left-4 w-[280px] bg-[#111] border border-[#333] rounded-xl shadow-xl z-50 p-3"
-             role="dialog"
-             aria-label="Filtros ativos"
-           >
+            className="absolute top-14 left-4 w-[280px] bg-[#111] border border-[#333] rounded-xl shadow-xl z-50 p-3"
+            role="dialog"
+            aria-label="Filtros ativos"
+          >
             <div className="flex items-center justify-between mb-2">
               <span className="text-[10px] font-black text-white uppercase tracking-widest">Filtros</span>
               <button 
                 onClick={() => setIsSidebarOpen(false)} 
-                 className="p-1 hover:bg-[#222] rounded-md"
+                className="p-1 hover:bg-[#222] rounded-md"
                 aria-label="Fechar filtros"
               >
                 <XCircle size={14} className="text-neutral-400 hover:text-[#B5FF03]" />
               </button>
             </div>
-            <p className="text-[10px] text-neutral-400">Aplique filtros na aba Orçamentos para filtrar dados aqui.</p>
+            <p className="text-[10px] text-neutral-400">Aplique filtros na aba Contatos para filtrar dados aqui.</p>
           </div>
         </>
       )}
@@ -219,118 +247,216 @@ const CRMDashboard = () => {
       {/* Header section */}
       <div className="mb-4 md:mb-6 flex justify-between items-start">
         <div>
-          <h1 className="text-2xl md:text-4xl font-black text-white tracking-tight mb-2 whitespace-nowrap">Painel de Vendas</h1>
-          <p className="text-neutral-400 text-xs md:text-sm">Monitoramento em tempo real do seu funil de vendas.</p>
+          <h1 className="text-2xl md:text-4xl font-black text-white tracking-tight mb-2 whitespace-nowrap flex items-center gap-3">
+            <LayoutDashboard className="text-[#B5FF03]" size={32} />
+            Página Principal
+          </h1>
+          <p className="text-neutral-400 text-xs md:text-sm">Bem-vindo ao painel de controle da Ventura Luz e Efeitos.</p>
         </div>
         <div className="relative group">
           <button 
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-             className={`p-2 rounded-lg border transition-all relative ${hasActiveFilters ? 'bg-[#111] text-[#B5FF03] border-[#333]' : 'bg-transparent border-transparent text-neutral-400 hover:text-[#B5FF03] hover:bg-[#111]'}`}
+            className={`p-2 rounded-lg border transition-all relative ${hasActiveFilters ? 'bg-[#111] text-[#B5FF03] border-[#333]' : 'bg-transparent border-transparent text-neutral-400 hover:text-[#B5FF03] hover:bg-[#111]'}`}
           >
             <Filter size={16} strokeWidth={hasActiveFilters ? 2.5 : 1.5} />
             {hasActiveFilters && (
               <span className="absolute top-1 right-1 w-1.5 h-1.5 bg-red-500 rounded-full" />
             )}
           </button>
-           <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-[#111] text-white text-[10px] font-medium rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
-             Filtros
-           </span>
+          <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-[#111] text-white text-[10px] font-medium rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
+            Filtros
+          </span>
         </div>
       </div>
 
       {/* Metrics Cards Grid */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-6 gap-2 md:gap-3 lg:gap-4 mb-6 md:mb-10">
         {stats.map((stat, idx) => {
-           const Icon = stat.icon;
-           return (
-             <div key={idx} className="bg-[#111] border border-[#333] rounded-md p-3 md:p-5 hover:border-[#B5FF03] transition-all shadow-sm">
-               <div className="flex items-center gap-2 md:gap-3 mb-2 md:mb-3">
-                 <div className="w-6 md:w-8 h-6 md:h-8 rounded-md bg-[#222] flex items-center justify-center">
-                   <Icon size={14} className="text-[#B5FF03] md:w-4 md:h-4" />
-                 </div>
-                 <p className="text-white text-[9px] md:text-[11px] font-bold uppercase tracking-widest leading-none">{stat.title}</p>
-               </div>
-               <p className="text-2xl md:text-3xl font-black text-[#B5FF03]">{stat.value}</p>
-             </div>
-           );
-         })}
+          const Icon = stat.icon;
+          return (
+            <div key={idx} className="bg-[#111] border border-[#333] rounded-md p-3 md:p-5 hover:border-[#B5FF03] transition-all shadow-sm">
+              <div className="flex items-center gap-2 md:gap-3 mb-2 md:mb-3">
+                <div className="w-6 md:w-8 h-6 md:h-8 rounded-md bg-[#222] flex items-center justify-center">
+                  <Icon size={14} className="text-[#B5FF03] md:w-4 md:h-4" />
+                </div>
+                <p className="text-white text-[9px] md:text-[11px] font-bold uppercase tracking-widest leading-none">{stat.title}</p>
+              </div>
+              <p className="text-2xl md:text-3xl font-black text-[#B5FF03]">{stat.value}</p>
+            </div>
+          );
+        })}
       </div>
 
-      {/* Chart Section */}
-        <div className="bg-[#111] border border-[#333] rounded-2xl p-4 md:p-8 shadow-sm overflow-x-auto mb-6 md:mb-10">
-        <div className="mb-6 md:mb-8">
-          <h2 className="text-lg md:text-xl font-bold text-white mb-1">Visão Geral do Pipeline</h2>
-          <p className="text-neutral-400 text-[10px] md:text-xs uppercase font-bold tracking-widest">Distribuição de Orçamentos por etapa</p>
+      {/* Two Column Layout: Chart + Calendar Widget */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6 md:mb-10">
+        {/* Pipeline Chart */}
+        <div className="lg:col-span-2 bg-[#111] border border-[#333] rounded-2xl p-4 md:p-8 shadow-sm overflow-x-auto">
+          <div className="mb-6 md:mb-8">
+            <h2 className="text-lg md:text-xl font-bold text-white mb-1">Visão Geral do Pipeline</h2>
+            <p className="text-neutral-400 text-[10px] md:text-xs uppercase font-bold tracking-widest">Distribuição de Orçamentos por etapa</p>
+          </div>
+          
+          <div className="min-h-[280px] md:min-h-[400px]">
+            {hasChartData ? (
+              <ResponsiveContainer width="100%" height={350}>
+                <BarChart 
+                  data={chartData} 
+                  margin={CHART_CONFIG.margin}
+                >
+                  <CartesianGrid 
+                    strokeDasharray="3 3" 
+                    stroke={CHART_CONFIG.colors.grid} 
+                    vertical={false} 
+                  />
+                  <XAxis 
+                    dataKey="name" 
+                    stroke={CHART_CONFIG.colors.stroke} 
+                    fontSize={10} 
+                    fontWeight={600}
+                    tickLine={false}
+                    axisLine={false}
+                    interval={0}
+                    angle={-30}
+                    textAnchor="end"
+                    dy={8}
+                    dx={5}
+                  />
+                  <YAxis 
+                    stroke="#888" 
+                    fontSize={11} 
+                    tickLine={false}
+                    axisLine={false}
+                  />
+                  <Tooltip 
+                    cursor={{ fill: 'rgba(181,255,3,0.1)' }}
+                    contentStyle={{ 
+                      backgroundColor: CHART_CONFIG.colors.tooltip.bg, 
+                      border: `1px solid ${CHART_CONFIG.colors.tooltip.border}`,
+                      borderRadius: '12px',
+                      color: CHART_CONFIG.colors.tooltip.text,
+                      fontSize: CHART_CONFIG.colors.tooltip.fontSize,
+                      fontWeight: '600'
+                    }}
+                  />
+                  <Bar 
+                    dataKey="value" 
+                    fill={CHART_CONFIG.colors.fill} 
+                    radius={[4, 4, 0, 0]}
+                    barSize={CHART_CONFIG.barSize}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-full flex items-center justify-center text-neutral-400 text-sm">
+                Nenhum dado disponível
+              </div>
+            )}
+          </div>
         </div>
-        
-        <div className="min-h-[280px] md:min-h-[400px]">
-          {hasChartData ? (
-            <ResponsiveContainer width="100%" height={350}>
-              <BarChart 
-                data={chartData} 
-                margin={CHART_CONFIG.margin}
+
+        {/* Mini Calendário Widget */}
+        <div className="bg-[#111] border border-[#333] rounded-2xl p-4 md:p-6 shadow-sm">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-xs font-black text-[#B5FF03] uppercase tracking-widest flex items-center gap-2">
+              <Calendar size={14} />
+              Calendário
+            </h3>
+            <Link to="/calendario" className="text-[9px] text-neutral-400 hover:text-white uppercase tracking-wider font-bold">
+              Ver todos
+            </Link>
+          </div>
+
+          {/* Mini Calendar Grid */}
+          <div className="grid grid-cols-7 gap-0.5 mb-4">
+            {dayNames.map(d => (
+              <div key={d} className="text-center text-[8px] text-neutral-500 font-bold uppercase py-1">
+                {d[0]}
+              </div>
+            ))}
+            {Array.from({ length: startOffset }).map((_, i) => (
+              <div key={`empty-${i}`} className="h-7" />
+            ))}
+            {Array.from({ length: daysInMonth }).map((_, i) => {
+              const day = i + 1;
+              const dayEvents = getEventsForDay(day);
+              const isToday = day === today.getDate();
+              return (
+                <div
+                  key={day}
+                  className={`h-7 flex items-center justify-center text-[10px] font-bold rounded-full relative cursor-default
+                    ${isToday ? 'bg-[#B5FF03] text-black' : dayEvents.length > 0 ? 'text-white' : 'text-neutral-600'}`}
+                >
+                  {day}
+                  {dayEvents.length > 0 && !isToday && (
+                    <div className="absolute bottom-0.5 left-1/2 -translate-x-1/2 flex gap-0.5">
+                      {dayEvents.slice(0, 3).map((ev, idx) => (
+                        <div key={idx} className="w-1 h-1 rounded-full" style={{ backgroundColor: getStatusColor(ev.status) }} />
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Legend */}
+          <div className="flex flex-wrap gap-2 mb-4 pb-3 border-b border-[#222]">
+            <div className="flex items-center gap-1">
+              <div className="w-2 h-2 rounded-full bg-[#B5FF03]" />
+              <span className="text-[8px] text-neutral-500">Confirmado</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="w-2 h-2 rounded-full bg-[#f59e0b]" />
+              <span className="text-[8px] text-neutral-500">Pendente</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="w-2 h-2 rounded-full bg-[#ef4444]" />
+              <span className="text-[8px] text-neutral-500">Cancelado</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="w-2 h-2 rounded-full bg-[#3b82f6]" />
+              <span className="text-[8px] text-neutral-500">Realizado</span>
+            </div>
+          </div>
+
+          {/* Upcoming Events */}
+          <h4 className="text-[9px] font-black text-neutral-400 uppercase tracking-widest mb-3">Próximos Eventos</h4>
+          <div className="space-y-2">
+            {upcomingEvents.map(event => (
+              <Link
+                key={event.id}
+                to="/calendario"
+                className="flex items-start gap-2 p-2 rounded-md hover:bg-[#1a1a1a] transition-colors group"
               >
-                <CartesianGrid 
-                  strokeDasharray="3 3" 
-                  stroke={CHART_CONFIG.colors.grid} 
-                  vertical={false} 
-                />
-                <XAxis 
-                  dataKey="name" 
-                  stroke={CHART_CONFIG.colors.stroke} 
-                  fontSize={10} 
-                  fontWeight={600}
-                  tickLine={false}
-                  axisLine={false}
-                  interval={0}
-                  angle={-30}
-                  textAnchor="end"
-                  dy={8}
-                  dx={5}
-                />
-                 <YAxis 
-                   stroke="#888" 
-                   fontSize={11} 
-                   tickLine={false}
-                   axisLine={false}
-                 />
-                 <Tooltip 
-                   cursor={{ fill: 'rgba(181,255,3,0.1)' }}
-                   contentStyle={{ 
-                     backgroundColor: CHART_CONFIG.colors.tooltip.bg, 
-                     border: `1px solid ${CHART_CONFIG.colors.tooltip.border}`,
-                     borderRadius: '12px',
-                     color: CHART_CONFIG.colors.tooltip.text,
-                     fontSize: CHART_CONFIG.colors.tooltip.fontSize,
-                     fontWeight: '600'
-                   }}
-                 />
-                <Bar 
-                  dataKey="value" 
-                  fill={CHART_CONFIG.colors.fill} 
-                  radius={[4, 4, 0, 0]}
-                  barSize={CHART_CONFIG.barSize}
-                />
-              </BarChart>
-            </ResponsiveContainer>
-          ) : (
-             <div className="h-full flex items-center justify-center text-neutral-400 text-sm">
-               Nenhum dado disponível
-             </div>
-          )}
+                <div className="w-1.5 h-1.5 rounded-full mt-1.5 shrink-0" style={{ backgroundColor: getStatusColor(event.status) }} />
+                <div className="min-w-0 flex-1">
+                  <p className="text-[11px] font-bold text-white truncate group-hover:underline">{event.title || 'Sem título'}</p>
+                  <div className="flex items-center gap-2 text-[8px] text-neutral-500">
+                    <span>{event.eventType || 'Evento'}</span>
+                    <span>•</span>
+                    <span>{event.date ? new Date(event.date + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }) : '—'}</span>
+                    {event.time && <><span>•</span><span>{event.time}</span></>}
+                  </div>
+                </div>
+              </Link>
+            ))}
+            {upcomingEvents.length === 0 && (
+              <p className="text-[10px] text-neutral-600 text-center py-2 italic">Nenhum evento futuro</p>
+            )}
+          </div>
         </div>
       </div>
 
       {/* Atividades Recentes */}
-       <div className="bg-[#111] border border-[#333] rounded-2xl p-4 md:p-8 shadow-sm">
+      <div className="bg-[#111] border border-[#333] rounded-2xl p-4 md:p-8 shadow-sm">
         <div className="flex items-center gap-2 mb-6">
-           <Activity className="w-4 h-4 text-[#B5FF03]" aria-hidden="true" />
-           <h2 className="text-lg md:text-xl font-bold text-white">Atividades Recentes</h2>
+          <Activity className="w-4 h-4 text-[#B5FF03]" aria-hidden="true" />
+          <h2 className="text-lg md:text-xl font-bold text-white">Atividades Recentes</h2>
         </div>
         {isLoadingLogs ? (
           <div className="flex items-center justify-center py-8">
-             <div className="w-6 h-6 border-2 border-[#B5FF03]/20 border-t-[#B5FF03] rounded-full animate-spin" />
-             <span className="ml-2 text-sm text-neutral-400">Carregando atividades...</span>
+            <div className="w-6 h-6 border-2 border-[#B5FF03]/20 border-t-[#B5FF03] rounded-full animate-spin" />
+            <span className="ml-2 text-sm text-neutral-400">Carregando atividades...</span>
           </div>
         ) : fetchActivityLogsError ? (
           <div className="flex items-center gap-2 p-4 bg-red-50 border border-red-100 rounded-md" role="alert">
@@ -338,20 +464,20 @@ const CRMDashboard = () => {
             <p className="text-sm text-red-600">{fetchActivityLogsError}</p>
           </div>
         ) : displayLogs.length === 0 ? (
-           <p className="text-neutral-400 text-xs">Nenhuma atividade registrada.</p>
+          <p className="text-neutral-400 text-xs">Nenhuma atividade registrada.</p>
         ) : (
           <div className="space-y-3">
             {displayLogs.map((log) => {
               const Icon = ACTION_ICONS[log.acao] || Activity;
               return (
                 <div key={log.id} className="flex items-start gap-3">
-                   <div className="w-7 h-7 rounded-full bg-[#222] flex items-center justify-center shrink-0 mt-0.5">
-                     <Icon className="w-3.5 h-3.5 text-[#B5FF03]" strokeWidth={2} aria-hidden="true" />
-                   </div>
-                   <div className="flex-1 min-w-0">
-                     <p className="text-xs md:text-sm text-white leading-snug">{sanitizeDescription(log.descricao)}</p>
-                     <p className="text-[10px] md:text-xs text-neutral-400 font-medium mt-0.5">há {formatRelativeTime(log.timestamp)}</p>
-                   </div>
+                  <div className="w-7 h-7 rounded-full bg-[#222] flex items-center justify-center shrink-0 mt-0.5">
+                    <Icon className="w-3.5 h-3.5 text-[#B5FF03]" strokeWidth={2} aria-hidden="true" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs md:text-sm text-white leading-snug">{sanitizeDescription(log.descricao)}</p>
+                    <p className="text-[10px] md:text-xs text-neutral-400 font-medium mt-0.5">há {formatRelativeTime(log.timestamp)}</p>
+                  </div>
                 </div>
               );
             })}

@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Plus, Trash2, X, Edit3, MessageCircle, Package, Building2, Search, Calendar } from 'lucide-react';
+import { useState, useEffect, useMemo } from 'react';
+import { Plus, Trash2, X, Edit3, MessageCircle, Package, Building2, Search, Calendar, ArrowUpRight, ArrowDownLeft, Filter as FilterIcon, Layers } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useCRM } from '../../contexts/CRMContext';
 import { generateUUID } from '../../lib/uuid';
@@ -706,7 +706,13 @@ const Tarefas = () => {
     return stored ? JSON.parse(stored) : [DEFAULT_BOARD];
   });
 
-  const [activeTab, setActiveTab] = useState<'inventario' | 'aluguel'>('inventario');
+  const [activeTab, setActiveTab] = useState<'inventario' | 'aluguel' | 'retirada' | 'entrada'>('inventario');
+  const [estoqueZeroFilter, setEstoqueZeroFilter] = useState(false);
+  const [dateFilterEstoque, setDateFilterEstoque] = useState('');
+  const [movementLog, setMovementLog] = useState<{ id: string; type: 'retirada' | 'entrada'; item: string; qty: number; date: string; notes: string }[]>(() => {
+    const stored = localStorage.getItem('axium_movement_log_v1');
+    return stored ? JSON.parse(stored) : [];
+  });
 
   const [rentalRecords, setRentalRecords] = useState<RentalRecord[]>(() => {
     const stored = localStorage.getItem('axium_rental_v1');
@@ -738,6 +744,10 @@ const Tarefas = () => {
   useEffect(() => {
     localStorage.setItem('axium_rental_v1', JSON.stringify(rentalRecords));
   }, [rentalRecords]);
+
+  useEffect(() => {
+    localStorage.setItem('axium_movement_log_v1', JSON.stringify(movementLog));
+  }, [movementLog]);
 
   const [showCreateTaskModal, setShowCreateTaskModal] = useState(false);
   const [showNewBoardModal, setShowNewBoardModal] = useState(false);
@@ -912,10 +922,10 @@ const Tarefas = () => {
         <p className="text-neutral-400 text-sm font-medium mb-6">Gerencie seus itens, categorias e fornecedores.</p>
       </div>
 
-      <div className="flex gap-6 border-b border-[#222222]">
+      <div className="flex gap-6 border-b border-[#222222] overflow-x-auto scrollbar-hide">
         <button
           onClick={() => setActiveTab('inventario')}
-          className={`py-3 px-1 border-b-2 font-bold text-xs uppercase tracking-widest transition-colors ${
+          className={`py-3 px-1 border-b-2 font-bold text-xs uppercase tracking-widest transition-colors whitespace-nowrap ${
             activeTab === 'inventario'
               ? 'border-[#B5FF03] text-[#B5FF03]'
               : 'border-transparent text-[#888888] hover:text-white'
@@ -925,8 +935,30 @@ const Tarefas = () => {
           Inventário
         </button>
         <button
+          onClick={() => setActiveTab('retirada')}
+          className={`py-3 px-1 border-b-2 font-bold text-xs uppercase tracking-widest transition-colors whitespace-nowrap ${
+            activeTab === 'retirada'
+              ? 'border-[#B5FF03] text-[#B5FF03]'
+              : 'border-transparent text-[#888888] hover:text-white'
+          }`}
+        >
+          <ArrowUpRight size={16} className="inline mr-2" />
+          Retirada
+        </button>
+        <button
+          onClick={() => setActiveTab('entrada')}
+          className={`py-3 px-1 border-b-2 font-bold text-xs uppercase tracking-widest transition-colors whitespace-nowrap ${
+            activeTab === 'entrada'
+              ? 'border-[#B5FF03] text-[#B5FF03]'
+              : 'border-transparent text-[#888888] hover:text-white'
+          }`}
+        >
+          <ArrowDownLeft size={16} className="inline mr-2" />
+          Entrada / Entrega
+        </button>
+        <button
           onClick={() => setActiveTab('aluguel')}
-          className={`py-3 px-1 border-b-2 font-bold text-xs uppercase tracking-widest transition-colors ${
+          className={`py-3 px-1 border-b-2 font-bold text-xs uppercase tracking-widest transition-colors whitespace-nowrap ${
             activeTab === 'aluguel'
               ? 'border-[#B5FF03] text-[#B5FF03]'
               : 'border-transparent text-[#888888] hover:text-white'
@@ -939,6 +971,34 @@ const Tarefas = () => {
 
       {activeTab === 'inventario' && (
         <>
+          {/* Inventory Filters */}
+          <div className="flex flex-wrap items-center gap-3 mb-4 p-3 bg-[#0a0a0a] border border-[#1a1a1a] rounded-md">
+            <div className="flex items-center gap-2">
+              <FilterIcon size={14} className="text-[#B5FF03]" />
+              <span className="text-[9px] font-black text-white uppercase tracking-widest">Filtros:</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Calendar size={14} className="text-neutral-500" />
+              <input
+                type="date"
+                value={dateFilterEstoque}
+                onChange={(e) => setDateFilterEstoque(e.target.value)}
+                className="bg-[#1a1a1a] border border-[#333] rounded-md px-2 py-1.5 text-[10px] font-bold text-white focus:outline-none focus:border-[#B5FF03] [color-scheme:dark]"
+              />
+            </div>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={estoqueZeroFilter}
+                onChange={(e) => setEstoqueZeroFilter(e.target.checked)}
+                className="w-3.5 h-3.5 accent-[#B5FF03]"
+              />
+              <span className="text-[10px] font-bold text-neutral-400 hover:text-[#B5FF03] transition-colors">
+                Estoque Zero
+              </span>
+            </label>
+          </div>
+
           <div className="flex flex-wrap gap-3">
             <button
               onClick={() => setShowCreateTaskModal(true)}
@@ -954,7 +1014,36 @@ const Tarefas = () => {
             </button>
           </div>
 
-          {boards.map(board => (
+          {/* Filtered Boards */}
+          {(() => {
+            const filteredBoards = boards.map(board => {
+              const filteredRows = board.rows.filter(row => {
+                if (estoqueZeroFilter) {
+                  const qty = Number(row.values['col-3']) || 0;
+                  if (qty > 0) return false;
+                }
+                if (dateFilterEstoque) {
+                  const lastEntry = String(row.values['col-6'] || '');
+                  if (lastEntry && lastEntry !== dateFilterEstoque) return false;
+                }
+                return true;
+              });
+              return { ...board, rows: filteredRows };
+            });
+            return filteredBoards.map(board => (
+              <Board
+                key={board.id}
+                board={board}
+                allBoards={boards}
+                onUpdateBoard={handleUpdateBoard}
+                onDeleteBoard={() => handleDeleteBoard(board.id)}
+                onMoveRow={() => {}}
+                onAddColumn={() => handleAddColumn(board.id)}
+              />
+            ));
+          })()}
+
+          {boards.filter(b => b.rows.length > 0 || !estoqueZeroFilter).map(board => (
             <Board
               key={board.id}
               board={board}
@@ -966,6 +1055,140 @@ const Tarefas = () => {
             />
           ))}
         </>
+      )}
+
+      {/* Retirada Tab */}
+      {activeTab === 'retirada' && (
+        <div>
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 mb-6">
+            <div>
+              <h2 className="text-lg font-black text-white">Registro de Retiradas</h2>
+              <p className="text-xs text-neutral-400">Controle de saída de itens do estoque.</p>
+            </div>
+            <button
+              onClick={() => {
+                const board = boards[0];
+                if (!board || board.rows.length === 0) {
+                  alert('Adicione itens ao inventário primeiro.');
+                  return;
+                }
+                const itemName = prompt('Nome do item para retirada:');
+                if (!itemName) return;
+                const found = board.rows.find(r => String(r.values['col-1'] || '').toLowerCase() === itemName.toLowerCase());
+                if (!found) {
+                  alert('Item não encontrado no estoque.');
+                  return;
+                }
+                const qtyStr = prompt('Quantidade a retirar:');
+                const qty = parseInt(qtyStr || '0');
+                if (qty <= 0) return;
+                const currentQty = Number(found.values['col-3']) || 0;
+                if (qty > currentQty) {
+                  alert(`Estoque insuficiente. Disponível: ${currentQty}`);
+                  return;
+                }
+                const notes = prompt('Observação (opcional):') || '';
+                const updatedBoard = { ...board, rows: board.rows.map(r => r.id === found.id ? { ...r, values: { ...r.values, 'col-3': currentQty - qty } } : r) };
+                handleUpdateBoard(updatedBoard);
+                setMovementLog(prev => [{ id: generateUUID(), type: 'retirada', item: itemName, qty, date: new Date().toISOString().split('T')[0], notes }, ...prev]);
+              }}
+              className="flex items-center gap-2 px-4 py-2.5 bg-[#f59e0b] text-black font-black rounded-lg hover:bg-[#d48c0a] transition-colors text-xs"
+            >
+              <ArrowUpRight size={16} /> Registrar Retirada
+            </button>
+          </div>
+
+          <div className="bg-[#111111] border border-[#222222] rounded-lg overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-[#222222]">
+                  <th className="text-left p-4 text-xs font-black uppercase tracking-widest text-[#B5FF03]">Data</th>
+                  <th className="text-left p-4 text-xs font-black uppercase tracking-widest text-[#B5FF03]">Item</th>
+                  <th className="text-left p-4 text-xs font-black uppercase tracking-widest text-[#B5FF03]">Qtd</th>
+                  <th className="text-left p-4 text-xs font-black uppercase tracking-widest text-[#B5FF03]">Observação</th>
+                </tr>
+              </thead>
+              <tbody>
+                {movementLog.filter(m => m.type === 'retirada').map(m => (
+                  <tr key={m.id} className="border-b border-[#222222] hover:bg-[#1a1a1a]">
+                    <td className="p-4 text-sm text-[#888888]">{m.date}</td>
+                    <td className="p-4 text-sm text-white">{m.item}</td>
+                    <td className="p-4 text-sm text-[#f59e0b] font-bold">-{m.qty}</td>
+                    <td className="p-4 text-sm text-[#888888]">{m.notes || '—'}</td>
+                  </tr>
+                ))}
+                {movementLog.filter(m => m.type === 'retirada').length === 0 && (
+                  <tr><td colSpan={4} className="p-8 text-center text-sm text-[#888888]">Nenhuma retirada registrada</td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Entrada / Entrega Tab */}
+      {activeTab === 'entrada' && (
+        <div>
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 mb-6">
+            <div>
+              <h2 className="text-lg font-black text-white">Registro de Entradas</h2>
+              <p className="text-xs text-neutral-400">Controle de entrada/entrega de itens no estoque.</p>
+            </div>
+            <button
+              onClick={() => {
+                const board = boards[0];
+                if (!board || board.rows.length === 0) {
+                  alert('Adicione itens ao inventário primeiro.');
+                  return;
+                }
+                const itemName = prompt('Nome do item para entrada:');
+                if (!itemName) return;
+                const found = board.rows.find(r => String(r.values['col-1'] || '').toLowerCase() === itemName.toLowerCase());
+                if (!found) {
+                  alert('Item não encontrado no estoque.');
+                  return;
+                }
+                const qtyStr = prompt('Quantidade a dar entrada:');
+                const qty = parseInt(qtyStr || '0');
+                if (qty <= 0) return;
+                const currentQty = Number(found.values['col-3']) || 0;
+                const notes = prompt('Observação (opcional):') || '';
+                const updatedBoard = { ...board, rows: board.rows.map(r => r.id === found.id ? { ...r, values: { ...r.values, 'col-3': currentQty + qty, 'col-6': new Date().toISOString().split('T')[0] } } : r) };
+                handleUpdateBoard(updatedBoard);
+                setMovementLog(prev => [{ id: generateUUID(), type: 'entrada', item: itemName, qty, date: new Date().toISOString().split('T')[0], notes }, ...prev]);
+              }}
+              className="flex items-center gap-2 px-4 py-2.5 bg-[#B5FF03] text-black font-black rounded-lg hover:bg-[#a1e600] transition-colors text-xs"
+            >
+              <ArrowDownLeft size={16} /> Registrar Entrada
+            </button>
+          </div>
+
+          <div className="bg-[#111111] border border-[#222222] rounded-lg overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-[#222222]">
+                  <th className="text-left p-4 text-xs font-black uppercase tracking-widest text-[#B5FF03]">Data</th>
+                  <th className="text-left p-4 text-xs font-black uppercase tracking-widest text-[#B5FF03]">Item</th>
+                  <th className="text-left p-4 text-xs font-black uppercase tracking-widest text-[#B5FF03]">Qtd</th>
+                  <th className="text-left p-4 text-xs font-black uppercase tracking-widest text-[#B5FF03]">Observação</th>
+                </tr>
+              </thead>
+              <tbody>
+                {movementLog.filter(m => m.type === 'entrada').map(m => (
+                  <tr key={m.id} className="border-b border-[#222222] hover:bg-[#1a1a1a]">
+                    <td className="p-4 text-sm text-[#888888]">{m.date}</td>
+                    <td className="p-4 text-sm text-white">{m.item}</td>
+                    <td className="p-4 text-sm text-[#B5FF03] font-bold">+{m.qty}</td>
+                    <td className="p-4 text-sm text-[#888888]">{m.notes || '—'}</td>
+                  </tr>
+                ))}
+                {movementLog.filter(m => m.type === 'entrada').length === 0 && (
+                  <tr><td colSpan={4} className="p-8 text-center text-sm text-[#888888]">Nenhuma entrada registrada</td></tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
       )}
 
       {activeTab === 'aluguel' && (

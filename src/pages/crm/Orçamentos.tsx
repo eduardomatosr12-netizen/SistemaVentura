@@ -1,6 +1,6 @@
-﻿import { useState, useMemo, useRef, useEffect } from 'react';
+﻿import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import { ReactNode } from 'react';
-import { Plus, Pencil, Trash2, X, Save, Filter, XCircle, ChevronDown, ChevronUp, AlertCircle, MessageCircle, Package, Search } from 'lucide-react';
+import { Plus, Pencil, Trash2, X, Save, Filter, XCircle, ChevronDown, ChevronUp, AlertCircle, MessageCircle, Package, Search, FileText, Percent, DollarSign } from 'lucide-react';
 import WhatsAppModal from '../../components/WhatsAppModal';
 import { useCRM, type Lead, type OrcamentoItem } from '../../contexts/CRMContext';
 import { useFilters } from '../../contexts/FilterContext';
@@ -16,6 +16,16 @@ const formatBRL = (val: string) => {
     style: 'currency',
     currency: 'BRL',
   }).format(num);
+};
+
+const formatCurrency = (val: number) => {
+  return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
+};
+
+const parseMonetaryValue = (val: string): number => {
+  if (!val) return 0;
+  const clean = val.replace('R$ ', '').replace(/\./g, '').replace(',', '.').trim();
+  return parseFloat(clean) || 0;
 };
 
 const EMPTY_LEAD: Partial<Lead> = {
@@ -99,7 +109,137 @@ const Field = ({ label, required, children }: { label: string; required?: boolea
 );
 
 const inputCls =
-   'w-full bg-[#1a1a1a] border border-gray-700 rounded-md py-2.5 px-3.5 text-white text-sm placeholder-gray-500 focus:outline-none focus:border-[#B5FF03] transition-colors';
+  'w-full bg-[#1a1a1a] border border-gray-700 rounded-md py-2.5 px-3.5 text-white text-sm placeholder-gray-500 focus:outline-none focus:border-[#B5FF03] transition-colors';
+
+// PDF Generation
+const generatePDF = (lead: Lead, discountData?: { type: 'percent' | 'fixed'; value: number }): void => {
+  const win = window.open('', '_blank');
+  if (!win) return;
+
+  const items = lead.items || [];
+  let total = items.reduce((sum, item) => sum + item.quantidade * item.valorUnitario, 0);
+  let discountText = '';
+  let finalTotal = total;
+
+  if (discountData && discountData.value > 0) {
+    if (discountData.type === 'percent') {
+      const discountAmount = total * (discountData.value / 100);
+      finalTotal = total - discountAmount;
+      discountText = `Desconto: ${discountData.value}% (-${formatCurrency(discountAmount)})`;
+    } else {
+      finalTotal = total - discountData.value;
+      discountText = `Desconto: -${formatCurrency(discountData.value)}`;
+    }
+  }
+
+  const now = new Date();
+  const dateStr = now.toLocaleDateString('pt-BR');
+
+  win.document.write(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <title>Orçamento - ${lead.name}</title>
+      <style>
+        @page { margin: 20mm 15mm; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; color: #222; margin: 0; padding: 30px; }
+        .header { text-align: center; border-bottom: 3px solid #B5FF03; padding-bottom: 20px; margin-bottom: 25px; }
+        .header h1 { margin: 0; font-size: 24px; color: #000; letter-spacing: 2px; text-transform: uppercase; }
+        .header p { margin: 5px 0 0; color: #666; font-size: 12px; }
+        .info-grid { display: flex; justify-content: space-between; margin-bottom: 25px; }
+        .info-box { flex: 1; }
+        .info-box h3 { font-size: 10px; text-transform: uppercase; color: #B5FF03; letter-spacing: 1px; margin: 0 0 5px; }
+        .info-box p { margin: 2px 0; font-size: 13px; color: #333; }
+        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        thead th { background: #000; color: #B5FF03; padding: 10px 12px; text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; }
+        tbody td { padding: 10px 12px; border-bottom: 1px solid #eee; font-size: 13px; }
+        tbody tr:hover { background: #f9f9f9; }
+        .total-row { font-weight: bold; }
+        .total-row td { border-top: 2px solid #000; padding-top: 12px; }
+        .discount-row td { color: #e53935; }
+        .footer { margin-top: 40px; text-align: center; font-size: 11px; color: #999; border-top: 1px solid #eee; padding-top: 15px; }
+        .badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: bold; }
+        .badge-pending { background: #fff3e0; color: #e65100; }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1>Orçamento</h1>
+        <p>Ventura Luz e Efeitos • Emitido em ${dateStr}</p>
+      </div>
+      <div class="info-grid">
+        <div class="info-box">
+          <h3>Cliente</h3>
+          <p><strong>${lead.name}</strong></p>
+          ${lead.whatsapp ? `<p>WhatsApp: ${lead.whatsapp}</p>` : ''}
+          ${lead.email ? `<p>Email: ${lead.email}</p>` : ''}
+        </div>
+        <div class="info-box" style="text-align: right;">
+          <h3>Evento</h3>
+          <p><strong>${lead.niche || '—'}</strong></p>
+          <p>Data: ${lead.firstContact ? new Date(lead.firstContact).toLocaleDateString('pt-BR') : '—'}</p>
+          <p>Status: <span class="badge badge-pending">${lead.stage}</span></p>
+        </div>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th style="width: 50%;">Item</th>
+            <th style="width: 15%; text-align: center;">Qtd</th>
+            <th style="width: 20%; text-align: right;">Valor Unit.</th>
+            <th style="width: 15%; text-align: right;">Subtotal</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${items.map(item => `
+            <tr>
+              <td>${item.descricao}</td>
+              <td style="text-align: center;">${item.quantidade}</td>
+              <td style="text-align: right;">${formatCurrency(item.valorUnitario)}</td>
+              <td style="text-align: right;">${formatCurrency(item.quantidade * item.valorUnitario)}</td>
+            </tr>
+          `).join('')}
+          <tr class="total-row">
+            <td colspan="3" style="text-align: right;">Total Bruto</td>
+            <td style="text-align: right;">${formatCurrency(total)}</td>
+          </tr>
+          ${discountText ? `
+          <tr class="discount-row">
+            <td colspan="3" style="text-align: right;">${discountText}</td>
+            <td style="text-align: right;">${formatCurrency(finalTotal)}</td>
+          </tr>` : ''}
+          <tr>
+            <td colspan="3" style="text-align: right; font-size: 16px; font-weight: black;">VALOR FINAL</td>
+            <td style="text-align: right; font-size: 16px; font-weight: black;">${formatCurrency(finalTotal)}</td>
+          </tr>
+        </tbody>
+      </table>
+      ${lead.notes ? `<div style="margin-top: 20px; padding: 12px; background: #f5f5f5; border-radius: 8px;"><strong style="font-size: 10px; text-transform: uppercase; color: #666;">Observações:</strong><p style="font-size: 13px; margin: 5px 0 0;">${lead.notes}</p></div>` : ''}
+      <div class="footer">
+        <p>Ventura Luz e Efeitos • Documento gerado automaticamente pelo sistema.</p>
+      </div>
+    </body>
+    </html>
+  `);
+  win.document.close();
+  win.print();
+};
+
+const MONTHS = [
+  { value: '01', label: 'Janeiro' },
+  { value: '02', label: 'Fevereiro' },
+  { value: '03', label: 'Março' },
+  { value: '04', label: 'Abril' },
+  { value: '05', label: 'Maio' },
+  { value: '06', label: 'Junho' },
+  { value: '07', label: 'Julho' },
+  { value: '08', label: 'Agosto' },
+  { value: '09', label: 'Setembro' },
+  { value: '10', label: 'Outubro' },
+  { value: '11', label: 'Novembro' },
+  { value: '12', label: 'Dezembro' },
+];
 
 const CRMOrçamentos = () => {
   const { Orçamentos, addLead, updateLead, deleteLead, searchTerm } = useCRM();
@@ -123,6 +263,13 @@ const CRMOrçamentos = () => {
   const [invStockItems, setInvStockItems] = useState<{ name: string; qty: number; category: string }[]>([]);
   const invDropdownRef = useRef<HTMLDivElement>(null);
 
+  // Discount state
+  const [discountType, setDiscountType] = useState<'percent' | 'fixed'>('percent');
+  const [discountValue, setDiscountValue] = useState(0);
+
+  // Month filter
+  const [selectedMonth, setSelectedMonth] = useState<string>('');
+
   useEffect(() => {
     setInvStockItems(getAllInventoryItems());
   }, []);
@@ -132,6 +279,27 @@ const CRMOrçamentos = () => {
       setInvStockItems(getAllInventoryItems());
       setInvSearch('');
       setShowInvDropdown(false);
+      const lead = Orçamentos.find(o => o.id === current.id);
+      if (lead?.items) {
+        const total = lead.items.reduce((sum, i) => sum + i.quantidade * i.valorUnitario, 0);
+        if (total > 0 && lead.value) {
+          const leadValue = parseMonetaryValue(lead.value);
+          if (leadValue < total) {
+            const diff = total - leadValue;
+            const pct = Math.round((diff / total) * 100);
+            if (diff > 0 && pct > 0) {
+              setDiscountType('percent');
+              setDiscountValue(pct);
+            } else {
+              setDiscountValue(0);
+            }
+          } else {
+            setDiscountValue(0);
+          }
+        } else {
+          setDiscountValue(0);
+        }
+      }
     }
   }, [isOpen]);
 
@@ -153,6 +321,26 @@ const CRMOrçamentos = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // Calculate discount
+  const calculateDiscount = useCallback((items: OrcamentoItem[], discountT: string, discountV: number) => {
+    const total = items.reduce((sum, i) => sum + i.quantidade * i.valorUnitario, 0);
+    if (discountV <= 0) return { total, discountedTotal: total, discountAmount: 0 };
+    if (discountT === 'percent') {
+      const amount = total * (discountV / 100);
+      return { total, discountedTotal: total - amount, discountAmount: amount };
+    }
+    return { total, discountedTotal: Math.max(0, total - discountV), discountAmount: discountV };
+  }, []);
+
+  // Update the value field when items or discount changes
+  useEffect(() => {
+    if (current.items && current.items.length > 0) {
+      const { discountedTotal } = calculateDiscount(current.items, discountType, discountValue);
+      const formatted = formatCurrency(discountedTotal);
+      setCurrent(prev => ({ ...prev, value: formatted }));
+    }
+  }, [current.items, discountType, discountValue, calculateDiscount]);
+
   const addItem = () => {
     if (!newItemDesc.trim()) return;
 
@@ -171,8 +359,8 @@ const CRMOrçamentos = () => {
     };
     const updatedItems = [...(current.items || []), item];
     setCurrent(prev => ({ ...prev, items: updatedItems }));
-    const total = updatedItems.reduce((sum, i) => sum + i.quantidade * i.valorUnitario, 0);
-    const formatted = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(total);
+    const { discountedTotal } = calculateDiscount(updatedItems, discountType, discountValue);
+    const formatted = formatCurrency(discountedTotal);
     updateField('value', formatted);
     setNewItemDesc('');
     setInvSearch('');
@@ -183,8 +371,8 @@ const CRMOrçamentos = () => {
   const removeItem = (id: string) => {
     const updatedItems = (current.items || []).filter(i => i.id !== id);
     setCurrent(prev => ({ ...prev, items: updatedItems }));
-    const total = updatedItems.reduce((sum, i) => sum + i.quantidade * i.valorUnitario, 0);
-    const formatted = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(total);
+    const { discountedTotal } = calculateDiscount(updatedItems, discountType, discountValue);
+    const formatted = formatCurrency(discountedTotal);
     updateField('value', formatted);
   };
 
@@ -192,10 +380,9 @@ const CRMOrçamentos = () => {
     setNewItemDesc(name);
     setInvSearch(name);
     setShowInvDropdown(false);
-
     const found = invStockItems.find(i => i.name === name);
     if (found) {
-      setNewItemVal(found.qty > 0 ? 0 : 0);
+      setNewItemVal(0);
     }
   };
 
@@ -240,21 +427,105 @@ const CRMOrçamentos = () => {
     }
   }, [nicheSearch, uniqueNiches]);
 
-  const openAdd = () => { setMode('add'); setCurrent(EMPTY_LEAD); setIsOpen(true); };
-  const openEdit = (lead: Lead) => { setMode('edit'); setCurrent({ ...lead }); setIsOpen(true); };
+  const openAdd = () => { setMode('add'); setCurrent(EMPTY_LEAD); setIsOpen(true); setDiscountValue(0); };
+  const openEdit = (lead: Lead) => {
+    setMode('edit');
+    setCurrent({ ...lead });
+    setIsOpen(true);
+    if (lead.items && lead.items.length > 0) {
+      const total = lead.items.reduce((sum, i) => sum + i.quantidade * i.valorUnitario, 0);
+      if (total > 0) {
+        const leadValue = parseMonetaryValue(lead.value);
+        if (leadValue < total) {
+          const diff = total - leadValue;
+          const pct = Math.round((diff / total) * 100);
+          if (diff > 0) {
+            setDiscountType('percent');
+            setDiscountValue(pct);
+          } else {
+            setDiscountValue(0);
+          }
+        } else {
+          setDiscountValue(0);
+        }
+      }
+    } else {
+      setDiscountValue(0);
+    }
+  };
+
+  // Add pending revenue when a lead becomes "Contrato Fechado"
+  const addPendingRevenue = (leadName: string, value: string, closingDate: string, numInstallments?: number) => {
+    const storageKey = 'axium_finance_v1';
+    const stored = localStorage.getItem(storageKey);
+    const finance = stored ? JSON.parse(stored) : { manualInvoices: [] };
+    
+    const pendingInvoice = {
+      id: `lead-revenue-${generateUUID()}`,
+      client: leadName,
+      amount: value,
+      date: closingDate || new Date().toISOString().split('T')[0],
+      status: 'Pendente',
+      source: 'lead',
+      paymentMethod: numInstallments && numInstallments > 1 ? 'parcelado' : 'pix',
+      installments: numInstallments && numInstallments > 1 ? String(numInstallments) : undefined,
+      lastModifiedBy: employeeName || 'Sistema',
+    };
+
+    finance.manualInvoices = [...(finance.manualInvoices || []), pendingInvoice];
+    localStorage.setItem(storageKey, JSON.stringify(finance));
+
+    // If parcelado, create projected revenues for future months
+    if (numInstallments && numInstallments > 1) {
+      const totalValue = parseMonetaryValue(value);
+      const installmentValue = totalValue / numInstallments;
+      const baseDate = closingDate ? new Date(closingDate) : new Date();
+
+      for (let i = 1; i < numInstallments; i++) {
+        const projectedDate = new Date(baseDate);
+        projectedDate.setMonth(projectedDate.getMonth() + i);
+        const projectedInvoice = {
+          id: `lead-revenue-proj-${generateUUID()}`,
+          client: `${leadName} (Parcela ${i + 1}/${numInstallments})`,
+          amount: formatCurrency(installmentValue),
+          date: projectedDate.toISOString().split('T')[0],
+          status: 'Pendente',
+          source: 'lead',
+          paymentMethod: 'parcelado',
+          installments: String(numInstallments),
+          lastModifiedBy: 'Sistema (Projeção)',
+        };
+        finance.manualInvoices.push(projectedInvoice);
+      }
+      localStorage.setItem(storageKey, JSON.stringify(finance));
+    }
+  };
+
+  const getFinalValue = (): string => {
+    if (!current.items || current.items.length === 0) return current.value || 'R$ 0,00';
+    const total = current.items.reduce((sum, i) => sum + i.quantidade * i.valorUnitario, 0);
+    if (discountValue <= 0) return formatCurrency(total);
+    if (discountType === 'percent') {
+      return formatCurrency(total - (total * discountValue / 100));
+    }
+    return formatCurrency(Math.max(0, total - discountValue));
+  };
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
     const isFechado = current.stage === 'Contrato Fechado';
     const modifiedLead = {
       ...current,
-        lastModifiedBy: employeeName || (role === 'admin' ? 'Administrador' : 'Funcionário')
+      lastModifiedBy: employeeName || (role === 'admin' ? 'Administrador' : 'Funcionário')
     };
+    
+    const finalValue = getFinalValue();
     
     if (mode === 'add') {
       addLead(modifiedLead as Omit<Lead, 'id'>);
       if (isFechado && current.items && current.items.length > 0) {
         current.items.forEach(item => deductInventory(item.descricao, item.quantidade));
+        addPendingRevenue(current.name || 'Cliente', finalValue, current.firstContact || '');
       }
     } else {
       const prevLead = Orçamentos.find(o => o.id === current.id);
@@ -271,6 +542,10 @@ const CRMOrçamentos = () => {
           prevLead.items.forEach(item => restoreInventory(item.descricao, item.quantidade));
         }
         current.items.forEach(item => deductInventory(item.descricao, item.quantidade));
+
+        if (!wasFechado) {
+          addPendingRevenue(current.name || 'Cliente', finalValue, current.firstContact || '');
+        }
       }
 
       updateLead(current.id!, modifiedLead);
@@ -375,8 +650,21 @@ const CRMOrçamentos = () => {
       }
     }
 
+    // Month filter
+    if (selectedMonth) {
+      result = result.filter(lead => {
+        if (!lead.firstContact) return false;
+        const month = lead.firstContact.substring(5, 7);
+        return month === selectedMonth;
+      });
+    }
+
     return result;
-  }, [Orçamentos, searchTerm, filters]);
+  }, [Orçamentos, searchTerm, filters, selectedMonth]);
+
+  const calculateItemsTotal = (items?: OrcamentoItem[]) => {
+    return (items || []).reduce((sum, i) => sum + i.quantidade * i.valorUnitario, 0);
+  };
 
   return (
     <>
@@ -384,7 +672,7 @@ const CRMOrçamentos = () => {
       {isSidebarOpen && (
         <>
           <div className="fixed inset-0 bg-black/20 z-40" onClick={() => setIsSidebarOpen(false)} />
-          <div className="absolute top-14 left-4 w-[280px] max-h-[70vh] bg-[#111] border border-[#333] rounded-xl shadow-xl overflow-y-auto z-50">
+          <div className="absolute top-14 left-4 w-[280px] max-h-[80vh] bg-[#111] border border-[#333] rounded-xl shadow-xl overflow-y-auto z-50">
             <div className="p-3 sticky top-0 bg-[#111] border-b border-[#333] flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <div>
@@ -411,6 +699,19 @@ const CRMOrçamentos = () => {
                 Limpar filtros
               </button>
             )}
+
+            <FilterSection title="Mês">
+              <select
+                value={selectedMonth}
+                onChange={(e) => setSelectedMonth(e.target.value)}
+                className="w-full bg-[#1a1a1a] border border-[#333] rounded-md px-3 py-2 text-xs font-bold text-white focus:ring-1 focus:ring-[#B5FF03] outline-none"
+              >
+                <option value="">Todos os meses</option>
+                {MONTHS.map(m => (
+                  <option key={m.value} value={m.value}>{m.label}</option>
+                ))}
+              </select>
+            </FilterSection>
 
             <FilterSection title="Etapa" defaultOpen={true}>
               {(STAGES || []).map(stage => (
@@ -474,7 +775,7 @@ const CRMOrçamentos = () => {
                     {filters.niches.map(n => (
                       <span key={n} className="px-2 py-1 bg-black text-white text-[10px] font-bold rounded-md flex items-center gap-1">
                         {n}
-                         <button type="button" onClick={() => toggleNicheFilter(n)} className="hover:text-red-400">×</button>
+                        <button type="button" onClick={() => toggleNicheFilter(n)} className="hover:text-red-400">×</button>
                       </span>
                     ))}
                   </div>
@@ -488,7 +789,7 @@ const CRMOrçamentos = () => {
                   { value: '', label: 'Todos' },
                   { value: 'today', label: 'Hoje' },
                   { value: 'week', label: 'Esta semana' },
-                   { value: 'month', label: 'Este mês' }
+                  { value: 'month', label: 'Este mês' }
                 ].map(opt => (
                   <label key={opt.value} className="flex items-center gap-2 cursor-pointer group">
                     <div className={`w-4 h-4 border rounded-full flex items-center justify-center transition-all ${filters?.dateFilter === opt.value ? 'bg-black border-black' : 'border-[#333] group-hover:border-black'}`}>
@@ -518,10 +819,10 @@ const CRMOrçamentos = () => {
               <div className="relative group">
                 <button 
                   onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                  className={`p-2 rounded-lg border transition-all relative ${hasActiveFilters ? 'bg-[#111] text-white border-[#333]' : 'bg-transparent border-transparent text-[#B5FF03] hover:text-[#B5FF03] hover:bg-[#0a0a0a]'}`}
+                  className={`p-2 rounded-lg border transition-all relative ${hasActiveFilters || selectedMonth ? 'bg-[#111] text-white border-[#333]' : 'bg-transparent border-transparent text-[#B5FF03] hover:text-[#B5FF03] hover:bg-[#0a0a0a]'}`}
                 >
-                  <Filter size={16} strokeWidth={hasActiveFilters ? 2.5 : 1.5} />
-                  {hasActiveFilters && (
+                  <Filter size={16} strokeWidth={hasActiveFilters || selectedMonth ? 2.5 : 1.5} />
+                  {(hasActiveFilters || selectedMonth) && (
                     <span className="absolute top-1 right-1 w-1.5 h-1.5 bg-red-500 rounded-full" />
                   )}
                 </button>
@@ -539,7 +840,7 @@ const CRMOrçamentos = () => {
             </div>
             <button onClick={openAdd} className="flex items-center gap-2 px-6 py-3 bg-[#B5FF03] text-black font-black rounded-lg hover:bg-[#a1e600] transition-all whitespace-nowrap">
               <Plus size={15} strokeWidth={2.5} />
-                <span className="hidden sm:inline">Novo Contato</span>
+              <span className="hidden sm:inline">Novo Contato</span>
               <span className="sm:hidden text-xs">Novo</span>
             </button>
           </div>
@@ -555,15 +856,15 @@ const CRMOrçamentos = () => {
                   ))}
                 </tr>
               </thead>
-               <tbody className="divide-y divide-[#222]">
+              <tbody className="divide-y divide-[#222]">
                 {Array.isArray(filteredOrçamentos) && filteredOrçamentos.length > 0 ? filteredOrçamentos.map(lead => (
-                   <tr key={lead?.id} className="hover:bg-[#111] transition-colors group">
+                  <tr key={lead?.id} className="hover:bg-[#111] transition-colors group">
                     <td className="px-3 md:px-5 py-2 md:py-4">
                       <div className="font-semibold text-white text-xs md:text-sm">{lead?.name}</div>
-                       <div className="text-[10px] md:text-xs text-neutral-400 truncate">{lead?.niche} · {lead?.email}</div>
+                      <div className="text-[10px] md:text-xs text-neutral-400 truncate">{lead?.niche} · {lead?.email}</div>
                     </td>
-                     <td className="px-3 md:px-5 py-2 md:py-4 text-neutral-400 text-xs md:text-sm whitespace-nowrap">
-                       {lead?.whatsapp ? (
+                    <td className="px-3 md:px-5 py-2 md:py-4 text-neutral-400 text-xs md:text-sm whitespace-nowrap">
+                      {lead?.whatsapp ? (
                         <div className="flex items-center gap-1.5">
                           <span>{lead.whatsapp}</span>
                           <button
@@ -572,26 +873,26 @@ const CRMOrçamentos = () => {
                             className="text-[#25D366] hover:text-[#B5FF03] transition-colors"
                             title="Enviar mensagem via WhatsApp"
                           >
-                             <MessageCircle size={14} className="md:w-4 md:h-4" />
+                            <MessageCircle size={14} className="md:w-4 md:h-4" />
                           </button>
                         </div>
                       ) : (
-                         <span className="text-[#B5FF03]">—</span>
+                        <span className="text-[#B5FF03]">—</span>
                       )}
                     </td>
-                     <td className="px-3 md:px-5 py-2 md:py-4 text-neutral-400 text-xs md:text-sm whitespace-nowrap">{lead?.instagram}</td>
-                     <td className="px-3 md:px-5 py-2 md:py-4 text-white font-medium text-xs md:text-sm whitespace-nowrap">{lead?.value || '—'}</td>
-                     <td className="px-3 md:px-5 py-4 md:py-6 text-center">
-                        <span className={`${stageStyle[lead?.stage] ?? baseStageStyle}`}>
-                          {lead?.stage === 'Novos Orçamentos' ? 'Novos Contatos' : lead?.stage}
-                        </span>
-                      </td>
+                    <td className="px-3 md:px-5 py-2 md:py-4 text-neutral-400 text-xs md:text-sm whitespace-nowrap">{lead?.instagram}</td>
+                    <td className="px-3 md:px-5 py-2 md:py-4 text-white font-medium text-xs md:text-sm whitespace-nowrap">{lead?.value || '—'}</td>
+                    <td className="px-3 md:px-5 py-4 md:py-6 text-center">
+                      <span className={`${stageStyle[lead?.stage] ?? baseStageStyle}`}>
+                        {lead?.stage === 'Novos Orçamentos' ? 'Novos Contatos' : lead?.stage}
+                      </span>
+                    </td>
                     <td className="px-3 md:px-5 py-2 md:py-4">
                       <div className="flex items-center justify-center gap-0.5 md:gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
-                         <button onClick={() => openEdit(lead)} className="p-1 md:p-1.5 text-neutral-400 hover:text-white hover:bg-[#111] rounded-md transition-all">
+                        <button onClick={() => openEdit(lead)} className="p-1 md:p-1.5 text-neutral-400 hover:text-white hover:bg-[#111] rounded-md transition-all">
                           <Pencil size={12} className="md:w-3.5 md:h-3.5" />
                         </button>
-                         <button onClick={() => handleDelete(lead?.id)} className="p-1 md:p-1.5 text-neutral-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-all">
+                        <button onClick={() => handleDelete(lead?.id)} className="p-1 md:p-1.5 text-neutral-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-all">
                           <Trash2 size={12} className="md:w-3.5 md:h-3.5" />
                         </button>
                       </div>
@@ -599,7 +900,7 @@ const CRMOrçamentos = () => {
                   </tr>
                 )) : (
                   <tr>
-                     <td colSpan={6} className="px-3 md:px-5 py-8 md:py-12 text-center text-neutral-400 font-medium italic text-xs md:text-sm">
+                    <td colSpan={6} className="px-3 md:px-5 py-8 md:py-12 text-center text-neutral-400 font-medium italic text-xs md:text-sm">
                       {hasActiveFilters ? 'Nenhum lead encontrado com os filtros aplicados' : `Nenhum lead encontrado para "${searchTerm}"`}
                     </td>
                   </tr>
@@ -615,7 +916,6 @@ const CRMOrçamentos = () => {
                     <div className="font-semibold text-white text-sm">{lead?.name}</div>
                     <div className="text-xs text-neutral-400 truncate">{lead?.niche} · {lead?.email}</div>
                   </div>
-
                   <div className="flex items-center gap-2 text-xs text-neutral-300">
                     <span className="text-neutral-500 font-medium">WhatsApp:</span>
                     {lead?.whatsapp ? (
@@ -623,9 +923,8 @@ const CRMOrçamentos = () => {
                         <span>{lead.whatsapp}</span>
                         <button
                           type="button"
-                          onClick={() => setWhatsAppModal({ lead, selectedTemplate: null })}
+                          onClick={() => setWhatsAppTarget(lead)}
                           className="text-[#25D366] hover:text-[#B5FF03] transition-colors"
-                          title="Enviar mensagem via WhatsApp"
                         >
                           <MessageCircle size={14} />
                         </button>
@@ -634,23 +933,19 @@ const CRMOrçamentos = () => {
                       <span className="text-[#B5FF03]">—</span>
                     )}
                   </div>
-
                   <div className="flex items-center gap-2 text-xs text-neutral-300">
                     <span className="text-neutral-500 font-medium">Instagram:</span>
                     <span>{lead?.instagram || '—'}</span>
                   </div>
-
                   <div className="flex items-center gap-2 text-xs">
                     <span className="text-neutral-500 font-medium">Valor:</span>
                     <span className="text-white font-medium">{lead?.value || '—'}</span>
                   </div>
-
                   <div className="flex justify-center pt-1 w-full">
                     <span className={`${stageStyle[lead?.stage] ?? baseStageStyle}`}>
                       {lead?.stage === 'Novos Orçamentos' ? 'Novos Contatos' : lead?.stage}
                     </span>
                   </div>
-
                   <div className="flex items-center justify-end gap-2 pt-2 border-t border-[#222]">
                     <button onClick={() => openEdit(lead)} className="p-1.5 text-neutral-400 hover:text-white hover:bg-[#1a1a1a] rounded-md transition-all">
                       <Pencil size={14} />
@@ -675,14 +970,14 @@ const CRMOrçamentos = () => {
           <div className="bg-[#111] border border-[#333] w-full max-w-sm md:max-w-2xl rounded-2xl shadow-xl overflow-hidden max-h-[90vh] flex flex-col">
             <div className="flex justify-between items-start md:items-center gap-3 px-4 md:px-7 py-3 md:py-5 border-b border-slate-100 shrink-0">
               <div>
-                  <h2 className="text-lg md:text-xl font-black text-white tracking-tight">
-                    {mode === 'add' ? 'Novo Evento' : 'Editar Evento'}
-                  </h2>
+                <h2 className="text-lg md:text-xl font-black text-white tracking-tight">
+                  {mode === 'add' ? 'Novo Evento' : 'Editar Evento'}
+                </h2>
                 <p className="text-[10px] md:text-xs text-[#B5FF03] mt-0.5 md:mt-0.5">
                   {mode === 'add' ? 'Preencha os dados para cadastrar um novo evento.' : `Editando: ${current.name}`}
                 </p>
               </div>
-                <button onClick={() => setIsOpen(false)} className="text-[#B5FF03] hover:text-white transition-colors p-1 flex-shrink-0" type="button">
+              <button onClick={() => setIsOpen(false)} className="text-[#B5FF03] hover:text-white transition-colors p-1 flex-shrink-0" type="button">
                 <X size={20} className="w-5 h-5 md:w-5 md:h-5" />
               </button>
             </div>
@@ -764,131 +1059,202 @@ const CRMOrçamentos = () => {
                 </div>
 
                 <Field label="DECORADOR">
-                    <input type="text" value={current.followUpReminder} onChange={e => updateField('followUpReminder', e.target.value)}
-                      className={inputCls} placeholder="Nome do decorador" />
-                  </Field>
+                  <input type="text" value={current.followUpReminder} onChange={e => updateField('followUpReminder', e.target.value)}
+                    className={inputCls} placeholder="Nome do decorador" />
+                </Field>
 
-                 <Field label="OBSERVAÇÕES">
-                   <textarea value={current.notes} onChange={e => updateField('notes', e.target.value)}
-                     rows={4} className={`${inputCls} resize-none`}
-                     placeholder="Notas internas, contexto do lead..." />
-                 </Field>
+                <Field label="OBSERVAÇÕES">
+                  <textarea value={current.notes} onChange={e => updateField('notes', e.target.value)}
+                    rows={4} className={`${inputCls} resize-none`}
+                    placeholder="Notas internas, contexto do lead..." />
+                </Field>
 
-                 <div className="border-t border-[#333] pt-4 mt-2">
-                   <label className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-widest mb-3" style={{color: '#B5FF03'}}>
-                     <Package size={14} /> ITENS DO ORÇAMENTO
-                   </label>
+                {/* Itens do Orçamento */}
+                <div className="border-t border-[#333] pt-4 mt-2">
+                  <label className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-widest mb-3" style={{color: '#B5FF03'}}>
+                    <Package size={14} /> ITENS DO ORÇAMENTO
+                  </label>
 
-                    {current.items && current.items.length > 0 && (
-                      <div className="space-y-2 mb-4">
-                        {current.items.map(item => (
-                          <div key={item.id} className="flex items-center gap-2 bg-[#1a1a1a] border border-[#333] rounded-md px-3 py-2">
-                            <span className="flex-1 text-white text-sm font-medium truncate">{item.descricao}</span>
-                            <span className="text-neutral-400 text-xs whitespace-nowrap">{item.quantidade}x</span>
-                            <span className="text-white text-xs font-bold whitespace-nowrap">
-                              {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(item.valorUnitario)}
-                            </span>
-                            <button type="button" onClick={() => removeItem(item.id)} className="text-neutral-500 hover:text-red-500 transition-colors p-1">
-                              <X size={14} />
-                            </button>
-                          </div>
-                        ))}
-                        <div className="flex items-center justify-end gap-2 bg-[#111] border border-[#B5FF03]/30 rounded-md px-4 py-3 mt-3">
-                          <span className="text-xs font-black uppercase tracking-widest text-[#B5FF03]">Total</span>
-                          <span className="text-sm font-black text-white">
-                            {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(
-                              (current.items || []).reduce((sum, item) => sum + item.quantidade * item.valorUnitario, 0)
-                            )}
+                  {current.items && current.items.length > 0 && (
+                    <div className="space-y-2 mb-4">
+                      {current.items.map(item => (
+                        <div key={item.id} className="flex items-center gap-2 bg-[#1a1a1a] border border-[#333] rounded-md px-3 py-2">
+                          <span className="flex-1 text-white text-sm font-medium truncate">{item.descricao}</span>
+                          <span className="text-neutral-400 text-xs whitespace-nowrap">{item.quantidade}x</span>
+                          <span className="text-white text-xs font-bold whitespace-nowrap">
+                            {formatCurrency(item.valorUnitario)}
                           </span>
+                          <button type="button" onClick={() => removeItem(item.id)} className="text-neutral-500 hover:text-red-500 transition-colors p-1">
+                            <X size={14} />
+                          </button>
                         </div>
-                      </div>
-                    )}
+                      ))}
+                      
+                      {/* Discount Section */}
+                      {current.items.length > 0 && calculateItemsTotal(current.items) > 0 && (
+                        <div className="bg-[#111] border border-[#333] rounded-md p-4 mt-3 space-y-3">
+                          <label className="flex items-center gap-2 text-[10px] font-black text-[#B5FF03] uppercase tracking-widest">
+                            <Percent size={12} /> Desconto
+                          </label>
+                          <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-1 bg-[#1a1a1a] border border-[#333] rounded-md p-1">
+                              <button
+                                type="button"
+                                onClick={() => { setDiscountType('percent'); setDiscountValue(0); }}
+                                className={`px-3 py-1.5 text-[10px] font-black rounded transition-colors ${discountType === 'percent' ? 'bg-[#B5FF03] text-black' : 'text-neutral-400 hover:text-white'}`}
+                              >
+                                %
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => { setDiscountType('fixed'); setDiscountValue(0); }}
+                                className={`px-3 py-1.5 text-[10px] font-black rounded transition-colors ${discountType === 'fixed' ? 'bg-[#B5FF03] text-black' : 'text-neutral-400 hover:text-white'}`}
+                              >
+                                R$
+                              </button>
+                            </div>
+                            <input
+                              type="number"
+                              min="0"
+                              max={discountType === 'percent' ? 100 : undefined}
+                              value={discountValue}
+                              onChange={e => setDiscountValue(parseFloat(e.target.value) || 0)}
+                              className="w-20 bg-[#1a1a1a] border border-[#333] rounded-md px-3 py-1.5 text-xs font-bold text-white text-center focus:outline-none focus:border-[#B5FF03]"
+                              placeholder="0"
+                            />
+                            <span className="text-[10px] text-neutral-500 font-bold">
+                              {discountType === 'percent' ? '%' : 'R$'}
+                            </span>
+                          </div>
 
-                   <div className="flex items-center gap-2 relative" ref={invDropdownRef}>
-                     <div className="flex-1 relative">
-                       <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-neutral-500" />
-                       <input
-                         type="text"
-                         value={invSearch}
-                         onChange={e => {
-                           setInvSearch(e.target.value);
-                           setNewItemDesc(e.target.value);
-                           setShowInvDropdown(true);
-                         }}
-                         onFocus={() => setShowInvDropdown(true)}
-                         placeholder="Buscar produto no estoque..."
-                         className="w-full bg-[#1a1a1a] border border-gray-700 rounded-md py-2 pl-8 pr-3 text-white text-xs placeholder-gray-500 focus:outline-none focus:border-[#B5FF03] transition-colors"
-                       />
-                       {showInvDropdown && (
-                         <div className="absolute z-50 top-full mt-1 left-0 right-0 bg-[#1a1a1a] border border-[#333] rounded-md shadow-xl max-h-48 overflow-y-auto">
-                           {filteredInvItems.length === 0 ? (
-                             <p className="px-3 py-3 text-xs text-neutral-500 text-center">Nenhum produto encontrado no estoque</p>
-                           ) : (
-                             filteredInvItems.map(item => {
-                               const available = getAvailableQuantity(item.name, current.firstContact || '');
-                               return (
-                                 <button
-                                   key={item.name}
-                                   type="button"
-                                   onClick={() => handleItemSelect(item.name)}
-                                   className="w-full text-left px-3 py-2 text-xs text-white hover:bg-[#333] transition-colors border-b border-[#222] last:border-b-0 flex items-center justify-between"
-                                 >
-                                   <span className="font-medium truncate mr-2">{item.name}</span>
-                                   <span className={`whitespace-nowrap shrink-0 ${available > 0 ? 'text-neutral-400' : 'text-red-500'}`}>
-                                     Disp: {available}
-                                   </span>
-                                 </button>
-                               );
-                             })
-                           )}
-                         </div>
-                       )}
-                     </div>
-                     <input
-                       type="number"
-                       min="1"
-                       value={newItemQty}
-                       onChange={e => {
-                         const qty = parseInt(e.target.value) || 1;
-                         setNewItemQty(qty);
-                         if (newItemDesc.trim()) {
-                           const available = getAvailableQuantity(newItemDesc.trim(), current.firstContact || '');
-                           if (qty > available && available > 0) {
-                             alert(`Estoque insuficiente! Disponível apenas: ${available}`);
-                           }
-                         }
-                       }}
-                       className="w-14 bg-[#1a1a1a] border border-gray-700 rounded-md py-2 px-2 text-white text-xs text-center focus:outline-none focus:border-[#B5FF03] transition-colors"
-                       placeholder="Qtd"
-                     />
-                     <input
-                       type="number"
-                       min="0"
-                       step="0.01"
-                       value={newItemVal}
-                       onChange={e => setNewItemVal(parseFloat(e.target.value) || 0)}
-                       className="w-24 bg-[#1a1a1a] border border-gray-700 rounded-md py-2 px-2 text-white text-xs text-right focus:outline-none focus:border-[#B5FF03] transition-colors"
-                       placeholder="Valor unit."
-                     />
-                     <button
-                       type="button"
-                       onClick={addItem}
-                       className="p-2 bg-[#B5FF03] text-black rounded-md hover:bg-[#a1e600] transition-colors"
-                     >
-                       <Plus size={16} />
-                     </button>
-                   </div>
-                 </div>
-               </div>
+                          {/* Discount preview */}
+                          {(() => {
+                            const { total, discountedTotal, discountAmount } = calculateDiscount(current.items || [], discountType, discountValue);
+                            return (
+                              <div className="space-y-1 pt-2 border-t border-[#333]">
+                                <div className="flex justify-between text-xs text-neutral-400">
+                                  <span>Total Bruto:</span>
+                                  <span className="text-white font-bold">{formatCurrency(total)}</span>
+                                </div>
+                                {discountAmount > 0 && (
+                                  <div className="flex justify-between text-xs text-red-400">
+                                    <span>Desconto:</span>
+                                    <span>-{formatCurrency(discountAmount)}</span>
+                                  </div>
+                                )}
+                                <div className="flex justify-between text-sm font-black text-[#B5FF03] border-t border-[#333] pt-1 mt-1">
+                                  <span>Valor Final:</span>
+                                  <span>{formatCurrency(discountedTotal)}</span>
+                                </div>
+                              </div>
+                            );
+                          })()}
+                        </div>
+                      )}
+                    </div>
+                  )}
 
-               <div className="flex flex-col md:flex-row gap-2 md:gap-3 px-4 md:px-7 py-3 md:py-5 border-t border-[#333] shrink-0 bg-[#111]">
-                 <button
-                   type="button"
-                   onClick={() => setIsOpen(false)}
-                   className="flex-1 px-4 py-2 md:py-3 rounded-md bg-[#222] text-white font-semibold hover:bg-[#333] transition-colors text-xs md:text-sm"
-                 >
-                   Cancelar
-                 </button>
+                  <div className="flex items-center gap-2 relative" ref={invDropdownRef}>
+                    <div className="flex-1 relative">
+                      <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-neutral-500" />
+                      <input
+                        type="text"
+                        value={invSearch}
+                        onChange={e => {
+                          setInvSearch(e.target.value);
+                          setNewItemDesc(e.target.value);
+                          setShowInvDropdown(true);
+                        }}
+                        onFocus={() => setShowInvDropdown(true)}
+                        placeholder="Buscar produto no estoque..."
+                        className="w-full bg-[#1a1a1a] border border-gray-700 rounded-md py-2 pl-8 pr-3 text-white text-xs placeholder-gray-500 focus:outline-none focus:border-[#B5FF03] transition-colors"
+                      />
+                      {showInvDropdown && (
+                        <div className="absolute z-50 top-full mt-1 left-0 right-0 bg-[#1a1a1a] border border-[#333] rounded-md shadow-xl max-h-48 overflow-y-auto">
+                          {filteredInvItems.length === 0 ? (
+                            <p className="px-3 py-3 text-xs text-neutral-500 text-center">Nenhum produto encontrado no estoque</p>
+                          ) : (
+                            filteredInvItems.map(item => {
+                              const available = getAvailableQuantity(item.name, current.firstContact || '');
+                              return (
+                                <button
+                                  key={item.name}
+                                  type="button"
+                                  onClick={() => handleItemSelect(item.name)}
+                                  className="w-full text-left px-3 py-2 text-xs text-white hover:bg-[#333] transition-colors border-b border-[#222] last:border-b-0 flex items-center justify-between"
+                                >
+                                  <span className="font-medium truncate mr-2">{item.name}</span>
+                                  <span className={`whitespace-nowrap shrink-0 ${available > 0 ? 'text-neutral-400' : 'text-red-500'}`}>
+                                    Disp: {available}
+                                  </span>
+                                </button>
+                              );
+                            })
+                          )}
+                        </div>
+                      )}
+                    </div>
+                    <input
+                      type="number"
+                      min="1"
+                      value={newItemQty}
+                      onChange={e => {
+                        const qty = parseInt(e.target.value) || 1;
+                        setNewItemQty(qty);
+                        if (newItemDesc.trim()) {
+                          const available = getAvailableQuantity(newItemDesc.trim(), current.firstContact || '');
+                          if (qty > available && available > 0) {
+                            alert(`Estoque insuficiente! Disponível apenas: ${available}`);
+                          }
+                        }
+                      }}
+                      className="w-14 bg-[#1a1a1a] border border-gray-700 rounded-md py-2 px-2 text-white text-xs text-center focus:outline-none focus:border-[#B5FF03] transition-colors"
+                      placeholder="Qtd"
+                    />
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={newItemVal}
+                      onChange={e => setNewItemVal(parseFloat(e.target.value) || 0)}
+                      className="w-24 bg-[#1a1a1a] border border-gray-700 rounded-md py-2 px-2 text-white text-xs text-right focus:outline-none focus:border-[#B5FF03] transition-colors"
+                      placeholder="Valor unit."
+                    />
+                    <button
+                      type="button"
+                      onClick={addItem}
+                      className="p-2 bg-[#B5FF03] text-black rounded-md hover:bg-[#a1e600] transition-colors"
+                    >
+                      <Plus size={16} />
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex flex-col md:flex-row gap-2 md:gap-3 px-4 md:px-7 py-3 md:py-5 border-t border-[#333] shrink-0 bg-[#111]">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (current.id && current.items && current.items.length > 0) {
+                      const lead = Orçamentos.find(o => o.id === current.id);
+                      if (lead) {
+                        generatePDF(lead, discountValue > 0 ? { type: discountType, value: discountValue } : undefined);
+                      }
+                    }
+                  }}
+                  className="px-4 py-2 md:py-3 rounded-md bg-[#222] text-[#B5FF03] font-bold hover:bg-[#333] transition-colors text-xs md:text-sm flex items-center gap-2"
+                  disabled={!current.items || current.items.length === 0}
+                >
+                  <FileText size={14} />
+                  PDF
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsOpen(false)}
+                  className="flex-1 px-4 py-2 md:py-3 rounded-md bg-[#222] text-white font-semibold hover:bg-[#333] transition-colors text-xs md:text-sm"
+                >
+                  Cancelar
+                </button>
                 <button
                   type="submit"
                   className="flex-1 flex items-center justify-center gap-2 bg-black text-white px-4 py-2 md:py-3 rounded-md font-bold hover:bg-neutral-800 active:scale-[0.98] transition-all text-xs md:text-sm"
@@ -926,5 +1292,3 @@ const CRMOrçamentos = () => {
 export default function OrçamentosPage() {
   return <CRMOrçamentos />;
 }
-
-
