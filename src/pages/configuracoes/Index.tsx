@@ -4,12 +4,12 @@ import {
   Save, CheckCircle2,
   User, UserCircle,
   RefreshCw, Users,
-  AlertCircle
+  AlertCircle, MessageCircle
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase, PROFILES_TABLE } from '../../lib/supabase';
 import { generateUUID, isValidUUID } from '../../lib/uuid';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 
 interface Employee {
   id: string;
@@ -398,6 +398,29 @@ const Configuracoes = () => {
             </div>
           );
         })}
+      </div>
+
+      {/* WhatsApp Templates card */}
+      <div className="mt-6 max-w-2xl">
+        <Link
+          to="/configuracoes/templates-whatsapp"
+          className="block bg-[#111111] border border-[#222222] rounded-3xl p-8 hover:border-[#b5ff03] transition-all group relative overflow-hidden"
+        >
+          <div className="flex items-center justify-between relative z-10">
+            <div className="flex items-center gap-6">
+              <div className="w-16 h-16 bg-[#1a1a1a] rounded-2xl flex items-center justify-center shrink-0 group-hover:bg-[#1a1a1a] transition-colors">
+                <MessageCircle className="w-8 h-8 text-[#b5ff03] group-hover:text-[#b5ff03] transition-colors" strokeWidth={2.5} />
+              </div>
+              <div>
+                <h3 className="font-black text-[#ffffff] text-lg tracking-tight">Templates WhatsApp</h3>
+                <p className="text-xs text-[#888888] font-bold uppercase tracking-widest mt-1">Crie e gerencie modelos de mensagens para envio rápido</p>
+              </div>
+            </div>
+            <span className="bg-[#b5ff03] text-black font-bold px-6 py-3 rounded-md text-[11px] uppercase tracking-widest hover:bg-[#b5ff03]/90 transition-all active:scale-[0.95] shadow-lg shadow-black/10">
+              Gerenciar
+            </span>
+          </div>
+        </Link>
       </div>
 
       <div className="mt-12 max-w-2xl border-2 border-red-50 bg-red-50/20 rounded-[40px] p-10 relative overflow-hidden group/danger">

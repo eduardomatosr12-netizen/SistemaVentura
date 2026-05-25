@@ -17,6 +17,7 @@ const routeTitles: Record<string, { title: string; subtitle: string }> = {
   '/financeiro': { title: 'Financeiro', subtitle: 'Receitas, despesas e fluxo de caixa' },
   '/tarefas': { title: 'Controle de Estoque', subtitle: 'Gerencie seus itens, categorias e fornecedores.' },
   '/configuracoes': { title: 'Configurações', subtitle: 'Preferências da aplicação' },
+  '/configuracoes/templates-whatsapp': { title: 'Templates WhatsApp', subtitle: 'Gerencie modelos de mensagens para WhatsApp' },
 };
 
 const notificationIcon = (type: AppNotification['type']) => {
