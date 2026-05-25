@@ -78,7 +78,7 @@ const CRMDashboard = () => {
   const [formData, setFormData] = useState({
     name: '', whatsapp: '', email: '', cpf: '',
     eventType: '', date: '', time: '', city: '', observacao: '',
-    dataMontagem: '', dataDesmontagem: '', status: '',
+    dataMontagem: '', dataDesmontagem: '', status: '', outroEventoType: '',
     orcamentoItems: [] as OrcamentoItem[], desconto: 0,
   });
   const [selectedClientId, setSelectedClientId] = useState('');
@@ -207,7 +207,7 @@ const CRMDashboard = () => {
 
   const openCreateModal = (dateStr: string) => {
     setCreateDate(dateStr);
-    setFormData(prev => ({ ...prev, date: dateStr, eventType: '', city: '', observacao: '', dataMontagem: '', dataDesmontagem: '', status: '', orcamentoItems: [], desconto: 0 }));
+    setFormData(prev => ({ ...prev, date: dateStr, eventType: '', city: '', observacao: '', dataMontagem: '', dataDesmontagem: '', status: '', outroEventoType: '', orcamentoItems: [], desconto: 0 }));
     setSelectedClientId('');
     setClientSearch('');
     setInvSearch('');
@@ -624,15 +624,15 @@ const CRMDashboard = () => {
       {/* Create Event/Client Modal */}
       {isCreateOpen && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[100] p-4" onClick={() => setIsCreateOpen(false)}>
-          <div className="bg-[#0a0a0a] border border-[#222222] rounded-lg w-full max-w-md" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between p-4 border-b border-[#222]">
+          <div className="bg-[#0a0a0a] border border-[#222222] rounded-lg w-full max-w-md max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between p-4 border-b border-[#222] shrink-0">
               <h3 className="text-sm font-black uppercase tracking-widest text-[#B5FF03]">Novo Evento</h3>
               <button onClick={() => setIsCreateOpen(false)} className="p-1 hover:bg-[#222] rounded-md transition-colors">
                 <X size={16} className="text-neutral-400" />
               </button>
             </div>
             {/* Mode toggle */}
-            <div className="flex border-b border-[#222]">
+            <div className="flex border-b border-[#222] shrink-0">
               <button
                 onClick={() => setCreateMode('novo_cliente')}
                 className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest transition-colors ${createMode === 'novo_cliente' ? 'text-[#B5FF03] border-b-2 border-[#B5FF03]' : 'text-neutral-500 hover:text-white'}`}
@@ -646,7 +646,7 @@ const CRMDashboard = () => {
                 Novo Evento
               </button>
             </div>
-            <form onSubmit={handleCreateSubmit} className="p-4 space-y-4">
+            <form onSubmit={handleCreateSubmit} className="p-4 space-y-4 overflow-y-auto [&::-webkit-scrollbar]:w-[6px] [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-[#333] [&::-webkit-scrollbar-thumb]:rounded-[10px] [&::-webkit-scrollbar-thumb:hover]:bg-[#555]">
               {createMode === 'novo_cliente' ? (
                 <>
                   <div>
@@ -758,6 +758,13 @@ const CRMDashboard = () => {
                         </div>
                       )}
                     </div>
+                    {formData.eventType === 'Outros' && (
+                      <div className="mt-3">
+                        <input type="text" value={formData.outroEventoType} onChange={e => setFormData(prev => ({ ...prev, outroEventoType: e.target.value }))}
+                          placeholder="Especifique o tipo de evento..."
+                          className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-sm text-white placeholder-neutral-600 focus:border-[#B5FF03] outline-none" />
+                      </div>
+                    )}
                   </div>
                   {/* Cidade */}
                   <div>
@@ -774,7 +781,7 @@ const CRMDashboard = () => {
                         <CalendarDays size={12} /> Data do Evento
                       </label>
                       <input type="date" value={formData.date} onChange={e => setFormData(prev => ({ ...prev, date: e.target.value }))}
-                        className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-sm text-white focus:border-[#B5FF03] outline-none" required />
+                        className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-sm text-white focus:border-[#B5FF03] outline-none" style={{ colorScheme: 'dark' }} required />
                     </div>
                     <div>
                       <label className="block text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-1.5 flex items-center gap-1.5">
@@ -791,14 +798,14 @@ const CRMDashboard = () => {
                         <CalendarDays size={12} /> Data de Montagem
                       </label>
                       <input type="date" value={formData.dataMontagem} onChange={e => setFormData(prev => ({ ...prev, dataMontagem: e.target.value }))}
-                        className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-sm text-white focus:border-[#B5FF03] outline-none" />
+                        className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-sm text-white focus:border-[#B5FF03] outline-none" style={{ colorScheme: 'dark' }} />
                     </div>
                     <div>
                       <label className="block text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-1.5 flex items-center gap-1.5">
                         <CalendarDays size={12} /> Data de Desmontagem
                       </label>
                       <input type="date" value={formData.dataDesmontagem} onChange={e => setFormData(prev => ({ ...prev, dataDesmontagem: e.target.value }))}
-                        className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-sm text-white focus:border-[#B5FF03] outline-none" />
+                        className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-sm text-white focus:border-[#B5FF03] outline-none" style={{ colorScheme: 'dark' }} />
                     </div>
                   </div>
                   {/* Status do Evento */}
