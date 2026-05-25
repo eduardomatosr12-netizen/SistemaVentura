@@ -114,9 +114,13 @@ const CRMDashboard = () => {
 
   const handleDayClick = (day: number) => {
     const events = getEventsForDay(day);
-    if (events.length === 0) return;
-    setSelectedDayEvents(events);
     const dateObj = new Date(viewYear, viewMonth, day);
+    if (events.length === 0) {
+      const dateStr = `${viewYear}-${String(viewMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      navigate('/calendario', { state: { preselectedDate: dateStr } });
+      return;
+    }
+    setSelectedDayEvents(events);
     setSelectedDate(dateObj.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' }));
   };
 
@@ -209,10 +213,9 @@ const CRMDashboard = () => {
                   <button
                     key={day}
                     onClick={() => handleDayClick(day)}
-                    disabled={dayEvents.length === 0}
-                    className={`bg-[#111] min-h-[90px] md:min-h-[110px] p-1.5 text-left align-top transition-colors
+                    className={`bg-[#111] min-h-[90px] md:min-h-[110px] p-1.5 text-left align-top transition-colors cursor-pointer
                       ${isToday ? 'ring-1 ring-inset ring-[#B5FF03]' : ''}
-                      ${dayEvents.length > 0 ? 'hover:bg-[#1a1a1a] cursor-pointer' : 'cursor-default'}`}
+                      hover:bg-[#1a1a1a] hover:ring-1 hover:ring-inset hover:ring-[#333]`}
                   >
                     <span className={`inline-flex items-center justify-center w-5 h-5 text-[10px] font-bold rounded-full mb-1
                       ${isToday ? 'bg-[#B5FF03] text-black' : 'text-neutral-400'}`}>
