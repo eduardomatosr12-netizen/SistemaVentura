@@ -5,7 +5,7 @@ import { useCRM } from '../../contexts/CRMContext';
 import type { CalendarEvent, Lead, OrcamentoItem } from '../../contexts/CRMContext';
 import { useActivityLogs } from '../../contexts/ActivityContext';
 import { generateUUID } from '../../lib/uuid';
-import { getAllInventoryItems, getAvailableQuantity, findInventoryItem } from '../../lib/inventory';
+import { getAllInventoryItems, getAvailableQuantity, findInventoryItem, loadInventory, refreshReservedCache } from '../../lib/inventory';
 
 const ACTION_ICONS: Record<string, LucideIcon> = {
   lead_criado: UserPlus,
@@ -160,7 +160,11 @@ const CRMDashboard = () => {
 
   useEffect(() => {
     if (isCreateOpen) {
-      setInvStockItems(getAllInventoryItems());
+      (async () => {
+        await loadInventory();
+        await refreshReservedCache(formData.date || new Date().toISOString().split('T')[0]);
+        setInvStockItems(getAllInventoryItems());
+      })();
     }
   }, [isCreateOpen]);
 

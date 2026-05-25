@@ -521,36 +521,39 @@ const CRMOrçamentos = () => {
     
     const finalValue = getFinalValue();
     
-    if (mode === 'add') {
-      addLead(modifiedLead as Omit<Lead, 'id'>);
-      if (isFechado && current.items && current.items.length > 0) {
-        current.items.forEach(item => deductInventory(item.descricao, item.quantidade));
-        addPendingRevenue(current.name || 'Cliente', finalValue, current.firstContact || '');
-      }
-    } else {
-      const prevLead = Orçamentos.find(o => o.id === current.id);
-      const wasFechado = prevLead?.stage === 'Contrato Fechado';
-
-      if (wasFechado && !isFechado) {
-        if (prevLead?.items) {
-          prevLead.items.forEach(item => restoreInventory(item.descricao, item.quantidade));
-        }
-      }
-
-      if (isFechado && current.items && current.items.length > 0) {
-        if (wasFechado && prevLead?.items) {
-          prevLead.items.forEach(item => restoreInventory(item.descricao, item.quantidade));
-        }
-        current.items.forEach(item => deductInventory(item.descricao, item.quantidade));
-
-        if (!wasFechado) {
+    const doInventoryOps = async () => {
+      if (mode === 'add') {
+        addLead(modifiedLead as Omit<Lead, 'id'>);
+        if (isFechado && current.items && current.items.length > 0) {
+          await Promise.all(current.items.map(item => deductInventory(item.descricao, item.quantidade)));
           addPendingRevenue(current.name || 'Cliente', finalValue, current.firstContact || '');
         }
-      }
+      } else {
+        const prevLead = Orçamentos.find(o => o.id === current.id);
+        const wasFechado = prevLead?.stage === 'Contrato Fechado';
 
-      updateLead(current.id!, modifiedLead);
-    }
-    setIsOpen(false);
+        if (wasFechado && !isFechado) {
+          if (prevLead?.items) {
+            await Promise.all(prevLead.items.map(item => restoreInventory(item.descricao, item.quantidade)));
+          }
+        }
+
+        if (isFechado && current.items && current.items.length > 0) {
+          if (wasFechado && prevLead?.items) {
+            await Promise.all(prevLead.items.map(item => restoreInventory(item.descricao, item.quantidade)));
+          }
+          await Promise.all(current.items.map(item => deductInventory(item.descricao, item.quantidade)));
+
+          if (!wasFechado) {
+            addPendingRevenue(current.name || 'Cliente', finalValue, current.firstContact || '');
+          }
+        }
+
+        updateLead(current.id!, modifiedLead);
+      }
+      setIsOpen(false);
+    };
+    doInventoryOps();
   };
 
   const handleDelete = (id: string | undefined) => {
