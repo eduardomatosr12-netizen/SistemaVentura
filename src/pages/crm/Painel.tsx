@@ -1,10 +1,10 @@
 import { useState, useMemo } from 'react';
-import { Calendar, UserPlus, ArrowRight, CheckSquare, Activity, AlertCircle, LayoutDashboard, X } from 'lucide-react';
+import { Calendar, UserPlus, ArrowRight, CheckSquare, Activity, AlertCircle, LayoutDashboard, X, ChevronLeft, ChevronRight } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { useCRM } from '../../contexts/CRMContext';
 import type { CalendarEvent } from '../../contexts/CRMContext';
 import { useActivityLogs } from '../../contexts/ActivityContext';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 const ACTION_ICONS: Record<string, LucideIcon> = {
   lead_criado: UserPlus,
@@ -57,8 +57,11 @@ const statusBg: Record<string, string> = {
 const CRMDashboard = () => {
   const { events } = useCRM();
   const { activityLogs, isLoadingLogs, fetchActivityLogsError } = useActivityLogs();
+  const navigate = useNavigate();
   const [selectedDayEvents, setSelectedDayEvents] = useState<CalendarEvent[] | null>(null);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const [viewYear, setViewYear] = useState(new Date().getFullYear());
+  const [viewMonth, setViewMonth] = useState(new Date().getMonth());
 
   const displayLogs = useMemo(() => {
     return activityLogs.slice(0, 10).filter(log => log?.id && log?.acao);
@@ -72,28 +75,48 @@ const CRMDashboard = () => {
       if (!e?.date) return false;
       const d = new Date(e.date + 'T12:00:00');
       if (isNaN(d.getTime())) return false;
-      return d.getDate() === day && d.getMonth() === today.getMonth() && d.getFullYear() === today.getFullYear();
+      return d.getDate() === day && d.getMonth() === viewMonth && d.getFullYear() === viewYear;
     });
   };
 
-  const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
-  const firstDay = new Date(today.getFullYear(), today.getMonth(), 1).getDay();
+  const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
+  const firstDay = new Date(viewYear, viewMonth, 1).getDay();
   const startOffset = firstDay === 0 ? 6 : firstDay - 1;
 
-  const dayNames = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+  const dayHeaders = ['SEG', 'TER', 'QUA', 'QUI', 'SEX', 'SÁB', 'DOM'];
+
+  const prevMonth = () => {
+    if (viewMonth === 0) {
+      setViewMonth(11);
+      setViewYear(viewYear - 1);
+    } else {
+      setViewMonth(viewMonth - 1);
+    }
+  };
+
+  const nextMonth = () => {
+    if (viewMonth === 11) {
+      setViewMonth(0);
+      setViewYear(viewYear + 1);
+    } else {
+      setViewMonth(viewMonth + 1);
+    }
+  };
+
+  const monthNames = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
 
   const upcomingEvents = useMemo(() => {
     return safeEvents
       .filter(e => e.date && new Date(e.date + 'T12:00:00') >= new Date())
       .sort((a, b) => new Date(a.date + 'T12:00:00').getTime() - new Date(b.date + 'T12:00:00').getTime())
-      .slice(0, 5);
+      .slice(0, 10);
   }, [safeEvents]);
 
   const handleDayClick = (day: number) => {
     const events = getEventsForDay(day);
     if (events.length === 0) return;
     setSelectedDayEvents(events);
-    const dateObj = new Date(today.getFullYear(), today.getMonth(), day);
+    const dateObj = new Date(viewYear, viewMonth, day);
     setSelectedDate(dateObj.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' }));
   };
 
@@ -109,10 +132,12 @@ const CRMDashboard = () => {
     return d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' });
   };
 
+  const isCurrentMonth = viewMonth === today.getMonth() && viewYear === today.getFullYear();
+
   return (
     <div className="relative min-h-screen bg-black">
       {/* Header section */}
-      <div className="mb-4 md:mb-6">
+      <div className="mb-6">
         <h1 className="text-2xl md:text-4xl font-black text-white tracking-tight mb-2 flex items-center gap-3">
           <LayoutDashboard className="text-[#B5FF03]" size={32} />
           Página Principal
@@ -120,96 +145,155 @@ const CRMDashboard = () => {
         <p className="text-neutral-400 text-xs md:text-sm">Bem-vindo ao painel de controle da Ventura Luz e Efeitos.</p>
       </div>
 
-      {/* Mini Calendário Widget */}
-      <div className="bg-[#111] border border-[#333] rounded-2xl p-4 md:p-6 shadow-sm">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-xs font-black text-[#B5FF03] uppercase tracking-widest flex items-center gap-2">
-            <Calendar size={14} />
-            Calendário
-          </h3>
-          <Link to="/calendario" className="text-[9px] text-neutral-400 hover:text-white uppercase tracking-wider font-bold">
-            Ver todos
-          </Link>
+      {/* Expanded Calendar Section */}
+      <div className="bg-[#111] border border-[#333] rounded-2xl shadow-sm overflow-hidden">
+        {/* Top bar */}
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 p-4 md:p-6 border-b border-[#222]">
+          <div>
+            <h2 className="text-lg font-black text-white tracking-tight">Calendário de Eventos</h2>
+            <p className="text-[11px] text-neutral-400 mt-0.5">Visualize e acompanhe seus compromissos agendados.</p>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 bg-[#0a0a0a] border border-[#333] rounded-lg px-3 py-1.5">
+              <button onClick={prevMonth} className="p-1 hover:bg-[#222] rounded-md transition-colors">
+                <ChevronLeft size={16} className="text-neutral-400" />
+              </button>
+              <span className="text-sm font-bold text-white min-w-[140px] text-center select-none">
+                {monthNames[viewMonth]} {viewYear}
+              </span>
+              <button onClick={nextMonth} className="p-1 hover:bg-[#222] rounded-md transition-colors">
+                <ChevronRight size={16} className="text-neutral-400" />
+              </button>
+            </div>
+            <button
+              onClick={() => navigate('/calendario')}
+              className="rounded-full px-4 py-2 bg-[#B5FF03] text-black font-bold text-xs uppercase tracking-widest hover:bg-[#a1e600] transition-colors min-h-[44px]"
+            >
+              + CRIAR
+            </button>
+          </div>
         </div>
 
-        {/* Mini Calendar Grid */}
-        <div className="grid grid-cols-7 gap-0.5 mb-4">
-          {dayNames.map(d => (
-            <div key={d} className="text-center text-[8px] text-neutral-500 font-bold uppercase py-1">
-              {d[0]}
+        {/* Legend bar */}
+        <div className="flex flex-wrap items-center gap-4 px-4 md:px-6 py-3 border-b border-[#222] bg-[#0a0a0a]">
+          <span className="text-[9px] font-black uppercase tracking-widest text-neutral-400">Status:</span>
+          {Object.entries(statusLabel).map(([key, label]) => (
+            <div key={key} className="flex items-center gap-1.5">
+              <div className={`w-2.5 h-2.5 rounded-full ${statusBg[key]}`} />
+              <span className="text-[10px] text-neutral-500 font-medium">{label}</span>
             </div>
           ))}
-          {Array.from({ length: startOffset }).map((_, i) => (
-            <div key={`empty-${i}`} className="h-7" />
-          ))}
-          {Array.from({ length: daysInMonth }).map((_, i) => {
-            const day = i + 1;
-            const dayEvents = getEventsForDay(day);
-            const isToday = day === today.getDate();
-            const hasEvents = dayEvents.length > 0;
-            return (
-              <button
-                key={day}
-                onClick={() => handleDayClick(day)}
-                disabled={!hasEvents}
-                className={`h-7 flex items-center justify-center text-[10px] font-bold rounded-full relative
-                  ${isToday ? 'bg-[#B5FF03] text-black' : hasEvents ? 'text-white hover:bg-[#222] cursor-pointer' : 'text-neutral-600 cursor-default'}
-                  ${!hasEvents ? '' : 'transition-colors'}`}
-              >
-                {day}
-                {hasEvents && (
-                  <div className="absolute bottom-0.5 left-1/2 -translate-x-1/2 flex gap-0.5">
-                    {dayEvents.slice(0, 3).map((ev, idx) => (
-                      <div key={idx} className="w-1 h-1 rounded-full" style={{ backgroundColor: getStatusColor(ev.status) }} />
-                    ))}
+        </div>
+
+        {/* Two-column layout */}
+        <div className="flex flex-col lg:flex-row">
+          {/* Left - Calendar Grid */}
+          <div className="flex-1 p-4 md:p-6">
+            <div className="grid grid-cols-7 gap-px bg-[#222] rounded-lg overflow-hidden">
+              {/* Day headers */}
+              {dayHeaders.map(d => (
+                <div key={d} className="bg-[#111] text-center text-[9px] font-black uppercase tracking-widest text-neutral-400 py-2 px-1">
+                  {d}
+                </div>
+              ))}
+              {/* Empty offset cells */}
+              {Array.from({ length: startOffset }).map((_, i) => (
+                <div key={`empty-${i}`} className="bg-[#111] min-h-[90px] md:min-h-[110px]" />
+              ))}
+              {/* Day cells */}
+              {Array.from({ length: daysInMonth }).map((_, i) => {
+                const day = i + 1;
+                const dayEvents = getEventsForDay(day);
+                const isToday = day === today.getDate() && isCurrentMonth;
+                return (
+                  <button
+                    key={day}
+                    onClick={() => handleDayClick(day)}
+                    disabled={dayEvents.length === 0}
+                    className={`bg-[#111] min-h-[90px] md:min-h-[110px] p-1.5 text-left align-top transition-colors
+                      ${isToday ? 'ring-1 ring-inset ring-[#B5FF03]' : ''}
+                      ${dayEvents.length > 0 ? 'hover:bg-[#1a1a1a] cursor-pointer' : 'cursor-default'}`}
+                  >
+                    <span className={`inline-flex items-center justify-center w-5 h-5 text-[10px] font-bold rounded-full mb-1
+                      ${isToday ? 'bg-[#B5FF03] text-black' : 'text-neutral-400'}`}>
+                      {day}
+                    </span>
+                    <div className="space-y-0.5">
+                      {dayEvents.slice(0, 3).map(ev => (
+                        <div
+                          key={ev.id}
+                          className="text-[8px] leading-tight px-1 py-0.5 rounded truncate font-medium text-white"
+                          style={{ backgroundColor: ev.status ? getStatusColor(ev.status) + '25' : '#333', borderLeft: `2px solid ${getStatusColor(ev.status)}` }}
+                        >
+                          {ev.title || ev.client || ev.eventType || 'Evento'}
+                        </div>
+                      ))}
+                      {dayEvents.length > 3 && (
+                        <span className="text-[7px] text-neutral-500 pl-1">+{dayEvents.length - 3} mais</span>
+                      )}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Right - Upcoming Events Panel */}
+          <div className="w-full lg:w-80 border-t lg:border-t-0 lg:border-l border-[#222] bg-[#0a0a0a]">
+            <div className="p-4 md:p-6">
+              <h4 className="text-[10px] font-black text-[#B5FF03] uppercase tracking-widest mb-4">Próximos Eventos</h4>
+              <div className="space-y-2">
+                {upcomingEvents.map((event, idx) => {
+                  const eventDate = event.date ? new Date(event.date + 'T12:00:00') : null;
+                  const daysUntil = eventDate ? Math.ceil((eventDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)) : null;
+                  return (
+                    <button
+                      key={event.id}
+                      onClick={() => {
+                        setSelectedDayEvents([event]);
+                        setSelectedDate(
+                          event.date
+                            ? new Date(event.date + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })
+                            : '—'
+                        );
+                      }}
+                      className={`w-full text-left flex items-start gap-3 p-3 rounded-lg hover:bg-[#1a1a1a] transition-colors group ${idx > 0 ? 'border-t border-[#222]' : ''}`}
+                    >
+                      <div className="flex flex-col items-center min-w-[36px]">
+                        <span className="text-[18px] font-black text-white leading-none">
+                          {eventDate ? eventDate.getDate() : '—'}
+                        </span>
+                        <span className="text-[8px] text-neutral-500 uppercase font-bold">
+                          {eventDate ? eventDate.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '') : ''}
+                        </span>
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[11px] font-bold text-white truncate group-hover:underline">{event.title || 'Sem título'}</p>
+                        <div className="flex items-center gap-1.5 text-[9px] text-neutral-500 mt-0.5">
+                          <span className={`px-1.5 py-0.5 rounded-full text-[8px] font-bold ${event.status ? statusBg[event.status] : 'bg-[#333]'} ${event.status === 'confirmado' ? 'text-black' : 'text-white'}`}>
+                            {event.status ? statusLabel[event.status] : '—'}
+                          </span>
+                          {event.eventType && <span>{event.eventType}</span>}
+                          {event.time && <><span>•</span><span>{event.time}</span></>}
+                        </div>
+                        {daysUntil !== null && (
+                          <p className="text-[8px] text-neutral-600 mt-1">
+                            {daysUntil === 0 ? 'Hoje' : daysUntil === 1 ? 'Amanhã' : `Em ${daysUntil} dias`}
+                          </p>
+                        )}
+                      </div>
+                    </button>
+                  );
+                })}
+                {upcomingEvents.length === 0 && (
+                  <div className="text-center py-8">
+                    <Calendar size={24} className="mx-auto text-neutral-600 mb-2" />
+                    <p className="text-[10px] text-neutral-500 italic">Nenhum evento futuro</p>
                   </div>
                 )}
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Legend */}
-        <div className="flex flex-wrap gap-2 mb-4 pb-3 border-b border-[#222]">
-          {Object.entries(statusLabel).map(([key, label]) => (
-            <div key={key} className="flex items-center gap-1">
-              <div className={`w-2 h-2 rounded-full ${statusBg[key]}`} />
-              <span className="text-[8px] text-neutral-500">{label}</span>
-            </div>
-          ))}
-        </div>
-
-        {/* Upcoming Events */}
-        <h4 className="text-[9px] font-black text-neutral-400 uppercase tracking-widest mb-3">Próximos Eventos</h4>
-        <div className="space-y-2">
-          {upcomingEvents.map(event => (
-            <button
-              key={event.id}
-              onClick={() => {
-                setSelectedDayEvents([event]);
-                setSelectedDate(
-                  event.date
-                    ? new Date(event.date + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })
-                    : '—'
-                );
-              }}
-              className="w-full text-left flex items-start gap-2 p-2 rounded-md hover:bg-[#1a1a1a] transition-colors group"
-            >
-              <div className="w-1.5 h-1.5 rounded-full mt-1.5 shrink-0" style={{ backgroundColor: getStatusColor(event.status) }} />
-              <div className="min-w-0 flex-1">
-                <p className="text-[11px] font-bold text-white truncate group-hover:underline">{event.title || 'Sem título'}</p>
-                <div className="flex items-center gap-2 text-[8px] text-neutral-500">
-                  <span>{event.eventType || 'Evento'}</span>
-                  <span>•</span>
-                  <span>{event.date ? new Date(event.date + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }) : '—'}</span>
-                  {event.time && <><span>•</span><span>{event.time}</span></>}
-                </div>
               </div>
-            </button>
-          ))}
-          {upcomingEvents.length === 0 && (
-            <p className="text-[10px] text-neutral-600 text-center py-2 italic">Nenhum evento futuro</p>
-          )}
+            </div>
+          </div>
         </div>
       </div>
 
