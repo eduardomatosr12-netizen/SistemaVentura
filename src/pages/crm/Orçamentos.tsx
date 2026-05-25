@@ -556,6 +556,26 @@ const CRMOrçamentos = () => {
     clearFilters();
   };
 
+  const handleExportPDF = () => {
+    const leadData: Lead = {
+      id: current.id || '',
+      name: current.name || 'Orçamento',
+      niche: current.niche || '',
+      whatsapp: current.whatsapp || '',
+      email: current.email || '',
+      instagram: current.instagram || '',
+      stage: current.stage || 'Novos Orçamentos',
+      firstContact: current.firstContact || '',
+      closingDate: current.closingDate || '',
+      followUpReminder: current.followUpReminder || '',
+      address: current.address || '',
+      notes: current.notes || '',
+      value: current.value || '',
+      items: current.items || [],
+    };
+    generatePDF(leadData, discountValue > 0 ? { type: discountType, value: discountValue } : undefined);
+  };
+
   const calculateItemsTotal = (items?: OrcamentoItem[]) => {
     return (items || []).reduce((sum, i) => sum + i.quantidade * i.valorUnitario, 0);
   };
@@ -1055,19 +1075,11 @@ const CRMOrçamentos = () => {
               <div className="flex flex-col md:flex-row gap-2 md:gap-3 px-4 md:px-7 py-3 md:py-5 border-t border-[#333] shrink-0 bg-[#111]">
                 <button
                   type="button"
-                  onClick={() => {
-                    if (current.id && current.items && current.items.length > 0) {
-                      const lead = Orçamentos.find(o => o.id === current.id);
-                      if (lead) {
-                        generatePDF(lead, discountValue > 0 ? { type: discountType, value: discountValue } : undefined);
-                      }
-                    }
-                  }}
-                  className="px-4 py-2 md:py-3 rounded-md bg-[#222] text-[#B5FF03] font-bold hover:bg-[#333] transition-colors text-xs md:text-sm flex items-center gap-2"
-                  disabled={!current.items || current.items.length === 0}
+                  onClick={handleExportPDF}
+                  className="px-5 py-2 md:py-3 rounded-md bg-[#1a1a1a] border border-[#333] text-[#B5FF03] font-bold hover:bg-[#222] hover:border-[#B5FF03] transition-all text-xs md:text-sm flex items-center gap-2"
                 >
                   <FileText size={14} />
-                  PDF
+                  EXPORTAR ORÇAMENTO (PDF)
                 </button>
                 <button
                   type="button"
@@ -1081,7 +1093,7 @@ const CRMOrçamentos = () => {
                   className="flex-1 flex items-center justify-center gap-2 bg-black text-white px-4 py-2 md:py-3 rounded-md font-bold hover:bg-neutral-800 active:scale-[0.98] transition-all text-xs md:text-sm"
                 >
                   <Save size={15} strokeWidth={2.5} />
-                  {mode === 'add' ? 'Criar' : 'Salvar'}
+                  {mode === 'add' ? 'CADASTRAR CLIENTE E AGENDAR' : 'SALVAR ALTERAÇÕES'}
                 </button>
               </div>
             </form>
