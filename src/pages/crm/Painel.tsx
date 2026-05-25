@@ -78,7 +78,8 @@ const CRMDashboard = () => {
   const [formData, setFormData] = useState({
     name: '', whatsapp: '', email: '', cpf: '',
     eventType: '', date: '', time: '', city: '', observacao: '',
-    orcamentoItems: [] as OrcamentoItem[],
+    dataMontagem: '', dataDesmontagem: '', status: '',
+    orcamentoItems: [] as OrcamentoItem[], desconto: 0,
   });
   const [selectedClientId, setSelectedClientId] = useState('');
 
@@ -138,9 +139,11 @@ const CRMDashboard = () => {
 
   // Custom dropdown state
   const [eventTypeOpen, setEventTypeOpen] = useState(false);
+  const [statusOpen, setStatusOpen] = useState(false);
   const [clientSearchOpen, setClientSearchOpen] = useState(false);
   const [clientSearch, setClientSearch] = useState('');
   const eventTypeRef = useRef<HTMLDivElement>(null);
+  const statusRef = useRef<HTMLDivElement>(null);
   const clientSearchRef = useRef<HTMLDivElement>(null);
 
   // Inventory integration
@@ -165,10 +168,19 @@ const CRMDashboard = () => {
     ).slice(0, 40);
   }, [invStockItems, invSearch]);
 
+  const subtotal = useMemo(() =>
+    formData.orcamentoItems.reduce((sum, item) => sum + item.quantidade * item.valorUnitario, 0),
+  [formData.orcamentoItems]);
+
+  const total = useMemo(() => Math.max(0, subtotal - formData.desconto), [subtotal, formData.desconto]);
+
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (eventTypeRef.current && !eventTypeRef.current.contains(e.target as Node)) {
         setEventTypeOpen(false);
+      }
+      if (statusRef.current && !statusRef.current.contains(e.target as Node)) {
+        setStatusOpen(false);
       }
       if (clientSearchRef.current && !clientSearchRef.current.contains(e.target as Node)) {
         setClientSearchOpen(false);
@@ -195,7 +207,7 @@ const CRMDashboard = () => {
 
   const openCreateModal = (dateStr: string) => {
     setCreateDate(dateStr);
-    setFormData(prev => ({ ...prev, date: dateStr, eventType: '', city: '', observacao: '', orcamentoItems: [] }));
+    setFormData(prev => ({ ...prev, date: dateStr, eventType: '', city: '', observacao: '', dataMontagem: '', dataDesmontagem: '', status: '', orcamentoItems: [], desconto: 0 }));
     setSelectedClientId('');
     setClientSearch('');
     setInvSearch('');
@@ -220,7 +232,7 @@ const CRMDashboard = () => {
         followUpReminder: '',
         address: formData.city || '',
         notes: formData.observacao || '',
-        value: formData.orcamentoItems.reduce((sum, item) => sum + item.quantidade * item.valorUnitario, 0).toString(),
+        value: total.toString(),
         items: formData.orcamentoItems.length > 0 ? formData.orcamentoItems : undefined,
       };
       addLead(leadInput);
@@ -234,8 +246,10 @@ const CRMDashboard = () => {
         date: formData.date,
         time: formData.time,
         city: formData.city,
+        dataMontagem: formData.dataMontagem,
+        dataDesmontagem: formData.dataDesmontagem,
         description: formData.observacao,
-        status: 'pendente',
+        status: (formData.status as CalendarEvent['status']) || 'pendente',
       });
     } else {
       const client = Orçamentos.find(l => l.id === selectedClientId);
@@ -251,8 +265,10 @@ const CRMDashboard = () => {
         date: formData.date,
         time: formData.time,
         city: formData.city,
+        dataMontagem: formData.dataMontagem,
+        dataDesmontagem: formData.dataDesmontagem,
         description: formData.observacao,
-        status: 'pendente',
+        status: (formData.status as CalendarEvent['status']) || 'pendente',
       });
     }
     setIsCreateOpen(false);
@@ -735,6 +751,15 @@ const CRMDashboard = () => {
                       )}
                     </div>
                   </div>
+                  {/* Cidade */}
+                  <div>
+                    <label className="block text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-1.5 flex items-center gap-1.5">
+                      <MapPin size={12} /> Cidade
+                    </label>
+                    <input type="text" value={formData.city} onChange={e => setFormData(prev => ({ ...prev, city: e.target.value }))}
+                      placeholder="Ex: São Paulo, SP"
+                      className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-sm text-white placeholder-neutral-600 focus:border-[#B5FF03] outline-none" />
+                  </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className="block text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-1.5 flex items-center gap-1.5">
@@ -751,14 +776,53 @@ const CRMDashboard = () => {
                         className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-sm text-white focus:border-[#B5FF03] outline-none" />
                     </div>
                   </div>
-                  {/* Cidade */}
-                  <div>
+                  {/* Data de Montagem e Desmontagem */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-1.5 flex items-center gap-1.5">
+                        <CalendarDays size={12} /> Data de Montagem
+                      </label>
+                      <input type="date" value={formData.dataMontagem} onChange={e => setFormData(prev => ({ ...prev, dataMontagem: e.target.value }))}
+                        className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-sm text-white focus:border-[#B5FF03] outline-none" />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-1.5 flex items-center gap-1.5">
+                        <CalendarDays size={12} /> Data de Desmontagem
+                      </label>
+                      <input type="date" value={formData.dataDesmontagem} onChange={e => setFormData(prev => ({ ...prev, dataDesmontagem: e.target.value }))}
+                        className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-sm text-white focus:border-[#B5FF03] outline-none" />
+                    </div>
+                  </div>
+                  {/* Status do Evento */}
+                  <div ref={statusRef}>
                     <label className="block text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-1.5 flex items-center gap-1.5">
-                      <MapPin size={12} /> Cidade
+                      <CalendarDays size={12} /> Status do Evento
                     </label>
-                    <input type="text" value={formData.city} onChange={e => setFormData(prev => ({ ...prev, city: e.target.value }))}
-                      placeholder="Ex: São Paulo, SP"
-                      className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-sm text-white placeholder-neutral-600 focus:border-[#B5FF03] outline-none" />
+                    <div className="relative">
+                      <button
+                        type="button"
+                        onClick={() => setStatusOpen(prev => !prev)}
+                        className={`w-full bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-sm text-left flex items-center justify-between gap-2 transition-colors ${formData.status ? 'text-white' : 'text-neutral-500'} focus:border-[#B5FF03] outline-none`}
+                      >
+                        <span>{formData.status ? statusLabel[formData.status] || formData.status : 'Selecionar...'}</span>
+                        <ChevronDown size={14} className={`text-neutral-500 transition-transform ${statusOpen ? 'rotate-180' : ''}`} />
+                      </button>
+                      {statusOpen && (
+                        <div className="absolute top-full left-0 right-0 mt-1 bg-[#1a1a1a] border border-[#333] rounded-lg overflow-hidden z-50 shadow-xl">
+                          {Object.entries(statusLabel).map(([key, label]) => (
+                            <button
+                              type="button"
+                              key={key}
+                              onClick={() => { setFormData(prev => ({ ...prev, status: key })); setStatusOpen(false); }}
+                              className={`w-full text-left px-3 py-2 text-sm transition-colors flex items-center gap-2 ${formData.status === key ? 'bg-[#2a2a2a] text-[#B5FF03] font-bold' : 'text-white hover:bg-[#333]'}`}
+                            >
+                              <div className={`w-2.5 h-2.5 rounded-full ${statusBg[key]}`} />
+                              {label}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
                   {/* Observação */}
                   <div>
@@ -925,6 +989,24 @@ const CRMDashboard = () => {
                           <p className="text-[10px] text-neutral-500 italic">Clique em "Adicionar Item" para buscar no estoque</p>
                         </div>
                       )}
+                    </div>
+
+                    {/* Financial footer */}
+                    <div className="border-t border-[#333] pt-3 mt-3 space-y-2">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="text-neutral-400">Subtotal dos Equipamentos</span>
+                        <span className="text-white font-bold">R$ {subtotal.toFixed(2)}</span>
+                      </div>
+                      <div className="flex items-center justify-between gap-4">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 shrink-0">Desconto (R$)</label>
+                        <input type="number" min="0" step="0.01" value={formData.desconto}
+                          onChange={e => setFormData(prev => ({ ...prev, desconto: Math.max(0, Number(e.target.value) || 0) }))}
+                          className="w-28 bg-[#111] border border-[#333] rounded-lg px-2 py-1.5 text-sm text-white text-right focus:border-[#B5FF03] outline-none" />
+                      </div>
+                      <div className="border-t border-[#222] pt-2 flex items-center justify-between">
+                        <span className="text-xs font-black uppercase tracking-widest text-[#B5FF03]">Valor Total do Aluguel</span>
+                        <span className="text-base font-black text-white">R$ {total.toFixed(2)}</span>
+                      </div>
                     </div>
                   </div>
                 </div>
