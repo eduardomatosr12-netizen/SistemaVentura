@@ -588,6 +588,44 @@ const CRMDashboard = () => {
             </div>
           </div>
         </div>
+
+        {/* Atividades Recentes */}
+        <div className="p-4 md:p-8 border-t border-[#222]">
+          <div className="flex items-center gap-2 mb-6">
+            <Activity className="w-4 h-4 text-[#B5FF03]" aria-hidden="true" />
+            <h2 className="text-lg md:text-xl font-bold text-white">Atividades Recentes</h2>
+          </div>
+          {isLoadingLogs ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="w-6 h-6 border-2 border-[#B5FF03]/20 border-t-[#B5FF03] rounded-full animate-spin" />
+              <span className="ml-2 text-sm text-neutral-400">Carregando atividades...</span>
+            </div>
+          ) : fetchActivityLogsError ? (
+            <div className="flex items-center gap-2 p-4 bg-red-50 border border-red-100 rounded-md" role="alert">
+              <AlertCircle className="w-5 h-5 text-red-500" aria-hidden="true" />
+              <p className="text-sm text-red-600">{fetchActivityLogsError}</p>
+            </div>
+          ) : displayLogs.length === 0 ? (
+            <p className="text-neutral-400 text-xs">Nenhuma atividade registrada.</p>
+          ) : (
+            <div className="space-y-3">
+              {displayLogs.map((log) => {
+                const Icon = ACTION_ICONS[log.acao] || Activity;
+                return (
+                  <div key={log.id} className="flex items-start gap-3">
+                    <div className="w-7 h-7 rounded-full bg-[#222] flex items-center justify-center shrink-0 mt-0.5">
+                      <Icon className="w-3.5 h-3.5 text-[#B5FF03]" strokeWidth={2} aria-hidden="true" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs md:text-sm text-white leading-snug">{sanitizeDescription(log.descricao)}</p>
+                      <p className="text-[10px] md:text-xs text-neutral-400 font-medium mt-0.5">há {formatRelativeTime(log.timestamp)}</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
       )}
 
       {/* HISTÓRICO DE EVENTOS */}
@@ -1275,43 +1313,6 @@ const CRMDashboard = () => {
         </div>
       )}
 
-      {/* Atividades Recentes */}
-      <div className="bg-[#111] border border-[#333] rounded-2xl p-4 md:p-8 shadow-sm">
-        <div className="flex items-center gap-2 mb-6">
-          <Activity className="w-4 h-4 text-[#B5FF03]" aria-hidden="true" />
-          <h2 className="text-lg md:text-xl font-bold text-white">Atividades Recentes</h2>
-        </div>
-        {isLoadingLogs ? (
-          <div className="flex items-center justify-center py-8">
-            <div className="w-6 h-6 border-2 border-[#B5FF03]/20 border-t-[#B5FF03] rounded-full animate-spin" />
-            <span className="ml-2 text-sm text-neutral-400">Carregando atividades...</span>
-          </div>
-        ) : fetchActivityLogsError ? (
-          <div className="flex items-center gap-2 p-4 bg-red-50 border border-red-100 rounded-md" role="alert">
-            <AlertCircle className="w-5 h-5 text-red-500" aria-hidden="true" />
-            <p className="text-sm text-red-600">{fetchActivityLogsError}</p>
-          </div>
-        ) : displayLogs.length === 0 ? (
-          <p className="text-neutral-400 text-xs">Nenhuma atividade registrada.</p>
-        ) : (
-          <div className="space-y-3">
-            {displayLogs.map((log) => {
-              const Icon = ACTION_ICONS[log.acao] || Activity;
-              return (
-                <div key={log.id} className="flex items-start gap-3">
-                  <div className="w-7 h-7 rounded-full bg-[#222] flex items-center justify-center shrink-0 mt-0.5">
-                    <Icon className="w-3.5 h-3.5 text-[#B5FF03]" strokeWidth={2} aria-hidden="true" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs md:text-sm text-white leading-snug">{sanitizeDescription(log.descricao)}</p>
-                    <p className="text-[10px] md:text-xs text-neutral-400 font-medium mt-0.5">há {formatRelativeTime(log.timestamp)}</p>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
     </div>
   );
 };
