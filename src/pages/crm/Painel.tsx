@@ -71,7 +71,10 @@ const CRMDashboard = () => {
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [viewYear, setViewYear] = useState(new Date().getFullYear());
   const [viewMonth, setViewMonth] = useState(new Date().getMonth());
-  const [activeTab, setActiveTab] = useState<'eventos' | 'orcamentos'>('eventos');
+  const [activeTab, setActiveTab] = useState<'calendario' | 'eventos' | 'orcamentos'>('calendario');
+  const [eventPage, setEventPage] = useState(0);
+  const [orcPage, setOrcPage] = useState(0);
+  const ROWS_PER_PAGE = 15;
 
   // Create modal state
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -359,6 +362,25 @@ const CRMDashboard = () => {
 
   const isCurrentMonth = viewMonth === today.getMonth() && viewYear === today.getFullYear();
 
+  const paginatedEvents = useMemo(() => {
+    const start = eventPage * ROWS_PER_PAGE;
+    return safeEvents.slice(start, start + ROWS_PER_PAGE);
+  }, [safeEvents, eventPage]);
+
+  const paginatedOrcamentos = useMemo(() => {
+    const start = orcPage * ROWS_PER_PAGE;
+    return Orçamentos.slice(start, start + ROWS_PER_PAGE);
+  }, [Orçamentos, orcPage]);
+
+  const totalEventPages = Math.max(1, Math.ceil(safeEvents.length / ROWS_PER_PAGE));
+  const totalOrcPages = Math.max(1, Math.ceil(Orçamentos.length / ROWS_PER_PAGE));
+
+  const handleTabChange = (tab: 'calendario' | 'eventos' | 'orcamentos') => {
+    setActiveTab(tab);
+    setEventPage(0);
+    setOrcPage(0);
+  };
+
   return (
     <div className="relative min-h-screen bg-black">
       {/* Header section */}
@@ -370,13 +392,22 @@ const CRMDashboard = () => {
         <p className="text-neutral-400 text-xs md:text-sm">Bem-vindo ao painel de controle da Ventura Luz e Efeitos.</p>
       </div>
 
-      {/* Tabs: Eventos / Orçamentos */}
-      <div className="bg-[#111] border border-[#333] rounded-2xl shadow-sm overflow-hidden mb-6">
-        {/* Tab navigation bar */}
+      {/* 3-tab navigation */}
+      <div className="bg-[#111] border border-[#333] rounded-2xl mb-6">
         <div className="flex border-b border-[#222] px-6">
           <button
-            onClick={() => setActiveTab('eventos')}
+            onClick={() => handleTabChange('calendario')}
             className={`py-3 px-1 border-b-2 font-bold text-xs uppercase tracking-widest transition-colors whitespace-nowrap ${
+              activeTab === 'calendario'
+                ? 'border-[#B5FF03] text-[#B5FF03]'
+                : 'border-transparent text-[#888888] hover:text-white'
+            }`}
+          >
+            Calendário
+          </button>
+          <button
+            onClick={() => handleTabChange('eventos')}
+            className={`py-3 px-1 border-b-2 font-bold text-xs uppercase tracking-widest transition-colors whitespace-nowrap ml-6 ${
               activeTab === 'eventos'
                 ? 'border-[#B5FF03] text-[#B5FF03]'
                 : 'border-transparent text-[#888888] hover:text-white'
@@ -385,7 +416,7 @@ const CRMDashboard = () => {
             Histórico de Eventos
           </button>
           <button
-            onClick={() => setActiveTab('orcamentos')}
+            onClick={() => handleTabChange('orcamentos')}
             className={`py-3 px-1 border-b-2 font-bold text-xs uppercase tracking-widest transition-colors whitespace-nowrap ml-6 ${
               activeTab === 'orcamentos'
                 ? 'border-[#B5FF03] text-[#B5FF03]'
@@ -395,10 +426,174 @@ const CRMDashboard = () => {
             Histórico de Orçamentos
           </button>
         </div>
+      </div>
 
-        {/* Table content */}
-        <div className="overflow-x-auto">
-          {activeTab === 'eventos' ? (
+      {/* CALENDÁRIO */}
+      {activeTab === 'calendario' && (
+        <div className="bg-[#111] border border-[#333] rounded-2xl shadow-sm overflow-hidden">
+          {/* Top bar */}
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 p-4 md:p-6 border-b border-[#222]">
+            <div>
+              <h2 className="text-lg font-black text-white tracking-tight">Calendário de Eventos</h2>
+              <p className="text-[11px] text-neutral-400 mt-0.5">Visualize e acompanhe seus compromissos agendados.</p>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 bg-[#0a0a0a] border border-[#333] rounded-lg px-3 py-1.5">
+                <button onClick={prevMonth} className="p-1 hover:bg-[#222] rounded-md transition-colors">
+                  <ChevronLeft size={16} className="text-neutral-400" />
+                </button>
+                <span className="text-sm font-bold text-white min-w-[140px] text-center select-none">
+                  {monthNames[viewMonth]} {viewYear}
+                </span>
+                <button onClick={nextMonth} className="p-1 hover:bg-[#222] rounded-md transition-colors">
+                  <ChevronRight size={16} className="text-neutral-400" />
+                </button>
+              </div>
+              <button
+                onClick={() => openCreateModal(new Date().toISOString().split('T')[0])}
+                className="rounded-full px-4 py-2 bg-[#B5FF03] text-black font-bold text-xs uppercase tracking-widest hover:bg-[#a1e600] transition-colors min-h-[44px]"
+              >
+                + CRIAR
+              </button>
+            </div>
+          </div>
+
+          {/* Legend bar */}
+          <div className="flex flex-wrap items-center gap-4 px-4 md:px-6 py-3 border-b border-[#222] bg-[#0a0a0a]">
+            <span className="text-[9px] font-black uppercase tracking-widest text-neutral-400">Status:</span>
+            {Object.entries(statusLabel).map(([key, label]) => (
+              <div key={key} className="flex items-center gap-1.5">
+                <div className={`w-2.5 h-2.5 rounded-full ${statusBg[key]}`} />
+                <span className="text-[10px] text-neutral-500 font-medium">{label}</span>
+              </div>
+            ))}
+            <div className="flex items-center gap-1.5">
+              <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: '#8B5CF6' }} />
+              <span className="text-[10px] text-neutral-500 font-medium">Montagem</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: '#06B6D4' }} />
+              <span className="text-[10px] text-neutral-500 font-medium">Desmontagem</span>
+            </div>
+          </div>
+
+          {/* Two-column layout */}
+          <div className="flex flex-col lg:flex-row">
+            {/* Left - Calendar Grid */}
+            <div className="flex-1 p-4 md:p-6">
+              <div className="grid grid-cols-7 bg-[#222] rounded-lg overflow-hidden">
+                {dayHeaders.map(d => (
+                  <div key={d} className="bg-[#111] text-center text-[9px] font-black uppercase tracking-widest text-neutral-400 py-2 px-1 border-b border-[#222]">
+                    {d}
+                  </div>
+                ))}
+                {Array.from({ length: startOffset }).map((_, i) => (
+                  <div key={`empty-${i}`} className="bg-[#111] min-h-[90px] md:min-h-[110px] border-r border-b border-[#222]" />
+                ))}
+                {Array.from({ length: daysInMonth }).map((_, i) => {
+                  const day = i + 1;
+                  const dayEvents = getEventsForDay(day);
+                  const isToday = day === today.getDate() && isCurrentMonth;
+                  return (
+                    <div
+                      key={day}
+                      role="button"
+                      tabIndex={0}
+                      onClick={() => handleDayClick(day)}
+                      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleDayClick(day); }}
+                      className={`min-h-[90px] md:min-h-[110px] p-1.5 text-left align-top border-r border-b border-[#222] select-none transition-colors
+                        ${isToday ? 'bg-[#1a1a1a] ring-1 ring-inset ring-[#B5FF03]' : 'bg-[#111]'}
+                        hover:bg-[#1a1a1a]`}
+                      style={{ cursor: 'pointer !important', pointerEvents: 'auto !important' } as React.CSSProperties}
+                    >
+                      <span className={`inline-flex items-center justify-center w-5 h-5 text-[10px] font-bold rounded-full mb-1
+                        ${isToday ? 'bg-[#B5FF03] text-black' : 'text-neutral-400'}`}>
+                        {day}
+                      </span>
+                      <div className="space-y-0.5">
+                        {dayEvents.slice(0, 3).map(ev => (
+                          <div
+                            key={ev.id}
+                            className="text-[8px] leading-tight px-1 py-0.5 rounded truncate font-medium text-white"
+                            style={{ backgroundColor: ev.status ? getStatusColor(ev.status) + '25' : '#333', borderLeft: `2px solid ${getStatusColor(ev.status)}` }}
+                          >
+                            {ev.title || ev.client || ev.eventType || 'Evento'}
+                          </div>
+                        ))}
+                        {dayEvents.length > 3 && (
+                          <span className="text-[7px] text-neutral-500 pl-1">+{dayEvents.length - 3} mais</span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Right - Upcoming Events Panel */}
+            <div className="w-full lg:w-80 border-t lg:border-t-0 lg:border-l border-[#222] bg-[#0a0a0a]">
+              <div className="p-4 md:p-6">
+                <h4 className="text-[10px] font-black text-[#B5FF03] uppercase tracking-widest mb-4">Próximos Eventos</h4>
+                <div className="space-y-2">
+                  {upcomingEvents.map((event, idx) => {
+                    const eventDate = event.date ? new Date(event.date + 'T12:00:00') : null;
+                    const daysUntil = eventDate ? Math.ceil((eventDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)) : null;
+                    return (
+                      <button
+                        key={event.id}
+                        onClick={() => {
+                          setSelectedDayEvents([event]);
+                          setSelectedDate(
+                            event.date
+                              ? new Date(event.date + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })
+                              : '—'
+                          );
+                        }}
+                        className={`w-full text-left flex items-start gap-3 p-3 rounded-lg hover:bg-[#1a1a1a] transition-colors group ${idx > 0 ? 'border-t border-[#222]' : ''}`}
+                      >
+                        <div className="flex flex-col items-center min-w-[36px]">
+                          <span className="text-[18px] font-black text-white leading-none">
+                            {eventDate ? eventDate.getDate() : '—'}
+                          </span>
+                          <span className="text-[8px] text-neutral-500 uppercase font-bold">
+                            {eventDate ? eventDate.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '') : ''}
+                          </span>
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-[11px] font-bold text-white truncate group-hover:underline">{event.title || 'Sem título'}</p>
+                          <div className="flex items-center gap-1.5 text-[9px] text-neutral-500 mt-0.5">
+                            <span className={`px-1.5 py-0.5 rounded-full text-[8px] font-bold ${event.status ? statusBg[event.status] : 'bg-[#333]'} ${event.status === 'confirmado' ? 'text-black' : 'text-white'}`}>
+                              {event.status ? statusLabel[event.status] : '—'}
+                            </span>
+                            {event.eventType && <span>{event.eventType}</span>}
+                            {event.time && <><span>•</span><span>{event.time}</span></>}
+                          </div>
+                          {daysUntil !== null && (
+                            <p className="text-[8px] text-neutral-600 mt-1">
+                              {daysUntil === 0 ? 'Hoje' : daysUntil === 1 ? 'Amanhã' : `Em ${daysUntil} dias`}
+                            </p>
+                          )}
+                        </div>
+                      </button>
+                    );
+                  })}
+                  {upcomingEvents.length === 0 && (
+                    <div className="text-center py-8">
+                      <Calendar size={24} className="mx-auto text-neutral-600 mb-2" />
+                      <p className="text-[10px] text-neutral-500 italic">Nenhum evento futuro</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* HISTÓRICO DE EVENTOS */}
+      {activeTab === 'eventos' && (
+        <div className="bg-[#111] border border-[#333] rounded-2xl shadow-sm overflow-hidden">
+          <div className="overflow-x-auto">
             <table className="w-full text-left">
               <thead>
                 <tr className="border-b border-[#222]">
@@ -410,12 +605,12 @@ const CRMDashboard = () => {
                 </tr>
               </thead>
               <tbody>
-                {safeEvents.length === 0 ? (
+                {paginatedEvents.length === 0 ? (
                   <tr>
                     <td colSpan={5} className="text-center py-8 text-neutral-500 text-xs italic">Nenhum evento encontrado.</td>
                   </tr>
                 ) : (
-                  safeEvents.map(event => (
+                  paginatedEvents.map(event => (
                     <tr key={event.id} className="border-b border-[#222] hover:bg-[#0a0a0a] transition-colors">
                       <td className="px-4 py-3 text-sm text-white">{event.client || event.title || '—'}</td>
                       <td className="px-4 py-3 text-sm text-neutral-300">{event.eventType || '—'}</td>
@@ -441,7 +636,44 @@ const CRMDashboard = () => {
                 )}
               </tbody>
             </table>
-          ) : (
+          </div>
+          {/* Pagination footer */}
+          <div className="flex items-center justify-between px-4 py-3 border-t border-[#222] bg-[#0a0a0a]">
+            <span className="text-[11px] text-neutral-500">
+              Página {eventPage + 1} de {totalEventPages} ({safeEvents.length} registros)
+            </span>
+            <div className="flex items-center gap-2">
+              <button
+                disabled={eventPage === 0}
+                onClick={() => setEventPage(p => Math.max(0, p - 1))}
+                className={`px-3 py-1 text-[10px] font-bold uppercase tracking-widest rounded-md transition-colors ${
+                  eventPage === 0
+                    ? 'text-neutral-600 cursor-not-allowed'
+                    : 'text-white hover:bg-[#222]'
+                }`}
+              >
+                Anterior
+              </button>
+              <button
+                disabled={eventPage >= totalEventPages - 1}
+                onClick={() => setEventPage(p => Math.min(totalEventPages - 1, p + 1))}
+                className={`px-3 py-1 text-[10px] font-bold uppercase tracking-widest rounded-md transition-colors ${
+                  eventPage >= totalEventPages - 1
+                    ? 'text-neutral-600 cursor-not-allowed'
+                    : 'text-white hover:bg-[#222]'
+                }`}
+              >
+                Próximo
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* HISTÓRICO DE ORÇAMENTOS */}
+      {activeTab === 'orcamentos' && (
+        <div className="bg-[#111] border border-[#333] rounded-2xl shadow-sm overflow-hidden">
+          <div className="overflow-x-auto">
             <table className="w-full text-left">
               <thead>
                 <tr className="border-b border-[#222]">
@@ -452,12 +684,12 @@ const CRMDashboard = () => {
                 </tr>
               </thead>
               <tbody>
-                {Orçamentos.length === 0 ? (
+                {paginatedOrcamentos.length === 0 ? (
                   <tr>
                     <td colSpan={4} className="text-center py-8 text-neutral-500 text-xs italic">Nenhum orçamento encontrado.</td>
                   </tr>
                 ) : (
-                  Orçamentos.map(lead => (
+                  paginatedOrcamentos.map(lead => (
                     <tr key={lead.id} className="border-b border-[#222] hover:bg-[#0a0a0a] transition-colors">
                       <td className="px-4 py-3 text-sm text-white">{lead.name || '—'}</td>
                       <td className="px-4 py-3 text-sm text-neutral-300">{formatDate(lead.firstContact)}</td>
@@ -474,172 +706,39 @@ const CRMDashboard = () => {
                 )}
               </tbody>
             </table>
-          )}
-        </div>
-      </div>
-
-      {/* Expanded Calendar Section */}
-      <div className="bg-[#111] border border-[#333] rounded-2xl shadow-sm overflow-hidden">
-        {/* Top bar */}
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 p-4 md:p-6 border-b border-[#222]">
-          <div>
-            <h2 className="text-lg font-black text-white tracking-tight">Calendário de Eventos</h2>
-            <p className="text-[11px] text-neutral-400 mt-0.5">Visualize e acompanhe seus compromissos agendados.</p>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 bg-[#0a0a0a] border border-[#333] rounded-lg px-3 py-1.5">
-              <button onClick={prevMonth} className="p-1 hover:bg-[#222] rounded-md transition-colors">
-                <ChevronLeft size={16} className="text-neutral-400" />
+          {/* Pagination footer */}
+          <div className="flex items-center justify-between px-4 py-3 border-t border-[#222] bg-[#0a0a0a]">
+            <span className="text-[11px] text-neutral-500">
+              Página {orcPage + 1} de {totalOrcPages} ({Orçamentos.length} registros)
+            </span>
+            <div className="flex items-center gap-2">
+              <button
+                disabled={orcPage === 0}
+                onClick={() => setOrcPage(p => Math.max(0, p - 1))}
+                className={`px-3 py-1 text-[10px] font-bold uppercase tracking-widest rounded-md transition-colors ${
+                  orcPage === 0
+                    ? 'text-neutral-600 cursor-not-allowed'
+                    : 'text-white hover:bg-[#222]'
+                }`}
+              >
+                Anterior
               </button>
-              <span className="text-sm font-bold text-white min-w-[140px] text-center select-none">
-                {monthNames[viewMonth]} {viewYear}
-              </span>
-              <button onClick={nextMonth} className="p-1 hover:bg-[#222] rounded-md transition-colors">
-                <ChevronRight size={16} className="text-neutral-400" />
+              <button
+                disabled={orcPage >= totalOrcPages - 1}
+                onClick={() => setOrcPage(p => Math.min(totalOrcPages - 1, p + 1))}
+                className={`px-3 py-1 text-[10px] font-bold uppercase tracking-widest rounded-md transition-colors ${
+                  orcPage >= totalOrcPages - 1
+                    ? 'text-neutral-600 cursor-not-allowed'
+                    : 'text-white hover:bg-[#222]'
+                }`}
+              >
+                Próximo
               </button>
             </div>
-            <button
-              onClick={() => openCreateModal(new Date().toISOString().split('T')[0])}
-              className="rounded-full px-4 py-2 bg-[#B5FF03] text-black font-bold text-xs uppercase tracking-widest hover:bg-[#a1e600] transition-colors min-h-[44px]"
-            >
-              + CRIAR
-            </button>
           </div>
         </div>
-
-        {/* Legend bar */}
-        <div className="flex flex-wrap items-center gap-4 px-4 md:px-6 py-3 border-b border-[#222] bg-[#0a0a0a]">
-          <span className="text-[9px] font-black uppercase tracking-widest text-neutral-400">Status:</span>
-          {Object.entries(statusLabel).map(([key, label]) => (
-            <div key={key} className="flex items-center gap-1.5">
-              <div className={`w-2.5 h-2.5 rounded-full ${statusBg[key]}`} />
-              <span className="text-[10px] text-neutral-500 font-medium">{label}</span>
-            </div>
-          ))}
-          <div className="flex items-center gap-1.5">
-            <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: '#8B5CF6' }} />
-            <span className="text-[10px] text-neutral-500 font-medium">Montagem</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: '#06B6D4' }} />
-            <span className="text-[10px] text-neutral-500 font-medium">Desmontagem</span>
-          </div>
-        </div>
-
-        {/* Two-column layout */}
-        <div className="flex flex-col lg:flex-row">
-          {/* Left - Calendar Grid */}
-          <div className="flex-1 p-4 md:p-6">
-            <div className="grid grid-cols-7 bg-[#222] rounded-lg overflow-hidden">
-              {/* Day headers */}
-              {dayHeaders.map(d => (
-                <div key={d} className="bg-[#111] text-center text-[9px] font-black uppercase tracking-widest text-neutral-400 py-2 px-1 border-b border-[#222]">
-                  {d}
-                </div>
-              ))}
-              {/* Empty offset cells */}
-              {Array.from({ length: startOffset }).map((_, i) => (
-                <div key={`empty-${i}`} className="bg-[#111] min-h-[90px] md:min-h-[110px] border-r border-b border-[#222]" />
-              ))}
-              {/* Day cells */}
-              {Array.from({ length: daysInMonth }).map((_, i) => {
-                const day = i + 1;
-                const dayEvents = getEventsForDay(day);
-                const isToday = day === today.getDate() && isCurrentMonth;
-                return (
-                  <div
-                    key={day}
-                    role="button"
-                    tabIndex={0}
-                    onClick={() => handleDayClick(day)}
-                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleDayClick(day); }}
-                    className={`min-h-[90px] md:min-h-[110px] p-1.5 text-left align-top border-r border-b border-[#222] select-none transition-colors
-                      ${isToday ? 'bg-[#1a1a1a] ring-1 ring-inset ring-[#B5FF03]' : 'bg-[#111]'}
-                      hover:bg-[#1a1a1a]`}
-                    style={{ cursor: 'pointer !important', pointerEvents: 'auto !important' } as React.CSSProperties}
-                  >
-                    <span className={`inline-flex items-center justify-center w-5 h-5 text-[10px] font-bold rounded-full mb-1
-                      ${isToday ? 'bg-[#B5FF03] text-black' : 'text-neutral-400'}`}>
-                      {day}
-                    </span>
-                    <div className="space-y-0.5">
-                      {dayEvents.slice(0, 3).map(ev => (
-                        <div
-                          key={ev.id}
-                          className="text-[8px] leading-tight px-1 py-0.5 rounded truncate font-medium text-white"
-                          style={{ backgroundColor: ev.status ? getStatusColor(ev.status) + '25' : '#333', borderLeft: `2px solid ${getStatusColor(ev.status)}` }}
-                        >
-                          {ev.title || ev.client || ev.eventType || 'Evento'}
-                        </div>
-                      ))}
-                      {dayEvents.length > 3 && (
-                        <span className="text-[7px] text-neutral-500 pl-1">+{dayEvents.length - 3} mais</span>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Right - Upcoming Events Panel */}
-          <div className="w-full lg:w-80 border-t lg:border-t-0 lg:border-l border-[#222] bg-[#0a0a0a]">
-            <div className="p-4 md:p-6">
-              <h4 className="text-[10px] font-black text-[#B5FF03] uppercase tracking-widest mb-4">Próximos Eventos</h4>
-              <div className="space-y-2">
-                {upcomingEvents.map((event, idx) => {
-                  const eventDate = event.date ? new Date(event.date + 'T12:00:00') : null;
-                  const daysUntil = eventDate ? Math.ceil((eventDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)) : null;
-                  return (
-                    <button
-                      key={event.id}
-                      onClick={() => {
-                        setSelectedDayEvents([event]);
-                        setSelectedDate(
-                          event.date
-                            ? new Date(event.date + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' })
-                            : '—'
-                        );
-                      }}
-                      className={`w-full text-left flex items-start gap-3 p-3 rounded-lg hover:bg-[#1a1a1a] transition-colors group ${idx > 0 ? 'border-t border-[#222]' : ''}`}
-                    >
-                      <div className="flex flex-col items-center min-w-[36px]">
-                        <span className="text-[18px] font-black text-white leading-none">
-                          {eventDate ? eventDate.getDate() : '—'}
-                        </span>
-                        <span className="text-[8px] text-neutral-500 uppercase font-bold">
-                          {eventDate ? eventDate.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '') : ''}
-                        </span>
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-[11px] font-bold text-white truncate group-hover:underline">{event.title || 'Sem título'}</p>
-                        <div className="flex items-center gap-1.5 text-[9px] text-neutral-500 mt-0.5">
-                          <span className={`px-1.5 py-0.5 rounded-full text-[8px] font-bold ${event.status ? statusBg[event.status] : 'bg-[#333]'} ${event.status === 'confirmado' ? 'text-black' : 'text-white'}`}>
-                            {event.status ? statusLabel[event.status] : '—'}
-                          </span>
-                          {event.eventType && <span>{event.eventType}</span>}
-                          {event.time && <><span>•</span><span>{event.time}</span></>}
-                        </div>
-                        {daysUntil !== null && (
-                          <p className="text-[8px] text-neutral-600 mt-1">
-                            {daysUntil === 0 ? 'Hoje' : daysUntil === 1 ? 'Amanhã' : `Em ${daysUntil} dias`}
-                          </p>
-                        )}
-                      </div>
-                    </button>
-                  );
-                })}
-                {upcomingEvents.length === 0 && (
-                  <div className="text-center py-8">
-                    <Calendar size={24} className="mx-auto text-neutral-600 mb-2" />
-                    <p className="text-[10px] text-neutral-500 italic">Nenhum evento futuro</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
+      )}
 
       {/* Event Detail Modal */}
       {selectedDayEvents && (
