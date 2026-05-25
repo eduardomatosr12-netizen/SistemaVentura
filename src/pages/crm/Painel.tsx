@@ -1,10 +1,9 @@
 import { useState, useMemo } from 'react';
-import { Calendar, UserPlus, ArrowRight, CheckSquare, Activity, AlertCircle, LayoutDashboard, X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Calendar, UserPlus, ArrowRight, CheckSquare, Activity, AlertCircle, LayoutDashboard, X, ChevronLeft, ChevronRight, User, Phone, Mail, CreditCard, CalendarDays, Clock } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { useCRM } from '../../contexts/CRMContext';
-import type { CalendarEvent } from '../../contexts/CRMContext';
+import type { CalendarEvent, Lead } from '../../contexts/CRMContext';
 import { useActivityLogs } from '../../contexts/ActivityContext';
-import { useNavigate } from 'react-router-dom';
 
 const ACTION_ICONS: Record<string, LucideIcon> = {
   lead_criado: UserPlus,
@@ -54,14 +53,82 @@ const statusBg: Record<string, string> = {
   realizado: 'bg-[#3b82f6]',
 };
 
+const EVENT_TYPES = ['Aniver', 'Casam', 'Corporativo', 'Privado', 'Outros'];
+
 const CRMDashboard = () => {
-  const { events } = useCRM();
+  const { events, Orçamentos, addLead, addEvent } = useCRM();
   const { activityLogs, isLoadingLogs, fetchActivityLogsError } = useActivityLogs();
-  const navigate = useNavigate();
   const [selectedDayEvents, setSelectedDayEvents] = useState<CalendarEvent[] | null>(null);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [viewYear, setViewYear] = useState(new Date().getFullYear());
   const [viewMonth, setViewMonth] = useState(new Date().getMonth());
+
+  // Create modal state
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [createMode, setCreateMode] = useState<'novo_cliente' | 'novo_evento'>('novo_cliente');
+  const [createDate, setCreateDate] = useState('');
+  const [formData, setFormData] = useState({
+    name: '', whatsapp: '', email: '', cpf: '',
+    eventType: '', date: '', time: '',
+  });
+  const [selectedClientId, setSelectedClientId] = useState('');
+
+  const openCreateModal = (dateStr: string) => {
+    setCreateDate(dateStr);
+    setFormData(prev => ({ ...prev, date: dateStr }));
+    setSelectedClientId('');
+    setCreateMode('novo_cliente');
+    setIsCreateOpen(true);
+  };
+
+  const handleCreateSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (createMode === 'novo_cliente') {
+      const leadInput = {
+        name: formData.name,
+        niche: formData.eventType || 'Evento',
+        whatsapp: formData.whatsapp,
+        email: formData.email,
+        instagram: '',
+        stage: 'Novos Orçamentos',
+        origin: 'evento',
+        firstContact: formData.date || new Date().toISOString().split('T')[0],
+        closingDate: '',
+        followUpReminder: '',
+        address: '',
+        notes: '',
+        value: '',
+      };
+      addLead(leadInput);
+      addEvent({
+        title: formData.eventType ? `${formData.eventType} - ${formData.name}` : formData.name,
+        client: formData.name,
+        clientPhone: formData.whatsapp,
+        clientEmail: formData.email,
+        clientCpf: formData.cpf,
+        eventType: formData.eventType,
+        date: formData.date,
+        time: formData.time,
+        status: 'pendente',
+      });
+    } else {
+      const client = Orçamentos.find(l => l.id === selectedClientId);
+      if (!client) return;
+      addEvent({
+        title: formData.eventType ? `${formData.eventType} - ${client.name}` : client.name,
+        client: client.name,
+        clientId: client.id,
+        clientPhone: client.whatsapp,
+        clientEmail: client.email,
+        clientCpf: '',
+        eventType: formData.eventType,
+        date: formData.date,
+        time: formData.time,
+        status: 'pendente',
+      });
+    }
+    setIsCreateOpen(false);
+  };
 
   const displayLogs = useMemo(() => {
     return activityLogs.slice(0, 10).filter(log => log?.id && log?.acao);
@@ -117,7 +184,7 @@ const CRMDashboard = () => {
     const dateObj = new Date(viewYear, viewMonth, day);
     if (events.length === 0) {
       const dateStr = `${viewYear}-${String(viewMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-      navigate('/calendario', { state: { preselectedDate: dateStr } });
+      openCreateModal(dateStr);
       return;
     }
     setSelectedDayEvents(events);
@@ -170,7 +237,7 @@ const CRMDashboard = () => {
               </button>
             </div>
             <button
-              onClick={() => navigate('/calendario')}
+              onClick={() => openCreateModal(new Date().toISOString().split('T')[0])}
               className="rounded-full px-4 py-2 bg-[#B5FF03] text-black font-bold text-xs uppercase tracking-widest hover:bg-[#a1e600] transition-colors min-h-[44px]"
             >
               + CRIAR
@@ -398,6 +465,120 @@ const CRMDashboard = () => {
                 </div>
               ))}
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Create Event/Client Modal */}
+      {isCreateOpen && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[100] p-4" onClick={() => setIsCreateOpen(false)}>
+          <div className="bg-[#0a0a0a] border border-[#222222] rounded-lg w-full max-w-md" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between p-4 border-b border-[#222]">
+              <h3 className="text-sm font-black uppercase tracking-widest text-[#B5FF03]">Novo Evento</h3>
+              <button onClick={() => setIsCreateOpen(false)} className="p-1 hover:bg-[#222] rounded-md transition-colors">
+                <X size={16} className="text-neutral-400" />
+              </button>
+            </div>
+            {/* Mode toggle */}
+            <div className="flex border-b border-[#222]">
+              <button
+                onClick={() => setCreateMode('novo_cliente')}
+                className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest transition-colors ${createMode === 'novo_cliente' ? 'text-[#B5FF03] border-b-2 border-[#B5FF03]' : 'text-neutral-500 hover:text-white'}`}
+              >
+                Novo Cliente
+              </button>
+              <button
+                onClick={() => setCreateMode('novo_evento')}
+                className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest transition-colors ${createMode === 'novo_evento' ? 'text-[#B5FF03] border-b-2 border-[#B5FF03]' : 'text-neutral-500 hover:text-white'}`}
+              >
+                Novo Evento
+              </button>
+            </div>
+            <form onSubmit={handleCreateSubmit} className="p-4 space-y-4">
+              {createMode === 'novo_cliente' ? (
+                <>
+                  <div>
+                    <label className="block text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-1.5 flex items-center gap-1.5">
+                      <User size={12} /> Nome
+                    </label>
+                    <input type="text" value={formData.name} onChange={e => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                      className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-sm text-white focus:border-[#B5FF03] outline-none" required />
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-1.5 flex items-center gap-1.5">
+                        <Phone size={12} /> WhatsApp
+                      </label>
+                      <input type="text" value={formData.whatsapp} onChange={e => setFormData(prev => ({ ...prev, whatsapp: e.target.value }))}
+                        className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-sm text-white focus:border-[#B5FF03] outline-none" required />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-1.5 flex items-center gap-1.5">
+                        <Mail size={12} /> E-mail
+                      </label>
+                      <input type="email" value={formData.email} onChange={e => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                        className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-sm text-white focus:border-[#B5FF03] outline-none" required />
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-1.5 flex items-center gap-1.5">
+                      <CreditCard size={12} /> CPF
+                    </label>
+                    <input type="text" value={formData.cpf} onChange={e => setFormData(prev => ({ ...prev, cpf: e.target.value }))}
+                      className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-sm text-white focus:border-[#B5FF03] outline-none" />
+                  </div>
+                </>
+              ) : (
+                <div>
+                  <label className="block text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-1.5 flex items-center gap-1.5">
+                    <User size={12} /> Selecione o Cliente
+                  </label>
+                  <select value={selectedClientId} onChange={e => setSelectedClientId(e.target.value)}
+                    className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-sm text-white focus:border-[#B5FF03] outline-none" required>
+                    <option value="">Selecionar...</option>
+                    {Orçamentos.map(lead => (
+                      <option key={lead.id} value={lead.id}>{lead.name} — {lead.whatsapp}</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+              {/* Event fields — common to both modes */}
+              <div className="border-t border-[#222] pt-4">
+                <p className="text-[9px] font-black uppercase tracking-widest text-neutral-400 mb-3">Dados do Evento</p>
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-1.5 flex items-center gap-1.5">
+                      <CalendarDays size={12} /> Tipo de Evento
+                    </label>
+                    <select value={formData.eventType} onChange={e => setFormData(prev => ({ ...prev, eventType: e.target.value }))}
+                      className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-sm text-white focus:border-[#B5FF03] outline-none" required>
+                      <option value="">Selecionar...</option>
+                      {EVENT_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+                    </select>
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-1.5 flex items-center gap-1.5">
+                        <CalendarDays size={12} /> Data
+                      </label>
+                      <input type="date" value={formData.date} onChange={e => setFormData(prev => ({ ...prev, date: e.target.value }))}
+                        className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-sm text-white focus:border-[#B5FF03] outline-none" required />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-1.5 flex items-center gap-1.5">
+                        <Clock size={12} /> Horário
+                      </label>
+                      <input type="time" value={formData.time} onChange={e => setFormData(prev => ({ ...prev, time: e.target.value }))}
+                        className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-sm text-white focus:border-[#B5FF03] outline-none" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <button type="submit"
+                className="w-full py-3 bg-[#B5FF03] text-black font-bold text-xs uppercase tracking-widest rounded-lg hover:bg-[#a1e600] transition-colors">
+                {createMode === 'novo_cliente' ? 'Cadastrar Cliente e Agendar' : 'Agendar Evento'}
+              </button>
+            </form>
           </div>
         </div>
       )}
