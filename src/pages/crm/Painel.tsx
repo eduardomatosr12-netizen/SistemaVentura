@@ -673,7 +673,7 @@ const CRMDashboard = () => {
                         <Mail size={12} /> E-mail
                       </label>
                       <input type="email" value={formData.email} onChange={e => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                        className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-sm text-white focus:border-[#B5FF03] outline-none" required />
+                        className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-sm text-white focus:border-[#B5FF03] outline-none" />
                     </div>
                   </div>
                   <div>
