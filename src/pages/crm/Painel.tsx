@@ -193,16 +193,16 @@ const CRMDashboard = () => {
         <div className="flex flex-col lg:flex-row">
           {/* Left - Calendar Grid */}
           <div className="flex-1 p-4 md:p-6">
-            <div className="grid grid-cols-7 gap-px bg-[#222] rounded-lg overflow-hidden">
+            <div className="grid grid-cols-7 bg-[#222] rounded-lg overflow-hidden">
               {/* Day headers */}
               {dayHeaders.map(d => (
-                <div key={d} className="bg-[#111] text-center text-[9px] font-black uppercase tracking-widest text-neutral-400 py-2 px-1">
+                <div key={d} className="bg-[#111] text-center text-[9px] font-black uppercase tracking-widest text-neutral-400 py-2 px-1 border-b border-[#222]">
                   {d}
                 </div>
               ))}
               {/* Empty offset cells */}
               {Array.from({ length: startOffset }).map((_, i) => (
-                <div key={`empty-${i}`} className="bg-[#111] min-h-[90px] md:min-h-[110px]" />
+                <div key={`empty-${i}`} className="bg-[#111] min-h-[90px] md:min-h-[110px] border-r border-b border-[#222]" />
               ))}
               {/* Day cells */}
               {Array.from({ length: daysInMonth }).map((_, i) => {
@@ -210,12 +210,16 @@ const CRMDashboard = () => {
                 const dayEvents = getEventsForDay(day);
                 const isToday = day === today.getDate() && isCurrentMonth;
                 return (
-                  <button
+                  <div
                     key={day}
+                    role="button"
+                    tabIndex={0}
                     onClick={() => handleDayClick(day)}
-                    className={`bg-[#111] min-h-[90px] md:min-h-[110px] p-1.5 text-left align-top transition-colors cursor-pointer
-                      ${isToday ? 'ring-1 ring-inset ring-[#B5FF03]' : ''}
-                      hover:bg-[#1a1a1a] hover:ring-1 hover:ring-inset hover:ring-[#333]`}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleDayClick(day); }}
+                    className={`min-h-[90px] md:min-h-[110px] p-1.5 text-left align-top border-r border-b border-[#222] select-none transition-colors
+                      ${isToday ? 'bg-[#1a1a1a] ring-1 ring-inset ring-[#B5FF03]' : 'bg-[#111]'}
+                      hover:bg-[#1a1a1a]`}
+                    style={{ cursor: 'pointer !important', pointerEvents: 'auto !important' } as React.CSSProperties}
                   >
                     <span className={`inline-flex items-center justify-center w-5 h-5 text-[10px] font-bold rounded-full mb-1
                       ${isToday ? 'bg-[#B5FF03] text-black' : 'text-neutral-400'}`}>
@@ -235,7 +239,7 @@ const CRMDashboard = () => {
                         <span className="text-[7px] text-neutral-500 pl-1">+{dayEvents.length - 3} mais</span>
                       )}
                     </div>
-                  </button>
+                  </div>
                 );
               })}
             </div>
