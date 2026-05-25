@@ -1015,7 +1015,6 @@ const CRMDashboard = () => {
                             </div>
                           </div>
                         );
-                        );
                       })}
                       {formData.orcamentoItems.length === 0 && !invSearchOpen && (
                         <div className="text-center py-3 bg-[#111] border border-dashed border-[#333] rounded-lg">
