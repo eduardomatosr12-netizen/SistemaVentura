@@ -91,7 +91,7 @@ export function useNotifications() {
           time: formatRelativeTime(lead.firstContact),
           timestamp: lead.firstContact || nowISO,
           isRead: readMap[id] || false,
-          type: 'orcamento_pendente', link: '/crm/pipeline',
+          type: 'orcamento_pendente', link: '/contatos',
         });
       }
 

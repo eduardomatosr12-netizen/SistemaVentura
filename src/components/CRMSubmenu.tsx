@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Users, GitBranch, Calendar, Upload } from 'lucide-react';
+import { LayoutDashboard, Users, Calendar, Upload } from 'lucide-react';
 
 const CRMSubmenu = () => {
   const location = useLocation();
@@ -7,7 +7,6 @@ const CRMSubmenu = () => {
   const crmSubItems = [
     { id: 'painel', label: 'Painel', icon: LayoutDashboard, path: '/crm/painel' },
     { id: 'orcamentos', label: 'Clientes', icon: Users, path: '/crm/orcamentos' },
-    { id: 'pipeline', label: 'Etapas', icon: GitBranch, path: '/crm/pipeline' },
     { id: 'calendario', label: 'Calendário', icon: Calendar, path: '/crm/calendario' },
     { id: 'importar', label: 'Importar', icon: Upload, path: '/crm/importar' },
   ];

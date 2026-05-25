@@ -4,7 +4,7 @@ import { useLocation, useNavigate, Link } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import TopHeader from '../components/TopHeader';
 import { useAuth } from '../contexts/AuthContext';
-import { LayoutDashboard, GitBranch, Users, Calendar, Clock, Phone, DollarSign, Package } from 'lucide-react';
+import { LayoutDashboard, Users, Calendar, Clock, Phone, DollarSign, Package } from 'lucide-react';
 
 type UserRole = 'admin' | 'employee';
 
@@ -176,10 +176,6 @@ const MainLayout = ({ children, hideSubmenu }: MainLayoutProps) => {
         <Link to="/home" className={`flex flex-col items-center gap-0.5 px-3 py-2 ${location.pathname === '/home' ? 'text-[#B5FF03]' : 'text-neutral-400'}`}>
           <LayoutDashboard size={20} />
           <span className="text-[10px] font-bold uppercase tracking-wider">Home</span>
-        </Link>
-        <Link to="/pipeline" className={`flex flex-col items-center gap-0.5 px-3 py-2 ${location.pathname === '/pipeline' ? 'text-[#B5FF03]' : 'text-neutral-400'}`}>
-          <GitBranch size={20} />
-          <span className="text-[10px] font-bold uppercase tracking-wider">Pipeline</span>
         </Link>
         <Link to="/contatos" className={`flex flex-col items-center gap-0.5 px-3 py-2 ${location.pathname === '/contatos' ? 'text-[#B5FF03]' : 'text-neutral-400'}`}>
           <Users size={20} />

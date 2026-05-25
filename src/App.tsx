@@ -12,7 +12,6 @@ import UpdatePassword from './pages/UpdatePassword';
 import MainLayout from './layouts/MainLayout';
 import CRMPainel from './pages/crm/Painel';
 import OrçamentosPage from './pages/crm/Orçamentos';
-import CRMPipeline from './pages/crm/Pipeline';
 import CRMCalendario from './pages/crm/Calendario';
 import CRMImportar from './pages/crm/Importar';
 import Financeiro from './pages/financeiro/Index';
@@ -58,18 +57,6 @@ function AppRoutes() {
           <ProtectedRoute allowedRoles={['admin', 'manager', 'user']}>
             <MainLayout hideSubmenu>
               <CRMPainel />
-            </MainLayout>
-          </ProtectedRoute>
-        }
-      />
-
-      {/* PIPELINE - Independente */}
-      <Route
-        path="/pipeline"
-        element={
-          <ProtectedRoute allowedRoles={['admin', 'manager', 'user']}>
-            <MainLayout hideSubmenu>
-              <CRMPipeline />
             </MainLayout>
           </ProtectedRoute>
         }
@@ -125,7 +112,7 @@ function AppRoutes() {
 
       {/* Legacy CRM routes - keep for backward compatibility */}
       <Route path="/crm/painel" element={<Navigate to="/home" replace />} />
-      <Route path="/crm/pipeline" element={<Navigate to="/pipeline" replace />} />
+      <Route path="/crm/pipeline" element={<Navigate to="/home" replace />} />
       <Route path="/crm/orcamentos" element={<Navigate to="/contatos" replace />} />
       <Route path="/crm/calendario" element={<Navigate to="/calendario" replace />} />
       <Route path="/crm/reuniao" element={<Navigate to="/reuniao" replace />} />

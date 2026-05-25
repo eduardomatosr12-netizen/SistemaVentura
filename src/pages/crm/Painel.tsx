@@ -4,7 +4,6 @@ import type { LucideIcon } from 'lucide-react';
 import { useCRM, type Lead } from '../../contexts/CRMContext';
 import type { CalendarEvent } from '../../contexts/CRMContext';
 import { useActivityLogs } from '../../contexts/ActivityContext';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useFilters } from '../../contexts/FilterContext';
 import { Link } from 'react-router-dom';
 
@@ -34,11 +33,6 @@ interface Stat {
   stageFilter?: string;
 }
 
-interface ChartDataPoint {
-  name: string;
-  value: number;
-}
-
 interface ActionIconConfig {
   [key: string]: LucideIcon;
 }
@@ -48,17 +42,6 @@ const ACTION_ICONS: ActionIconConfig = {
   lead_movido: ArrowRight,
   lead_atualizado: ArrowRight,
   tarefa_concluida: CheckSquare,
-};
-
-const CHART_CONFIG = {
-  margin: { top: 20, right: 10, left: 0, bottom: 60 },
-  barSize: 40,
-  colors: {
-    fill: '#B5FF03',
-    grid: '#333',
-    stroke: '#666',
-    tooltip: { bg: '#111', border: '#333', text: '#fff', fontSize: '12px' },
-  },
 };
 
 const formatRelativeTime = (timestamp: string): string => {
@@ -164,20 +147,11 @@ const CRMDashboard = () => {
     dateFilter: filters.dateFilter,
   }), [Orçamentos, filters]);
 
-  const chartData = useMemo((): ChartDataPoint[] => {
-    return STAGES.map(stage => ({
-      name: stage,
-      value: filteredOrçamentos.filter(l => l.stage === stage).length
-    }));
-  }, [filteredOrçamentos]);
-
   const stats = useMemo(() => calculateStats(filteredOrçamentos, CHART_ICONS), [filteredOrçamentos]);
 
   const displayLogs = useMemo(() => {
     return activityLogs.slice(0, 10).filter(log => log?.id && log?.acao);
   }, [activityLogs]);
-
-  const hasChartData = chartData.length > 0 && filteredOrçamentos.length > 0;
 
   // Calendar widget helpers
   const today = new Date();
@@ -287,74 +261,7 @@ const CRMDashboard = () => {
         })}
       </div>
 
-      {/* Two Column Layout: Chart + Calendar Widget */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6 md:mb-10">
-        {/* Pipeline Chart */}
-        <div className="lg:col-span-2 bg-[#111] border border-[#333] rounded-2xl p-4 md:p-8 shadow-sm overflow-x-auto">
-          <div className="mb-6 md:mb-8">
-            <h2 className="text-lg md:text-xl font-bold text-white mb-1">Visão Geral do Pipeline</h2>
-            <p className="text-neutral-400 text-[10px] md:text-xs uppercase font-bold tracking-widest">Distribuição de Orçamentos por etapa</p>
-          </div>
-          
-          <div className="min-h-[280px] md:min-h-[400px]">
-            {hasChartData ? (
-              <ResponsiveContainer width="100%" height={350}>
-                <BarChart 
-                  data={chartData} 
-                  margin={CHART_CONFIG.margin}
-                >
-                  <CartesianGrid 
-                    strokeDasharray="3 3" 
-                    stroke={CHART_CONFIG.colors.grid} 
-                    vertical={false} 
-                  />
-                  <XAxis 
-                    dataKey="name" 
-                    stroke={CHART_CONFIG.colors.stroke} 
-                    fontSize={10} 
-                    fontWeight={600}
-                    tickLine={false}
-                    axisLine={false}
-                    interval={0}
-                    angle={-30}
-                    textAnchor="end"
-                    dy={8}
-                    dx={5}
-                  />
-                  <YAxis 
-                    stroke="#888" 
-                    fontSize={11} 
-                    tickLine={false}
-                    axisLine={false}
-                  />
-                  <Tooltip 
-                    cursor={{ fill: 'rgba(181,255,3,0.1)' }}
-                    contentStyle={{ 
-                      backgroundColor: CHART_CONFIG.colors.tooltip.bg, 
-                      border: `1px solid ${CHART_CONFIG.colors.tooltip.border}`,
-                      borderRadius: '12px',
-                      color: CHART_CONFIG.colors.tooltip.text,
-                      fontSize: CHART_CONFIG.colors.tooltip.fontSize,
-                      fontWeight: '600'
-                    }}
-                  />
-                  <Bar 
-                    dataKey="value" 
-                    fill={CHART_CONFIG.colors.fill} 
-                    radius={[4, 4, 0, 0]}
-                    barSize={CHART_CONFIG.barSize}
-                  />
-                </BarChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="h-full flex items-center justify-center text-neutral-400 text-sm">
-                Nenhum dado disponível
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Mini Calendário Widget */}
+      {/* Mini Calendário Widget */}
         <div className="bg-[#111] border border-[#333] rounded-2xl p-4 md:p-6 shadow-sm">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-xs font-black text-[#B5FF03] uppercase tracking-widest flex items-center gap-2">
@@ -445,7 +352,6 @@ const CRMDashboard = () => {
             )}
           </div>
         </div>
-      </div>
 
       {/* Atividades Recentes */}
       <div className="bg-[#111] border border-[#333] rounded-2xl p-4 md:p-8 shadow-sm">

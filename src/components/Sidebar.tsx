@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { BarChart3, DollarSign, Package, Settings, LogOut, X, User, MessageCircle, LayoutDashboard, GitBranch, Users, Calendar, Clock, Phone } from 'lucide-react';
+import { BarChart3, DollarSign, Package, Settings, LogOut, X, User, MessageCircle, LayoutDashboard, Users, Calendar, Clock, Phone } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 interface SidebarProps {
@@ -14,7 +14,6 @@ const Sidebar = ({ isOpen = false, onClose }: SidebarProps) => {
 
   const mainMenuItems = [
     { id: 'home', label: 'Home', icon: LayoutDashboard, path: '/home', allowedRoles: ['admin', 'manager', 'user'] as const },
-    { id: 'pipeline', label: 'Pipeline', icon: GitBranch, path: '/pipeline', allowedRoles: ['admin', 'manager', 'user'] as const },
     { id: 'contatos', label: 'Contatos', icon: Users, path: '/contatos', allowedRoles: ['admin', 'manager', 'user'] as const },
     { id: 'reuniao', label: 'Reunião', icon: Calendar, path: '/reuniao', allowedRoles: ['admin', 'manager', 'user'] as const },
     { id: 'calendario', label: 'Calendário', icon: Clock, path: '/calendario', allowedRoles: ['admin', 'manager', 'user'] as const },

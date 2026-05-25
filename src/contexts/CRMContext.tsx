@@ -68,7 +68,6 @@ interface CRMContextType {
   updateEvent: (id: string, event: Partial<CalendarEvent>) => void;
   deleteEvent: (id: string) => void;
   OrçamentosByStage: Record<Stage, Lead[]>;
-  totalPipelineValue: number;
 }
 
 const CRMContext = createContext<CRMContextType | undefined>(undefined);
@@ -183,8 +182,6 @@ export const CRMProvider = ({ children }: { children: ReactNode }) => {
 
   const OrçamentosByStage = useMemo(() => groupOrçamentosByStage(Orçamentos), [Orçamentos]);
   
-  const totalPipelineValue = useMemo(() => calculateTotalValue(Orçamentos), [Orçamentos]);
-
   const addLead = useCallback((lead: LeadInput) => {
     const id = generateUUID();
     const newLead: Lead = { ...lead, id };
@@ -242,7 +239,6 @@ export const CRMProvider = ({ children }: { children: ReactNode }) => {
     updateEvent,
     deleteEvent,
     OrçamentosByStage,
-    totalPipelineValue,
   }), [
     Orçamentos,
     events,
@@ -257,7 +253,6 @@ export const CRMProvider = ({ children }: { children: ReactNode }) => {
     updateEvent,
     deleteEvent,
     OrçamentosByStage,
-    totalPipelineValue,
   ]);
 
   return (
