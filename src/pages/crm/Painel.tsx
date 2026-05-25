@@ -98,17 +98,13 @@ const filterOrçamentos = (Orçamentos: Lead[], filters: { stages?: string[]; ni
 const calculateStats = (Orçamentos: Lead[], icons: typeof CHART_ICONS) => {
   const stats: Stat[] = [
     { title: 'Total de Orçamentos', value: Orçamentos.length.toString(), icon: icons.Users },
-    { title: 'Reuniões', value: Orçamentos.filter(l => l.stage === 'Reunião Agendada').length.toString(), icon: icons.Calendar, stageFilter: 'Reunião Agendada' },
-    { title: 'Contatos Ativos', value: Orçamentos.filter(l => l.stage === 'Contato Ativo').length.toString(), icon: icons.MessageSquare, stageFilter: 'Contato Ativo' },
-    { title: 'Follow-ups', value: Orçamentos.filter(l => l.stage === 'Follow Up').length.toString(), icon: icons.Clock, stageFilter: 'Follow Up' },
-    { title: 'Propostas Enviadas', value: Orçamentos.filter(l => l.stage === 'Proposta Enviada').length.toString(), icon: icons.FileText, stageFilter: 'Proposta Enviada' },
     { title: 'Orçamentos Perdidos', value: Orçamentos.filter(l => l.stage === 'Perdido').length.toString(), icon: icons.UserX, stageFilter: 'Perdido' },
     { title: 'Fechados', value: Orçamentos.filter(l => l.stage === 'Contrato Fechado').length.toString(), icon: icons.CheckCircle, stageFilter: 'Contrato Fechado' },
   ];
   return stats;
 };
 
-const CHART_ICONS = { Users, Calendar, MessageSquare, Clock, FileText, UserX, CheckCircle };
+const CHART_ICONS = { Users, UserX, CheckCircle };
 
 const CRMDashboard = () => {
   const { Orçamentos: contextOrçamentos, events } = useCRM();
