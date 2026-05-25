@@ -65,7 +65,7 @@ const EVENT_TYPES = [
 ];
 
 const CRMDashboard = () => {
-  const { events, Orçamentos, addLead, addEvent } = useCRM();
+  const { events, Orçamentos, addLead, addEvent, updateEvent, updateLead } = useCRM();
   const { activityLogs, isLoadingLogs, fetchActivityLogsError } = useActivityLogs();
   const [selectedDayEvents, setSelectedDayEvents] = useState<CalendarEvent[] | null>(null);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
@@ -87,6 +87,7 @@ const CRMDashboard = () => {
     orcamentoItems: [] as OrcamentoItem[], desconto: 0,
   });
   const [selectedClientId, setSelectedClientId] = useState('');
+  const [editingEventId, setEditingEventId] = useState<string | null>(null);
 
   const handleSelectInventoryItem = (itemName: string) => {
     const info = findInventoryItem(itemName);
@@ -219,6 +220,7 @@ const CRMDashboard = () => {
   }, [clientSearch, Orçamentos]);
 
   const openCreateModal = (dateStr: string) => {
+    setEditingEventId(null);
     setCreateDate(dateStr);
     setFormData(prev => ({ ...prev, date: dateStr, eventType: '', city: '', observacao: '', dataMontagem: '', dataDesmontagem: '', status: '', outroEventoType: '', orcamentoItems: [], desconto: 0 }));
     setSelectedClientId('');
@@ -229,9 +231,69 @@ const CRMDashboard = () => {
     setIsCreateOpen(true);
   };
 
+  const handleEditEvent = (event: CalendarEvent) => {
+    const lead = event.clientId ? Orçamentos.find(l => l.id === event.clientId) : null;
+    setEditingEventId(event.id);
+    setCreateDate(event.date || '');
+    setFormData({
+      name: event.client || '',
+      whatsapp: event.clientPhone || '',
+      email: event.clientEmail || '',
+      cpf: event.clientCpf || '',
+      eventType: event.eventType || '',
+      date: event.date || '',
+      time: event.time || '',
+      city: event.city || '',
+      observacao: event.description || '',
+      dataMontagem: event.dataMontagem || '',
+      dataDesmontagem: event.dataDesmontagem || '',
+      status: event.status || '',
+      outroEventoType: '',
+      orcamentoItems: (lead?.items as OrcamentoItem[]) || [],
+      desconto: 0,
+    });
+    setSelectedClientId(event.clientId || '');
+    setClientSearch(event.client ? `${event.client} — ${event.clientPhone || ''}` : '');
+    setInvSearch('');
+    setInvSearchOpen(false);
+    setCreateMode('novo_cliente');
+    setIsCreateOpen(true);
+    setSelectedDayEvents(null);
+    setSelectedDate(null);
+  };
+
   const handleCreateSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (createMode === 'novo_cliente') {
+    if (editingEventId) {
+      const eventFields: Partial<CalendarEvent> = {
+        title: formData.eventType ? `${formData.eventType} - ${formData.name}` : formData.name,
+        client: formData.name,
+        clientPhone: formData.whatsapp,
+        clientEmail: formData.email,
+        clientCpf: formData.cpf,
+        eventType: formData.eventType,
+        date: formData.date,
+        time: formData.time,
+        city: formData.city,
+        dataMontagem: formData.dataMontagem,
+        dataDesmontagem: formData.dataDesmontagem,
+        description: formData.observacao,
+        status: (formData.status as CalendarEvent['status']) || 'pendente',
+      };
+      updateEvent(editingEventId, eventFields);
+      if (selectedClientId) {
+        updateLead(selectedClientId, {
+          name: formData.name,
+          whatsapp: formData.whatsapp,
+          email: formData.email,
+          address: formData.city || '',
+          notes: formData.observacao || '',
+          value: total.toString(),
+          items: formData.orcamentoItems.length > 0 ? formData.orcamentoItems : undefined,
+        });
+      }
+      setEditingEventId(null);
+    } else if (createMode === 'novo_cliente') {
       const leadInput = {
         name: formData.name,
         niche: formData.eventType || 'Evento',
@@ -797,9 +859,18 @@ const CRMDashboard = () => {
                   {/* Status badge */}
                   <div className="flex justify-between items-start">
                     <span className="text-white font-bold text-sm">{event.title || 'Evento'}</span>
-                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${event.status ? statusBg[event.status] : 'bg-[#333]'} ${event.status === 'confirmado' ? 'text-black' : 'text-white'}`}>
-                      {event.status ? statusLabel[event.status] : '—'}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => handleEditEvent(event)}
+                        className="flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold text-[#B5FF03] border border-[#B5FF03]/30 hover:bg-[#B5FF03]/10 transition-colors"
+                      >
+                        <Pencil size={11} />
+                        Editar
+                      </button>
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${event.status ? statusBg[event.status] : 'bg-[#333]'} ${event.status === 'confirmado' ? 'text-black' : 'text-white'}`}>
+                        {event.status ? statusLabel[event.status] : '—'}
+                      </span>
+                    </div>
                   </div>
 
                   {/* Client info */}
@@ -879,11 +950,11 @@ const CRMDashboard = () => {
 
       {/* Create Event/Client Modal */}
       {isCreateOpen && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[100] p-4" onClick={() => setIsCreateOpen(false)}>
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[100] p-4" onClick={() => { setEditingEventId(null); setIsCreateOpen(false); }}>
           <div className="bg-[#0a0a0a] border border-[#222222] rounded-lg w-full max-w-md max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between p-4 border-b border-[#222] shrink-0">
-              <h3 className="text-sm font-black uppercase tracking-widest text-[#B5FF03]">Novo Evento</h3>
-              <button onClick={() => setIsCreateOpen(false)} className="p-1 hover:bg-[#222] rounded-md transition-colors">
+              <h3 className="text-sm font-black uppercase tracking-widest text-[#B5FF03]">{editingEventId ? 'Editar Evento' : 'Novo Evento'}</h3>
+              <button onClick={() => { setEditingEventId(null); setIsCreateOpen(false); }} className="p-1 hover:bg-[#222] rounded-md transition-colors">
                 <X size={16} className="text-neutral-400" />
               </button>
             </div>
@@ -1307,7 +1378,7 @@ const CRMDashboard = () => {
               </div>
               <button type="submit"
                 className="w-full py-3 bg-[#B5FF03] text-black font-bold text-xs uppercase tracking-widest rounded-lg hover:bg-[#a1e600] transition-colors">
-                {createMode === 'novo_cliente' ? 'Cadastrar Cliente e Agendar' : 'Agendar Evento'}
+                {editingEventId ? 'Salvar Alterações' : createMode === 'novo_cliente' ? 'Cadastrar Cliente e Agendar' : 'Agendar Evento'}
               </button>
             </form>
           </div>
