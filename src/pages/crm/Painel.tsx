@@ -481,39 +481,37 @@ const CRMDashboard = () => {
       </div>
 
       {/* 3-tab navigation */}
-      <div className="bg-[#111] border border-[#333] rounded-2xl mb-6">
-        <div className="flex border-b border-[#222] px-6">
-          <button
-            onClick={() => handleTabChange('calendario')}
-            className={`py-3 px-1 border-b-2 font-bold text-xs uppercase tracking-widest transition-colors whitespace-nowrap ${
-              activeTab === 'calendario'
-                ? 'border-[#B5FF03] text-[#B5FF03]'
-                : 'border-transparent text-[#888888] hover:text-white'
-            }`}
-          >
-            Calendário
-          </button>
-          <button
-            onClick={() => handleTabChange('eventos')}
-            className={`py-3 px-1 border-b-2 font-bold text-xs uppercase tracking-widest transition-colors whitespace-nowrap ml-6 ${
-              activeTab === 'eventos'
-                ? 'border-[#B5FF03] text-[#B5FF03]'
-                : 'border-transparent text-[#888888] hover:text-white'
-            }`}
-          >
-            Histórico de Eventos
-          </button>
-          <button
-            onClick={() => handleTabChange('orcamentos')}
-            className={`py-3 px-1 border-b-2 font-bold text-xs uppercase tracking-widest transition-colors whitespace-nowrap ml-6 ${
-              activeTab === 'orcamentos'
-                ? 'border-[#B5FF03] text-[#B5FF03]'
-                : 'border-transparent text-[#888888] hover:text-white'
-            }`}
-          >
-            Histórico de Orçamentos
-          </button>
-        </div>
+      <div className="flex gap-6 mb-6">
+        <button
+          onClick={() => handleTabChange('calendario')}
+          className={`pb-2 border-b-2 font-bold text-xs uppercase tracking-widest transition-colors whitespace-nowrap ${
+            activeTab === 'calendario'
+              ? 'border-[#B5FF03] text-[#B5FF03]'
+              : 'border-transparent text-[#888888] hover:text-white'
+          }`}
+        >
+          Calendário
+        </button>
+        <button
+          onClick={() => handleTabChange('eventos')}
+          className={`pb-2 border-b-2 font-bold text-xs uppercase tracking-widest transition-colors whitespace-nowrap ${
+            activeTab === 'eventos'
+              ? 'border-[#B5FF03] text-[#B5FF03]'
+              : 'border-transparent text-[#888888] hover:text-white'
+          }`}
+        >
+          Histórico de Eventos
+        </button>
+        <button
+          onClick={() => handleTabChange('orcamentos')}
+          className={`pb-2 border-b-2 font-bold text-xs uppercase tracking-widest transition-colors whitespace-nowrap ${
+            activeTab === 'orcamentos'
+              ? 'border-[#B5FF03] text-[#B5FF03]'
+              : 'border-transparent text-[#888888] hover:text-white'
+          }`}
+        >
+          Histórico de Orçamentos
+        </button>
       </div>
 
       {/* CALENDÁRIO */}
