@@ -3,6 +3,7 @@ import { Calendar, UserPlus, ArrowRight, CheckSquare, Activity, AlertCircle, Lay
 import type { LucideIcon } from 'lucide-react';
 import { useCRM } from '../../contexts/CRMContext';
 import type { CalendarEvent, Lead, OrcamentoItem } from '../../contexts/CRMContext';
+import { parseMonetaryValue, formatCurrency } from '../../lib/crmHelpers';
 import { useActivityLogs } from '../../contexts/ActivityContext';
 import { generateUUID } from '../../lib/uuid';
 import { getAllInventoryItems, getAvailableQuantity, findInventoryItem, loadInventory, refreshReservedCache } from '../../lib/inventory';
@@ -70,6 +71,7 @@ const CRMDashboard = () => {
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [viewYear, setViewYear] = useState(new Date().getFullYear());
   const [viewMonth, setViewMonth] = useState(new Date().getMonth());
+  const [activeTab, setActiveTab] = useState<'eventos' | 'orcamentos'>('eventos');
 
   // Create modal state
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -366,6 +368,114 @@ const CRMDashboard = () => {
           Página Principal
         </h1>
         <p className="text-neutral-400 text-xs md:text-sm">Bem-vindo ao painel de controle da Ventura Luz e Efeitos.</p>
+      </div>
+
+      {/* Tabs: Eventos / Orçamentos */}
+      <div className="bg-[#111] border border-[#333] rounded-2xl shadow-sm overflow-hidden mb-6">
+        {/* Tab navigation bar */}
+        <div className="flex border-b border-[#222] px-6">
+          <button
+            onClick={() => setActiveTab('eventos')}
+            className={`py-3 px-1 border-b-2 font-bold text-xs uppercase tracking-widest transition-colors whitespace-nowrap ${
+              activeTab === 'eventos'
+                ? 'border-[#B5FF03] text-[#B5FF03]'
+                : 'border-transparent text-[#888888] hover:text-white'
+            }`}
+          >
+            Histórico de Eventos
+          </button>
+          <button
+            onClick={() => setActiveTab('orcamentos')}
+            className={`py-3 px-1 border-b-2 font-bold text-xs uppercase tracking-widest transition-colors whitespace-nowrap ml-6 ${
+              activeTab === 'orcamentos'
+                ? 'border-[#B5FF03] text-[#B5FF03]'
+                : 'border-transparent text-[#888888] hover:text-white'
+            }`}
+          >
+            Histórico de Orçamentos
+          </button>
+        </div>
+
+        {/* Table content */}
+        <div className="overflow-x-auto">
+          {activeTab === 'eventos' ? (
+            <table className="w-full text-left">
+              <thead>
+                <tr className="border-b border-[#222]">
+                  <th className="text-[10px] font-black uppercase tracking-widest text-neutral-500 px-4 py-3">Cliente</th>
+                  <th className="text-[10px] font-black uppercase tracking-widest text-neutral-500 px-4 py-3">Tipo</th>
+                  <th className="text-[10px] font-black uppercase tracking-widest text-neutral-500 px-4 py-3">Data</th>
+                  <th className="text-[10px] font-black uppercase tracking-widest text-neutral-500 px-4 py-3">Cidade</th>
+                  <th className="text-[10px] font-black uppercase tracking-widest text-neutral-500 px-4 py-3">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {safeEvents.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="text-center py-8 text-neutral-500 text-xs italic">Nenhum evento encontrado.</td>
+                  </tr>
+                ) : (
+                  safeEvents.map(event => (
+                    <tr key={event.id} className="border-b border-[#222] hover:bg-[#0a0a0a] transition-colors">
+                      <td className="px-4 py-3 text-sm text-white">{event.client || event.title || '—'}</td>
+                      <td className="px-4 py-3 text-sm text-neutral-300">{event.eventType || '—'}</td>
+                      <td className="px-4 py-3 text-sm text-neutral-300">{formatDate(event.date)}</td>
+                      <td className="px-4 py-3 text-sm text-neutral-300">{event.city || '—'}</td>
+                      <td className="px-4 py-3">
+                        {event.status ? (
+                          <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                            event.status === 'confirmado' ? 'bg-[#B5FF03] text-black' :
+                            event.status === 'pendente' ? 'bg-[#f59e0b] text-white' :
+                            event.status === 'cancelado' ? 'bg-[#ef4444] text-white' :
+                            event.status === 'realizado' ? 'bg-[#3b82f6] text-white' :
+                            'bg-[#333] text-white'
+                          }`}>
+                            {statusLabel[event.status] || event.status}
+                          </span>
+                        ) : (
+                          <span className="text-neutral-500 text-xs">—</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          ) : (
+            <table className="w-full text-left">
+              <thead>
+                <tr className="border-b border-[#222]">
+                  <th className="text-[10px] font-black uppercase tracking-widest text-neutral-500 px-4 py-3">Cliente</th>
+                  <th className="text-[10px] font-black uppercase tracking-widest text-neutral-500 px-4 py-3">Data de Criação</th>
+                  <th className="text-[10px] font-black uppercase tracking-widest text-neutral-500 px-4 py-3">Valor Total</th>
+                  <th className="text-[10px] font-black uppercase tracking-widest text-neutral-500 px-4 py-3">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {Orçamentos.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className="text-center py-8 text-neutral-500 text-xs italic">Nenhum orçamento encontrado.</td>
+                  </tr>
+                ) : (
+                  Orçamentos.map(lead => (
+                    <tr key={lead.id} className="border-b border-[#222] hover:bg-[#0a0a0a] transition-colors">
+                      <td className="px-4 py-3 text-sm text-white">{lead.name || '—'}</td>
+                      <td className="px-4 py-3 text-sm text-neutral-300">{formatDate(lead.firstContact)}</td>
+                      <td className="px-4 py-3 text-sm text-[#B5FF03] font-bold">
+                        {lead.value ? formatCurrency(parseMonetaryValue(lead.value)) : 'R$ 0,00'}
+                      </td>
+                      <td className="px-4 py-3">
+                        <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#333] text-white">
+                          {lead.stage || '—'}
+                        </span>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          )}
+        </div>
       </div>
 
       {/* Expanded Calendar Section */}
