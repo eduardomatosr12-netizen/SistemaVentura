@@ -398,6 +398,14 @@ const CRMDashboard = () => {
               <span className="text-[10px] text-neutral-500 font-medium">{label}</span>
             </div>
           ))}
+          <div className="flex items-center gap-1.5">
+            <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: '#8B5CF6' }} />
+            <span className="text-[10px] text-neutral-500 font-medium">Montagem</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: '#06B6D4' }} />
+            <span className="text-[10px] text-neutral-500 font-medium">Desmontagem</span>
+          </div>
         </div>
 
         {/* Two-column layout */}
