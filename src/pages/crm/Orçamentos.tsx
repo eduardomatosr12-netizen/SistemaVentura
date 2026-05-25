@@ -35,6 +35,14 @@ const EMPTY_LEAD: Partial<Lead> = {
   notes: '', value: '', items: [],
 };
 
+const EVENT_TYPES = [
+  'Aniversário',
+  'Casamento',
+  'Corporativo',
+  'Privado',
+  'Outros'
+];
+
 const STAGES = [
   'Novos Orçamentos',
   'Primeiro Contato',
@@ -44,17 +52,6 @@ const STAGES = [
   'Proposta Enviada',
   'Contrato Fechado',
   'Perdido'
-];
-
-const STAGE_ORIGINS = [
-  'Instagram',
-  'Indicação',
-  'WhatsApp',
-  'Facebook',
-  'Google',
-  'Site',
-  'Evento',
-  'Outros'
 ];
 
 const baseStageStyle = 'bg-[#1a1a1a] text-white/70 text-center text-sm leading-5 rounded-full px-4 py-1.5 min-w-[120px] border border-gray-700 inline-flex items-center justify-center';
@@ -86,18 +83,6 @@ const FilterSection = ({ title, children, defaultOpen = true }: { title: string;
     </div>
   );
 };
-
-const CheckboxFilter = ({ label, checked, onChange }: { label: string; checked: boolean; onChange: (checked: boolean) => void }) => (
-  <label className="flex items-center gap-2 cursor-pointer group">
-    <div className={`w-4 h-4 border rounded flex items-center justify-center transition-all ${checked ? 'bg-black border-black' : 'border-[#333] group-hover:border-black'}`}>
-      {checked && <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-      </svg>}
-    </div>
-    <input type="checkbox" className="hidden" checked={checked} onChange={e => onChange(e.target.checked)} />
-    <span className="text-xs font-medium text-[#B5FF03] group-hover:text-white">{label}</span>
-  </label>
-);
 
 const Field = ({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) => (
   <div className="space-y-1.5">
@@ -243,17 +228,14 @@ const MONTHS = [
 
 const CRMOrçamentos = () => {
   const { Orçamentos, addLead, updateLead, deleteLead, searchTerm } = useCRM();
-  const { filters, setStagesFilter, setNichesFilter, setOriginsFilter, setDateFilter, clearFilters, hasActiveFilters } = useFilters();
+  const { clearFilters } = useFilters();
   const { role, employeeName } = useAuth();
 
   const [isOpen, setIsOpen] = useState(false);
   const [current, setCurrent] = useState<Partial<Lead>>(EMPTY_LEAD);
   const [mode, setMode] = useState<'add' | 'edit'>('add');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [nicheSearch, setNicheSearch] = useState('');
   const [whatsAppTarget, setWhatsAppTarget] = useState<Lead | null>(null);
-  const [nicheSuggestions, setNicheSuggestions] = useState<string[]>([]);
-  const [showNicheSuggestions, setShowNicheSuggestions] = useState(false);
 
   const [newItemDesc, setNewItemDesc] = useState('');
   const [newItemQty, setNewItemQty] = useState(1);
@@ -269,6 +251,12 @@ const CRMOrçamentos = () => {
 
   // Month filter
   const [selectedMonth, setSelectedMonth] = useState<string>('');
+
+  // Event type filter
+  const [eventType, setEventType] = useState<string>('');
+
+  // City filter
+  const [citySearch, setCitySearch] = useState<string>('');
 
   useEffect(() => {
     setInvStockItems(getAllInventoryItems());
@@ -385,47 +373,6 @@ const CRMOrçamentos = () => {
       setNewItemVal(0);
     }
   };
-
-  const uniqueNiches = useMemo(() => {
-    if (!Orçamentos || !Array.isArray(Orçamentos)) return [];
-    try {
-      const niches = new Set(Orçamentos.map(l => l.niche).filter(Boolean));
-      return Array.from(niches).sort();
-    } catch {
-      return [];
-    }
-  }, [Orçamentos]);
-
-  const handleNicheSelect = (niche: string) => {
-    const currentNiches = filters?.niches || [];
-    if (!currentNiches.includes(niche)) {
-      setNichesFilter([...currentNiches, niche]);
-    }
-    setNicheSearch('');
-    setShowNicheSuggestions(false);
-  };
-
-  const handleAddNiche = () => {
-    if (nicheSearch.trim()) {
-      handleNicheSelect(nicheSearch.trim());
-    }
-  };
-
-  useEffect(() => {
-    if (!nicheSearch.trim()) {
-      setNicheSuggestions([]);
-      return;
-    }
-    try {
-      const search = nicheSearch.toLowerCase();
-      const suggestions = uniqueNiches
-        .filter(n => n.toLowerCase().includes(search))
-        .slice(0, 8);
-      setNicheSuggestions(suggestions);
-    } catch {
-      setNicheSuggestions([]);
-    }
-  }, [nicheSearch, uniqueNiches]);
 
   const openAdd = () => { setMode('add'); setCurrent(EMPTY_LEAD); setIsOpen(true); setDiscountValue(0); };
   const openEdit = (lead: Lead) => {
@@ -564,42 +511,6 @@ const CRMOrçamentos = () => {
   const updateField = (field: keyof Lead, val: string) =>
     setCurrent(prev => ({ ...prev, [field]: val }));
 
-  const toggleStageFilter = (stage: string) => {
-    try {
-      const currentStages = filters?.stages || [];
-      const newStages = currentStages.includes(stage)
-        ? currentStages.filter(s => s !== stage)
-        : [...currentStages, stage];
-      setStagesFilter(newStages);
-    } catch (err) {
-      console.error('Erro ao filtrar por etapa:', err);
-    }
-  };
-
-  const toggleOriginFilter = (origin: string) => {
-    try {
-      const currentOrigins = filters?.origins || [];
-      const newOrigins = currentOrigins.includes(origin)
-        ? currentOrigins.filter((o: string) => o !== origin)
-        : [...currentOrigins, origin];
-      setOriginsFilter(newOrigins);
-    } catch (err) {
-      console.error('Erro ao filtrar por origem:', err);
-    }
-  };
-
-  const toggleNicheFilter = (niche: string) => {
-    try {
-      const currentNiches = filters?.niches || [];
-      const newNiches = currentNiches.includes(niche)
-        ? currentNiches.filter(n => n !== niche)
-        : [...currentNiches, niche];
-      setNichesFilter(newNiches);
-    } catch (err) {
-      console.error('Erro ao filtrar por nicho:', err);
-    }
-  };
-
   const filteredOrçamentos = useMemo(() => {
     if (!Orçamentos || !Array.isArray(Orçamentos)) return [];
     let result = Orçamentos;
@@ -612,45 +523,16 @@ const CRMOrçamentos = () => {
       );
     }
 
-    if (filters.stages && filters.stages.length > 0) {
-      result = result.filter(lead => filters.stages.includes(lead.stage));
+    // Event type filter
+    if (eventType) {
+      result = result.filter(lead => lead.niche === eventType);
     }
 
-    if (filters.origins && filters.origins.length > 0) {
-      result = result.filter(lead => filters.origins.includes(lead.origin));
-    }
-
-    if (filters.niches && filters.niches.length > 0) {
-      result = result.filter(lead => filters.niches.includes(lead.niche));
-    }
-
-    if (filters.dateFilter) {
-      const now = new Date();
-      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      
-      if (filters.dateFilter === 'today') {
-        result = result.filter(lead => {
-          if (!lead.firstContact) return false;
-          const leadDate = new Date(lead.firstContact);
-          return leadDate.toDateString() === today.toDateString();
-        });
-      } else if (filters.dateFilter === 'week') {
-        const weekAgo = new Date(today);
-        weekAgo.setDate(weekAgo.getDate() - 7);
-        result = result.filter(lead => {
-          if (!lead.firstContact) return false;
-          const leadDate = new Date(lead.firstContact);
-          return leadDate >= weekAgo;
-        });
-      } else if (filters.dateFilter === 'month') {
-        const monthAgo = new Date(today);
-        monthAgo.setMonth(monthAgo.getMonth() - 1);
-        result = result.filter(lead => {
-          if (!lead.firstContact) return false;
-          const leadDate = new Date(lead.firstContact);
-          return leadDate >= monthAgo;
-        });
-      }
+    // City filter
+    if (citySearch) {
+      result = result.filter(lead =>
+        lead.address?.toLowerCase().includes(citySearch.toLowerCase())
+      );
     }
 
     // Month filter
@@ -663,7 +545,16 @@ const CRMOrçamentos = () => {
     }
 
     return result;
-  }, [Orçamentos, searchTerm, filters, selectedMonth]);
+  }, [Orçamentos, searchTerm, eventType, citySearch, selectedMonth]);
+
+  const hasActiveFilters = selectedMonth !== '' || eventType !== '' || citySearch !== '';
+
+  const handleClearFilters = () => {
+    setSelectedMonth('');
+    setEventType('');
+    setCitySearch('');
+    clearFilters();
+  };
 
   const calculateItemsTotal = (items?: OrcamentoItem[]) => {
     return (items || []).reduce((sum, i) => sum + i.quantidade * i.valorUnitario, 0);
@@ -695,7 +586,7 @@ const CRMOrçamentos = () => {
             </div>
             {hasActiveFilters && (
               <button 
-                onClick={clearFilters}
+                onClick={handleClearFilters}
                 className="text-[10px] font-bold text-[#B5FF03] hover:text-red-500 transition-colors flex items-center gap-1 px-3 py-2 border-b border-[#1a1a1a] w-full"
               >
                 <XCircle size={10} />
@@ -703,7 +594,7 @@ const CRMOrçamentos = () => {
               </button>
             )}
 
-            <FilterSection title="Mês">
+            <FilterSection title="Filtro por Data">
               <select
                 value={selectedMonth}
                 onChange={(e) => setSelectedMonth(e.target.value)}
@@ -716,100 +607,27 @@ const CRMOrçamentos = () => {
               </select>
             </FilterSection>
 
-            <FilterSection title="Etapa" defaultOpen={true}>
-              {(STAGES || []).map(stage => (
-                <CheckboxFilter
-                  key={stage}
-                  label={stage === 'Novos Orçamentos' ? 'Novos Contatos' : stage}
-                  checked={(filters?.stages || []).includes(stage)}
-                  onChange={() => toggleStageFilter(stage)}
-                />
-              ))}
-            </FilterSection>
-
-            <FilterSection title="Origem">
-              {(STAGE_ORIGINS || []).map(origin => (
-                <CheckboxFilter
-                  key={origin}
-                  label={origin}
-                  checked={(filters?.origins || []).includes(origin)}
-                  onChange={() => toggleOriginFilter(origin)}
-                />
-              ))}
-            </FilterSection>
-
-            <FilterSection title="Nicho do Cliente">
-              <div className="space-y-2">
-                <div className="relative">
-                  <input
-                    type="text"
-                    value={nicheSearch}
-                    onChange={(e) => { setNicheSearch(e.target.value); setShowNicheSuggestions(true); }}
-                    onFocus={() => setShowNicheSuggestions(true)}
-                    onBlur={() => setTimeout(() => setShowNicheSuggestions(false), 200)}
-                    onKeyDown={(e) => e.key === 'Enter' && handleAddNiche()}
-                    placeholder="Buscar ou adicionar nicho..."
-                    className="w-full bg-[#111] border border-slate-700 rounded-md py-2 px-3 text-xs font-medium text-white focus:outline-none focus:border-[#B5FF03]"
-                  />
-                  {showNicheSuggestions && nicheSuggestions.length > 0 && (
-                    <div className="absolute z-10 w-full mt-1 bg-[#111] border border-[#333] rounded-md shadow-lg max-h-40 overflow-y-auto">
-                      {nicheSuggestions.map(s => (
-                        <button
-                          key={s}
-                          type="button"
-                          onClick={() => handleNicheSelect(s)}
-                          className="w-full text-left px-3 py-2 text-xs font-medium text-white hover:bg-[#111]"
-                        >
-                          {s}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-                <button
-                  type="button"
-                  onClick={handleAddNiche}
-                  className="w-full py-2 text-xs font-bold text-neutral-500 hover:text-white text-center border border-dashed border-[#333] rounded-md"
-                >
-                  + Adicionar "{nicheSearch || '...'}"
-                </button>
-                {(filters?.niches || []).length > 0 && (
-                  <div className="flex flex-wrap gap-1">
-                    {filters.niches.map(n => (
-                      <span key={n} className="px-2 py-1 bg-black text-white text-[10px] font-bold rounded-md flex items-center gap-1">
-                        {n}
-                        <button type="button" onClick={() => toggleNicheFilter(n)} className="hover:text-red-400">×</button>
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </FilterSection>
-
-            <FilterSection title="Data de Entrada">
-              <div className="space-y-2">
-                {[
-                  { value: '', label: 'Todos' },
-                  { value: 'today', label: 'Hoje' },
-                  { value: 'week', label: 'Esta semana' },
-                  { value: 'month', label: 'Este mês' }
-                ].map(opt => (
-                  <label key={opt.value} className="flex items-center gap-2 cursor-pointer group">
-                    <div className={`w-4 h-4 border rounded-full flex items-center justify-center transition-all ${filters?.dateFilter === opt.value ? 'bg-black border-black' : 'border-[#333] group-hover:border-black'}`}>
-                      {filters?.dateFilter === opt.value && (
-                        <div className="w-2 h-2 bg-[#111] rounded-full" />
-                      )}
-                    </div>
-                    <input 
-                      type="radio" 
-                      className="hidden" 
-                      checked={filters?.dateFilter === opt.value}
-                      onChange={() => setDateFilter(opt.value as any)}
-                    />
-                    <span className={`text-xs font-medium ${filters?.dateFilter === opt.value ? 'text-white' : 'text-neutral-500'}`}>{opt.label}</span>
-                  </label>
+            <FilterSection title="Tipo de Evento">
+              <select
+                value={eventType}
+                onChange={(e) => setEventType(e.target.value)}
+                className="w-full bg-[#1a1a1a] border border-[#333] rounded-md px-3 py-2 text-xs font-bold text-white focus:ring-1 focus:ring-[#B5FF03] outline-none"
+              >
+                <option value="">Todos os tipos</option>
+                {EVENT_TYPES.map(t => (
+                  <option key={t} value={t}>{t}</option>
                 ))}
-              </div>
+              </select>
+            </FilterSection>
+
+            <FilterSection title="Cidade">
+              <input
+                type="text"
+                value={citySearch}
+                onChange={(e) => setCitySearch(e.target.value)}
+                placeholder="Digite o nome da cidade..."
+                className="w-full bg-[#1a1a1a] border border-[#333] rounded-md px-3 py-2 text-xs font-bold text-white placeholder-neutral-500 focus:ring-1 focus:ring-[#B5FF03] outline-none"
+              />
             </FilterSection>
           </div>
         </>
