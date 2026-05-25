@@ -67,7 +67,7 @@ const EVENT_TYPES = [
 ];
 
 const CRMDashboard = () => {
-  const { events, Orçamentos, addLead, addEvent, updateEvent, updateLead } = useCRM();
+  const { events, Orçamentos, addLead, addEvent, updateEvent, updateLead, deleteEvent } = useCRM();
   const { activityLogs, isLoadingLogs, fetchActivityLogsError } = useActivityLogs();
   const [selectedDayEvents, setSelectedDayEvents] = useState<CalendarEvent[] | null>(null);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
@@ -232,6 +232,14 @@ const CRMDashboard = () => {
       items: formData.orcamentoItems || [],
     };
     generatePDF(leadData, formData.desconto > 0 ? { type: 'fixed', value: formData.desconto } : undefined);
+  };
+
+  const handleDeleteEvent = () => {
+    if (!editingEventId) return;
+    if (!confirm('Tem certeza que deseja excluir este evento?')) return;
+    deleteEvent(editingEventId);
+    setEditingEventId(null);
+    setIsCreateOpen(false);
   };
 
   useEffect(() => {
@@ -1425,14 +1433,21 @@ const CRMDashboard = () => {
                   </div>
                 </div>
               </div>
-              <div className="flex gap-2">
+              <div className="flex items-center gap-3">
+                {editingEventId && (
+                  <button type="button" onClick={handleDeleteEvent}
+                    className="px-4 py-3 bg-transparent border border-[#EF4444]/40 text-[#EF4444] font-bold text-xs uppercase tracking-widest rounded-lg hover:bg-[#EF4444]/10 hover:border-[#EF4444] transition-all flex items-center justify-center gap-2">
+                    <Trash2 size={14} />
+                    EXCLUIR
+                  </button>
+                )}
                 <button type="button" onClick={handleExportPDF}
-                  className="flex-1 py-3 bg-[#1a1a1a] border border-[#333] text-[#B5FF03] font-bold text-xs uppercase tracking-widest rounded-lg hover:bg-[#222] hover:border-[#B5FF03] transition-all flex items-center justify-center gap-2">
+                  className="flex-1 py-3 bg-[#1a1a1a] border border-[#333] text-white font-bold text-xs uppercase tracking-widest rounded-lg hover:bg-[#222] hover:border-[#555] transition-all flex items-center justify-center gap-2">
                   <FileText size={14} />
                   EXPORTAR ORÇAMENTO (PDF)
                 </button>
                 <button type="submit"
-                  className="flex-1 py-3 bg-[#B5FF03] text-black font-bold text-xs uppercase tracking-widest rounded-lg hover:bg-[#a1e600] transition-colors">
+                  className="flex-[2] py-3 bg-[#B5FF03] text-black font-bold text-xs uppercase tracking-widest rounded-lg hover:bg-[#a1e600] transition-colors">
                   {editingEventId ? 'Salvar Alterações' : createMode === 'novo_cliente' ? 'Cadastrar Cliente e Agendar' : 'Agendar Evento'}
                 </button>
               </div>
