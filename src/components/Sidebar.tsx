@@ -16,7 +16,6 @@ const Sidebar = ({ isOpen = false, onClose }: SidebarProps) => {
     { id: 'home', label: 'Home', icon: LayoutDashboard, path: '/home', allowedRoles: ['admin', 'manager', 'user'] as const },
     { id: 'contatos', label: 'Contatos', icon: Users, path: '/contatos', allowedRoles: ['admin', 'manager', 'user'] as const },
     { id: 'reuniao', label: 'Reunião', icon: Calendar, path: '/reuniao', allowedRoles: ['admin', 'manager', 'user'] as const },
-    { id: 'calendario', label: 'Calendário', icon: Clock, path: '/calendario', allowedRoles: ['admin', 'manager', 'user'] as const },
     { id: 'clientes', label: 'Clientes', icon: Phone, path: '/clientes', allowedRoles: ['admin', 'manager', 'user'] as const },
     { id: 'tarefas', label: 'Estoque', icon: Package, path: '/tarefas', allowedRoles: ['admin', 'manager', 'user'] as const },
     { id: 'financeiro', label: 'Financeiro', icon: DollarSign, path: '/financeiro', allowedRoles: ['admin', 'manager'] as const },

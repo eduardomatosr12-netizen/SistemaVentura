@@ -4,7 +4,7 @@ import { useLocation, useNavigate, Link } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import TopHeader from '../components/TopHeader';
 import { useAuth } from '../contexts/AuthContext';
-import { LayoutDashboard, Users, Calendar, Clock, Phone, DollarSign, Package } from 'lucide-react';
+import { LayoutDashboard, Users, DollarSign } from 'lucide-react';
 
 type UserRole = 'admin' | 'employee';
 
@@ -180,10 +180,6 @@ const MainLayout = ({ children, hideSubmenu }: MainLayoutProps) => {
         <Link to="/contatos" className={`flex flex-col items-center gap-0.5 px-3 py-2 ${location.pathname === '/contatos' ? 'text-[#B5FF03]' : 'text-neutral-400'}`}>
           <Users size={20} />
           <span className="text-[10px] font-bold uppercase tracking-wider">Contatos</span>
-        </Link>
-        <Link to="/calendario" className={`flex flex-col items-center gap-0.5 px-3 py-2 ${location.pathname === '/calendario' ? 'text-[#B5FF03]' : 'text-neutral-400'}`}>
-          <Calendar size={20} />
-          <span className="text-[10px] font-bold uppercase tracking-wider">Calendário</span>
         </Link>
         <Link to="/financeiro" className={`flex flex-col items-center gap-0.5 px-3 py-2 ${location.pathname.startsWith('/financeiro') ? 'text-[#B5FF03]' : 'text-neutral-400'}`}>
           <DollarSign size={20} />
