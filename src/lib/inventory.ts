@@ -65,9 +65,18 @@ interface FechadoOrcamentoItem {
 
 interface FechadoOrcamento {
   id: string;
+  name?: string;
   stage?: string;
   items?: FechadoOrcamentoItem[];
   firstContact?: string;
+}
+
+interface StoredEvent {
+  id: string;
+  client?: string;
+  clientPhone?: string;
+  date?: string;
+  status?: string;
 }
 
 export const getReservedQuantity = (itemName: string, eventDate: string): number => {
@@ -75,8 +84,24 @@ export const getReservedQuantity = (itemName: string, eventDate: string): number
     const stored = localStorage.getItem(ORCAMENTOS_KEY);
     if (!stored) return 0;
     const orcamentos: FechadoOrcamento[] = JSON.parse(stored);
+
+    // Only count items from orçamentos whose linked event has status 'confirmado' or 'realizado'
+    const eventsStored = localStorage.getItem('axium_events_v2');
+    const events: StoredEvent[] = eventsStored ? JSON.parse(eventsStored) : [];
+
+    const confirmedClientNames = new Set(
+      events
+        .filter(e => e.date === eventDate && (e.status === 'confirmado' || e.status === 'realizado') && e.client)
+        .map(e => e.client!.toLowerCase())
+    );
+
     return orcamentos
-      .filter(o => o.stage === STAGE_FECHADO && o.firstContact === eventDate && o.items && o.items.length > 0)
+      .filter(o => {
+        if (!o.items || o.items.length === 0) return false;
+        if (o.firstContact !== eventDate) return false;
+        if (!o.name) return false;
+        return confirmedClientNames.has(o.name.toLowerCase());
+      })
       .flatMap(o => o.items || [])
       .filter(i => i.descricao && i.descricao.toLowerCase() === itemName.toLowerCase())
       .reduce((sum, i) => sum + (i.quantidade || 0), 0);
