@@ -1,5 +1,5 @@
-import { useState, useMemo } from 'react';
-import { Calendar, UserPlus, ArrowRight, CheckSquare, Activity, AlertCircle, LayoutDashboard, X, ChevronLeft, ChevronRight, User, Phone, Mail, CreditCard, CalendarDays, Clock } from 'lucide-react';
+import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
+import { Calendar, UserPlus, ArrowRight, CheckSquare, Activity, AlertCircle, LayoutDashboard, X, ChevronLeft, ChevronRight, ChevronDown, Search, User, Phone, Mail, CreditCard, CalendarDays, Clock } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { useCRM } from '../../contexts/CRMContext';
 import type { CalendarEvent, Lead } from '../../contexts/CRMContext';
@@ -53,7 +53,13 @@ const statusBg: Record<string, string> = {
   realizado: 'bg-[#3b82f6]',
 };
 
-const EVENT_TYPES = ['Aniver', 'Casam', 'Corporativo', 'Privado', 'Outros'];
+const EVENT_TYPES = [
+  { value: 'Aniver', label: 'Aniver (Aniversário)' },
+  { value: 'Casam', label: 'Casam (Casamento)' },
+  { value: 'Corporativo', label: 'Corporativo' },
+  { value: 'Privado', label: 'Privado' },
+  { value: 'Outros', label: 'Outros' },
+];
 
 const CRMDashboard = () => {
   const { events, Orçamentos, addLead, addEvent } = useCRM();
@@ -73,10 +79,39 @@ const CRMDashboard = () => {
   });
   const [selectedClientId, setSelectedClientId] = useState('');
 
+  // Custom dropdown state
+  const [eventTypeOpen, setEventTypeOpen] = useState(false);
+  const [clientSearchOpen, setClientSearchOpen] = useState(false);
+  const [clientSearch, setClientSearch] = useState('');
+  const eventTypeRef = useRef<HTMLDivElement>(null);
+  const clientSearchRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (eventTypeRef.current && !eventTypeRef.current.contains(e.target as Node)) {
+        setEventTypeOpen(false);
+      }
+      if (clientSearchRef.current && !clientSearchRef.current.contains(e.target as Node)) {
+        setClientSearchOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const filteredClients = useMemo(() => {
+    if (!clientSearch.trim()) return Orçamentos;
+    const q = clientSearch.toLowerCase();
+    return Orçamentos.filter(l =>
+      l.name.toLowerCase().includes(q) || l.whatsapp.includes(q)
+    );
+  }, [clientSearch, Orçamentos]);
+
   const openCreateModal = (dateStr: string) => {
     setCreateDate(dateStr);
-    setFormData(prev => ({ ...prev, date: dateStr }));
+    setFormData(prev => ({ ...prev, date: dateStr, eventType: '' }));
     setSelectedClientId('');
+    setClientSearch('');
     setCreateMode('novo_cliente');
     setIsCreateOpen(true);
   };
@@ -529,32 +564,83 @@ const CRMDashboard = () => {
                   </div>
                 </>
               ) : (
-                <div>
+                <div ref={clientSearchRef}>
                   <label className="block text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-1.5 flex items-center gap-1.5">
                     <User size={12} /> Selecione o Cliente
                   </label>
-                  <select value={selectedClientId} onChange={e => setSelectedClientId(e.target.value)}
-                    className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-sm text-white focus:border-[#B5FF03] outline-none" required>
-                    <option value="">Selecionar...</option>
-                    {Orçamentos.map(lead => (
-                      <option key={lead.id} value={lead.id}>{lead.name} — {lead.whatsapp}</option>
-                    ))}
-                  </select>
+                  <div className="relative">
+                    <div className="flex items-center bg-[#111] border border-[#333] rounded-lg overflow-hidden focus-within:border-[#B5FF03] transition-colors">
+                      <Search size={14} className="text-neutral-500 ml-3 shrink-0" />
+                      <input
+                        type="text"
+                        value={clientSearch}
+                        onChange={e => { setClientSearch(e.target.value); setClientSearchOpen(true); setSelectedClientId(''); }}
+                        onFocus={() => setClientSearchOpen(true)}
+                        placeholder="Digite para buscar..."
+                        className="w-full bg-transparent border-none px-2 py-2 text-sm text-white placeholder-neutral-600 outline-none"
+                        autoComplete="off"
+                      />
+                    </div>
+                    {clientSearchOpen && (
+                      <div className="absolute top-full left-0 right-0 mt-1 bg-[#1a1a1a] border border-[#333] rounded-lg max-h-48 overflow-y-auto z-50 shadow-xl">
+                        {filteredClients.length === 0 ? (
+                          <div className="px-3 py-2 text-xs text-neutral-500 italic">Nenhum cliente encontrado</div>
+                        ) : (
+                          filteredClients.map(lead => (
+                            <button
+                              type="button"
+                              key={lead.id}
+                              onClick={() => { setSelectedClientId(lead.id); setClientSearch(`${lead.name} — ${lead.whatsapp}`); setClientSearchOpen(false); }}
+                              className={`w-full text-left px-3 py-2 text-sm text-white hover:bg-[#333] transition-colors flex items-center gap-2 ${selectedClientId === lead.id ? 'bg-[#2a2a2a] border-l-2 border-[#B5FF03]' : ''}`}
+                            >
+                              <User size={12} className="text-neutral-500 shrink-0" />
+                              <div className="min-w-0">
+                                <span className="block truncate">{lead.name}</span>
+                                <span className="block text-[10px] text-neutral-500 truncate">{lead.whatsapp}</span>
+                              </div>
+                            </button>
+                          ))
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  {selectedClientId && (
+                    <p className="text-[10px] text-[#B5FF03] mt-1">Cliente selecionado</p>
+                  )}
                 </div>
               )}
               {/* Event fields — common to both modes */}
               <div className="border-t border-[#222] pt-4">
                 <p className="text-[9px] font-black uppercase tracking-widest text-neutral-400 mb-3">Dados do Evento</p>
                 <div className="space-y-3">
-                  <div>
+                  <div ref={eventTypeRef}>
                     <label className="block text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-1.5 flex items-center gap-1.5">
                       <CalendarDays size={12} /> Tipo de Evento
                     </label>
-                    <select value={formData.eventType} onChange={e => setFormData(prev => ({ ...prev, eventType: e.target.value }))}
-                      className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-sm text-white focus:border-[#B5FF03] outline-none" required>
-                      <option value="">Selecionar...</option>
-                      {EVENT_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
-                    </select>
+                    <div className="relative">
+                      <button
+                        type="button"
+                        onClick={() => setEventTypeOpen(prev => !prev)}
+                        className={`w-full bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-sm text-left flex items-center justify-between gap-2 transition-colors ${formData.eventType ? 'text-white' : 'text-neutral-500'} focus:border-[#B5FF03] outline-none`}
+                      >
+                        <span>{formData.eventType ? EVENT_TYPES.find(t => t.value === formData.eventType)?.label || formData.eventType : 'Selecionar...'}</span>
+                        <ChevronDown size={14} className={`text-neutral-500 transition-transform ${eventTypeOpen ? 'rotate-180' : ''}`} />
+                      </button>
+                      {eventTypeOpen && (
+                        <div className="absolute top-full left-0 right-0 mt-1 bg-[#1a1a1a] border border-[#333] rounded-lg overflow-hidden z-50 shadow-xl">
+                          {EVENT_TYPES.map(t => (
+                            <button
+                              type="button"
+                              key={t.value}
+                              onClick={() => { setFormData(prev => ({ ...prev, eventType: t.value })); setEventTypeOpen(false); }}
+                              className={`w-full text-left px-3 py-2 text-sm transition-colors ${formData.eventType === t.value ? 'bg-[#2a2a2a] text-[#B5FF03] font-bold' : 'text-white hover:bg-[#333]'}`}
+                            >
+                              {t.label}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <div>
