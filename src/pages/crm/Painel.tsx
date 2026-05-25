@@ -1,9 +1,9 @@
 import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
-import { Calendar, UserPlus, ArrowRight, CheckSquare, Activity, AlertCircle, LayoutDashboard, X, ChevronLeft, ChevronRight, ChevronDown, Search, User, Phone, Mail, CreditCard, CalendarDays, Clock, Plus, Trash2, MapPin, Pencil } from 'lucide-react';
+import { Calendar, UserPlus, ArrowRight, CheckSquare, Activity, AlertCircle, LayoutDashboard, X, ChevronLeft, ChevronRight, ChevronDown, Search, User, Phone, Mail, CreditCard, CalendarDays, Clock, Plus, Trash2, MapPin, Pencil, FileText } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { useCRM } from '../../contexts/CRMContext';
 import type { CalendarEvent, Lead, OrcamentoItem } from '../../contexts/CRMContext';
-import { parseMonetaryValue, formatCurrency } from '../../lib/crmHelpers';
+import { parseMonetaryValue, formatCurrency, generatePDF } from '../../lib/crmHelpers';
 import { useActivityLogs } from '../../contexts/ActivityContext';
 import { generateUUID } from '../../lib/uuid';
 import { getAllInventoryItems, getAvailableQuantity, findInventoryItem, loadInventory, refreshReservedCache } from '../../lib/inventory';
@@ -213,6 +213,26 @@ const CRMDashboard = () => {
   [formData.orcamentoItems]);
 
   const total = useMemo(() => Math.max(0, subtotal - formData.desconto), [subtotal, formData.desconto]);
+
+  const handleExportPDF = () => {
+    const leadData: Lead = {
+      id: '',
+      name: formData.name || 'Orçamento',
+      niche: formData.eventType || '',
+      whatsapp: formData.whatsapp || '',
+      email: formData.email || '',
+      instagram: '',
+      stage: formData.status || 'Novos Orçamentos',
+      firstContact: formData.date || '',
+      closingDate: '',
+      followUpReminder: '',
+      address: formData.city || '',
+      notes: formData.observacao || '',
+      value: total.toString(),
+      items: formData.orcamentoItems || [],
+    };
+    generatePDF(leadData, formData.desconto > 0 ? { type: 'fixed', value: formData.desconto } : undefined);
+  };
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -1405,10 +1425,17 @@ const CRMDashboard = () => {
                   </div>
                 </div>
               </div>
-              <button type="submit"
-                className="w-full py-3 bg-[#B5FF03] text-black font-bold text-xs uppercase tracking-widest rounded-lg hover:bg-[#a1e600] transition-colors">
-                {editingEventId ? 'Salvar Alterações' : createMode === 'novo_cliente' ? 'Cadastrar Cliente e Agendar' : 'Agendar Evento'}
-              </button>
+              <div className="flex gap-2">
+                <button type="button" onClick={handleExportPDF}
+                  className="flex-1 py-3 bg-[#1a1a1a] border border-[#333] text-[#B5FF03] font-bold text-xs uppercase tracking-widest rounded-lg hover:bg-[#222] hover:border-[#B5FF03] transition-all flex items-center justify-center gap-2">
+                  <FileText size={14} />
+                  EXPORTAR ORÇAMENTO (PDF)
+                </button>
+                <button type="submit"
+                  className="flex-1 py-3 bg-[#B5FF03] text-black font-bold text-xs uppercase tracking-widest rounded-lg hover:bg-[#a1e600] transition-colors">
+                  {editingEventId ? 'Salvar Alterações' : createMode === 'novo_cliente' ? 'Cadastrar Cliente e Agendar' : 'Agendar Evento'}
+                </button>
+              </div>
             </form>
           </div>
         </div>

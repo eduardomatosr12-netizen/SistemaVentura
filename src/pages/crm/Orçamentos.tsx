@@ -7,6 +7,7 @@ import { useFilters } from '../../contexts/FilterContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { generateUUID } from '../../lib/uuid';
 import { getAllInventoryItems, getAvailableQuantity, deductInventory, restoreInventory } from '../../lib/inventory';
+import { generatePDF } from '../../lib/crmHelpers';
 
 const formatBRL = (val: string) => {
   const numeric = val.replace(/\D/g, '');
@@ -97,120 +98,6 @@ const inputCls =
   'w-full bg-[#1a1a1a] border border-gray-700 rounded-md py-2.5 px-3.5 text-white text-sm placeholder-gray-500 focus:outline-none focus:border-[#B5FF03] transition-colors';
 
 // PDF Generation
-const generatePDF = (lead: Lead, discountData?: { type: 'percent' | 'fixed'; value: number }): void => {
-  const win = window.open('', '_blank');
-  if (!win) return;
-
-  const items = lead.items || [];
-  let total = items.reduce((sum, item) => sum + item.quantidade * item.valorUnitario, 0);
-  let discountText = '';
-  let finalTotal = total;
-
-  if (discountData && discountData.value > 0) {
-    if (discountData.type === 'percent') {
-      const discountAmount = total * (discountData.value / 100);
-      finalTotal = total - discountAmount;
-      discountText = `Desconto: ${discountData.value}% (-${formatCurrency(discountAmount)})`;
-    } else {
-      finalTotal = total - discountData.value;
-      discountText = `Desconto: -${formatCurrency(discountData.value)}`;
-    }
-  }
-
-  const now = new Date();
-  const dateStr = now.toLocaleDateString('pt-BR');
-
-  win.document.write(`
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <meta charset="UTF-8">
-      <title>Orçamento - ${lead.name}</title>
-      <style>
-        @page { margin: 20mm 15mm; }
-        body { font-family: 'Segoe UI', Arial, sans-serif; color: #222; margin: 0; padding: 30px; }
-        .header { text-align: center; border-bottom: 3px solid #B5FF03; padding-bottom: 20px; margin-bottom: 25px; }
-        .header h1 { margin: 0; font-size: 24px; color: #000; letter-spacing: 2px; text-transform: uppercase; }
-        .header p { margin: 5px 0 0; color: #666; font-size: 12px; }
-        .info-grid { display: flex; justify-content: space-between; margin-bottom: 25px; }
-        .info-box { flex: 1; }
-        .info-box h3 { font-size: 10px; text-transform: uppercase; color: #B5FF03; letter-spacing: 1px; margin: 0 0 5px; }
-        .info-box p { margin: 2px 0; font-size: 13px; color: #333; }
-        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-        thead th { background: #000; color: #B5FF03; padding: 10px 12px; text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; }
-        tbody td { padding: 10px 12px; border-bottom: 1px solid #eee; font-size: 13px; }
-        tbody tr:hover { background: #f9f9f9; }
-        .total-row { font-weight: bold; }
-        .total-row td { border-top: 2px solid #000; padding-top: 12px; }
-        .discount-row td { color: #e53935; }
-        .footer { margin-top: 40px; text-align: center; font-size: 11px; color: #999; border-top: 1px solid #eee; padding-top: 15px; }
-        .badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: bold; }
-        .badge-pending { background: #fff3e0; color: #e65100; }
-      </style>
-    </head>
-    <body>
-      <div class="header">
-        <h1>Orçamento</h1>
-        <p>Ventura Luz e Efeitos • Emitido em ${dateStr}</p>
-      </div>
-      <div class="info-grid">
-        <div class="info-box">
-          <h3>Cliente</h3>
-          <p><strong>${lead.name}</strong></p>
-          ${lead.whatsapp ? `<p>WhatsApp: ${lead.whatsapp}</p>` : ''}
-          ${lead.email ? `<p>Email: ${lead.email}</p>` : ''}
-        </div>
-        <div class="info-box" style="text-align: right;">
-          <h3>Evento</h3>
-          <p><strong>${lead.niche || '—'}</strong></p>
-          <p>Data: ${lead.firstContact ? new Date(lead.firstContact).toLocaleDateString('pt-BR') : '—'}</p>
-          <p>Status: <span class="badge badge-pending">${lead.stage}</span></p>
-        </div>
-      </div>
-      <table>
-        <thead>
-          <tr>
-            <th style="width: 50%;">Item</th>
-            <th style="width: 15%; text-align: center;">Qtd</th>
-            <th style="width: 20%; text-align: right;">Valor Unit.</th>
-            <th style="width: 15%; text-align: right;">Subtotal</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${items.map(item => `
-            <tr>
-              <td>${item.descricao}</td>
-              <td style="text-align: center;">${item.quantidade}</td>
-              <td style="text-align: right;">${formatCurrency(item.valorUnitario)}</td>
-              <td style="text-align: right;">${formatCurrency(item.quantidade * item.valorUnitario)}</td>
-            </tr>
-          `).join('')}
-          <tr class="total-row">
-            <td colspan="3" style="text-align: right;">Total Bruto</td>
-            <td style="text-align: right;">${formatCurrency(total)}</td>
-          </tr>
-          ${discountText ? `
-          <tr class="discount-row">
-            <td colspan="3" style="text-align: right;">${discountText}</td>
-            <td style="text-align: right;">${formatCurrency(finalTotal)}</td>
-          </tr>` : ''}
-          <tr>
-            <td colspan="3" style="text-align: right; font-size: 16px; font-weight: black;">VALOR FINAL</td>
-            <td style="text-align: right; font-size: 16px; font-weight: black;">${formatCurrency(finalTotal)}</td>
-          </tr>
-        </tbody>
-      </table>
-      ${lead.notes ? `<div style="margin-top: 20px; padding: 12px; background: #f5f5f5; border-radius: 8px;"><strong style="font-size: 10px; text-transform: uppercase; color: #666;">Observações:</strong><p style="font-size: 13px; margin: 5px 0 0;">${lead.notes}</p></div>` : ''}
-      <div class="footer">
-        <p>Ventura Luz e Efeitos • Documento gerado automaticamente pelo sistema.</p>
-      </div>
-    </body>
-    </html>
-  `);
-  win.document.close();
-  win.print();
-};
-
 const MONTHS = [
   { value: '01', label: 'Janeiro' },
   { value: '02', label: 'Fevereiro' },
@@ -554,26 +441,6 @@ const CRMOrçamentos = () => {
     setEventType('');
     setCitySearch('');
     clearFilters();
-  };
-
-  const handleExportPDF = () => {
-    const leadData: Lead = {
-      id: current.id || '',
-      name: current.name || 'Orçamento',
-      niche: current.niche || '',
-      whatsapp: current.whatsapp || '',
-      email: current.email || '',
-      instagram: current.instagram || '',
-      stage: current.stage || 'Novos Orçamentos',
-      firstContact: current.firstContact || '',
-      closingDate: current.closingDate || '',
-      followUpReminder: current.followUpReminder || '',
-      address: current.address || '',
-      notes: current.notes || '',
-      value: current.value || '',
-      items: current.items || [],
-    };
-    generatePDF(leadData, discountValue > 0 ? { type: discountType, value: discountValue } : undefined);
   };
 
   const calculateItemsTotal = (items?: OrcamentoItem[]) => {
@@ -1073,14 +940,6 @@ const CRMOrçamentos = () => {
               </div>
 
               <div className="flex flex-col md:flex-row gap-2 md:gap-3 px-4 md:px-7 py-3 md:py-5 border-t border-[#333] shrink-0 bg-[#111]">
-                <button
-                  type="button"
-                  onClick={handleExportPDF}
-                  className="px-5 py-2 md:py-3 rounded-md bg-[#1a1a1a] border border-[#333] text-[#B5FF03] font-bold hover:bg-[#222] hover:border-[#B5FF03] transition-all text-xs md:text-sm flex items-center gap-2"
-                >
-                  <FileText size={14} />
-                  EXPORTAR ORÇAMENTO (PDF)
-                </button>
                 <button
                   type="button"
                   onClick={() => setIsOpen(false)}
