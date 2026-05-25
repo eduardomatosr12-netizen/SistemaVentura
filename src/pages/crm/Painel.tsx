@@ -839,16 +839,6 @@ const CRMDashboard = () => {
                       )}
                     </div>
                   </div>
-                  {/* Observação */}
-                  <div>
-                    <label className="block text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-1.5 flex items-center gap-1.5">
-                      <AlertCircle size={12} /> Observação
-                    </label>
-                    <textarea value={formData.observacao} onChange={e => setFormData(prev => ({ ...prev, observacao: e.target.value }))}
-                      placeholder="Informações adicionais sobre o evento..."
-                      rows={3}
-                      className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-sm text-white placeholder-neutral-600 focus:border-[#B5FF03] outline-none resize-none" />
-                  </div>
                   {/* Itens do Orçamento */}
                   <div className="border-t border-[#222] pt-3">
                     <div className="flex items-center justify-between mb-3">
@@ -1023,6 +1013,16 @@ const CRMDashboard = () => {
                         <span className="text-base font-black text-white">R$ {total.toFixed(2)}</span>
                       </div>
                     </div>
+                  </div>
+                  {/* Observação */}
+                  <div>
+                    <label className="block text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-1.5 flex items-center gap-1.5">
+                      <AlertCircle size={12} /> Observação
+                    </label>
+                    <textarea value={formData.observacao} onChange={e => setFormData(prev => ({ ...prev, observacao: e.target.value }))}
+                      placeholder="Informações adicionais sobre o evento..."
+                      rows={3}
+                      className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-sm text-white placeholder-neutral-600 focus:border-[#B5FF03] outline-none resize-none" />
                   </div>
                 </div>
               </div>
