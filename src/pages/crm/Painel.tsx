@@ -430,6 +430,7 @@ const CRMDashboard = () => {
 
       {/* CALENDÁRIO */}
       {activeTab === 'calendario' && (
+        <>
         <div className="bg-[#111] border border-[#333] rounded-2xl shadow-sm overflow-hidden">
           {/* Top bar */}
           <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 p-4 md:p-6 border-b border-[#222]">
@@ -626,7 +627,7 @@ const CRMDashboard = () => {
             </div>
           )}
         </div>
-      )}
+      </>)}
 
       {/* HISTÓRICO DE EVENTOS */}
       {activeTab === 'eventos' && (
