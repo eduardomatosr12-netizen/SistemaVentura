@@ -215,7 +215,7 @@ const CRMDashboard = () => {
 
     setTimeout(() => {
       generatePDF(leadData, formData.desconto > 0 ? { type: 'fixed', value: formData.desconto } : undefined);
-    }, 200);
+    }, 1000);
   };
 
   const handleDeleteEvent = () => {
