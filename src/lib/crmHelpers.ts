@@ -1,4 +1,5 @@
 import type { Lead } from '../contexts/CRMContext';
+import { cleanPhoneNumber, generateWhatsAppLink } from './whatsapp';
 
 export const STAGES = [
   'Novos Orçamentos',
@@ -163,26 +164,36 @@ export function generatePDF(lead: Lead, discountData?: { type: 'percent' | 'fixe
         .company-header {
           background: #2d2d2d;
           color: #fff;
-          padding: 28px 35px;
+          padding: 22px 35px;
           display: flex;
           justify-content: space-between;
-          align-items: center;
+          align-items: flex-start;
         }
-        .company-header .brand h1 {
-          font-size: 20px;
+        .company-header .company-info {
+          display: flex;
+          flex-direction: column;
+          gap: 3px;
+        }
+        .company-header .company-info .company-name {
+          font-size: 16px;
           font-weight: 700;
-          letter-spacing: 3px;
+          letter-spacing: 2px;
           text-transform: uppercase;
-          margin: 0;
+          margin: 0 0 4px 0;
         }
-        .company-header .brand .tagline {
+        .company-header .company-info .info-row {
           font-size: 11px;
-          color: #aaa;
-          letter-spacing: 1px;
-          margin-top: 2px;
+          color: #ccc;
+          margin: 0;
+          line-height: 1.5;
+        }
+        .company-header .company-info .info-row strong {
+          color: #fff;
+          font-weight: 600;
         }
         .company-header .doc-info {
           text-align: right;
+          white-space: nowrap;
         }
         .company-header .doc-info .doc-title {
           font-size: 22px;
@@ -352,9 +363,11 @@ export function generatePDF(lead: Lead, discountData?: { type: 'percent' | 'fixe
       <div class="watermark">VENTURA</div>
 
       <div class="company-header">
-        <div class="brand">
-          <h1>Ventura Luz e Efeitos</h1>
-          <div class="tagline">Iluminação Profissional • Eventos • Logística</div>
+        <div class="company-info">
+          <div class="company-name">Ventura Luz e Efeitos</div>
+          <p class="info-row"><strong>Endereço:</strong> Rua Coronel Constantino, 224, Ipanema, Águas Belas - PE</p>
+          <p class="info-row"><strong>Telefone:</strong> (87) 9.9618-9979</p>
+          <p class="info-row"><strong>E-mail:</strong> producaoleoventura@gmail.com</p>
         </div>
         <div class="doc-info">
           <div class="doc-title">Orçamento</div>
@@ -367,7 +380,7 @@ export function generatePDF(lead: Lead, discountData?: { type: 'percent' | 'fixe
           <div class="col">
             <h3>Cliente</h3>
             <p><strong>${lead.name}</strong></p>
-            ${lead.whatsapp ? `<p>WhatsApp: ${lead.whatsapp}</p>` : ''}
+            ${lead.whatsapp ? `<p>WhatsApp: <a href="${generateWhatsAppLink(lead.whatsapp)}" target="_blank" style="color: #25D366; text-decoration: underline;">${lead.whatsapp}</a></p>` : ''}
             ${lead.email ? `<p>Email: ${lead.email}</p>` : ''}
             ${lead.instagram ? `<p>Instagram: ${lead.instagram}</p>` : ''}
           </div>

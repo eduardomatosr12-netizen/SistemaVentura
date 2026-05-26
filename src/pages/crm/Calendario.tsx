@@ -2,7 +2,8 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import { useCRM } from '../../contexts/CRMContext';
 import type { CalendarEvent } from '../../contexts/CRMContext';
 import { generateUUID } from '../../lib/uuid';
-import { X, ExternalLink, Clock, User, Users, MessageSquare, Plus, Trash2, Calendar as CalendarIcon, Link as LinkIcon, FileText, ChevronLeft, ChevronRight, Search, MapPin, Mail, Phone, CreditCard, Flag } from 'lucide-react';
+import { generateWhatsAppLink } from '../../lib/whatsapp';
+import { X, ExternalLink, Clock, User, Users, MessageSquare, Plus, Trash2, Calendar as CalendarIcon, Link as LinkIcon, FileText, ChevronLeft, ChevronRight, Search, MapPin, Mail, Phone, CreditCard, Flag, MessageCircle } from 'lucide-react';
 
 const toBR = (iso: string): string => {
   if (!iso) return '';
@@ -606,6 +607,14 @@ const CRMCalendario = () => {
                     <div className="flex items-center gap-2">
                       <Phone size={12} className="text-neutral-500 shrink-0" />
                       <span className="text-sm text-white font-medium">{viewEvent.clientPhone}</span>
+                      <button
+                        type="button"
+                        onClick={() => window.open(generateWhatsAppLink(viewEvent.clientPhone!), '_blank')}
+                        className="text-[#25D366] hover:text-[#B5FF03] transition-colors ml-auto"
+                        title="Enviar mensagem via WhatsApp"
+                      >
+                        <MessageCircle size={14} />
+                      </button>
                     </div>
                   )}
                   {viewEvent.clientEmail && (

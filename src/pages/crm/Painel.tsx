@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
-import { Calendar, UserPlus, ArrowRight, CheckSquare, Activity, AlertCircle, LayoutDashboard, X, ChevronLeft, ChevronRight, ChevronDown, Search, User, Phone, Mail, CreditCard, CalendarDays, Clock, Plus, Trash2, MapPin, Pencil, FileText } from 'lucide-react';
+import { Calendar, UserPlus, ArrowRight, CheckSquare, Activity, AlertCircle, LayoutDashboard, X, ChevronLeft, ChevronRight, ChevronDown, Search, User, Phone, Mail, CreditCard, CalendarDays, Clock, Plus, Trash2, MapPin, Pencil, FileText, MessageCircle } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { useCRM } from '../../contexts/CRMContext';
 import type { CalendarEvent, Lead, OrcamentoItem } from '../../contexts/CRMContext';
@@ -10,6 +10,7 @@ import { getAllInventoryItems, getAvailableQuantity, findInventoryItem, loadInve
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../../services/firebase';
 import { addTransaction } from '../../services/financeService';
+import { generateWhatsAppLink } from '../../lib/whatsapp';
 
 const ACTION_ICONS: Record<string, LucideIcon> = {
   lead_criado: UserPlus,
@@ -944,9 +945,17 @@ const CRMDashboard = () => {
                       </div>
                     )}
                     {event.clientPhone && (
-                      <div>
+                      <div className="flex items-center gap-2">
                         <span className="text-neutral-500">Telefone:</span>{' '}
                         <span className="text-white">{event.clientPhone}</span>
+                        <button
+                          type="button"
+                          onClick={(e) => { e.stopPropagation(); window.open(generateWhatsAppLink(event.clientPhone!), '_blank'); }}
+                          className="text-[#25D366] hover:text-[#B5FF03] transition-colors"
+                          title="Enviar mensagem via WhatsApp"
+                        >
+                          <MessageCircle size={14} />
+                        </button>
                       </div>
                     )}
                     {event.clientEmail && (

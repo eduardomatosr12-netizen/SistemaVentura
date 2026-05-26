@@ -101,16 +101,12 @@ const Board = ({
   board,
   allBoards,
   onUpdateBoard,
-  onDeleteBoard,
   onMoveRow,
-  onAddColumn,
 }: {
   board: BoardType;
   allBoards: BoardType[];
   onUpdateBoard: (board: BoardType) => void;
-  onDeleteBoard: () => void;
   onMoveRow: (rowId: string, fromBoardId: string, toBoardId: string) => void;
-  onAddColumn: (boardId: string) => void;
 }) => {
   const { role, employeeName } = useAuth();
 
@@ -188,29 +184,6 @@ const Board = ({
     const col = board.columns.find(c => c.id === colId);
     if (!col?.options) return '#6b7280';
     return col.options.find(o => o.label === value)?.color || '#6b7280';
-  };
-
-  const handleDeleteColumn = (colId: string) => {
-      if (colId === 'col-1') {
-        alert('Não é possível excluir a coluna "ITEM"');
-        return;
-      }
-    
-    if (!confirm('Tem certeza que deseja excluir esta coluna?')) {
-      return;
-    }
-    
-    const updatedBoard = {
-      ...board,
-      columns: board.columns.filter(c => c.id !== colId),
-      rows: board.rows.map(row => {
-        const newValues = { ...row.values };
-        delete newValues[colId];
-        return { ...row, values: newValues };
-      }),
-    };
-    
-    onUpdateBoard(updatedBoard);
   };
 
   const renderCell = (row: Row, col: Column) => {
@@ -638,10 +611,6 @@ const Board = ({
       <div className="flex items-center gap-3 mb-3">
         <div className="w-3 h-8 rounded-full" style={{ backgroundColor: board.color }} />
         <h2 className="text-xl font-black text-white">{board.title}</h2>
-        <button onClick={onAddColumn}           className="px-3 py-1 text-xs font-bold text-neutral-400 hover:text-white hover:bg-[#222] rounded-md transition-colors">
-          + Coluna
-        </button>
-        <button onClick={onDeleteBoard} className="ml-auto text-neutral-400 hover:text-red-400"><Trash2 size={16} /></button>
       </div>
         <div className="border rounded-2xl border-[#333] bg-[#111] overflow-hidden flex flex-col">
         <div className="overflow-x-auto overflow-y-auto max-h-[600px]">
@@ -655,18 +624,7 @@ const Board = ({
                      className="p-3 border-l border-[#333] text-left text-[10px] font-black uppercase tracking-widest text-white whitespace-nowrap group hover:bg-[#222] transition-colors" 
                     style={{ minWidth: col.width }}
                   >
-                    <div className="flex items-center justify-between">
-                      <span>{col.title}</span>
-                      {col.id !== 'col-1' && (
-                        <button
-                          onClick={() => handleDeleteColumn(col.id)}
-                          className="opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity text-neutral-400 hover:text-red-500 ml-2 cursor-pointer"
-                          title="Excluir coluna"
-                        >
-                          <Trash2 size={14} />
-                        </button>
-                      )}
-                    </div>
+                    <span>{col.title}</span>
                   </th>
                 ))}
               </tr>
@@ -750,20 +708,8 @@ const Tarefas = () => {
   }, [movementLog]);
 
   const [showCreateTaskModal, setShowCreateTaskModal] = useState(false);
-  const [showNewBoardModal, setShowNewBoardModal] = useState(false);
-  const [showAddColumnModal, setShowAddColumnModal] = useState(false);
-  const [selectedBoardForColumn, setSelectedBoardForColumn] = useState<string | null>(null);
-  const [newBoardTitle, setNewBoardTitle] = useState('');
-  const [newBoardColor, setNewBoardColor] = useState('#3b82f6');
-
   const [editingNote, setEditingNote] = useState<{ rowId: string; colId: string; boardId: string } | null>(null);
   const [noteContent, setNoteContent] = useState('');
-
-  const [newColumnData, setNewColumnData] = useState({
-    title: '',
-    type: 'text' as Column['type'],
-    width: 150,
-  });
 
   useEffect(() => {
     const handleOpenNoteEditor = (e: Event) => {
@@ -784,12 +730,6 @@ const Tarefas = () => {
     setBoards(boards.map(b => b.id === updatedBoard.id ? updatedBoard : b));
   };
 
-  const handleDeleteBoard = (id: string) => {
-    if (boards.length > 1 && confirm('Excluir quadro?')) {
-      setBoards(boards.filter(b => b.id !== id));
-    }
-  };
-
   const handleCreateNewTask = (boardId: string) => {
     const board = boards.find(b => b.id === boardId);
     if (!board) return;
@@ -804,59 +744,6 @@ const Tarefas = () => {
     
     handleUpdateBoard({ ...board, rows: [...board.rows, newRow] });
     setShowCreateTaskModal(false);
-  };
-
-  const handleCreateNewBoard = () => {
-    if (!newBoardTitle.trim()) return;
-    
-    const newBoard: BoardType = {
-      id: generateUUID(),
-      title: newBoardTitle,
-      color: newBoardColor,
-      columns: DEFAULT_BOARD.columns,
-      rows: [],
-    };
-    
-    setBoards([...boards, newBoard]);
-    setNewBoardTitle('');
-    setNewBoardColor('#3b82f6');
-    setShowNewBoardModal(false);
-  };
-
-  const handleAddColumn = (boardId: string) => {
-    setSelectedBoardForColumn(boardId);
-    setShowAddColumnModal(true);
-  };
-
-  const handleConfirmAddColumn = () => {
-    if (!newColumnData.title.trim() || !selectedBoardForColumn) return;
-
-    const board = boards.find(b => b.id === selectedBoardForColumn);
-    if (!board) return;
-
-    const newColumn: Column = {
-      id: generateUUID(),
-      title: newColumnData.title,
-      type: newColumnData.type,
-      width: newColumnData.width,
-      options:
-        newColumnData.type === 'status' ? [
-  { id: 'st-1', label: 'Disponível', color: '#B5FF03' },
-  { id: 'st-2', label: 'Alugado', color: '#f59e0b' },
-  { id: 'st-3', label: 'Manutenção', color: '#ef4444' },
-        ] :
-        newColumnData.type === 'tags' ? [
-  { id: 'tg-1', label: 'Urgente', color: '#ef4444' },
-  { id: 'tg-2', label: 'Importante', color: '#f59e0b' },
-  { id: 'tg-3', label: 'Normal', color: '#B5FF03' },
-        ] :
-        undefined,
-    };
-
-    handleUpdateBoard({ ...board, columns: [...board.columns, newColumn] });
-    setShowAddColumnModal(false);
-    setSelectedBoardForColumn(null);
-    setNewColumnData({ title: '', type: 'text', width: 150 });
   };
 
   const handleSaveNote = () => {
@@ -1006,54 +893,32 @@ const Tarefas = () => {
             >
               <Plus size={20} /> Novo Item
             </button>
-            <button
-              onClick={() => setShowNewBoardModal(true)}
-              className="flex items-center gap-2 px-6 py-3 bg-transparent border-2 border-[#B5FF03] text-[#B5FF03] font-black rounded-lg hover:bg-[#B5FF03]/10 transition-colors"
-            >
-              <Plus size={20} /> Nova Categoria
-            </button>
           </div>
 
-          {/* Filtered Boards */}
+          {/* Inventário */}
           {(() => {
-            const filteredBoards = boards.map(board => {
-              const filteredRows = board.rows.filter(row => {
-                if (estoqueZeroFilter) {
-                  const qty = Number(row.values['col-3']) || 0;
-                  if (qty > 0) return false;
-                }
-                if (dateFilterEstoque) {
-                  const lastEntry = String(row.values['col-6'] || '');
-                  if (lastEntry && lastEntry !== dateFilterEstoque) return false;
-                }
-                return true;
-              });
-              return { ...board, rows: filteredRows };
+            const board = boards[0];
+            if (!board) return null;
+            const filteredRows = board.rows.filter(row => {
+              if (estoqueZeroFilter) {
+                const qty = Number(row.values['col-3']) || 0;
+                if (qty > 0) return false;
+              }
+              if (dateFilterEstoque) {
+                const lastEntry = String(row.values['col-6'] || '');
+                if (lastEntry && lastEntry !== dateFilterEstoque) return false;
+              }
+              return true;
             });
-            return filteredBoards.map(board => (
+            return (
               <Board
-                key={board.id}
-                board={board}
+                board={{ ...board, rows: filteredRows }}
                 allBoards={boards}
                 onUpdateBoard={handleUpdateBoard}
-                onDeleteBoard={() => handleDeleteBoard(board.id)}
                 onMoveRow={() => {}}
-                onAddColumn={() => handleAddColumn(board.id)}
               />
-            ));
+            );
           })()}
-
-          {boards.filter(b => b.rows.length > 0 || !estoqueZeroFilter).map(board => (
-            <Board
-              key={board.id}
-              board={board}
-              allBoards={boards}
-              onUpdateBoard={handleUpdateBoard}
-              onDeleteBoard={() => handleDeleteBoard(board.id)}
-              onMoveRow={() => {}}
-              onAddColumn={() => handleAddColumn(board.id)}
-            />
-          ))}
         </>
       )}
 
@@ -1484,118 +1349,6 @@ const Tarefas = () => {
             >
               Cancelar
             </button>
-          </div>
-        </div>
-      )}
-
-      {showNewBoardModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="bg-[#111] border border-[#333] rounded-2xl p-8 max-w-full md:max-w-md w-full shadow-2xl">
-            <h3 className="text-xl font-black text-white mb-6">Nova Categoria</h3>
-            <div className="space-y-5">
-              <div>
-                <label className="block text-xs font-black text-neutral-400 uppercase tracking-widest mb-2">Nome do Quadro</label>
-                <input
-                  type="text"
-                  value={newBoardTitle}
-                  onChange={(e) => setNewBoardTitle(e.target.value)}
-                  placeholder="Ex: Projetos, Vendas, Orçamentos..."
-                  className="w-full px-4 py-3 border-2 border-[#333] rounded-lg font-bold text-white focus:border-[#B5FF03] outline-none transition-colors bg-[#111]"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-black text-neutral-400 uppercase tracking-widest mb-2">Cor</label>
-                <div className="flex gap-2 flex-wrap">
-                  {PRESET_COLORS.map(color => (
-                    <button
-                      key={color}
-                      onClick={() => setNewBoardColor(color)}
-                      className={`w-10 h-10 rounded-full transition-all ${newBoardColor === color ? 'scale-110 ring-2 ring-offset-2 ring-[#B5FF03]' : 'hover:scale-105'}`}
-                      style={{ backgroundColor: color }}
-                    />
-                  ))}
-                </div>
-              </div>
-            </div>
-            <div className="flex gap-3 mt-8">
-              <button
-                onClick={() => setShowNewBoardModal(false)}
-                className="flex-1 p-3 border border-neutral-200 rounded-lg text-neutral-600 hover:text-black hover:bg-neutral-50 transition-colors font-bold min-h-[44px]"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={handleCreateNewBoard}
-                disabled={!newBoardTitle.trim()}
-                className="flex-1 p-3 bg-[#B5FF03] text-black rounded-lg font-bold hover:bg-[#a1e600] transition-colors min-h-[44px] disabled:opacity-50 disabled:cursor-not-allowed"
-               >
-                  Criar Categoria
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {showAddColumnModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="bg-[#111] border border-[#333] rounded-2xl p-8 max-w-full md:max-w-md w-full shadow-2xl">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-black text-white">Adicionar Coluna</h3>
-              <button onClick={() => setShowAddColumnModal(false)} className="text-neutral-400 hover:text-black p-2 min-h-[44px]">
-                <X size={20} />
-              </button>
-            </div>
-            <div className="space-y-5">
-              <div>
-                <label className="block text-xs font-black text-neutral-400 uppercase tracking-widest mb-2">Nome da Coluna</label>
-                <input
-                  type="text"
-                  value={newColumnData.title}
-                  onChange={(e) => setNewColumnData({ ...newColumnData, title: e.target.value })}
-                  placeholder="Ex: Descrição, Valor, Data..."
-                  className="w-full px-4 py-3 border-2 border-[#333] rounded-lg font-bold text-white focus:border-[#B5FF03] outline-none transition-colors bg-[#111]"
-                />
-              </div>
-              <div>
-                <label className="block text-xs font-black text-neutral-500 uppercase tracking-widest mb-2">Tipo da Coluna</label>
-                <div className="grid grid-cols-2 gap-2">
-                  {COLUMN_TYPES.map(ct => (
-                    <button
-                      key={ct.type}
-                      onClick={() => setNewColumnData({ ...newColumnData, type: ct.type })}
-                      className={`p-3 rounded-lg border-2 text-left transition-colors ${newColumnData.type === ct.type ? 'border-[#B5FF03] bg-black text-[#B5FF03]' : 'border-[#333] hover:border-[#555]'}`}
-                    >
-                      <span className="text-sm">{ct.icon}</span>
-                      <span className="ml-2 text-xs font-bold">{ct.label}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <label className="block text-xs font-black text-neutral-500 uppercase tracking-widest mb-2">Largura (px)</label>
-                <input
-                  type="number"
-                  value={newColumnData.width}
-                  onChange={(e) => setNewColumnData({ ...newColumnData, width: Number(e.target.value) })}
-                  className="w-full px-4 py-3 border-2 border-[#333] rounded-lg font-bold text-white focus:border-[#B5FF03] outline-none transition-colors bg-[#111]"
-                />
-              </div>
-            </div>
-            <div className="flex gap-3 mt-8">
-                <button
-                  onClick={() => setShowAddColumnModal(false)}
-                  className="flex-1 p-3 border border-[#333] rounded-lg text-neutral-400 hover:text-white hover:bg-[#222] transition-colors font-bold min-h-[44px]"
-                >
-                  Cancelar
-              </button>
-              <button
-                onClick={handleConfirmAddColumn}
-                disabled={!newColumnData.title.trim()}
-                className="flex-1 p-3 bg-[#B5FF03] text-black rounded-lg font-bold hover:bg-[#a1e600] transition-colors min-h-[44px] disabled:opacity-50 disabled:cursor-not-allowed"
-               >
-                  Adicionar
-              </button>
-            </div>
           </div>
         </div>
       )}
