@@ -9,6 +9,7 @@ import { generateUUID } from '../../lib/uuid';
 import { getAllInventoryItems, getAvailableQuantity, findInventoryItem, loadInventory, refreshReservedCache } from '../../lib/inventory';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../../services/firebase';
+import { addTransaction } from '../../services/financeService';
 
 const ACTION_ICONS: Record<string, LucideIcon> = {
   lead_criado: UserPlus,
@@ -379,6 +380,15 @@ const CRMDashboard = () => {
         dataDesmontagem: formData.dataDesmontagem,
         description: formData.observacao,
         status: (formData.status as CalendarEvent['status']) || 'pendente',
+      });
+      addTransaction({
+        client: formData.name,
+        description: `Evento: ${formData.eventType || 'Evento'} - ${formData.name}${formData.observacao ? ' • ' + formData.observacao : ''}`,
+        amount: total,
+        date: formData.date || new Date().toISOString().split('T')[0],
+        status: 'Pendente',
+        type: 'receita',
+        source: 'evento',
       });
     } else {
       const client = Orçamentos.find(l => l.id === selectedClientId);

@@ -8,6 +8,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { generateUUID } from '../../lib/uuid';
 import { getAllInventoryItems, getAvailableQuantity, deductInventory, restoreInventory } from '../../lib/inventory';
 import { generatePDF } from '../../lib/crmHelpers';
+import { addTransaction } from '../../services/financeService';
 
 const formatBRL = (val: string) => {
   const numeric = val.replace(/\D/g, '');
@@ -297,6 +298,16 @@ const CRMOrçamentos = () => {
 
     finance.manualInvoices = [...(finance.manualInvoices || []), pendingInvoice];
     localStorage.setItem(storageKey, JSON.stringify(finance));
+
+    addTransaction({
+      client: leadName,
+      description: `Orçamento fechado - ${leadName}`,
+      amount: parseMonetaryValue(value),
+      date: closingDate || new Date().toISOString().split('T')[0],
+      status: 'Pendente',
+      type: 'receita',
+      source: 'lead',
+    });
 
     // If parcelado, create projected revenues for future months
     if (numInstallments && numInstallments > 1) {
