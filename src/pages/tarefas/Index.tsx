@@ -700,6 +700,8 @@ const Tarefas = () => {
     localStorage.setItem('axium_rental_v1', JSON.stringify(rentalRecords));
   }, [rentalRecords]);
 
+  const [saving, setSaving] = useState(false);
+  const [saveFeedback, setSaveFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [showCreateTaskModal, setShowCreateTaskModal] = useState(false);
   const [editingNote, setEditingNote] = useState<{ rowId: string; colId: string; boardId: string } | null>(null);
   const [noteContent, setNoteContent] = useState('');
