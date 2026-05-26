@@ -208,14 +208,13 @@ const CRMDashboard = () => {
       items: formData.orcamentoItems || [],
     };
 
-    if (formData.whatsapp) {
-      const msg = 'Olá, segue o seu orçamento em PDF.';
-      window.open(generateWhatsAppLink(formData.whatsapp, msg), '_blank');
-    }
+    generatePDF(leadData, formData.desconto > 0 ? { type: 'fixed', value: formData.desconto } : undefined);
+  };
 
-    setTimeout(() => {
-      generatePDF(leadData, formData.desconto > 0 ? { type: 'fixed', value: formData.desconto } : undefined);
-    }, 1000);
+  const handleSendWhatsApp = () => {
+    if (!formData.whatsapp) return;
+    const msg = 'Olá, segue o seu orçamento em PDF.';
+    window.open(generateWhatsAppLink(formData.whatsapp, msg), '_blank');
   };
 
   const handleDeleteEvent = () => {
@@ -1429,22 +1428,27 @@ const CRMDashboard = () => {
                   </div>
                 </div>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
                 {editingEventId && (
                   <button type="button" onClick={handleDeleteEvent}
-                    className="px-4 py-3 bg-transparent border border-[#EF4444]/40 text-[#EF4444] font-bold text-xs uppercase tracking-widest rounded-lg hover:bg-[#EF4444]/10 hover:border-[#EF4444] transition-all flex items-center justify-center gap-2">
+                    className="px-3 py-3 bg-transparent border border-[#EF4444]/40 text-[#EF4444] font-bold text-xs uppercase tracking-widest rounded-lg hover:bg-[#EF4444]/10 hover:border-[#EF4444] transition-all flex items-center justify-center gap-2 shrink-0">
                     <Trash2 size={14} />
                     EXCLUIR
                   </button>
                 )}
                 <button type="button" onClick={handleExportPDF}
-                  className="flex-1 py-3 bg-[#1a1a1a] border border-[#333] text-white font-bold text-xs uppercase tracking-widest rounded-lg hover:bg-[#222] hover:border-[#555] transition-all flex items-center justify-center gap-2">
+                  className="flex-1 py-3 bg-[#1a1a1a] border border-[#333] text-white font-bold text-[10px] uppercase tracking-widest rounded-lg hover:bg-[#222] hover:border-[#555] transition-all flex items-center justify-center gap-2 min-w-0">
                   <FileText size={14} />
-                  EXPORTAR ORÇAMENTO (PDF)
+                  EXPORTAR (PDF)
+                </button>
+                <button type="button" onClick={handleSendWhatsApp}
+                  className="flex-1 py-3 bg-[#1a1a1a] border border-[#25D366]/40 text-[#25D366] font-bold text-[10px] uppercase tracking-widest rounded-lg hover:bg-[#25D366]/10 hover:border-[#25D366] transition-all flex items-center justify-center gap-2 min-w-0">
+                  <MessageCircle size={14} />
+                  ENVIAR WHATSAPP
                 </button>
                 <button type="submit"
-                  className="flex-[2] py-3 bg-[#B5FF03] text-black font-bold text-xs uppercase tracking-widest rounded-lg hover:bg-[#a1e600] transition-colors">
-                  {editingEventId ? 'Salvar Alterações' : createMode === 'novo_cliente' ? 'Cadastrar Cliente e Agendar' : 'Agendar Evento'}
+                  className="flex-[1.5] py-3 bg-[#B5FF03] text-black font-bold text-[10px] uppercase tracking-widest rounded-lg hover:bg-[#a1e600] transition-colors text-center leading-tight">
+                  {editingEventId ? 'Salvar Alterações' : createMode === 'novo_cliente' ? 'Cadastrar e Agendar' : 'Agendar Evento'}
                 </button>
               </div>
             </form>
