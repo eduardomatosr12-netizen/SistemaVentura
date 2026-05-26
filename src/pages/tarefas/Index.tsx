@@ -1,9 +1,10 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Plus, Trash2, X, Edit3, MessageCircle, Package, Building2, Search, Calendar, ArrowUpRight, ArrowDownLeft, Filter as FilterIcon, Layers } from 'lucide-react';
+import { Plus, Trash2, X, Edit3, MessageCircle, Package, Building2, Search, Calendar, Filter as FilterIcon, Layers, Save, CheckCircle2, AlertCircle } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { useCRM } from '../../contexts/CRMContext';
 import { generateUUID } from '../../lib/uuid';
 import { cleanPhoneNumber, generateWhatsAppLink, WHATSAPP_MESSAGE_TEMPLATES } from '../../lib/whatsapp';
+import { saveBoards } from '../../lib/inventory';
 
 interface ColumnOption {
   id: string;
@@ -664,13 +665,9 @@ const Tarefas = () => {
     return stored ? JSON.parse(stored) : [DEFAULT_BOARD];
   });
 
-  const [activeTab, setActiveTab] = useState<'inventario' | 'aluguel' | 'retirada' | 'entrada'>('inventario');
+  const [activeTab, setActiveTab] = useState<'inventario' | 'aluguel'>('inventario');
   const [estoqueZeroFilter, setEstoqueZeroFilter] = useState(false);
   const [dateFilterEstoque, setDateFilterEstoque] = useState('');
-  const [movementLog, setMovementLog] = useState<{ id: string; type: 'retirada' | 'entrada'; item: string; qty: number; date: string; notes: string }[]>(() => {
-    const stored = localStorage.getItem('axium_movement_log_v1');
-    return stored ? JSON.parse(stored) : [];
-  });
 
   const [rentalRecords, setRentalRecords] = useState<RentalRecord[]>(() => {
     const stored = localStorage.getItem('axium_rental_v1');
@@ -703,10 +700,6 @@ const Tarefas = () => {
     localStorage.setItem('axium_rental_v1', JSON.stringify(rentalRecords));
   }, [rentalRecords]);
 
-  useEffect(() => {
-    localStorage.setItem('axium_movement_log_v1', JSON.stringify(movementLog));
-  }, [movementLog]);
-
   const [showCreateTaskModal, setShowCreateTaskModal] = useState(false);
   const [editingNote, setEditingNote] = useState<{ rowId: string; colId: string; boardId: string } | null>(null);
   const [noteContent, setNoteContent] = useState('');
@@ -728,6 +721,20 @@ const Tarefas = () => {
 
   const handleUpdateBoard = (updatedBoard: BoardType) => {
     setBoards(boards.map(b => b.id === updatedBoard.id ? updatedBoard : b));
+  };
+
+  const handleSaveToFirebase = async () => {
+    setSaving(true);
+    setSaveFeedback(null);
+    try {
+      await saveBoards(boards);
+      setSaveFeedback({ type: 'success', message: 'Alterações salvas no Firestore com sucesso!' });
+    } catch {
+      setSaveFeedback({ type: 'error', message: 'Erro ao salvar no Firestore.' });
+    } finally {
+      setSaving(false);
+      setTimeout(() => setSaveFeedback(null), 4000);
+    }
   };
 
   const handleCreateNewTask = (boardId: string) => {
@@ -822,28 +829,6 @@ const Tarefas = () => {
           Inventário
         </button>
         <button
-          onClick={() => setActiveTab('retirada')}
-          className={`py-3 px-1 border-b-2 font-bold text-xs uppercase tracking-widest transition-colors whitespace-nowrap ${
-            activeTab === 'retirada'
-              ? 'border-[#B5FF03] text-[#B5FF03]'
-              : 'border-transparent text-[#888888] hover:text-white'
-          }`}
-        >
-          <ArrowUpRight size={16} className="inline mr-2" />
-          Retirada
-        </button>
-        <button
-          onClick={() => setActiveTab('entrada')}
-          className={`py-3 px-1 border-b-2 font-bold text-xs uppercase tracking-widest transition-colors whitespace-nowrap ${
-            activeTab === 'entrada'
-              ? 'border-[#B5FF03] text-[#B5FF03]'
-              : 'border-transparent text-[#888888] hover:text-white'
-          }`}
-        >
-          <ArrowDownLeft size={16} className="inline mr-2" />
-          Entrada / Entrega
-        </button>
-        <button
           onClick={() => setActiveTab('aluguel')}
           className={`py-3 px-1 border-b-2 font-bold text-xs uppercase tracking-widest transition-colors whitespace-nowrap ${
             activeTab === 'aluguel'
@@ -888,12 +873,28 @@ const Tarefas = () => {
 
           <div className="flex flex-wrap gap-3">
             <button
+              onClick={handleSaveToFirebase}
+              disabled={saving}
+              className="flex items-center gap-2 px-6 py-3 bg-[#2d2d2d] text-white font-black rounded-lg hover:bg-[#3d3d3d] transition-colors border border-[#444] disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Save size={18} /> {saving ? 'Salvando...' : 'Salvar Alterações'}
+            </button>
+            <button
               onClick={() => setShowCreateTaskModal(true)}
               className="flex items-center gap-2 px-6 py-3 bg-[#B5FF03] text-black font-black rounded-lg hover:bg-[#a1e600] transition-colors"
             >
               <Plus size={20} /> Novo Item
             </button>
           </div>
+
+          {saveFeedback && (
+            <div className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold ${
+              saveFeedback.type === 'success' ? 'bg-[#1a3a1a] text-[#B5FF03] border border-[#2a5a2a]' : 'bg-[#3a1a1a] text-red-400 border border-[#5a2a2a]'
+            }`}>
+              {saveFeedback.type === 'success' ? <CheckCircle2 size={16} /> : <AlertCircle size={16} />}
+              <span>{saveFeedback.message}</span>
+            </div>
+          )}
 
           {/* Inventário */}
           {(() => {
@@ -920,140 +921,6 @@ const Tarefas = () => {
             );
           })()}
         </>
-      )}
-
-      {/* Retirada Tab */}
-      {activeTab === 'retirada' && (
-        <div>
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 mb-6">
-            <div>
-              <h2 className="text-lg font-black text-white">Registro de Retiradas</h2>
-              <p className="text-xs text-neutral-400">Controle de saída de itens do estoque.</p>
-            </div>
-            <button
-              onClick={() => {
-                const board = boards[0];
-                if (!board || board.rows.length === 0) {
-                  alert('Adicione itens ao inventário primeiro.');
-                  return;
-                }
-                const itemName = prompt('Nome do item para retirada:');
-                if (!itemName) return;
-                const found = board.rows.find(r => String(r.values['col-1'] || '').toLowerCase() === itemName.toLowerCase());
-                if (!found) {
-                  alert('Item não encontrado no estoque.');
-                  return;
-                }
-                const qtyStr = prompt('Quantidade a retirar:');
-                const qty = parseInt(qtyStr || '0');
-                if (qty <= 0) return;
-                const currentQty = Number(found.values['col-3']) || 0;
-                if (qty > currentQty) {
-                  alert(`Estoque insuficiente. Disponível: ${currentQty}`);
-                  return;
-                }
-                const notes = prompt('Observação (opcional):') || '';
-                const updatedBoard = { ...board, rows: board.rows.map(r => r.id === found.id ? { ...r, values: { ...r.values, 'col-3': currentQty - qty } } : r) };
-                handleUpdateBoard(updatedBoard);
-                setMovementLog(prev => [{ id: generateUUID(), type: 'retirada', item: itemName, qty, date: new Date().toISOString().split('T')[0], notes }, ...prev]);
-              }}
-              className="flex items-center gap-2 px-4 py-2.5 bg-[#f59e0b] text-black font-black rounded-lg hover:bg-[#d48c0a] transition-colors text-xs"
-            >
-              <ArrowUpRight size={16} /> Registrar Retirada
-            </button>
-          </div>
-
-          <div className="bg-[#111111] border border-[#222222] rounded-lg overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-[#222222]">
-                  <th className="text-left p-4 text-xs font-black uppercase tracking-widest text-[#B5FF03]">Data</th>
-                  <th className="text-left p-4 text-xs font-black uppercase tracking-widest text-[#B5FF03]">Item</th>
-                  <th className="text-left p-4 text-xs font-black uppercase tracking-widest text-[#B5FF03]">Qtd</th>
-                  <th className="text-left p-4 text-xs font-black uppercase tracking-widest text-[#B5FF03]">Observação</th>
-                </tr>
-              </thead>
-              <tbody>
-                {movementLog.filter(m => m.type === 'retirada').map(m => (
-                  <tr key={m.id} className="border-b border-[#222222] hover:bg-[#1a1a1a]">
-                    <td className="p-4 text-sm text-[#888888]">{m.date}</td>
-                    <td className="p-4 text-sm text-white">{m.item}</td>
-                    <td className="p-4 text-sm text-[#f59e0b] font-bold">-{m.qty}</td>
-                    <td className="p-4 text-sm text-[#888888]">{m.notes || '—'}</td>
-                  </tr>
-                ))}
-                {movementLog.filter(m => m.type === 'retirada').length === 0 && (
-                  <tr><td colSpan={4} className="p-8 text-center text-sm text-[#888888]">Nenhuma retirada registrada</td></tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      {/* Entrada / Entrega Tab */}
-      {activeTab === 'entrada' && (
-        <div>
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 mb-6">
-            <div>
-              <h2 className="text-lg font-black text-white">Registro de Entradas</h2>
-              <p className="text-xs text-neutral-400">Controle de entrada/entrega de itens no estoque.</p>
-            </div>
-            <button
-              onClick={() => {
-                const board = boards[0];
-                if (!board || board.rows.length === 0) {
-                  alert('Adicione itens ao inventário primeiro.');
-                  return;
-                }
-                const itemName = prompt('Nome do item para entrada:');
-                if (!itemName) return;
-                const found = board.rows.find(r => String(r.values['col-1'] || '').toLowerCase() === itemName.toLowerCase());
-                if (!found) {
-                  alert('Item não encontrado no estoque.');
-                  return;
-                }
-                const qtyStr = prompt('Quantidade a dar entrada:');
-                const qty = parseInt(qtyStr || '0');
-                if (qty <= 0) return;
-                const currentQty = Number(found.values['col-3']) || 0;
-                const notes = prompt('Observação (opcional):') || '';
-                const updatedBoard = { ...board, rows: board.rows.map(r => r.id === found.id ? { ...r, values: { ...r.values, 'col-3': currentQty + qty, 'col-6': new Date().toISOString().split('T')[0] } } : r) };
-                handleUpdateBoard(updatedBoard);
-                setMovementLog(prev => [{ id: generateUUID(), type: 'entrada', item: itemName, qty, date: new Date().toISOString().split('T')[0], notes }, ...prev]);
-              }}
-              className="flex items-center gap-2 px-4 py-2.5 bg-[#B5FF03] text-black font-black rounded-lg hover:bg-[#a1e600] transition-colors text-xs"
-            >
-              <ArrowDownLeft size={16} /> Registrar Entrada
-            </button>
-          </div>
-
-          <div className="bg-[#111111] border border-[#222222] rounded-lg overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b border-[#222222]">
-                  <th className="text-left p-4 text-xs font-black uppercase tracking-widest text-[#B5FF03]">Data</th>
-                  <th className="text-left p-4 text-xs font-black uppercase tracking-widest text-[#B5FF03]">Item</th>
-                  <th className="text-left p-4 text-xs font-black uppercase tracking-widest text-[#B5FF03]">Qtd</th>
-                  <th className="text-left p-4 text-xs font-black uppercase tracking-widest text-[#B5FF03]">Observação</th>
-                </tr>
-              </thead>
-              <tbody>
-                {movementLog.filter(m => m.type === 'entrada').map(m => (
-                  <tr key={m.id} className="border-b border-[#222222] hover:bg-[#1a1a1a]">
-                    <td className="p-4 text-sm text-[#888888]">{m.date}</td>
-                    <td className="p-4 text-sm text-white">{m.item}</td>
-                    <td className="p-4 text-sm text-[#B5FF03] font-bold">+{m.qty}</td>
-                    <td className="p-4 text-sm text-[#888888]">{m.notes || '—'}</td>
-                  </tr>
-                ))}
-                {movementLog.filter(m => m.type === 'entrada').length === 0 && (
-                  <tr><td colSpan={4} className="p-8 text-center text-sm text-[#888888]">Nenhuma entrada registrada</td></tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
       )}
 
       {activeTab === 'aluguel' && (
