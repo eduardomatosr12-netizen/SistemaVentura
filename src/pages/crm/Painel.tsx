@@ -7,8 +7,6 @@ import { parseMonetaryValue, formatCurrency, generatePDF } from '../../lib/crmHe
 import { useActivityLogs } from '../../contexts/ActivityContext';
 import { generateUUID } from '../../lib/uuid';
 import { getAllInventoryItems, getAvailableQuantity, findInventoryItem, loadInventory, refreshReservedCache } from '../../lib/inventory';
-import { collection, getDocs } from 'firebase/firestore';
-import { db } from '../../services/firebase';
 import { addTransaction } from '../../services/financeService';
 import { generateWhatsAppLink } from '../../lib/whatsapp';
 
@@ -110,8 +108,7 @@ const CRMDashboard = () => {
         if (field === 'quantidade' || field === 'descricao') {
           const itemName = field === 'descricao' ? String(value) : i.descricao;
           if (itemName) {
-            const produto = findProdutoByName(itemName);
-            const available = produto ? produto.qtdDisponivel : getAvailableQuantity(itemName, formData.date || new Date().toISOString().split('T')[0]);
+            const available = getAvailableQuantity(itemName, formData.date || new Date().toISOString().split('T')[0]);
             if (field === 'quantidade') {
               const qty = Number(value) || 0;
               updated.quantidade = Math.min(qty, Math.max(1, available));
@@ -134,7 +131,6 @@ const CRMDashboard = () => {
 
   // Inventory integration
   const [invStockItems, setInvStockItems] = useState<{ name: string; qty: number; category: string }[]>([]);
-  const [produtosEstoque, setProdutosEstoque] = useState<{ id: string; name: string; valorUnitario: number; qtdDisponivel: number; categoria: string }[]>([]);
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
   const [invSearch, setInvSearch] = useState('');
   const [invSearchOpen, setInvSearchOpen] = useState(false);
@@ -148,44 +144,22 @@ const CRMDashboard = () => {
         await loadInventory();
         await refreshReservedCache(formData.date || new Date().toISOString().split('T')[0]);
         setInvStockItems(getAllInventoryItems());
-        try {
-          const q = collection(db, 'estoque');
-          const snapshot = await getDocs(q);
-          const produtos = snapshot.docs.map(d => {
-            const data = d.data();
-            return {
-              id: d.id,
-              name: data.nome || data.name || '',
-              valorUnitario: Number(data.valor_unitario || data.valorUnitario || data['col-7'] || 0),
-              qtdDisponivel: Number(data.quantidade_disponivel || data.qtdDisponivel || data['col-3'] || 0),
-              categoria: data.categoria || data.category || data['col-2'] || '',
-            };
-          }).filter(p => p.name);
-          if (produtos.length > 0) setProdutosEstoque(produtos);
-        } catch {
-          // fallback: estoque collection may not exist
-        }
       })();
     }
   }, [isCreateOpen]);
 
   const filteredInvItems = useMemo(() => {
-    const source = produtosEstoque.length > 0
-      ? produtosEstoque.map(p => ({ name: p.name, qty: p.qtdDisponivel, category: p.categoria }))
-      : invStockItems;
-    if (!invSearch.trim()) return source.slice(0, 40);
+    if (!invSearch.trim()) return invStockItems.slice(0, 40);
     const q = invSearch.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-    return source.filter(i =>
+    return invStockItems.filter(i =>
       i.name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').includes(q)
     ).slice(0, 40);
-  }, [invStockItems, produtosEstoque, invSearch]);
-
-  const findProdutoByName = (name: string) => produtosEstoque.find(p => p.name.toLowerCase() === name.toLowerCase());
+  }, [invStockItems, invSearch]);
 
   const handleSelectInventoryItem = (itemName: string) => {
-    const produto = findProdutoByName(itemName);
-    const unitValue = produto ? produto.valorUnitario : (findInventoryItem(itemName)?.row.values['col-7'] ? Number(findInventoryItem(itemName)!.row.values['col-7']) || 0 : 0);
-    const available = produto ? produto.qtdDisponivel : getAvailableQuantity(itemName, formData.date || new Date().toISOString().split('T')[0]);
+    const found = findInventoryItem(itemName);
+    const unitValue = found ? Number(found.row.values['col-7']) || 0 : 0;
+    const available = getAvailableQuantity(itemName, formData.date || new Date().toISOString().split('T')[0]);
     const maxQty = Math.max(1, available);
     const newId = generateUUID();
     setFormData(prev => ({
@@ -198,8 +172,8 @@ const CRMDashboard = () => {
   };
 
   const handleInlineItemSelect = (itemId: string, itemName: string) => {
-    const produto = findProdutoByName(itemName);
-    const unitValue = produto ? produto.valorUnitario : (findInventoryItem(itemName)?.row.values['col-7'] ? Number(findInventoryItem(itemName)!.row.values['col-7']) || 0 : 0);
+    const found = findInventoryItem(itemName);
+    const unitValue = found ? Number(found.row.values['col-7']) || 0 : 0;
     setFormData(prev => ({
       ...prev,
       orcamentoItems: prev.orcamentoItems.map(i =>
@@ -1272,8 +1246,7 @@ const CRMDashboard = () => {
                             <div className="px-3 py-2 text-xs text-neutral-500 italic">Nenhum item encontrado no estoque</div>
                           ) : (
                             filteredInvItems.map(item => {
-                                const produto = findProdutoByName(item.name);
-                                const available = produto ? produto.qtdDisponivel : getAvailableQuantity(item.name, formData.date || new Date().toISOString().split('T')[0]);
+                                const available = getAvailableQuantity(item.name, formData.date || new Date().toISOString().split('T')[0]);
                                 return (
                                   <button
                                     type="button"
@@ -1302,8 +1275,7 @@ const CRMDashboard = () => {
 
                     <div className="space-y-2">
                       {formData.orcamentoItems.map((item, idx) => {
-                        const produto = findProdutoByName(item.descricao);
-                        const available = produto ? produto.qtdDisponivel : getAvailableQuantity(item.descricao, formData.date || new Date().toISOString().split('T')[0]);
+                        const available = getAvailableQuantity(item.descricao, formData.date || new Date().toISOString().split('T')[0]);
                         const maxQty = Math.max(1, available);
                         const isExpanded = expandedItems.has(item.id);
                         return isExpanded ? (
@@ -1354,12 +1326,9 @@ const CRMDashboard = () => {
                                             inlineItemSearch.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
                                           )
                                         )
-                                      : (produtosEstoque.length > 0
-                                        ? produtosEstoque.map(p => ({ name: p.name, qty: p.qtdDisponivel, category: p.categoria }))
-                                        : invStockItems)
+                                      : invStockItems
                                     ).slice(0, 30).map(opt => {
-                                      const optProduto = findProdutoByName(opt.name);
-                                      const optAvailable = optProduto ? optProduto.qtdDisponivel : getAvailableQuantity(opt.name, formData.date || new Date().toISOString().split('T')[0]);
+                                      const optAvailable = getAvailableQuantity(opt.name, formData.date || new Date().toISOString().split('T')[0]);
                                       return (
                                         <button
                                           type="button"
