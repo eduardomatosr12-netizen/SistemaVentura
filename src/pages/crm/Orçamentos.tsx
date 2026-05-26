@@ -44,17 +44,6 @@ const EVENT_TYPES = [
   'Outros'
 ];
 
-const STAGES = [
-  'Novos Orçamentos',
-  'Primeiro Contato',
-  'Contato Ativo',
-  'Reunião Agendada',
-  'Follow Up',
-  'Proposta Enviada',
-  'Contrato Fechado',
-  'Perdido'
-];
-
 const baseStageStyle = 'bg-[#1a1a1a] text-white/70 text-center text-sm leading-5 rounded-full px-4 py-1.5 min-w-[120px] border border-gray-700 inline-flex items-center justify-center';
 
 const stageStyle: Record<string, string> = {
@@ -742,18 +731,10 @@ const CRMOrçamentos = () => {
                   </Field>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
-                  <Field label="CIDADE">
-                    <input type="text" value={current.address} onChange={e => updateField('address', e.target.value)}
-                      className={inputCls} placeholder="Ex: São Paulo - SP" />
-                  </Field>
-                  <Field label="ETAPA DO PIPELINE">
-                    <select value={current.stage} onChange={e => updateField('stage', e.target.value)}
-                      className={`${inputCls} appearance-none cursor-pointer`}>
-                      {STAGES.map(s => <option key={s} value={s} className="bg-[#1a1a1a] text-white">{s === 'Novos Orçamentos' ? 'Novos Contatos' : s}</option>)}
-                    </select>
-                  </Field>
-                </div>
+                <Field label="CIDADE">
+                  <input type="text" value={current.address} onChange={e => updateField('address', e.target.value)}
+                    className={inputCls} placeholder="Ex: São Paulo - SP" />
+                </Field>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
                   <Field label="DATA DO EVENTO">
