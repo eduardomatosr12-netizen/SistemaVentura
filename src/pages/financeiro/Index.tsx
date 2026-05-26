@@ -198,14 +198,7 @@ const Financeiro = () => {
   const [expenses, setExpenses] = useState<Expense[]>(() => {
     const stored = localStorage.getItem(EXPENSES_KEY);
     if (stored) return JSON.parse(stored);
-    return [
-      { id: 'exp-001', category: 'aluguel', description: 'Aluguel do escritório', amount: 'R$ 5.000,00', date: '2026-04-01', status: 'Pago' },
-      { id: 'exp-002', category: 'software', description: 'Assinatura CRM', amount: 'R$ 497,00', date: '2026-04-05', status: 'Pago' },
-      { id: 'exp-003', category: 'marketing', description: 'Ads Google', amount: 'R$ 2.500,00', date: '2026-04-10', status: 'Pendente' },
-      { id: 'exp-004', category: 'salarios', description: 'Folha de pagamento', amount: 'R$ 25.000,00', date: '2026-04-15', status: 'Pago' },
-      { id: 'exp-005', category: 'luz', description: 'Conta de luz', amount: 'R$ 1.200,00', date: '2026-04-18', status: 'Pago' },
-      { id: 'exp-006', category: 'internet', description: 'Internet corporativa', amount: 'R$ 299,00', date: '2026-04-20', status: 'Pago' },
-    ];
+    return [];
   });
 
   useEffect(() => {
@@ -226,16 +219,7 @@ const Financeiro = () => {
 
   const syncAsaasData = useCallback(async () => {
     setIsSyncing(true);
-    await new Promise(resolve => setTimeout(resolve, 1500));
-      
-    const mockAsaas: Invoice[] = [
-      { id: 'PAY-827364', client: 'Clínica Sorriso', amount: 'R$ 15.000,00', date: '2026-04-20', status: 'Pago', source: 'asaas', paymentMethod: 'pix' },
-      { id: 'PAY-918273', client: 'João Silva', amount: 'R$ 5.000,00', date: '2026-04-21', status: 'Pago', source: 'asaas', paymentMethod: 'credito' },
-      { id: 'PAY-102938', client: 'Maria Santos', amount: 'R$ 8.000,00', date: '2026-04-25', status: 'Pendente', source: 'asaas', paymentMethod: 'boleto' },
-      { id: 'PAY-445566', client: 'Odonto Master', amount: 'R$ 22.500,00', date: '2026-04-18', status: 'Pago', source: 'asaas', paymentMethod: 'pix' },
-    ];
-      
-    setAsaasInvoices(mockAsaas);
+    setAsaasInvoices([]);
     setLastSync(new Date().toLocaleTimeString());
     setIsSyncing(false);
   }, []);

@@ -127,7 +127,7 @@ const MainLayout = ({ children, hideSubmenu }: MainLayoutProps) => {
                   type="password"
                   value={loginPassword}
                   onChange={(e) => setLoginPassword(e.target.value)}
-                  placeholder={loginRole === 'admin' ? 'admin123' : 'func123'}
+                  placeholder="Digite sua senha"
                   className="w-full bg-[#111] border-2 border-[#333] rounded-xl px-4 py-3 font-bold text-white focus:border-[#B5FF03] outline-none"
                 />
               </div>
@@ -147,11 +147,7 @@ const MainLayout = ({ children, hideSubmenu }: MainLayoutProps) => {
               </button>
             </form>
 
-            <div className="mt-8 pt-6 border-t border-[#333] text-center">
-              <p className="text-xs text-neutral-500">
-                Admin: admin123 | Funcionário: func123
-              </p>
-            </div>
+
           </div>
         </div>
       </div>

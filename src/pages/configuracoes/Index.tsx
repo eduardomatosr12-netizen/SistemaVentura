@@ -64,11 +64,11 @@ const Configuracoes = () => {
         if (error) {
           if (error.code === '404' || error.message?.includes('not found') || error.message?.includes('no rows')) {
             console.warn('Profiles table not found, using defaults');
-            setProfileData({ name: '', email: user.email || '', phone: '(11) 99999-9999', avatar: '' });
+            setProfileData({ name: '', email: user.email || '', phone: '', avatar: '' });
             return;
           }
           console.warn('Profile load error:', error.message);
-          setProfileData({ name: '', email: user.email || '', phone: '(11) 99999-9999', avatar: '' });
+          setProfileData({ name: '', email: user.email || '', phone: '', avatar: '' });
           return;
         }
         
@@ -76,7 +76,7 @@ const Configuracoes = () => {
           setProfileData({
             name: data.nome || '',
             email: user.email || '',
-            phone: data.telefone || '(11) 99999-9999',
+            phone: data.telefone || '',
             avatar: data.avatar || ''
           });
           if (data.avatar) {
@@ -92,14 +92,14 @@ const Configuracoes = () => {
             setProfileData({
               name: parsed.nome || '',
               email: parsed.email || user.email || '',
-              phone: parsed.telefone || '(11) 99999-9999',
+              phone: parsed.telefone || '',
               avatar: parsed.avatar || ''
             });
             if (parsed.avatar) setAvatarPreview(parsed.avatar);
             return;
           } catch { /* ignore */ }
         }
-        setProfileData({ name: '', email: user.email || '', phone: '(11) 99999-9999', avatar: '' });
+        setProfileData({ name: '', email: user.email || '', phone: '', avatar: '' });
       }
     };
     loadData();
