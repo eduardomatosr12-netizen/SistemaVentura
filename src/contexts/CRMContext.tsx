@@ -1,10 +1,9 @@
-import { createContext, useContext, useState, useCallback, useEffect, useMemo } from 'react';
+import { createContext, useContext, useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import type { ReactNode } from 'react';
 import { STAGES, STAGE_CONFIG, parseMonetaryValue, calculateTotalValue, groupOrçamentosByStage, type Stage } from '../lib/crmHelpers';
-import { generateUUID } from '../lib/uuid';
 import * as leadService from '../services/leadService';
 import * as eventService from '../services/eventService';
-import { loadInventory } from '../lib/inventory';
+import { subscribeInventory } from '../lib/inventory';
 
 export interface OrcamentoItem {
   id: string;
@@ -81,59 +80,59 @@ export const CRMProvider = ({ children }: { children: ReactNode }) => {
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const loadCount = useRef(0);
 
   useEffect(() => {
-    Promise.all([
-      leadService.fetchLeads().then(setOrçamentos),
-      eventService.fetchEvents().then(setEvents),
-      loadInventory(),
-    ])
-      .catch(err => console.error('[CRM] Erro ao carregar dados:', err))
-      .finally(() => setIsLoading(false));
+    const onLoad = () => {
+      loadCount.current += 1;
+      if (loadCount.current >= 3) setIsLoading(false);
+    };
+
+    const unsubLeads = leadService.subscribeLeads(leads => {
+      setOrçamentos(leads);
+      onLoad();
+    });
+    const unsubEvents = eventService.subscribeEvents(events => {
+      setEvents(events);
+      onLoad();
+    });
+    const unsubInventory = subscribeInventory(onLoad);
+
+    return () => {
+      unsubLeads();
+      unsubEvents();
+      unsubInventory();
+    };
   }, []);
 
   const OrçamentosByStage = useMemo(() => groupOrçamentosByStage(Orçamentos), [Orçamentos]);
 
   const addLead = useCallback((lead: LeadInput) => {
-    const id = generateUUID();
-    const newLead: Lead = { ...lead, id };
-    setOrçamentos(prev => [...prev, newLead]);
-    leadService.addLead(lead).then(firestoreId => {
-      setOrçamentos(prev => prev.map(l => l.id === id ? { ...l, id: firestoreId } : l));
-    }).catch(() => {});
+    leadService.addLead(lead).catch(err => console.error('[CRM] Erro ao adicionar lead:', err));
   }, []);
 
   const updateLead = useCallback((id: string, fields: LeadUpdate) => {
-    setOrçamentos(prev => prev.map(l => l.id === id ? { ...l, ...fields } : l));
-    leadService.updateLead(id, fields).catch(() => {});
+    leadService.updateLead(id, fields).catch(err => console.error('[CRM] Erro ao atualizar lead:', err));
   }, []);
 
   const updateOrçamentostage = useCallback((id: string, stage: string) => {
-    setOrçamentos(prev => prev.map(l => l.id === id ? { ...l, stage } : l));
-    leadService.updateLeadStage(id, stage).catch(() => {});
+    leadService.updateLeadStage(id, stage).catch(err => console.error('[CRM] Erro ao atualizar etapa:', err));
   }, []);
 
   const deleteLead = useCallback((id: string) => {
-    setOrçamentos(prev => prev.filter(l => l.id !== id));
-    leadService.deleteLead(id).catch(() => {});
+    leadService.deleteLead(id).catch(err => console.error('[CRM] Erro ao excluir lead:', err));
   }, []);
 
   const addEvent = useCallback((event: Omit<CalendarEvent, 'id'>) => {
-    const id = generateUUID();
-    setEvents(prev => [...prev, { ...event, id }]);
-    eventService.addEvent(event).then(firestoreId => {
-      setEvents(prev => prev.map(e => e.id === id ? { ...e, id: firestoreId } : e));
-    }).catch(() => {});
+    eventService.addEvent(event).catch(err => console.error('[CRM] Erro ao adicionar evento:', err));
   }, []);
 
   const updateEvent = useCallback((id: string, fields: Partial<CalendarEvent>) => {
-    setEvents(prev => prev.map(e => e.id === id ? { ...e, ...fields } : e));
-    eventService.updateEvent(id, fields).catch(() => {});
+    eventService.updateEvent(id, fields).catch(err => console.error('[CRM] Erro ao atualizar evento:', err));
   }, []);
 
   const deleteEvent = useCallback((id: string) => {
-    setEvents(prev => prev.filter(e => e.id !== id));
-    eventService.deleteEvent(id).catch(() => {});
+    eventService.deleteEvent(id).catch(err => console.error('[CRM] Erro ao excluir evento:', err));
   }, []);
 
   const getOrçamentosByStage = useCallback((stage: string) => {

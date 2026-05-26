@@ -1,5 +1,5 @@
 import {
-  collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, orderBy, Timestamp,
+  collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, orderBy, onSnapshot, Timestamp,
 } from 'firebase/firestore';
 import { db } from './firebase';
 import type { Lead } from '../contexts/CRMContext';
@@ -11,6 +11,35 @@ const toDate = (ts: Timestamp | string | undefined): string => {
   if (!ts) return new Date().toISOString().split('T')[0];
   if (ts instanceof Timestamp) return ts.toDate().toISOString().split('T')[0];
   return String(ts).split('T')[0];
+};
+
+export const subscribeLeads = (callback: (leads: Lead[]) => void): () => void => {
+  const q = query(collection(db, COLLECTION), orderBy('name'));
+  const unsubscribe = onSnapshot(q, snapshot => {
+    const leads = snapshot.docs.map(d => {
+      const data = d.data();
+      return {
+        id: d.id,
+        name: data.name || '',
+        niche: data.niche || '',
+        whatsapp: data.whatsapp || '',
+        email: data.email || '',
+        instagram: data.instagram || '',
+        stage: data.stage || '',
+        origin: data.origin || '',
+        firstContact: toDate(data.firstContact),
+        closingDate: toDate(data.closingDate),
+        followUpReminder: data.followUpReminder || '',
+        address: data.address || '',
+        notes: data.notes || '',
+        value: data.value || '0',
+        items: data.items || [],
+        lastModifiedBy: data.lastModifiedBy || '',
+      } as Lead;
+    });
+    callback(leads);
+  }, err => console.error('[Firestore] Erro no listener de leads:', err));
+  return unsubscribe;
 };
 
 export const fetchLeads = async (): Promise<Lead[]> => {

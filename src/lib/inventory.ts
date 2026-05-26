@@ -1,6 +1,6 @@
 import { generateUUID } from './uuid';
 import {
-  collection, getDocs, addDoc, updateDoc, doc, query, orderBy, Timestamp, writeBatch,
+  collection, getDocs, addDoc, updateDoc, doc, query, orderBy, onSnapshot, Timestamp, writeBatch,
 } from 'firebase/firestore';
 import { db } from '../services/firebase';
 
@@ -54,6 +54,21 @@ export const loadInventory = async (): Promise<void> => {
   } catch {
     boardsCache = [];
   }
+};
+
+export const subscribeInventory = (onUpdate?: () => void): () => void => {
+  const q = query(collection(db, COLLECTION), orderBy('title'));
+  const unsubscribe = onSnapshot(q, snapshot => {
+    boardsCache = snapshot.docs.map(d => ({
+      id: d.id,
+      title: d.data().title || '',
+      color: d.data().color || '',
+      columns: d.data().columns || [],
+      rows: d.data().rows || [],
+    })) as InventoryBoard[];
+    onUpdate?.();
+  }, err => console.error('[Firestore] Erro no listener de inventário:', err));
+  return unsubscribe;
 };
 
 export const refreshReservedCache = async (eventDate: string): Promise<void> => {
