@@ -1,4 +1,4 @@
-import type { Lead, OrcamentoItem } from '../contexts/CRMContext';
+import type { Lead } from '../contexts/CRMContext';
 
 export const STAGES = [
   'Novos Orçamentos',
@@ -108,18 +108,20 @@ export function generatePDF(lead: Lead, discountData?: { type: 'percent' | 'fixe
   if (!win) return;
 
   const items = lead.items || [];
-  let total = items.reduce((sum, item) => sum + item.quantidade * item.valorUnitario, 0);
-  let discountText = '';
+  const total = items.reduce((sum, item) => sum + item.quantidade * item.valorUnitario, 0);
+  let discountAmount = 0;
+  let discountLabel = '';
   let finalTotal = total;
 
   if (discountData && discountData.value > 0) {
     if (discountData.type === 'percent') {
-      const discountAmount = total * (discountData.value / 100);
+      discountAmount = total * (discountData.value / 100);
       finalTotal = total - discountAmount;
-      discountText = `Desconto: ${discountData.value}% (-${formatCurrency(discountAmount)})`;
+      discountLabel = `${discountData.value}%`;
     } else {
-      finalTotal = total - discountData.value;
-      discountText = `Desconto: -${formatCurrency(discountData.value)}`;
+      discountAmount = discountData.value;
+      finalTotal = total - discountAmount;
+      discountLabel = `${formatCurrency(discountAmount)}`;
     }
   }
 
@@ -133,82 +135,298 @@ export function generatePDF(lead: Lead, discountData?: { type: 'percent' | 'fixe
       <meta charset="UTF-8">
       <title>Orçamento - ${lead.name}</title>
       <style>
-        @page { margin: 20mm 15mm; }
-        body { font-family: 'Segoe UI', Arial, sans-serif; color: #222; margin: 0; padding: 30px; }
-        .header { text-align: center; border-bottom: 3px solid #B5FF03; padding-bottom: 20px; margin-bottom: 25px; }
-        .header h1 { margin: 0; font-size: 24px; color: #000; letter-spacing: 2px; text-transform: uppercase; }
-        .header p { margin: 5px 0 0; color: #666; font-size: 12px; }
-        .info-grid { display: flex; justify-content: space-between; margin-bottom: 25px; }
-        .info-box { flex: 1; }
-        .info-box h3 { font-size: 10px; text-transform: uppercase; color: #B5FF03; letter-spacing: 1px; margin: 0 0 5px; }
-        .info-box p { margin: 2px 0; font-size: 13px; color: #333; }
-        table { width: 100%; border-collapse: collapse; margin: 20px 0; }
-        thead th { background: #000; color: #B5FF03; padding: 10px 12px; text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; }
-        tbody td { padding: 10px 12px; border-bottom: 1px solid #eee; font-size: 13px; }
-        tbody tr:hover { background: #f9f9f9; }
-        .total-row { font-weight: bold; }
-        .total-row td { border-top: 2px solid #000; padding-top: 12px; }
-        .discount-row td { color: #e53935; }
-        .footer { margin-top: 40px; text-align: center; font-size: 11px; color: #999; border-top: 1px solid #eee; padding-top: 15px; }
-        .badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: bold; }
-        .badge-pending { background: #fff3e0; color: #e65100; }
+        @page { margin: 15mm 12mm; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+          font-family: 'Segoe UI', Arial, sans-serif;
+          color: #222;
+          position: relative;
+          min-height: 100vh;
+          padding: 0;
+        }
+        .watermark {
+          position: fixed;
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%) rotate(-25deg);
+          font-size: 120px;
+          font-weight: 900;
+          color: #000;
+          opacity: 0.04;
+          letter-spacing: 12px;
+          text-transform: uppercase;
+          pointer-events: none;
+          z-index: -1;
+          white-space: nowrap;
+          font-family: 'Segoe UI', Arial, sans-serif;
+        }
+        .company-header {
+          background: #2d2d2d;
+          color: #fff;
+          padding: 28px 35px;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+        .company-header .brand h1 {
+          font-size: 20px;
+          font-weight: 700;
+          letter-spacing: 3px;
+          text-transform: uppercase;
+          margin: 0;
+        }
+        .company-header .brand .tagline {
+          font-size: 11px;
+          color: #aaa;
+          letter-spacing: 1px;
+          margin-top: 2px;
+        }
+        .company-header .doc-info {
+          text-align: right;
+        }
+        .company-header .doc-info .doc-title {
+          font-size: 22px;
+          font-weight: 700;
+          letter-spacing: 4px;
+          text-transform: uppercase;
+          color: #fff;
+        }
+        .company-header .doc-info .doc-date {
+          font-size: 11px;
+          color: #aaa;
+          margin-top: 2px;
+        }
+        .content {
+          padding: 30px 35px;
+        }
+        .client-section {
+          display: flex;
+          justify-content: space-between;
+          margin-bottom: 28px;
+          padding-bottom: 20px;
+          border-bottom: 1px solid #e0e0e0;
+        }
+        .client-section .col h3 {
+          font-size: 9px;
+          text-transform: uppercase;
+          letter-spacing: 1.5px;
+          color: #6B8E23;
+          margin-bottom: 8px;
+        }
+        .client-section .col p {
+          font-size: 13px;
+          color: #333;
+          line-height: 1.6;
+          margin: 0;
+        }
+        .client-section .col p strong {
+          font-size: 15px;
+          color: #1a1a1a;
+        }
+        table {
+          width: 100%;
+          border-collapse: collapse;
+          margin: 0 0 5px 0;
+        }
+        thead th {
+          background: #6B8E23;
+          color: #fff;
+          padding: 11px 14px;
+          text-align: left;
+          font-size: 10px;
+          text-transform: uppercase;
+          letter-spacing: 1.2px;
+          font-weight: 600;
+        }
+        thead th:last-child { text-align: right; }
+        thead th:nth-child(2) { text-align: center; }
+        thead th:nth-child(3) { text-align: right; }
+        tbody td {
+          padding: 12px 14px;
+          border-bottom: 1px solid #e8e8e8;
+          font-size: 13px;
+          color: #333;
+          vertical-align: top;
+        }
+        tbody td:last-child { text-align: right; font-weight: 600; }
+        tbody td:nth-child(2) { text-align: center; }
+        tbody td:nth-child(3) { text-align: right; }
+        tbody tr:last-child td { border-bottom: none; }
+        .table-spacer td {
+          padding: 6px 14px;
+          border-bottom: none;
+        }
+        .summary-section {
+          margin-top: 25px;
+          border-top: 2px solid #6B8E23;
+          padding-top: 15px;
+        }
+        .summary-row {
+          display: flex;
+          justify-content: flex-end;
+          align-items: center;
+          padding: 6px 0;
+          font-size: 13px;
+        }
+        .summary-row .label {
+          color: #555;
+          width: 260px;
+          text-align: right;
+          padding-right: 20px;
+        }
+        .summary-row .value {
+          font-weight: 600;
+          width: 160px;
+          text-align: right;
+        }
+        .summary-row.total {
+          font-size: 15px;
+          font-weight: 700;
+          color: #1a1a1a;
+        }
+        .summary-row.discount .label,
+        .summary-row.discount .value {
+          color: #c62828;
+        }
+        .final-block {
+          margin-top: 20px;
+          background: #2E7D32;
+          color: #fff;
+          padding: 16px 24px;
+          display: flex;
+          justify-content: flex-end;
+          align-items: center;
+          border-radius: 4px;
+        }
+        .final-block .final-label {
+          font-size: 13px;
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 1.5px;
+          margin-right: 30px;
+        }
+        .final-block .final-value {
+          font-size: 22px;
+          font-weight: 800;
+          letter-spacing: 1px;
+        }
+        .notes-section {
+          margin-top: 25px;
+          padding: 14px 16px;
+          background: #f9f9f9;
+          border-left: 3px solid #6B8E23;
+          border-radius: 2px;
+        }
+        .notes-section h4 {
+          font-size: 10px;
+          text-transform: uppercase;
+          letter-spacing: 1px;
+          color: #6B8E23;
+          margin-bottom: 6px;
+        }
+        .notes-section p {
+          font-size: 13px;
+          color: #444;
+          line-height: 1.5;
+        }
+        .page-footer {
+          margin-top: 40px;
+          text-align: center;
+          font-size: 10px;
+          color: #999;
+          border-top: 1px solid #e0e0e0;
+          padding-top: 14px;
+        }
+        .badge {
+          display: inline-block;
+          padding: 3px 10px;
+          border-radius: 12px;
+          font-size: 10px;
+          font-weight: 600;
+          background: #f1f8e9;
+          color: #558B2F;
+        }
       </style>
     </head>
     <body>
-      <div class="header">
-        <h1>Orçamento</h1>
-        <p>Ventura Luz e Efeitos • Emitido em ${dateStr}</p>
-      </div>
-      <div class="info-grid">
-        <div class="info-box">
-          <h3>Cliente</h3>
-          <p><strong>${lead.name}</strong></p>
-          ${lead.whatsapp ? `<p>WhatsApp: ${lead.whatsapp}</p>` : ''}
-          ${lead.email ? `<p>Email: ${lead.email}</p>` : ''}
+      <div class="watermark">ORÇAMENTO</div>
+
+      <div class="company-header">
+        <div class="brand">
+          <h1>Ventura Luz e Efeitos</h1>
+          <div class="tagline">Iluminação Profissional • Eventos • Logística</div>
         </div>
-        <div class="info-box" style="text-align: right;">
-          <h3>Evento</h3>
-          <p><strong>${lead.niche || '—'}</strong></p>
-          <p>Data: ${lead.firstContact ? new Date(lead.firstContact).toLocaleDateString('pt-BR') : '—'}</p>
-          <p>Status: <span class="badge badge-pending">${lead.stage}</span></p>
+        <div class="doc-info">
+          <div class="doc-title">Orçamento</div>
+          <div class="doc-date">Emitido em ${dateStr}</div>
         </div>
       </div>
-      <table>
-        <thead>
-          <tr>
-            <th style="width: 50%;">Item</th>
-            <th style="width: 15%; text-align: center;">Qtd</th>
-            <th style="width: 20%; text-align: right;">Valor Unit.</th>
-            <th style="width: 15%; text-align: right;">Subtotal</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${items.map(item => `
+
+      <div class="content">
+        <div class="client-section">
+          <div class="col">
+            <h3>Cliente</h3>
+            <p><strong>${lead.name}</strong></p>
+            ${lead.whatsapp ? `<p>WhatsApp: ${lead.whatsapp}</p>` : ''}
+            ${lead.email ? `<p>Email: ${lead.email}</p>` : ''}
+            ${lead.instagram ? `<p>Instagram: ${lead.instagram}</p>` : ''}
+          </div>
+          <div class="col" style="text-align: right;">
+            <h3>Evento</h3>
+            <p><strong>${lead.niche || '—'}</strong></p>
+            <p>Data: ${lead.firstContact ? new Date(lead.firstContact).toLocaleDateString('pt-BR') : '—'}</p>
+            ${lead.address ? `<p>Local: ${lead.address}</p>` : ''}
+            <p style="margin-top: 6px;"><span class="badge">${lead.stage}</span></p>
+          </div>
+        </div>
+
+        <table>
+          <thead>
             <tr>
-              <td>${item.descricao}</td>
-              <td style="text-align: center;">${item.quantidade}</td>
-              <td style="text-align: right;">${formatCurrency(item.valorUnitario)}</td>
-              <td style="text-align: right;">${formatCurrency(item.quantidade * item.valorUnitario)}</td>
+              <th style="width: 48%;">Serviços</th>
+              <th style="width: 12%;">Unidade</th>
+              <th style="width: 20%;">Valor por unidade</th>
+              <th style="width: 20%;">Custo</th>
             </tr>
-          `).join('')}
-          <tr class="total-row">
-            <td colspan="3" style="text-align: right;">Total Bruto</td>
-            <td style="text-align: right;">${formatCurrency(total)}</td>
-          </tr>
-          ${discountText ? `
-          <tr class="discount-row">
-            <td colspan="3" style="text-align: right;">${discountText}</td>
-            <td style="text-align: right;">${formatCurrency(finalTotal)}</td>
-          </tr>` : ''}
-          <tr>
-            <td colspan="3" style="text-align: right; font-size: 16px; font-weight: black;">VALOR FINAL</td>
-            <td style="text-align: right; font-size: 16px; font-weight: black;">${formatCurrency(finalTotal)}</td>
-          </tr>
-        </tbody>
-      </table>
-      ${lead.notes ? `<div style="margin-top: 20px; padding: 12px; background: #f5f5f5; border-radius: 8px;"><strong style="font-size: 10px; text-transform: uppercase; color: #666;">Observações:</strong><p style="font-size: 13px; margin: 5px 0 0;">${lead.notes}</p></div>` : ''}
-      <div class="footer">
-        <p>Ventura Luz e Efeitos • Documento gerado automaticamente pelo sistema.</p>
+          </thead>
+          <tbody>
+            ${items.map((item, i) => `
+              <tr${i === 0 ? '' : ''}>
+                <td>${item.descricao}</td>
+                <td>${item.quantidade}</td>
+                <td>${formatCurrency(item.valorUnitario)}</td>
+                <td>${formatCurrency(item.quantidade * item.valorUnitario)}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+
+        <div class="summary-section">
+          <div class="summary-row">
+            <span class="label">Valor Bruto</span>
+            <span class="value">${formatCurrency(total)}</span>
+          </div>
+          ${discountData && discountData.value > 0 ? `
+          <div class="summary-row discount">
+            <span class="label">Desconto (${discountLabel})</span>
+            <span class="value">- ${formatCurrency(discountAmount)}</span>
+          </div>` : ''}
+        </div>
+
+        <div class="final-block">
+          <span class="final-label">Valor Total${discountData && discountData.value > 0 ? ' com desconto' : ''}</span>
+          <span class="final-value">${formatCurrency(finalTotal)}</span>
+        </div>
+
+        ${lead.notes ? `
+        <div class="notes-section">
+          <h4>Observações</h4>
+          <p>${lead.notes}</p>
+        </div>` : ''}
+      </div>
+
+      <div class="page-footer">
+        <p>Ventura Luz e Efeitos • Iluminação Profissional • Documento gerado automaticamente pelo sistema.</p>
       </div>
     </body>
     </html>
