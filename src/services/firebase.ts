@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { getFirestore } from 'firebase/firestore';
+import { getFirestore, enableIndexedDbPersistence } from 'firebase/firestore';
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -11,5 +11,16 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-export const db = getFirestore(app);
+
+const db = getFirestore(app);
+
+enableIndexedDbPersistence(db).catch(err => {
+  if (err.code === 'failed-precondition') {
+    console.warn('[Firebase] Persistência offline não disponível: múltiplas abas abertas.');
+  } else if (err.code === 'unimplemented') {
+    console.warn('[Firebase] Navegador não suporta persistência offline.');
+  }
+});
+
+export { db };
 export default app;

@@ -59,6 +59,7 @@ type LeadUpdate = Partial<Omit<Lead, 'id'>>;
 interface CRMContextType {
   Orçamentos: Lead[];
   events: CalendarEvent[];
+  isLoading: boolean;
   searchTerm: string;
   setSearchTerm: (term: string) => void;
   addLead: (lead: LeadInput) => void;
@@ -78,6 +79,7 @@ const CRMContext = createContext<CRMContextType | undefined>(undefined);
 export const CRMProvider = ({ children }: { children: ReactNode }) => {
   const [Orçamentos, setOrçamentos] = useState<Lead[]>([]);
   const [events, setEvents] = useState<CalendarEvent[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
@@ -85,7 +87,9 @@ export const CRMProvider = ({ children }: { children: ReactNode }) => {
       leadService.fetchLeads().then(setOrçamentos),
       eventService.fetchEvents().then(setEvents),
       loadInventory(),
-    ]).catch(() => {});
+    ])
+      .catch(err => console.error('[CRM] Erro ao carregar dados:', err))
+      .finally(() => setIsLoading(false));
   }, []);
 
   const OrçamentosByStage = useMemo(() => groupOrçamentosByStage(Orçamentos), [Orçamentos]);
@@ -143,12 +147,12 @@ export const CRMProvider = ({ children }: { children: ReactNode }) => {
   }, [Orçamentos]);
 
   const value = useMemo(() => ({
-    Orçamentos, events, searchTerm, setSearchTerm,
+    Orçamentos, events, isLoading, searchTerm, setSearchTerm,
     addLead, updateLead, updateOrçamentostage, deleteLead,
     getOrçamentosByStage, getTotalValueByStage,
     addEvent, updateEvent, deleteEvent, OrçamentosByStage,
   }), [
-    Orçamentos, events, searchTerm,
+    Orçamentos, events, isLoading, searchTerm,
     addLead, updateLead, updateOrçamentostage, deleteLead,
     getOrçamentosByStage, getTotalValueByStage,
     addEvent, updateEvent, deleteEvent, OrçamentosByStage,
