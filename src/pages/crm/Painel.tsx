@@ -208,6 +208,10 @@ const CRMDashboard = () => {
       items: formData.orcamentoItems || [],
     };
     generatePDF(leadData, formData.desconto > 0 ? { type: 'fixed', value: formData.desconto } : undefined);
+    if (formData.whatsapp) {
+      const msg = 'Olá, segue o seu orçamento em PDF.';
+      window.open(generateWhatsAppLink(formData.whatsapp, msg), '_blank');
+    }
   };
 
   const handleDeleteEvent = () => {
