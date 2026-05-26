@@ -207,15 +207,15 @@ const CRMDashboard = () => {
       value: total.toString(),
       items: formData.orcamentoItems || [],
     };
+
     if (formData.whatsapp) {
       const msg = 'Olá, segue o seu orçamento em PDF.';
-      const a = document.createElement('a');
-      a.href = generateWhatsAppLink(formData.whatsapp, msg);
-      a.target = '_blank';
-      a.rel = 'noopener noreferrer';
-      a.click();
+      window.open(generateWhatsAppLink(formData.whatsapp, msg), '_blank');
     }
-    generatePDF(leadData, formData.desconto > 0 ? { type: 'fixed', value: formData.desconto } : undefined);
+
+    setTimeout(() => {
+      generatePDF(leadData, formData.desconto > 0 ? { type: 'fixed', value: formData.desconto } : undefined);
+    }, 200);
   };
 
   const handleDeleteEvent = () => {
