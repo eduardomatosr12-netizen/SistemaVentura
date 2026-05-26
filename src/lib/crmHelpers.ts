@@ -349,7 +349,7 @@ export function generatePDF(lead: Lead, discountData?: { type: 'percent' | 'fixe
       </style>
     </head>
     <body>
-      <div class="watermark">ORÇAMENTO</div>
+      <div class="watermark">VENTURA</div>
 
       <div class="company-header">
         <div class="brand">
