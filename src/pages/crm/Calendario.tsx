@@ -53,6 +53,29 @@ const getEventStatusBg = (status?: string): string => {
   }
 };
 
+type EventPhase = 'montagem' | 'evento' | 'desmontagem';
+
+interface CalendarOccurrence {
+  event: CalendarEvent;
+  phase: EventPhase;
+}
+
+const PHASE_CONFIG: Record<EventPhase, { label: string; shortLabel: string; color: string; bg: string }> = {
+  montagem: { label: 'Montagem', shortLabel: 'M', color: '#f59e0b', bg: 'rgba(245,158,11,0.15)' },
+  evento: { label: 'Evento', shortLabel: 'E', color: '#B5FF03', bg: 'rgba(181,255,3,0.15)' },
+  desmontagem: { label: 'Desmontagem', shortLabel: 'D', color: '#ef4444', bg: 'rgba(239,68,68,0.15)' },
+};
+
+const getPhaseColor = (occ: CalendarOccurrence): string => {
+  if (occ.phase === 'evento') return getEventStatusColor(occ.event.status);
+  return PHASE_CONFIG[occ.phase].color;
+};
+
+const getPhaseBg = (occ: CalendarOccurrence): string => {
+  if (occ.phase === 'evento') return getEventStatusBg(occ.event.status);
+  return PHASE_CONFIG[occ.phase].bg;
+};
+
 const CRMCalendario = () => {
   const { events, addEvent, updateEvent, deleteEvent, Orçamentos } = useCRM();
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
@@ -196,13 +219,32 @@ const CRMCalendario = () => {
     }
   };
 
-  const getEventsForDay = (day: number) => {
-    return safeEvents.filter(e => {
-      if (!e?.date) return false;
-      const d = parseDate(e.date);
-      if (!d) return false;
-      return d.getDate() === day && d.getMonth() === currentMonth && d.getFullYear() === currentYear;
-    });
+  const getOccurrencesForDay = (day: number): CalendarOccurrence[] => {
+    const result: CalendarOccurrence[] = [];
+    for (const e of safeEvents) {
+      if (!e) continue;
+      if (e.date) {
+        const d = parseDate(e.date);
+        if (d && d.getDate() === day && d.getMonth() === currentMonth && d.getFullYear() === currentYear) {
+          result.push({ event: e, phase: 'evento' });
+        }
+      }
+      if (e.dataMontagem) {
+        const d = parseDate(e.dataMontagem);
+        if (d && d.getDate() === day && d.getMonth() === currentMonth && d.getFullYear() === currentYear) {
+          result.push({ event: e, phase: 'montagem' });
+        }
+      }
+      if (e.dataDesmontagem) {
+        const d = parseDate(e.dataDesmontagem);
+        if (d && d.getDate() === day && d.getMonth() === currentMonth && d.getFullYear() === currentYear) {
+          result.push({ event: e, phase: 'desmontagem' });
+        }
+      }
+    }
+    const phaseOrder: Record<EventPhase, number> = { montagem: 0, evento: 1, desmontagem: 2 };
+    result.sort((a, b) => phaseOrder[a.phase] - phaseOrder[b.phase]);
+    return result;
   };
 
   const handleOpenCreate = () => {
@@ -294,6 +336,41 @@ const CRMCalendario = () => {
     return date.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
   };
 
+  const getOccurrenceDate = (occ: CalendarOccurrence): Date | null => {
+    switch (occ.phase) {
+      case 'evento': return parseDate(occ.event.date);
+      case 'montagem': return parseDate(occ.event.dataMontagem);
+      case 'desmontagem': return parseDate(occ.event.dataDesmontagem);
+    }
+  };
+
+  const upcomingOccurrences = useMemo(() => {
+    const all: CalendarOccurrence[] = [];
+    const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    for (const e of safeEvents) {
+      if (!e) continue;
+      if (e.date) {
+        const d = parseDate(e.date);
+        if (d && d >= todayStart) all.push({ event: e, phase: 'evento' });
+      }
+      if (e.dataMontagem) {
+        const d = parseDate(e.dataMontagem);
+        if (d && d >= todayStart) all.push({ event: e, phase: 'montagem' });
+      }
+      if (e.dataDesmontagem) {
+        const d = parseDate(e.dataDesmontagem);
+        if (d && d >= todayStart) all.push({ event: e, phase: 'desmontagem' });
+      }
+    }
+    all.sort((a, b) => {
+      const da = getOccurrenceDate(a);
+      const db = getOccurrenceDate(b);
+      if (!da || !db) return 0;
+      return da.getTime() - db.getTime();
+    });
+    return all.slice(0, 5);
+  }, [safeEvents]);
+
   return (
     <div className="min-h-screen p-2 md:p-8 bg-[#000000]">
       <div className="mb-4 md:mb-8 flex flex-col md:flex-row justify-between items-start md:items-end gap-3 md:gap-0">
@@ -364,7 +441,7 @@ const CRMCalendario = () => {
                 const dayNum = idx - startOffset + 1;
                 const isCurrentMonth = dayNum > 0 && dayNum <= daysInMonth;
                 const isToday = isCurrentMonth && dayNum === today.getDate() && currentMonth === today.getMonth() && currentYear === today.getFullYear();
-                const dayEvents = isCurrentMonth ? getEventsForDay(dayNum) : [];
+                const dayOccurrences = isCurrentMonth ? getOccurrencesForDay(dayNum) : [];
 
                 return (
                   <div
@@ -382,28 +459,43 @@ const CRMCalendario = () => {
                       </span>
                     </div>
 
-                    {/* Day Events Tags */}
+                    {/* Day Occurrences Tags */}
                     <div className="space-y-1">
-                      {dayEvents.map(event => (
+                      {dayOccurrences.map(occ => (
                         <button
-                          key={event?.id || generateUUID()}
-                          onClick={() => handleOpenView(event)}
+                          key={`${occ.event.id}-${occ.phase}`}
+                          onClick={() => handleOpenView(occ.event)}
                           className="w-full text-left p-1.5 rounded-md transition-all group overflow-hidden"
                           style={{
-                            backgroundColor: getEventStatusBg(event?.status),
-                            borderLeft: `3px solid ${getEventStatusColor(event?.status)}`,
+                            backgroundColor: getPhaseBg(occ),
+                            borderLeft: `3px solid ${getPhaseColor(occ)}`,
                           }}
                         >
-                          <div className="text-[9px] font-black leading-none mb-1"
-                            style={{ color: getEventStatusColor(event?.status) }}>
-                            {event?.eventType || 'Evento'}
+                          <div className="flex items-center gap-1.5 mb-1">
+                            <span
+                              className="text-[7px] font-black px-1 py-0.5 rounded-sm uppercase leading-none"
+                              style={{
+                                backgroundColor: getPhaseColor(occ),
+                                color: '#000',
+                              }}
+                            >
+                              {PHASE_CONFIG[occ.phase].shortLabel}
+                            </span>
+                            <span
+                              className="text-[8px] font-bold leading-none"
+                              style={{ color: getPhaseColor(occ) }}
+                            >
+                              {occ.phase === 'evento'
+                                ? (occ.event.eventType || 'Evento')
+                                : PHASE_CONFIG[occ.phase].label}
+                            </span>
                           </div>
                           <div className="text-[8px] font-bold text-neutral-400 truncate leading-none">
-                            {event?.time || '--:--'}
+                            {occ.event.time || '--:--'}
                           </div>
-                          {event?.title && (
+                          {occ.event.title && (
                             <div className="text-[8px] font-medium text-white truncate leading-none mt-0.5">
-                              {event.title}
+                              {occ.event.title}
                             </div>
                           )}
                         </button>
@@ -424,24 +516,36 @@ const CRMCalendario = () => {
               PRÓXIMOS EVENTOS
             </h3>
             <div className="space-y-5">
-              {safeEvents.slice(0, 5).map((event) => (
+              {upcomingOccurrences.map((occ) => (
                 <button
                   type="button"
-                  key={event?.id || generateUUID()}
+                  key={`${occ.event.id}-${occ.phase}`}
                   className="group w-full text-left"
-                  onClick={() => handleOpenView(event)}
+                  onClick={() => handleOpenView(occ.event)}
                 >
                   <div className="flex items-start gap-3">
                     <div className="w-1.5 h-1.5 rounded-full mt-2 shrink-0"
-                      style={{ backgroundColor: getEventStatusColor(event?.status) }} />
+                      style={{ backgroundColor: getPhaseColor(occ) }} />
                     <div>
-                      <p className="text-[13px] font-black text-white group-hover:underline leading-tight">{event?.title || 'Sem título'}</p>
+                      <p className="text-[13px] font-black text-white group-hover:underline leading-tight">{occ.event?.title || 'Sem título'}</p>
                       <div className="flex flex-wrap items-center gap-x-2 mt-1.5">
                         <span className="text-[9px] font-black bg-[#111] text-neutral-400 px-1.5 py-0.5 rounded uppercase tracking-tighter">
-                          {event?.eventType || 'Evento'}
+                          {occ.event?.eventType || 'Evento'}
+                        </span>
+                        <span
+                          className="text-[8px] font-black px-1 py-0.5 rounded-sm uppercase leading-none"
+                          style={{
+                            backgroundColor: getPhaseColor(occ),
+                            color: '#000',
+                          }}
+                        >
+                          {PHASE_CONFIG[occ.phase].shortLabel}
                         </span>
                         <span className="text-[9px] text-neutral-500 font-bold uppercase tracking-tighter">
-                          {formatDate(event?.date)}
+                          {(() => {
+                            const d = getOccurrenceDate(occ);
+                            return d ? d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }) : '--/--';
+                          })()}
                         </span>
                       </div>
                     </div>
