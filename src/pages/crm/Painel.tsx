@@ -401,14 +401,26 @@ const CRMDashboard = () => {
 
   const today = new Date();
   const safeEvents = Array.isArray(events) ? events : [];
-  
-  const getEventsForDay = (day: number) => {
-    return safeEvents.filter(e => {
-      if (!e?.date) return false;
-      const d = new Date(e.date + 'T12:00:00');
+
+  type DayOccurrence = {
+    event: CalendarEvent;
+    type: 'evento' | 'montagem' | 'desmontagem';
+  };
+
+  const getOccurrencesForDay = (day: number): DayOccurrence[] => {
+    const result: DayOccurrence[] = [];
+    const matchesDay = (dateStr: string | undefined) => {
+      if (!dateStr) return false;
+      const d = new Date(dateStr + 'T12:00:00');
       if (isNaN(d.getTime())) return false;
       return d.getDate() === day && d.getMonth() === viewMonth && d.getFullYear() === viewYear;
-    });
+    };
+    for (const event of safeEvents) {
+      if (matchesDay(event.date)) result.push({ event, type: 'evento' });
+      if (matchesDay(event.dataMontagem)) result.push({ event, type: 'montagem' });
+      if (matchesDay(event.dataDesmontagem)) result.push({ event, type: 'desmontagem' });
+    }
+    return result;
   };
 
   const daysInMonth = new Date(viewYear, viewMonth + 1, 0).getDate();
@@ -445,14 +457,15 @@ const CRMDashboard = () => {
   }, [safeEvents]);
 
   const handleDayClick = (day: number) => {
-    const events = getEventsForDay(day);
+    const occurrences = getOccurrencesForDay(day);
     const dateObj = new Date(viewYear, viewMonth, day);
-    if (events.length === 0) {
+    if (occurrences.length === 0) {
       const dateStr = `${viewYear}-${String(viewMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
       openCreateModal(dateStr);
       return;
     }
-    setSelectedDayEvents(events);
+    const uniqueEvents = Array.from(new Map(occurrences.map(o => [o.event.id, o.event])).values());
+    setSelectedDayEvents(uniqueEvents);
     setSelectedDate(dateObj.toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' }));
   };
 
@@ -599,8 +612,13 @@ const CRMDashboard = () => {
                 ))}
                 {Array.from({ length: daysInMonth }).map((_, i) => {
                   const day = i + 1;
-                  const dayEvents = getEventsForDay(day);
+                  const dayOccurrences = getOccurrencesForDay(day);
                   const isToday = day === today.getDate() && isCurrentMonth;
+                  const occurrenceColor = (type: DayOccurrence['type'], status?: string) => {
+                    if (type === 'montagem') return '#8B5CF6';
+                    if (type === 'desmontagem') return '#06B6D4';
+                    return getStatusColor(status);
+                  };
                   return (
                     <div
                       key={day}
@@ -618,17 +636,21 @@ const CRMDashboard = () => {
                         {day}
                       </span>
                       <div className="space-y-0.5">
-                        {dayEvents.slice(0, 3).map(ev => (
-                          <div
-                            key={ev.id}
-                            className="text-[8px] leading-tight px-1 py-0.5 rounded truncate font-medium text-white"
-                            style={{ backgroundColor: ev.status ? getStatusColor(ev.status) + '25' : '#333', borderLeft: `2px solid ${getStatusColor(ev.status)}` }}
-                          >
-                            {ev.title || ev.client || ev.eventType || 'Evento'}
-                          </div>
-                        ))}
-                        {dayEvents.length > 3 && (
-                          <span className="text-[7px] text-neutral-500 pl-1">+{dayEvents.length - 3} mais</span>
+                        {dayOccurrences.slice(0, 4).map(occ => {
+                          const color = occurrenceColor(occ.type, occ.event.status);
+                          const label = occ.type === 'montagem' ? '[M] ' : occ.type === 'desmontagem' ? '[D] ' : '';
+                          return (
+                            <div
+                              key={occ.event.id + '-' + occ.type}
+                              className="text-[8px] leading-tight px-1 py-0.5 rounded truncate font-medium text-white"
+                              style={{ backgroundColor: color + '25', borderLeft: `2px solid ${color}` }}
+                            >
+                              {label}{occ.event.title || occ.event.client || occ.event.eventType || 'Evento'}
+                            </div>
+                          );
+                        })}
+                        {dayOccurrences.length > 4 && (
+                          <span className="text-[7px] text-neutral-500 pl-1">+{dayOccurrences.length - 4} mais</span>
                         )}
                       </div>
                     </div>
