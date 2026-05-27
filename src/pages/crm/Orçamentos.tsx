@@ -614,7 +614,7 @@ const CRMOrçamentos = () => {
             <table className="w-full text-xs md:text-sm">
               <thead>
                 <tr className="border-b border-[#1a1a1a] bg-[#111]">
-                  {['NOME', 'WHATSAPP', 'INSTAGRAM', 'VALOR', 'ETAPA DO PIPELINE', 'AÇÕES'].map((h, i) => (
+                  {['NOME', 'WHATSAPP', 'INSTAGRAM', 'VALOR', 'STATUS', 'AÇÕES'].map((h, i) => (
                     <th key={h} className={`px-3 md:px-5 py-2 md:py-3.5 text-[10px] md:text-[11px] text-[#B5FF03] font-semibold uppercase tracking-wider whitespace-nowrap ${i >= 4 ? 'text-center' : 'text-left'}`}>
                       {h}
                     </th>
