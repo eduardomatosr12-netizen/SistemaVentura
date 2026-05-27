@@ -91,8 +91,8 @@ export const refreshReservedCache = async (eventDate: string): Promise<void> => 
       if (!confirmedClients.has(String(data.name).toLowerCase())) return;
       const items = data.items || [];
       for (const item of items) {
-        const key = String(item.descricao || '').toLowerCase();
-        reservedCache.set(key, (reservedCache.get(key) || 0) + (Number(item.quantidade) || 0));
+        const key = String(item.item || '').toLowerCase();
+        reservedCache.set(key, (reservedCache.get(key) || 0) + (Number(item.qtdAtual) || 0));
       }
     });
   } catch {

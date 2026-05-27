@@ -8,9 +8,9 @@ import { addTransaction, getTransactionByEventId } from '../services/financeServ
 
 export interface OrcamentoItem {
   id: string;
-  descricao: string;
-  quantidade: number;
-  valorUnitario: number;
+  item: string;
+  qtdAtual: number;
+  valorUnit: number;
 }
 
 export interface Lead {

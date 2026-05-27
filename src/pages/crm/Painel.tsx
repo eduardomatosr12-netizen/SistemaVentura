@@ -104,14 +104,14 @@ const CRMDashboard = () => {
       ...prev,
       orcamentoItems: prev.orcamentoItems.map(i => {
         if (i.id !== id) return i;
-        const updated = { ...i, [field]: field === 'descricao' ? value : Number(value) || 0 };
-        if (field === 'quantidade' || field === 'descricao') {
-          const itemName = field === 'descricao' ? String(value) : i.descricao;
+        const updated = { ...i, [field]: field === 'item' ? value : Number(value) || 0 };
+        if (field === 'qtdAtual' || field === 'item') {
+          const itemName = field === 'item' ? String(value) : i.item;
           if (itemName) {
             const available = getAvailableQuantity(itemName, formData.date || new Date().toISOString().split('T')[0]);
-            if (field === 'quantidade') {
+            if (field === 'qtdAtual') {
               const qty = Number(value) || 0;
-              updated.quantidade = Math.min(qty, Math.max(1, available));
+              updated.qtdAtual = Math.min(qty, Math.max(1, available));
             }
           }
         }
@@ -164,7 +164,7 @@ const CRMDashboard = () => {
     const newId = generateUUID();
     setFormData(prev => ({
       ...prev,
-      orcamentoItems: [...prev.orcamentoItems, { id: newId, descricao: itemName, quantidade: 1, valorUnitario: unitValue }],
+      orcamentoItems: [...prev.orcamentoItems, { id: newId, item: itemName, qtdAtual: 1, valorUnit: unitValue }],
     }));
     setExpandedItems(prev => new Set(prev).add(newId));
     setInvSearch('');
@@ -177,7 +177,7 @@ const CRMDashboard = () => {
     setFormData(prev => ({
       ...prev,
       orcamentoItems: prev.orcamentoItems.map(i =>
-        i.id === itemId ? { ...i, descricao: itemName, valorUnitario: unitValue } : i
+        i.id === itemId ? { ...i, item: itemName, valorUnit: unitValue } : i
       ),
     }));
     setEditingItemId(null);
@@ -185,7 +185,7 @@ const CRMDashboard = () => {
   };
 
   const subtotal = useMemo(() =>
-    formData.orcamentoItems.reduce((sum, item) => sum + item.quantidade * item.valorUnitario, 0),
+    formData.orcamentoItems.reduce((sum, item) => sum + item.qtdAtual * item.valorUnit, 0),
   [formData.orcamentoItems]);
 
   const total = useMemo(() => Math.max(0, subtotal - formData.desconto), [subtotal, formData.desconto]);
@@ -1318,7 +1318,7 @@ const CRMDashboard = () => {
 
                     <div className="space-y-2">
                       {formData.orcamentoItems.map((item, idx) => {
-                        const available = getAvailableQuantity(item.descricao, formData.date || new Date().toISOString().split('T')[0]);
+                        const available = getAvailableQuantity(item.item, formData.date || new Date().toISOString().split('T')[0]);
                         const maxQty = Math.max(1, available);
                         const isExpanded = expandedItems.has(item.id);
                         return isExpanded ? (
@@ -1345,7 +1345,7 @@ const CRMDashboard = () => {
                                 onClick={() => { setEditingItemId(editingItemId === item.id ? null : item.id); setInlineItemSearch(''); }}
                                 className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-sm text-left text-white flex items-center justify-between gap-2 hover:border-[#B5FF03] transition-colors"
                               >
-                                <span className="truncate">{item.descricao}</span>
+                                <span className="truncate">{item.item}</span>
                                 <ChevronDown size={12} className="text-neutral-500 shrink-0" />
                               </button>
                               {editingItemId === item.id && (
@@ -1377,7 +1377,7 @@ const CRMDashboard = () => {
                                           type="button"
                                           key={opt.name}
                                           onClick={() => handleInlineItemSelect(item.id, opt.name)}
-                                          className={`w-full text-left px-3 py-2 text-xs text-white hover:bg-[#333] transition-colors flex items-center justify-between gap-2 ${item.descricao === opt.name ? 'bg-[#2a2a2a] border-l-2 border-[#B5FF03]' : ''}`}
+                                          className={`w-full text-left px-3 py-2 text-xs text-white hover:bg-[#333] transition-colors flex items-center justify-between gap-2 ${item.item === opt.name ? 'bg-[#2a2a2a] border-l-2 border-[#B5FF03]' : ''}`}
                                         >
                                           <span className="truncate">{opt.name}</span>
                                           <span className={`text-[9px] shrink-0 ${optAvailable > 0 ? 'text-neutral-500' : 'text-red-400'}`}>
@@ -1393,26 +1393,26 @@ const CRMDashboard = () => {
                             <div className="grid grid-cols-2 gap-2">
                               <div>
                                 <label className="block text-[8px] font-black uppercase tracking-widest text-neutral-500 mb-1">Qtd (máx: {maxQty})</label>
-                                <input type="number" min="1" max={maxQty} value={item.quantidade} onChange={e => handleItemChange(item.id, 'quantidade', e.target.value)}
+                                <input type="number" min="1" max={maxQty} value={item.qtdAtual} onChange={e => handleItemChange(item.id, 'qtdAtual', e.target.value)}
                                   className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-1.5 text-sm text-white focus:border-[#B5FF03] outline-none" />
                               </div>
                               <div>
                                 <label className="block text-[8px] font-black uppercase tracking-widest text-neutral-500 mb-1">Valor Unit.</label>
-                                <input type="number" min="0" step="0.01" value={item.valorUnitario} onChange={e => handleItemChange(item.id, 'valorUnitario', e.target.value)}
+                                <input type="number" min="0" step="0.01" value={item.valorUnit} onChange={e => handleItemChange(item.id, 'valorUnit', e.target.value)}
                                   className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-1.5 text-sm text-white focus:border-[#B5FF03] outline-none" />
                               </div>
                             </div>
                             <div className="text-right">
                               <span className="text-[10px] text-neutral-400">Total: </span>
-                              <span className="text-[11px] text-white font-bold">R$ {(item.quantidade * item.valorUnitario).toFixed(2)}</span>
+                              <span className="text-[11px] text-white font-bold">R$ {(item.qtdAtual * item.valorUnit).toFixed(2)}</span>
                             </div>
                           </div>
                         ) : (
                           <div key={item.id} className="flex items-center justify-between py-2 px-1 border-b border-[#222] last:border-b-0">
                             <span className="text-sm text-white">
-                              <span className="text-[#B5FF03] font-bold">{item.quantidade}x</span>
-                              {' '}{item.descricao}
-                              <span className="text-neutral-400 ml-2">R$ {(item.quantidade * item.valorUnitario).toFixed(2)}</span>
+                              <span className="text-[#B5FF03] font-bold">{item.qtdAtual}x</span>
+                              {' '}{item.item}
+                              <span className="text-neutral-400 ml-2">R$ {(item.qtdAtual * item.valorUnit).toFixed(2)}</span>
                             </span>
                             <div className="flex items-center gap-1">
                               <button type="button" onClick={() => setExpandedItems(prev => { const next = new Set(prev); next.add(item.id); return next; })}

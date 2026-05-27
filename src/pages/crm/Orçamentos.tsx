@@ -146,7 +146,7 @@ const CRMOrçamentos = () => {
       setShowInvDropdown(false);
       const lead = Orçamentos.find(o => o.id === current.id);
       if (lead?.items) {
-        const total = lead.items.reduce((sum, i) => sum + i.quantidade * i.valorUnitario, 0);
+        const total = lead.items.reduce((sum, i) => sum + i.qtdAtual * i.valorUnit, 0);
         if (total > 0 && lead.value) {
           const leadValue = parseMonetaryValue(lead.value);
           if (leadValue < total) {
@@ -188,7 +188,7 @@ const CRMOrçamentos = () => {
 
   // Calculate discount
   const calculateDiscount = useCallback((items: OrcamentoItem[], discountT: string, discountV: number) => {
-    const total = items.reduce((sum, i) => sum + i.quantidade * i.valorUnitario, 0);
+    const total = items.reduce((sum, i) => sum + i.qtdAtual * i.valorUnit, 0);
     if (discountV <= 0) return { total, discountedTotal: total, discountAmount: 0 };
     if (discountT === 'percent') {
       const amount = total * (discountV / 100);
@@ -218,9 +218,9 @@ const CRMOrçamentos = () => {
 
     const item: OrcamentoItem = {
       id: generateUUID(),
-      descricao: newItemDesc.trim(),
-      quantidade: newItemQty,
-      valorUnitario: newItemVal,
+      item: newItemDesc.trim(),
+      qtdAtual: newItemQty,
+      valorUnit: newItemVal,
     };
     const updatedItems = [...(current.items || []), item];
     setCurrent(prev => ({ ...prev, items: updatedItems }));
@@ -261,7 +261,7 @@ const CRMOrçamentos = () => {
     setCurrent({ ...lead });
     setIsOpen(true);
     if (lead.items && lead.items.length > 0) {
-      const total = lead.items.reduce((sum, i) => sum + i.quantidade * i.valorUnitario, 0);
+      const total = lead.items.reduce((sum, i) => sum + i.qtdAtual * i.valorUnit, 0);
       if (total > 0) {
         const leadValue = parseMonetaryValue(lead.value);
         if (leadValue < total) {
@@ -341,7 +341,7 @@ const CRMOrçamentos = () => {
 
   const getFinalValue = (): string => {
     if (!current.items || current.items.length === 0) return current.value || 'R$ 0,00';
-    const total = current.items.reduce((sum, i) => sum + i.quantidade * i.valorUnitario, 0);
+    const total = current.items.reduce((sum, i) => sum + i.qtdAtual * i.valorUnit, 0);
     if (discountValue <= 0) return formatCurrency(total);
     if (discountType === 'percent') {
       return formatCurrency(total - (total * discountValue / 100));
@@ -363,7 +363,7 @@ const CRMOrçamentos = () => {
       if (mode === 'add') {
         addLead(modifiedLead as Omit<Lead, 'id'>);
         if (isFechado && current.items && current.items.length > 0) {
-          await Promise.all(current.items.map(item => deductInventory(item.descricao, item.quantidade)));
+          await Promise.all(current.items.map(item => deductInventory(item.item, item.qtdAtual)));
           addPendingRevenue(current.name || 'Cliente', finalValue, current.firstContact || '');
         }
       } else {
@@ -372,15 +372,15 @@ const CRMOrçamentos = () => {
 
         if (wasFechado && !isFechado) {
           if (prevLead?.items) {
-            await Promise.all(prevLead.items.map(item => restoreInventory(item.descricao, item.quantidade)));
+            await Promise.all(prevLead.items.map(item => restoreInventory(item.item, item.qtdAtual)));
           }
         }
 
         if (isFechado && current.items && current.items.length > 0) {
           if (wasFechado && prevLead?.items) {
-            await Promise.all(prevLead.items.map(item => restoreInventory(item.descricao, item.quantidade)));
+            await Promise.all(prevLead.items.map(item => restoreInventory(item.item, item.qtdAtual)));
           }
-          await Promise.all(current.items.map(item => deductInventory(item.descricao, item.quantidade)));
+          await Promise.all(current.items.map(item => deductInventory(item.item, item.qtdAtual)));
 
           if (!wasFechado) {
             addPendingRevenue(current.name || 'Cliente', finalValue, current.firstContact || '');
@@ -501,7 +501,7 @@ const CRMOrçamentos = () => {
   };
 
   const calculateItemsTotal = (items?: OrcamentoItem[]) => {
-    return (items || []).reduce((sum, i) => sum + i.quantidade * i.valorUnitario, 0);
+    return (items || []).reduce((sum, i) => sum + i.qtdAtual * i.valorUnit, 0);
   };
 
   return (
@@ -836,10 +836,10 @@ const CRMOrçamentos = () => {
                     <div className="space-y-2 mb-4">
                       {current.items.map(item => (
                         <div key={item.id} className="flex items-center gap-2 bg-[#1a1a1a] border border-[#333] rounded-md px-3 py-2">
-                          <span className="flex-1 text-white text-sm font-medium truncate">{item.descricao}</span>
-                          <span className="text-neutral-400 text-xs whitespace-nowrap">{item.quantidade}x</span>
+                          <span className="flex-1 text-white text-sm font-medium truncate">{item.item}</span>
+                          <span className="text-neutral-400 text-xs whitespace-nowrap">{item.qtdAtual}x</span>
                           <span className="text-white text-xs font-bold whitespace-nowrap">
-                            {formatCurrency(item.valorUnitario)}
+                            {formatCurrency(item.valorUnit)}
                           </span>
                           <button type="button" onClick={() => removeItem(item.id)} className="text-neutral-500 hover:text-red-500 transition-colors p-1">
                             <X size={14} />

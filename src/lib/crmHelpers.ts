@@ -109,7 +109,7 @@ export function generatePDF(lead: Lead, discountData?: { type: 'percent' | 'fixe
   if (!win) return;
 
   const items = lead.items || [];
-  const total = items.reduce((sum, item) => sum + item.quantidade * item.valorUnitario, 0);
+  const total = items.reduce((sum, item) => sum + item.qtdAtual * item.valorUnit, 0);
   let discountAmount = 0;
   let discountLabel = '';
   let finalTotal = total;
@@ -405,10 +405,10 @@ export function generatePDF(lead: Lead, discountData?: { type: 'percent' | 'fixe
           <tbody>
             ${items.map((item, i) => `
               <tr${i === 0 ? '' : ''}>
-                <td>${item.descricao}</td>
-                <td>${item.quantidade}</td>
-                <td>${formatCurrency(item.valorUnitario)}</td>
-                <td>${formatCurrency(item.quantidade * item.valorUnitario)}</td>
+                <td>${item.item}</td>
+                <td>${item.qtdAtual}</td>
+                <td>${formatCurrency(item.valorUnit)}</td>
+                <td>${formatCurrency(item.qtdAtual * item.valorUnit)}</td>
               </tr>
             `).join('')}
           </tbody>

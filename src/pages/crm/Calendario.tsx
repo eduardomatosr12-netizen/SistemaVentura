@@ -146,7 +146,7 @@ const CRMCalendario = () => {
   const buildItemsDescription = (lead: typeof Orçamentos[number]): string => {
     const items = lead.items;
     if (!items || items.length === 0) return '';
-    const lines = items.map(i => `- ${i.quantidade}x ${i.descricao}`);
+    const lines = items.map(i => `- ${i.qtdAtual}x ${i.item}`);
     return `Itens do Orçamento Fechado:\n${lines.join('\n')}`;
   };
 

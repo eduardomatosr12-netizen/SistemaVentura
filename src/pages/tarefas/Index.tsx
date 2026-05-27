@@ -793,7 +793,7 @@ const [boards, setBoards] = useState<BoardType[]>(() => {
       if (lead.firstContact !== dateFilterEstoque) return;
       if (!eventClients.has(lead.name.toLowerCase().trim())) return;
       (lead.items || []).forEach(item => {
-        map.set(item.descricao, (map.get(item.descricao) || 0) + item.quantidade);
+        map.set(item.item, (map.get(item.item) || 0) + item.qtdAtual);
       });
     });
 
