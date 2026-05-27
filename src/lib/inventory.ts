@@ -172,9 +172,9 @@ export const restoreInventory = async (itemName: string, quantity: number): Prom
   }
 };
 
-export const getAllInventoryItems = (): { name: string; qty: number; category: string }[] => {
+export const getAllInventoryItems = (): { name: string; qty: number; category: string; valorUnit: number }[] => {
   if (!boardsCache) return [];
-  const items: { name: string; qty: number; category: string }[] = [];
+  const items: { name: string; qty: number; category: string; valorUnit: number }[] = [];
   for (const board of boardsCache) {
     for (const row of board.rows) {
       const name = String(row.values['col-1'] || '');
@@ -182,6 +182,7 @@ export const getAllInventoryItems = (): { name: string; qty: number; category: s
       items.push({
         name, qty: Number(row.values['col-3']) || 0,
         category: String(row.values['col-2'] || board.title),
+        valorUnit: Number(row.values['col-7']) || 0,
       });
     }
   }

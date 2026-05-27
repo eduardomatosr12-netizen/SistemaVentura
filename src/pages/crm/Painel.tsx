@@ -6,7 +6,9 @@ import type { CalendarEvent, Lead, OrcamentoItem } from '../../contexts/CRMConte
 import { parseMonetaryValue, formatCurrency, generatePDF } from '../../lib/crmHelpers';
 import { useActivityLogs } from '../../contexts/ActivityContext';
 import { generateUUID } from '../../lib/uuid';
-import { getAllInventoryItems, getAvailableQuantity, findInventoryItem, loadInventory, refreshReservedCache } from '../../lib/inventory';
+import { getAllInventoryItems, getAvailableQuantity, loadInventory, refreshReservedCache } from '../../lib/inventory';
+import { collection, getDocs, query, orderBy } from 'firebase/firestore';
+import { db } from '../../services/firebase';
 import { addTransaction } from '../../services/financeService';
 import { generateWhatsAppLink } from '../../lib/whatsapp';
 
@@ -130,13 +132,37 @@ const CRMDashboard = () => {
   const clientSearchRef = useRef<HTMLDivElement>(null);
 
   // Inventory integration
-  const [invStockItems, setInvStockItems] = useState<{ name: string; qty: number; category: string }[]>([]);
+  const [invStockItems, setInvStockItems] = useState<{ name: string; qty: number; category: string; valorUnit: number }[]>([]);
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
   const [invSearch, setInvSearch] = useState('');
   const [invSearchOpen, setInvSearchOpen] = useState(false);
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
   const [inlineItemSearch, setInlineItemSearch] = useState('');
   const invSearchRef = useRef<HTMLDivElement>(null);
+
+  const [clientList, setClientList] = useState<{ id: string; nome: string; whatsapp: string; cidade: string }[]>([]);
+
+  useEffect(() => {
+    const fetchClients = async () => {
+      try {
+        const q = query(collection(db, 'leads'), orderBy('name'));
+        const snapshot = await getDocs(q);
+        const list = snapshot.docs.map(d => {
+          const data = d.data();
+          return {
+            id: d.id,
+            nome: data.nome || data.name || '',
+            whatsapp: data.whatsapp || data.telefone || '',
+            cidade: data.cidade || data.address || '',
+          };
+        });
+        setClientList(list);
+      } catch (err) {
+        console.error('[Painel] Erro ao carregar clientes:', err);
+      }
+    };
+    fetchClients();
+  }, []);
 
   useEffect(() => {
     if (isCreateOpen) {
@@ -156,28 +182,22 @@ const CRMDashboard = () => {
     ).slice(0, 40);
   }, [invStockItems, invSearch]);
 
-  const handleSelectInventoryItem = (itemName: string) => {
-    const found = findInventoryItem(itemName);
-    const unitValue = found ? Number(found.row.values['col-7']) || 0 : 0;
-    const available = getAvailableQuantity(itemName, formData.date || new Date().toISOString().split('T')[0]);
-    const maxQty = Math.max(1, available);
-    const newId = generateUUID();
+  const handleAdicionarItem = (prod: { id: string; item: string; valorUnit: number }) => {
+    const newItem: OrcamentoItem = { id: prod.id, item: prod.item, qtdAtual: 1, valorUnit: prod.valorUnit };
     setFormData(prev => ({
       ...prev,
-      orcamentoItems: [...prev.orcamentoItems, { id: newId, item: itemName, qtdAtual: 1, valorUnit: unitValue }],
+      orcamentoItems: [...prev.orcamentoItems, newItem],
     }));
-    setExpandedItems(prev => new Set(prev).add(newId));
+    setExpandedItems(prev => new Set(prev).add(prod.id));
     setInvSearch('');
     setInvSearchOpen(false);
   };
 
-  const handleInlineItemSelect = (itemId: string, itemName: string) => {
-    const found = findInventoryItem(itemName);
-    const unitValue = found ? Number(found.row.values['col-7']) || 0 : 0;
+  const handleInlineItemSelect = (itemId: string, itemName: string, valorUnit: number) => {
     setFormData(prev => ({
       ...prev,
       orcamentoItems: prev.orcamentoItems.map(i =>
-        i.id === itemId ? { ...i, item: itemName, valorUnit: unitValue } : i
+        i.id === itemId ? { ...i, item: itemName, valorUnit } : i
       ),
     }));
     setEditingItemId(null);
@@ -249,12 +269,12 @@ const CRMDashboard = () => {
   }, []);
 
   const filteredClients = useMemo(() => {
-    if (!clientSearch.trim()) return Orçamentos;
+    if (!clientSearch.trim()) return clientList;
     const q = clientSearch.toLowerCase();
-    return Orçamentos.filter(l =>
-      l.name.toLowerCase().includes(q) || l.whatsapp.includes(q)
+    return clientList.filter(c =>
+      c.nome.toLowerCase().includes(q) || c.whatsapp.includes(q)
     );
-  }, [clientSearch, Orçamentos]);
+  }, [clientSearch, clientList]);
 
   const openCreateModal = (dateStr: string) => {
     setEditingEventId(null);
@@ -1122,12 +1142,22 @@ const CRMDashboard = () => {
                             <button
                               type="button"
                               key={lead.id}
-                              onClick={() => { setSelectedClientId(lead.id); setClientSearch(`${lead.name} — ${lead.whatsapp}`); setClientSearchOpen(false); }}
+                              onClick={() => {
+                                setSelectedClientId(lead.id);
+                                setClientSearch(`${lead.nome} — ${lead.whatsapp}`);
+                                setClientSearchOpen(false);
+                                setFormData(prev => ({
+                                  ...prev,
+                                  name: lead.nome,
+                                  city: lead.cidade,
+                                  whatsapp: lead.whatsapp,
+                                }));
+                              }}
                               className={`w-full text-left px-3 py-2 text-sm text-white hover:bg-[#333] transition-colors flex items-center gap-2 ${selectedClientId === lead.id ? 'bg-[#2a2a2a] border-l-2 border-[#B5FF03]' : ''}`}
                             >
                               <User size={12} className="text-neutral-500 shrink-0" />
                               <div className="min-w-0">
-                                <span className="block truncate">{lead.name}</span>
+                                <span className="block truncate">{lead.nome}</span>
                                 <span className="block text-[10px] text-neutral-500 truncate">{lead.whatsapp}</span>
                               </div>
                             </button>
@@ -1294,7 +1324,7 @@ const CRMDashboard = () => {
                                   <button
                                     type="button"
                                     key={item.name}
-                                    onClick={() => handleSelectInventoryItem(item.name)}
+                                    onClick={() => handleAdicionarItem({ id: generateUUID(), item: item.name, valorUnit: item.valorUnit })}
                                     className="w-full text-left px-3 py-2 text-sm text-white hover:bg-[#333] transition-colors flex items-center justify-between gap-2"
                                   >
                                     <div className="flex items-center gap-2 min-w-0">
@@ -1376,7 +1406,7 @@ const CRMDashboard = () => {
                                         <button
                                           type="button"
                                           key={opt.name}
-                                          onClick={() => handleInlineItemSelect(item.id, opt.name)}
+                                          onClick={() => handleInlineItemSelect(item.id, opt.name, opt.valorUnit)}
                                           className={`w-full text-left px-3 py-2 text-xs text-white hover:bg-[#333] transition-colors flex items-center justify-between gap-2 ${item.item === opt.name ? 'bg-[#2a2a2a] border-l-2 border-[#B5FF03]' : ''}`}
                                         >
                                           <span className="truncate">{opt.name}</span>
