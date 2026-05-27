@@ -269,7 +269,12 @@ const CRMDashboard = () => {
   };
 
   const handleEditEvent = (event: CalendarEvent) => {
-    const lead = event.clientId ? Orçamentos.find(l => l.id === event.clientId) : null;
+    const leadFromId = event.clientId ? Orçamentos.find(l => l.id === event.clientId) : null;
+    const leadFromName = !leadFromId && event.client
+      ? Orçamentos.find(l => l.name.toLowerCase().trim() === event.client!.toLowerCase().trim())
+      : null;
+    const lead = leadFromId || leadFromName;
+    const leadId = lead?.id || event.clientId || '';
     setEditingEventId(event.id);
     setCreateDate(event.date || '');
     setFormData({
@@ -289,11 +294,11 @@ const CRMDashboard = () => {
       orcamentoItems: (lead?.items as OrcamentoItem[]) || [],
       desconto: 0,
     });
-    setSelectedClientId(event.clientId || '');
+    setSelectedClientId(leadId);
     setClientSearch(event.client ? `${event.client} — ${event.clientPhone || ''}` : '');
     setInvSearch('');
     setInvSearchOpen(false);
-    setCreateMode('novo_cliente');
+    setCreateMode(leadId ? (event.clientId ? 'cliente_existente' : 'novo_cliente') : 'novo_cliente');
     setIsCreateOpen(true);
     setSelectedDayEvents(null);
     setSelectedDate(null);
@@ -316,22 +321,26 @@ const CRMDashboard = () => {
         dataDesmontagem: formData.dataDesmontagem,
         description: formData.observacao,
         status: (formData.status as CalendarEvent['status']) || 'pendente',
+        valorTotal: total,
       };
       updateEvent(editingEventId, eventFields);
       if (selectedClientId) {
-        updateLead(selectedClientId, {
+        const leadUpdate: Partial<Lead> = {
           name: formData.name,
           whatsapp: formData.whatsapp,
           email: formData.email,
           address: formData.city || '',
           notes: formData.observacao || '',
-          value: total.toString(),
-          items: formData.orcamentoItems.length > 0 ? formData.orcamentoItems : undefined,
-        });
+        };
+        if (formData.orcamentoItems.length > 0) {
+          leadUpdate.value = total.toString();
+          leadUpdate.items = formData.orcamentoItems;
+        }
+        updateLead(selectedClientId, leadUpdate);
       }
       setEditingEventId(null);
     } else if (createMode === 'novo_cliente') {
-      const leadInput = {
+      const leadInput: Partial<Omit<Lead, 'id'>> = {
         name: formData.name,
         niche: formData.eventType || 'Evento',
         whatsapp: formData.whatsapp,
@@ -344,24 +353,29 @@ const CRMDashboard = () => {
         followUpReminder: '',
         address: formData.city || '',
         notes: formData.observacao || '',
-        value: total.toString(),
-        items: formData.orcamentoItems.length > 0 ? formData.orcamentoItems : undefined,
       };
-      addLead(leadInput);
-      addEvent({
-        title: formData.eventType ? `${formData.eventType} - ${formData.name}` : formData.name,
-        client: formData.name,
-        clientPhone: formData.whatsapp,
-        clientEmail: formData.email,
-        clientCpf: formData.cpf,
-        eventType: formData.eventType,
-        date: formData.date,
-        time: formData.time,
-        city: formData.city,
-        dataMontagem: formData.dataMontagem,
-        dataDesmontagem: formData.dataDesmontagem,
-        description: formData.observacao,
-        status: (formData.status as CalendarEvent['status']) || 'pendente',
+      if (formData.orcamentoItems.length > 0) {
+        leadInput.value = total.toString();
+        leadInput.items = formData.orcamentoItems;
+      }
+      addLead(leadInput as Omit<Lead, 'id'>).then(newLeadId => {
+        addEvent({
+          title: formData.eventType ? `${formData.eventType} - ${formData.name}` : formData.name,
+          client: formData.name,
+          clientId: newLeadId,
+          clientPhone: formData.whatsapp,
+          clientEmail: formData.email,
+          clientCpf: formData.cpf,
+          eventType: formData.eventType,
+          date: formData.date,
+          time: formData.time,
+          city: formData.city,
+          dataMontagem: formData.dataMontagem,
+          dataDesmontagem: formData.dataDesmontagem,
+          description: formData.observacao,
+          status: (formData.status as CalendarEvent['status']) || 'pendente',
+          valorTotal: total,
+        });
       });
       addTransaction({
         client: formData.name,

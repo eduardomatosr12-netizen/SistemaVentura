@@ -104,7 +104,7 @@ const MONTHS = [
 ];
 
 const CRMOrçamentos = () => {
-  const { Orçamentos, addLead, updateLead, deleteLead, searchTerm } = useCRM();
+  const { Orçamentos, events, addLead, updateLead, deleteLead, searchTerm } = useCRM();
   const { clearFilters } = useFilters();
   const { role, employeeName } = useAuth();
 
@@ -253,6 +253,10 @@ const CRMOrçamentos = () => {
 
   const openAdd = () => { setMode('add'); setCurrent(EMPTY_LEAD); setIsOpen(true); setDiscountValue(0); };
   const openEdit = (lead: Lead) => {
+    if (lead.id.startsWith('event-')) {
+      alert('Este cliente veio de um evento no calendário. Para editar, vá até o Calendário.');
+      return;
+    }
     setMode('edit');
     setCurrent({ ...lead });
     setIsOpen(true);
@@ -392,15 +396,68 @@ const CRMOrçamentos = () => {
 
   const handleDelete = (id: string | undefined) => {
     if (!id) return;
+    if (id.startsWith('event-')) {
+      alert('Este cliente veio de um evento no calendário. Para excluir, vá até o Calendário.');
+      return;
+    }
     if (confirm('Excluir este lead?')) deleteLead(id);
   };
 
   const updateField = (field: keyof Lead, val: string) =>
     setCurrent(prev => ({ ...prev, [field]: val }));
 
+  const unifiedClients = useMemo(() => {
+    const eventStageMap: Record<string, string> = {
+      confirmado: 'Contrato Fechado',
+      realizado: 'Concluído',
+      pendente: 'Novos Orçamentos',
+      cancelado: 'Perdido',
+    };
+
+    const map = new Map<string, Lead>();
+
+    Orçamentos.forEach(lead => {
+      if (lead.name) map.set(lead.name.toLowerCase().trim(), lead);
+    });
+
+    events.forEach(ev => {
+      const key = (ev.client || '').toLowerCase().trim();
+      if (!key) return;
+
+      if (map.has(key)) {
+        const existing = map.get(key)!;
+        if (ev.valorTotal) {
+          const current = parseMonetaryValue(existing.value);
+          existing.value = formatCurrency(current + ev.valorTotal);
+        }
+      } else {
+        const stage = ev.status ? (eventStageMap[ev.status] || 'Novos Orçamentos') : 'Novos Orçamentos';
+        map.set(key, {
+          id: `event-${ev.id}`,
+          name: ev.client || '',
+          niche: ev.eventType || ev.title || '',
+          whatsapp: ev.clientPhone || '',
+          email: ev.clientEmail || '',
+          instagram: '',
+          stage,
+          origin: 'evento',
+          firstContact: ev.date || '',
+          closingDate: '',
+          followUpReminder: '',
+          address: '',
+          notes: ev.description || '',
+          value: ev.valorTotal ? formatCurrency(ev.valorTotal) : 'R$ 0,00',
+          items: [],
+        });
+      }
+    });
+
+    return Array.from(map.values());
+  }, [Orçamentos, events]);
+
   const filteredOrçamentos = useMemo(() => {
-    if (!Orçamentos || !Array.isArray(Orçamentos)) return [];
-    let result = Orçamentos;
+    if (!unifiedClients || !Array.isArray(unifiedClients)) return [];
+    let result = unifiedClients;
 
     if (searchTerm) {
       result = result.filter(lead => 
@@ -432,7 +489,7 @@ const CRMOrçamentos = () => {
     }
 
     return result;
-  }, [Orçamentos, searchTerm, eventType, citySearch, selectedMonth]);
+  }, [unifiedClients, searchTerm, eventType, citySearch, selectedMonth]);
 
   const hasActiveFilters = selectedMonth !== '' || eventType !== '' || citySearch !== '';
 
@@ -609,7 +666,7 @@ const CRMOrçamentos = () => {
                 )) : (
                   <tr>
                     <td colSpan={6} className="px-3 md:px-5 py-8 md:py-12 text-center text-neutral-400 font-medium italic text-xs md:text-sm">
-                      {hasActiveFilters ? 'Nenhum lead encontrado com os filtros aplicados' : `Nenhum lead encontrado para "${searchTerm}"`}
+                      {hasActiveFilters ? 'Nenhum cliente encontrado com os filtros aplicados' : `Nenhum cliente encontrado para "${searchTerm}"`}
                     </td>
                   </tr>
                 )}
@@ -665,7 +722,7 @@ const CRMOrçamentos = () => {
                 </div>
               )) : (
                 <div className="text-center text-neutral-400 font-medium italic text-xs py-8">
-                  {hasActiveFilters ? 'Nenhum lead encontrado com os filtros aplicados' : `Nenhum lead encontrado para "${searchTerm}"`}
+                  {hasActiveFilters ? 'Nenhum cliente encontrado com os filtros aplicados' : `Nenhum cliente encontrado para "${searchTerm}"`}
                 </div>
               )}
             </div>

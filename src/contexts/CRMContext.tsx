@@ -4,6 +4,7 @@ import { STAGES, STAGE_CONFIG, parseMonetaryValue, calculateTotalValue, groupOr�
 import * as leadService from '../services/leadService';
 import * as eventService from '../services/eventService';
 import { subscribeInventory } from '../lib/inventory';
+import { addTransaction, getTransactionByEventId } from '../services/financeService';
 
 export interface OrcamentoItem {
   id: string;
@@ -50,6 +51,7 @@ export interface CalendarEvent {
   status?: 'confirmado' | 'pendente' | 'cancelado' | 'realizado';
   dataMontagem?: string;
   dataDesmontagem?: string;
+  valorTotal?: number;
 }
 
 type LeadInput = Omit<Lead, 'id'>;
@@ -128,8 +130,30 @@ export const CRMProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const updateEvent = useCallback((id: string, fields: Partial<CalendarEvent>) => {
+    const previous = events.find(e => e.id === id);
     eventService.updateEvent(id, fields).catch(err => console.error('[CRM] Erro ao atualizar evento:', err));
-  }, []);
+
+    if (fields.status === 'realizado' && previous?.status !== 'realizado') {
+      const title = fields.title ?? previous?.title ?? 'Evento';
+      const client = fields.client ?? previous?.client ?? '';
+      const valorTotal = fields.valorTotal ?? previous?.valorTotal ?? 0;
+      const dataEvento = fields.date ?? previous?.date ?? '';
+
+      getTransactionByEventId(id).then(existing => {
+        if (existing) return;
+        addTransaction({
+          client,
+          description: `Evento: ${title} - ${client}`,
+          amount: Number(valorTotal),
+          date: dataEvento,
+          status: 'Pendente',
+          type: 'receita',
+          source: 'evento',
+          origemEventoId: id,
+        }).catch(err => console.error('[CRM] Erro ao criar transação do evento:', err));
+      });
+    }
+  }, [events]);
 
   const deleteEvent = useCallback((id: string) => {
     eventService.deleteEvent(id).catch(err => console.error('[CRM] Erro ao excluir evento:', err));
