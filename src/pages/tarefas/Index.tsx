@@ -321,6 +321,7 @@ const Board = ({
               +
             </button>
           </div>
+          )
         ) : (
           <input
             type="number"
