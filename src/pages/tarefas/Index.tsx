@@ -1,5 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Plus, Trash2, X, Edit3, MessageCircle, Package, Building2, Search, Calendar, Filter as FilterIcon, Layers, Save, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Plus, Trash2, X, Edit3, MessageCircle, Package, Building2, Search, Calendar, Filter as FilterIcon, Layers, Save, CheckCircle2, AlertCircle, Database } from 'lucide-react';
+import { collection, writeBatch, doc, Timestamp } from 'firebase/firestore';
+import { db } from '../../services/firebase';
 import { useAuth } from '../../contexts/AuthContext';
 import { useCRM } from '../../contexts/CRMContext';
 import { generateUUID } from '../../lib/uuid';
@@ -772,6 +774,50 @@ const [boards, setBoards] = useState<BoardType[]>(() => {
     }
   };
 
+  const [seedFeedback, setSeedFeedback] = useState<string | null>(null);
+
+  const cadastrarItensEmLote = async () => {
+    setSeedFeedback('Cadastrando...');
+    try {
+      const batch = writeBatch(db);
+      const colRef = collection(db, 'estoque');
+      const ITENS = [
+        { item: 'Painel de Led P3.9 LPS Curvo (50x100)', categoria: 'Painel de LED', qtdAtual: 9, estoqueMinimo: 18, fornecedor: 'LPG', valorUnit: 75 },
+        { item: 'Par Led 60 Led 3w Rgb Triled', categoria: 'Iluminação', qtdAtual: 49, estoqueMinimo: 50, fornecedor: 'Mercado Livre', valorUnit: 25 },
+        { item: 'Varal de Lampada Comum (66 Lâmpada', categoria: 'Iluminação', qtdAtual: 3, estoqueMinimo: 1, fornecedor: 'Mercado Livre', valorUnit: 200 },
+        { item: 'Varal de Lampada Japonesa (66 Lâm', categoria: 'Iluminação', qtdAtual: 3, estoqueMinimo: 1, fornecedor: 'Mercado Livre', valorUnit: 300 },
+        { item: 'Som - Medio', categoria: 'Som', qtdAtual: 2, estoqueMinimo: 2, fornecedor: 'Power System', valorUnit: 175 },
+        { item: 'Som - Grave', categoria: 'Som', qtdAtual: 1, estoqueMinimo: 2, fornecedor: 'Power System', valorUnit: 175 },
+        { item: 'Som Completo (Banda)', categoria: 'Som', qtdAtual: 1, estoqueMinimo: 1, fornecedor: 'Power System', valorUnit: 750 },
+        { item: 'Som Completo (DJ/Evento)', categoria: 'Som', qtdAtual: 1, estoqueMinimo: 1, fornecedor: 'Power System', valorUnit: 400 },
+        { item: 'Piso Palco Praticáveis (100x200x', categoria: 'Estrutura', qtdAtual: 9, estoqueMinimo: 9, fornecedor: 'Pernambuco Estruturas', valorUnit: 80 },
+        { item: 'Cabine Fotografica Infinite', categoria: 'Outros', qtdAtual: 1, estoqueMinimo: 1, fornecedor: 'Maxi Grua', valorUnit: 500 },
+        { item: 'Seta de Led', categoria: 'Iluminação', qtdAtual: 5, estoqueMinimo: 1, fornecedor: 'Maxi Grua', valorUnit: 200 },
+        { item: 'Totem de Led P3.9 (100x200)', categoria: 'Painel de LED', qtdAtual: 40, estoqueMinimo: 4, fornecedor: 'LPG', valorUnit: 300 },
+        { item: 'Piso Paris Galáxia', categoria: 'Estrutura', qtdAtual: 1, estoqueMinimo: 16, fornecedor: 'Milleto', valorUnit: 50 },
+        { item: 'Moving Beem 14R LPG', categoria: 'Iluminação', qtdAtual: 0, estoqueMinimo: 4, fornecedor: 'LPG', valorUnit: 150 },
+        { item: 'Refletor Holofote Super Led 50w - BR', categoria: 'Iluminação', qtdAtual: 0, estoqueMinimo: 0, fornecedor: 'Ipojuca - Caruaru', valorUnit: 25 },
+        { item: 'Refletor Par 38', categoria: 'Iluminação', qtdAtual: 0, estoqueMinimo: 20, fornecedor: 'Mercado Livre', valorUnit: 25 },
+        { item: 'Refletor Holofote Led 30W - PT', categoria: 'Iluminação', qtdAtual: 0, estoqueMinimo: 24, fornecedor: 'Mercado Livre', valorUnit: 25 },
+        { item: 'Refletor Holofote Led 30W - BR', categoria: 'Iluminação', qtdAtual: 0, estoqueMinimo: 12, fornecedor: 'Mercado Livre', valorUnit: 25 },
+        { item: 'Refletor Holofote Led 200w - PT', categoria: 'Iluminação', qtdAtual: 0, estoqueMinimo: 30, fornecedor: 'Mercado Livre', valorUnit: 25 },
+        { item: 'Gride Alumínio P25 (Mt)', categoria: 'Estrutura', qtdAtual: 0, estoqueMinimo: 40, fornecedor: 'One Light', valorUnit: 30 },
+        { item: 'Show DJ', categoria: 'Som', qtdAtual: 0, estoqueMinimo: 1, fornecedor: 'Ventura', valorUnit: 800 },
+        { item: 'Jatos CO2', categoria: 'Efeitos', qtdAtual: 0, estoqueMinimo: 4, fornecedor: 'Pirulito Recife', valorUnit: 400 },
+        { item: 'Efeitos Pirotécnicos', categoria: 'Efeitos', qtdAtual: 0, estoqueMinimo: 10, fornecedor: 'Casa do Fogueteiro - Caruaru', valorUnit: 0 },
+      ];
+      for (const item of ITENS) {
+        const ref = doc(colRef);
+        batch.set(ref, { ...item, createdAt: Timestamp.now() });
+      }
+      await batch.commit();
+      setSeedFeedback(`${ITENS.length} itens cadastrados na coleção "estoque"!`);
+      setTimeout(() => setSeedFeedback(null), 5000);
+    } catch (err) {
+      setSeedFeedback('Erro ao cadastrar: ' + (err instanceof Error ? err.message : String(err)));
+    }
+  };
+
   const handleCreateNewTask = (boardId: string) => {
     const board = boards.find(b => b.id === boardId);
     if (!board) return;
@@ -915,6 +961,12 @@ const [boards, setBoards] = useState<BoardType[]>(() => {
               <Save size={18} /> {saving ? 'Salvando...' : 'Salvar Alterações'}
             </button>
             <button
+              onClick={cadastrarItensEmLote}
+              className="flex items-center gap-2 px-6 py-3 bg-[#1a1a2e] text-[#B5FF03] font-black rounded-lg hover:bg-[#2a2a4e] transition-colors border border-[#B5FF03]/30"
+            >
+              <Database size={18} /> Seed Estoque
+            </button>
+            <button
               onClick={() => setShowCreateTaskModal(true)}
               className="flex items-center gap-2 px-6 py-3 bg-[#B5FF03] text-black font-black rounded-lg hover:bg-[#a1e600] transition-colors"
             >
@@ -927,7 +979,13 @@ const [boards, setBoards] = useState<BoardType[]>(() => {
               saveFeedback.type === 'success' ? 'bg-[#1a3a1a] text-[#B5FF03] border border-[#2a5a2a]' : 'bg-[#3a1a1a] text-red-400 border border-[#5a2a2a]'
             }`}>
               {saveFeedback.type === 'success' ? <CheckCircle2 size={16} /> : <AlertCircle size={16} />}
-              <span>{saveFeedback.message}</span>
+              {saveFeedback.message}
+            </div>
+          )}
+          {seedFeedback && (
+            <div className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold bg-[#1a1a2e] text-[#B5FF03] border border-[#B5FF03]/20">
+              <Database size={16} />
+              {seedFeedback}
             </div>
           )}
 
