@@ -51,7 +51,8 @@ export const loadInventory = async (): Promise<void> => {
       columns: d.data().columns || [],
       rows: d.data().rows || [],
     })) as InventoryBoard[];
-  } catch {
+  } catch (err) {
+    console.error('[Inventory] Erro ao carregar inventário:', err);
     boardsCache = [];
   }
 };
@@ -95,8 +96,8 @@ export const refreshReservedCache = async (eventDate: string): Promise<void> => 
         reservedCache.set(key, (reservedCache.get(key) || 0) + (Number(item.qtdAtual) || 0));
       }
     });
-  } catch {
-    // silent
+  } catch (err) {
+    console.error('[Inventory] Erro ao carregar reservas:', err);
   }
 };
 
@@ -113,8 +114,8 @@ export const saveBoards = async (boards: InventoryBoard[]): Promise<void> => {
       });
     }
     await batch.commit();
-  } catch {
-    // silent
+  } catch (err) {
+    console.error('[Inventory] Erro ao salvar boards:', err);
   }
 };
 

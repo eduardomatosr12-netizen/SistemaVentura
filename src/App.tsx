@@ -3,6 +3,7 @@ import './App.css';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import type { UserRole } from './contexts/AuthContext';
 import { CRMProvider } from './contexts/CRMContext';
+import { FinanceProvider } from './contexts/FinanceContext';
 import { ActivityLogsProvider } from './contexts/ActivityContext';
 import { FilterProvider } from './contexts/FilterContext';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -182,9 +183,11 @@ function App() {
         <AuthProvider>
           <ActivityLogsProvider>
             <CRMProvider>
+              <FinanceProvider>
               <FilterProvider>
                 <AppRoutes />
               </FilterProvider>
+              </FinanceProvider>
             </CRMProvider>
           </ActivityLogsProvider>
         </AuthProvider>

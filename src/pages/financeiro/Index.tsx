@@ -1,9 +1,9 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { useCRM } from '../../contexts/CRMContext';
-import { useFilters } from '../../contexts/FilterContext';
 import { useAuth } from '../../contexts/AuthContext';
+import { useFinance } from '../../contexts/FinanceContext';
 import { generateUUID } from '../../lib/uuid';
-import { Plus, Pencil, Save, X, TrendingUp, TrendingDown, DollarSign, PieChart, CreditCard, User, Calendar, CheckCircle2, Clock, AlertTriangle, RefreshCw, ExternalLink, Receipt, Wallet, Filter, XCircle, ChevronDown, ChevronUp, SlidersHorizontal } from 'lucide-react';
+import { Pencil, X, TrendingUp, TrendingDown, Clock, AlertTriangle, XCircle, ChevronDown, ChevronUp, SlidersHorizontal } from 'lucide-react';
 
 interface Invoice {
   id: string;
@@ -97,26 +97,12 @@ const RadioFilter = ({ label, checked, onChange }: { label: string; checked: boo
 
 const Financeiro = () => {
   const { Orçamentos } = useCRM();
-  const { filters } = useFilters();
   const { role, employeeName } = useAuth();
+  const { transactions, addTransaction, updateTransaction, deleteTransaction } = useFinance();
 
-  const STORAGE_KEY = 'axium_finance_v2';
-  const EXPENSES_KEY = 'axium_expenses_v1';
-
-  const getStoredFinance = () => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) return JSON.parse(stored);
-    return { revenue: 0, expenses: 0, revenueOverride: null };
-  };
-
-  const [financeData, setFinanceData] = useState(getStoredFinance);
   const [activeTab, setActiveTab] = useState<'receitas' | 'fluxo' | 'projecao'>('receitas');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(financeData));
-  }, [financeData]);
-
   const [filtersState, setFiltersState] = useState({
     period: '' as '' | 'today' | 'this_week' | 'this_month' | 'last_month' | '90_days' | 'this_year' | 'custom',
     customDateStart: '',
@@ -138,7 +124,7 @@ const Financeiro = () => {
     return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
   };
     
-  const getDateRange = () => {
+  const getDateRange = useCallback(() => {
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
@@ -175,54 +161,33 @@ const Financeiro = () => {
       };
     }
     return null;
-  };
+  }, [filtersState]);
 
-  const isInDateRange = (dateStr: string) => {
+  const isInDateRange = useCallback((dateStr: string) => {
     if (!dateStr || dateStr === '—') return true;
     const range = getDateRange();
     if (!range) return true;
     const date = new Date(dateStr);
     return date >= range.start && date <= range.end;
-  };
+  }, [getDateRange]);
     
-  const [isAsaasConnected] = useState(localStorage.getItem('axium_int_asaas') === 'true');
-  const [isSyncing, setIsSyncing] = useState(false);
-  const [lastSync, setLastSync] = useState<string | null>(null);
-  const [manualInvoices, setManualInvoices] = useState<Invoice[]>(() => {
-    const stored = localStorage.getItem('axium_finance_v1');
-    if (stored) return JSON.parse(stored).manualInvoices ?? [];
-    return [];
-  });
-  const [asaasInvoices, setAsaasInvoices] = useState<Invoice[]>([]);
-    
-  const [expenses, setExpenses] = useState<Expense[]>(() => {
-    const stored = localStorage.getItem(EXPENSES_KEY);
-    if (stored) return JSON.parse(stored);
-    return [];
-  });
+  const firebaseInvoices: Invoice[] = useMemo(() =>
+    (transactions || [])
+      .filter(t => t.type === 'receita' && t.source !== 'lead')
+      .map(t => ({
+        id: t.id!,
+        client: t.client || '',
+        amount: formatCurrency(t.amount),
+        date: t.date,
+        status: t.status,
+        source: (t.source === 'asaas' ? 'asaas' : 'manual') as 'manual' | 'asaas',
+        paymentMethod: t.paymentMethod,
+        installments: t.installments,
+        lastModifiedBy: t.lastModifiedBy,
+      })),
+  [transactions]);
 
-  useEffect(() => {
-    localStorage.setItem(EXPENSES_KEY, JSON.stringify(expenses));
-  }, [expenses]);
-
-  useEffect(() => {
-    localStorage.setItem('axium_finance_v1', JSON.stringify({ manualInvoices }));
-  }, [manualInvoices]);
-    
-  const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
-  const [editingInvoice, setEditingInvoice] = useState<Invoice | null>(null);
-  const [isNewInvoice, setIsNewInvoice] = useState(false);
-
-  const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
-  const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
-  const [isNewExpense, setIsNewExpense] = useState(false);
-
-  const syncAsaasData = useCallback(async () => {
-    setIsSyncing(true);
-    setAsaasInvoices([]);
-    setLastSync(new Date().toLocaleTimeString());
-    setIsSyncing(false);
-  }, []);
+  const [asaasInvoices] = useState<Invoice[]>([]);
     
   const computedLeadInvoices: Invoice[] = (Orçamentos || [])
     .filter(l => l.stage === 'Contrato Fechado')
@@ -237,9 +202,9 @@ const Financeiro = () => {
     }));
     
   const allInvoices = useMemo(() => 
-    [...asaasInvoices, ...manualInvoices, ...computedLeadInvoices].sort((a, b) => 
+    [...asaasInvoices, ...firebaseInvoices, ...computedLeadInvoices].sort((a, b) => 
       new Date(b.date).getTime() - new Date(a.date).getTime()
-    ), [asaasInvoices, manualInvoices, Orçamentos]);
+    ), [asaasInvoices, firebaseInvoices, computedLeadInvoices]);
 
   const filteredInvoices = useMemo(() => {
     let result = allInvoices || [];
@@ -267,10 +232,24 @@ const Financeiro = () => {
     }
       
     return result;
-  }, [allInvoices, filtersState]);
+  }, [allInvoices, filtersState, isInDateRange]);
+
+  const firebaseExpenses: Expense[] = useMemo(() =>
+    (transactions || [])
+      .filter(t => t.type === 'despesa')
+      .map(t => ({
+        id: t.id!,
+        category: t.category || 'outros',
+        description: t.description,
+        amount: formatCurrency(t.amount),
+        date: t.date,
+        status: t.status as Expense['status'],
+        lastModifiedBy: t.lastModifiedBy,
+      })),
+  [transactions]);
     
   const filteredExpenses = useMemo(() => {
-    let result = expenses || [];
+    let result = firebaseExpenses || [];
       
     if (activeTab === 'fluxo' && filtersState.categories?.length > 0) {
       result = result.filter(exp => filtersState.categories.includes(exp.category));
@@ -292,7 +271,7 @@ const Financeiro = () => {
     }
       
     return result;
-  }, [expenses, filtersState, activeTab]);
+  }, [firebaseExpenses, filtersState, activeTab, isInDateRange]);
     
   const computedTotalRevenue = useMemo(() => 
     filteredInvoices
@@ -318,8 +297,6 @@ const Financeiro = () => {
       .reduce((acc, exp) => acc + parseBRL(exp.amount), 0),
   [filteredExpenses]);
     
-  const computedNetProfit = computedTotalRevenue - computedTotalExpenses;
-    
   const hasActiveFilters = filtersState.period !== '' || filtersState.statuses.length > 0 || 
     filtersState.categories.length > 0 || filtersState.origins.length > 0 || 
     filtersState.minValue !== '' || filtersState.maxValue !== '';
@@ -337,6 +314,14 @@ const Financeiro = () => {
     });
   };
     
+  const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
+  const [editingInvoice, setEditingInvoice] = useState<Invoice | null>(null);
+  const [isNewInvoice, setIsNewInvoice] = useState(false);
+
+  const [isExpenseModalOpen, setIsExpenseModalOpen] = useState(false);
+  const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
+  const [isNewExpense, setIsNewExpense] = useState(false);
+    
   const handleOpenInvoiceModal = (invoice?: Invoice) => {
     if (invoice) {
       setEditingInvoice(invoice);
@@ -345,7 +330,7 @@ const Financeiro = () => {
       setEditingInvoice({
         id: generateUUID(),
         client: '',
-        amount: 'R$ 0,00',
+        amount: '0,00',
         date: new Date().toISOString().split('T')[0],
         status: 'Pendente',
         source: 'manual'
@@ -355,38 +340,62 @@ const Financeiro = () => {
     setIsInvoiceModalOpen(true);
   };
     
-  const handleSaveInvoice = (e: React.FormEvent) => {
+  const handleSaveInvoice = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingInvoice) return;
-      
-    const modifiedInvoice = {
-      ...editingInvoice,
-      source: 'manual' as const,
-      lastModifiedBy: employeeName || (role === 'admin' ? 'Administrador' : 'Funcionário')
-    };
+
+    const amountValue = parseBRL(editingInvoice.amount);
       
     if (isNewInvoice) {
-      setManualInvoices(prev => [modifiedInvoice, ...prev]);
+      try {
+        await addTransaction({
+          type: 'receita',
+          client: editingInvoice.client,
+          description: `Fatura: ${editingInvoice.client}`,
+          amount: amountValue,
+          date: editingInvoice.date,
+          status: editingInvoice.status,
+          source: 'manual',
+          paymentMethod: editingInvoice.paymentMethod || 'pix',
+          installments: editingInvoice.installments,
+          lastModifiedBy: employeeName || (role === 'admin' ? 'Administrador' : 'Funcionário'),
+        });
+      } catch (err) {
+        console.error('[Finance] Erro ao salvar fatura:', err);
+      }
     } else {
-      setManualInvoices(prev => {
-        const exists = prev.find(inv => inv.id === editingInvoice.id);
-        if (exists) {
-          return prev.map(inv => inv.id === editingInvoice.id ? modifiedInvoice : inv);
+      const fbRecord = transactions.find(t => t.id === editingInvoice.id);
+      if (fbRecord) {
+        try {
+          await updateTransaction(editingInvoice.id, {
+            client: editingInvoice.client,
+            amount: amountValue,
+            date: editingInvoice.date,
+            status: editingInvoice.status,
+            paymentMethod: editingInvoice.paymentMethod,
+            installments: editingInvoice.installments,
+            lastModifiedBy: employeeName || (role === 'admin' ? 'Administrador' : 'Funcionário'),
+          });
+        } catch (err) {
+          console.error('[Finance] Erro ao atualizar fatura:', err);
         }
-        return [modifiedInvoice, ...prev];
-      });
+      }
     }
     setIsInvoiceModalOpen(false);
   };
     
-  const handleDeleteInvoice = (id: string) => {
+  const handleDeleteInvoice = async (id: string) => {
     const inv = allInvoices.find(i => i.id === id);
-    if (inv?.source !== 'manual') {
-      alert('Apenas faturas manuais podem ser excluídas por aqui.');
+    if (inv?.source === 'lead') {
+      alert('Faturas de leads não podem ser excluídas manualmente.');
       return;
     }
-    if (confirm('Excluir esta fatura manual?')) {
-      setManualInvoices(prev => prev.filter(inv => inv.id !== id));
+    if (confirm('Excluir esta fatura?')) {
+      try {
+        await deleteTransaction(id);
+      } catch (err) {
+        console.error('[Finance] Erro ao excluir fatura:', err);
+      }
       setIsInvoiceModalOpen(false);
     }
   };
@@ -400,7 +409,7 @@ const Financeiro = () => {
         id: generateUUID(),
         category: 'outros',
         description: '',
-        amount: 'R$ 0,00',
+        amount: '0,00',
         date: new Date().toISOString().split('T')[0],
         status: 'Pendente'
       });
@@ -409,26 +418,51 @@ const Financeiro = () => {
     setIsExpenseModalOpen(true);
   };
     
-  const handleSaveExpense = (e: React.FormEvent) => {
+  const handleSaveExpense = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingExpense) return;
-      
-    const modifiedExpense = {
-      ...editingExpense,
-      lastModifiedBy: employeeName || (role === 'admin' ? 'Administrador' : 'Funcionário')
-    };
+
+    const amountValue = parseBRL(editingExpense.amount);
       
     if (isNewExpense) {
-      setExpenses(prev => [modifiedExpense, ...prev]);
+      try {
+        await addTransaction({
+          type: 'despesa',
+          description: editingExpense.description,
+          category: editingExpense.category,
+          amount: amountValue,
+          date: editingExpense.date,
+          status: editingExpense.status,
+          source: 'manual',
+          lastModifiedBy: employeeName || (role === 'admin' ? 'Administrador' : 'Funcionário'),
+        });
+      } catch (err) {
+        console.error('[Finance] Erro ao salvar despesa:', err);
+      }
     } else {
-      setExpenses(prev => prev.map(exp => exp.id === editingExpense.id ? modifiedExpense : exp));
+      try {
+        await updateTransaction(editingExpense.id, {
+          description: editingExpense.description,
+          category: editingExpense.category,
+          amount: amountValue,
+          date: editingExpense.date,
+          status: editingExpense.status,
+          lastModifiedBy: employeeName || (role === 'admin' ? 'Administrador' : 'Funcionário'),
+        });
+      } catch (err) {
+        console.error('[Finance] Erro ao atualizar despesa:', err);
+      }
     }
     setIsExpenseModalOpen(false);
   };
     
-  const handleDeleteExpense = (id: string) => {
+  const handleDeleteExpense = async (id: string) => {
     if (confirm('Excluir esta despesa?')) {
-      setExpenses(prev => prev.filter(exp => exp.id !== id));
+      try {
+        await deleteTransaction(id);
+      } catch (err) {
+        console.error('[Finance] Erro ao excluir despesa:', err);
+      }
       setIsExpenseModalOpen(false);
     }
   };
@@ -444,33 +478,6 @@ const Financeiro = () => {
     return EXPENSE_CATEGORIES.find(c => c.value === cat)?.label || cat;
   };
     
-  const toggleStatusFilter = (status: string) => {
-    setFiltersState(prev => ({
-      ...prev,
-      statuses: prev.statuses.includes(status)
-        ? prev.statuses.filter(s => s !== status)
-        : [...prev.statuses, status]
-    }));
-  };
-    
-  const toggleCategoryFilter = (category: string) => {
-    setFiltersState(prev => ({
-      ...prev,
-      categories: prev.categories.includes(category)
-        ? prev.categories.filter(c => c !== category)
-        : [...prev.categories, category]
-    }));
-  };
-    
-  const toggleOriginFilter = (origin: string) => {
-    setFiltersState(prev => ({
-      ...prev,
-      origins: prev.origins.includes(origin)
-        ? prev.origins.filter(o => o !== origin)
-        : [...prev.origins, origin]
-    }));
-  };
-
   const filterContent = (
     <>
       <div className="flex justify-between items-center mb-6">
@@ -1041,7 +1048,7 @@ const Financeiro = () => {
                 </select>
               </div>
               <div className="flex justify-end gap-3 pt-4">
-                {!isNewInvoice && editingInvoice.source === 'manual' && (
+                {!isNewInvoice && (
                   <button
                     type="button"
                     onClick={() => handleDeleteInvoice(editingInvoice.id)}
