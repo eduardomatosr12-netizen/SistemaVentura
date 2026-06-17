@@ -3,7 +3,7 @@ import { useCRM } from '../../contexts/CRMContext';
 import type { CalendarEvent } from '../../contexts/CRMContext';
 import { generateUUID } from '../../lib/uuid';
 import { generateWhatsAppLink } from '../../lib/whatsapp';
-import { loadInventory, subscribeInventory, getAllInventoryItems } from '../../lib/inventory';
+import { loadInventory, subscribeInventory, getAllInventoryItems, ensureDefaultBoards } from '../../lib/inventory';
 import { X, ExternalLink, Clock, User, Users, MessageSquare, Plus, Trash2, Calendar as CalendarIcon, Link as LinkIcon, FileText, ChevronLeft, ChevronRight, Search, MapPin, Mail, Phone, CreditCard, Flag, MessageCircle, Package } from 'lucide-react';
 
 const toBR = (iso: string): string => {
@@ -199,6 +199,9 @@ const CRMCalendario = () => {
     const unsub = subscribeInventory(() => {
       setInvStockItems(getAllInventoryItems());
     });
+    ensureDefaultBoards().then(() => {
+      setInvStockItems(getAllInventoryItems());
+    }).catch(() => {});
     loadInventory().then(() => {
       setInvStockItems(getAllInventoryItems());
     }).catch(() => {});
@@ -1140,7 +1143,6 @@ const CRMCalendario = () => {
                       ))}
                     </div>
                   )}
-                  <div className="relative">
                     <div className="flex gap-2">
                       <input
                         type="text"
@@ -1151,9 +1153,9 @@ const CRMCalendario = () => {
                         className="flex-1 bg-[#0a0a0a] border border-[#333] rounded-md px-3 py-2 text-xs font-bold text-white focus:ring-1 focus:ring-[#B5FF03] outline-none transition-all"
                       />
                     </div>
-                    {invSearchOpen && filteredInvItems.length > 0 && (
-                      <div className="absolute z-50 top-full mt-1 left-0 right-0 bg-[#1a1a1a] border border-[#333] rounded-md shadow-xl max-h-40 overflow-y-auto">
-                        {filteredInvItems.map(prod => (
+                    {invSearchOpen && (
+                      <div className="mt-1 bg-[#1a1a1a] border border-[#333] rounded-md shadow-xl max-h-40 overflow-y-auto">
+                        {filteredInvItems.length > 0 ? filteredInvItems.map(prod => (
                           <button
                             key={prod.name}
                             type="button"
@@ -1164,7 +1166,9 @@ const CRMCalendario = () => {
                             <span className="text-neutral-400">disp: {prod.qty}</span>
                             <span className="text-[#B5FF03] font-bold">R$ {prod.valorUnit?.toFixed(2) || '0,00'}</span>
                           </button>
-                        ))}
+                        )) : (
+                          <p className="px-3 py-3 text-xs text-neutral-500 text-center">Nenhum item encontrado</p>
+                        )}
                       </div>
                     )}
                     {!invSearchOpen && eventItems.length === 0 && (
@@ -1172,7 +1176,6 @@ const CRMCalendario = () => {
                         Selecione um cliente com orçamento fechado ou busque itens manualmente
                       </p>
                     )}
-                  </div>
                 </div>
 
                 <div className="space-y-2">
