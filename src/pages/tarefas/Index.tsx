@@ -303,7 +303,7 @@ const Board = ({
             <button
               type="button"
               onClick={() => handleCellChange(row.id, col.id, Math.max(0, (Number(value) || 0) - 1))}
-              className="w-7 h-7 flex items-center justify-center rounded-md bg-[#222] text-white hover:bg-[#333] hover:text-[#B5FF03] transition-all font-bold text-lg"
+              className="w-10 h-10 md:w-7 md:h-7 flex items-center justify-center rounded-md bg-[#222] text-white hover:bg-[#333] hover:text-[#B5FF03] transition-all font-bold text-lg"
             >
               −
             </button>
@@ -312,13 +312,13 @@ const Board = ({
               value={String(value)}
               onChange={(e) => handleCellChange(row.id, col.id, e.target.value)}
               onKeyDown={(e) => e.stopPropagation()}
-              className="w-14 min-h-[36px] bg-transparent border-none outline-none text-sm text-center text-white font-bold focus:border-b-2 focus:border-[#B5FF03] transition-colors"
+              className="w-14 sm:w-14 min-h-[44px] md:min-h-[36px] bg-transparent border-none outline-none text-sm text-center text-white font-bold focus:border-b-2 focus:border-[#B5FF03] transition-colors"
               autoComplete="off"
             />
             <button
               type="button"
               onClick={() => handleCellChange(row.id, col.id, (Number(value) || 0) + 1)}
-              className="w-7 h-7 flex items-center justify-center rounded-md bg-[#222] text-white hover:bg-[#333] hover:text-[#B5FF03] transition-all font-bold text-lg"
+              className="w-10 h-10 md:w-7 md:h-7 flex items-center justify-center rounded-md bg-[#222] text-white hover:bg-[#333] hover:text-[#B5FF03] transition-all font-bold text-lg"
             >
               +
             </button>
@@ -1109,7 +1109,7 @@ const Tarefas = () => {
             </button>
           </div>
 
-          <div className="bg-[#111111] border border-[#222222] rounded-lg overflow-x-auto">
+          <div className="hidden md:block bg-[#111111] border border-[#222222] rounded-lg overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="border-b border-[#222222]">
@@ -1260,8 +1260,8 @@ const Tarefas = () => {
                 <label className="block text-xs font-black text-neutral-400 uppercase tracking-widest mb-3">Itens do Aluguel</label>
                 <div className="space-y-3">
                   {rentalForm.items.map((item, idx) => (
-                    <div key={item.id} className="flex gap-3 items-start bg-[#1a1a1a] border border-[#333] rounded-lg p-3">
-                      <div className="flex-1 min-w-0">
+                    <div key={item.id} className="flex flex-wrap gap-3 items-start bg-[#1a1a1a] border border-[#333] rounded-lg p-3">
+                      <div className="flex-1 min-w-0 w-full sm:w-auto">
                         <div className="relative">
                           <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-500" />
                           <input

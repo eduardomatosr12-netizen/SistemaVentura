@@ -795,7 +795,7 @@ const CRMCalendario = () => {
                 </button>
               </div>
 
-              <div className="p-8 space-y-6">
+              <div className="p-4 md:p-8 space-y-4 md:space-y-6">
                 {/* Status */}
                 <div className="space-y-2">
                   <label className="flex items-center gap-2 text-[9px] font-black text-[#B5FF03] uppercase tracking-widest">
@@ -814,7 +814,7 @@ const CRMCalendario = () => {
                   </select>
                 </div>
 
-                <div className="grid grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
                     <label className="flex items-center gap-2 text-[9px] font-black text-[#B5FF03] uppercase tracking-widest">
                       <MessageSquare size={12} strokeWidth={3} className="text-[#B5FF03]" />
@@ -858,7 +858,7 @@ const CRMCalendario = () => {
                       );
                     })()}
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                     <div className="space-y-2">
                       <label className="flex items-center gap-2 text-[9px] font-black text-[#B5FF03] uppercase tracking-widest">
                         <CalendarIcon size={12} strokeWidth={3} className="text-[#B5FF03]" />
@@ -897,7 +897,7 @@ const CRMCalendario = () => {
                 {/* Três Marcos Temporais */}
                 <div className="border border-[#1a1a1a] rounded-md p-4 space-y-3">
                   <label className="text-[9px] font-black text-[#B5FF03] uppercase tracking-widest block">MARCOS DO EVENTO</label>
-                  <div className="grid grid-cols-3 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div className="space-y-1">
                       <label className="text-[8px] font-bold text-neutral-500 uppercase tracking-widest">Data do Evento</label>
                       <input
@@ -1130,8 +1130,8 @@ const CRMCalendario = () => {
                   {eventItems.length > 0 && (
                     <div className="space-y-1.5">
                       {eventItems.map(item => (
-                        <div key={item.id} className="flex items-center gap-2 bg-[#0a0a0a] border border-[#222] rounded-md px-3 py-2">
-                          <span className="text-[10px] font-bold text-white flex-1">{item.qtdAtual}x {item.item}</span>
+                        <div key={item.id} className="flex items-center gap-2 bg-[#0a0a0a] border border-[#222] rounded-md px-3 py-2 overflow-hidden">
+                          <span className="text-[10px] font-bold text-white flex-1 truncate">{item.qtdAtual}x {item.item}</span>
                           <button
                             type="button"
                             onClick={() => handleRemoverItemEstoque(item.id)}
@@ -1162,8 +1162,8 @@ const CRMCalendario = () => {
                             onClick={() => handleAdicionarItemEstoque(prod)}
                             className="w-full text-left px-3 py-2 text-xs text-white hover:bg-[#333] transition-colors border-b border-[#222] last:border-b-0 flex items-center gap-2"
                           >
-                            <span className="font-bold flex-1">{prod.name}</span>
-                            <span className="text-neutral-400">disp: {prod.qty}</span>
+                            <span className="font-bold flex-1 truncate">{prod.name}</span>
+                            <span className="text-neutral-400 shrink-0">disp: {prod.qty}</span>
                             <span className="text-[#B5FF03] font-bold">R$ {prod.valorUnit?.toFixed(2) || '0,00'}</span>
                           </button>
                         )) : (
