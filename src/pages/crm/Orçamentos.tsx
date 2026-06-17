@@ -6,7 +6,7 @@ import { useCRM, type Lead, type OrcamentoItem } from '../../contexts/CRMContext
 import { useFilters } from '../../contexts/FilterContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { generateUUID } from '../../lib/uuid';
-import { getAllInventoryItems, getAvailableQuantity, deductInventory, restoreInventory } from '../../lib/inventory';
+import { loadInventory, subscribeInventory, getAllInventoryItems, getAvailableQuantity, deductInventory, restoreInventory } from '../../lib/inventory';
 import { generatePDF } from '../../lib/crmHelpers';
 import { addTransaction } from '../../services/financeService';
 
@@ -136,12 +136,18 @@ const CRMOrçamentos = () => {
   const [citySearch, setCitySearch] = useState<string>('');
 
   useEffect(() => {
-    setInvStockItems(getAllInventoryItems());
+    const unsub = subscribeInventory(() => {
+      setInvStockItems(getAllInventoryItems());
+    });
+    return () => unsub();
   }, []);
 
   useEffect(() => {
     if (isOpen) {
-      setInvStockItems(getAllInventoryItems());
+      (async () => {
+        await loadInventory();
+        setInvStockItems(getAllInventoryItems());
+      })();
       setInvSearch('');
       setShowInvDropdown(false);
       const lead = Orçamentos.find(o => o.id === current.id);
