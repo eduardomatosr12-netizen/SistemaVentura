@@ -1,12 +1,14 @@
-import { useState, useEffect, useMemo } from 'react';
-import { Plus, Trash2, X, Edit3, MessageCircle, Package, Building2, Search, Calendar, Filter as FilterIcon, Layers, Save, CheckCircle2, AlertCircle, Database } from 'lucide-react';
+import { useState, useEffect, useMemo, useRef } from 'react';
+import { Plus, Trash2, X, Edit3, MessageCircle, Package, Building2, Search, Calendar, Filter as FilterIcon, CheckCircle2, AlertCircle, Database } from 'lucide-react';
 import { collection, getDocs, deleteDoc, doc, writeBatch, Timestamp } from 'firebase/firestore';
 import { db } from '../../services/firebase';
 import { useAuth } from '../../contexts/AuthContext';
 import { useCRM } from '../../contexts/CRMContext';
 import { generateUUID } from '../../lib/uuid';
-import { cleanPhoneNumber, generateWhatsAppLink, WHATSAPP_MESSAGE_TEMPLATES } from '../../lib/whatsapp';
-import { saveBoards } from '../../lib/inventory';
+import { generateWhatsAppLink, WHATSAPP_MESSAGE_TEMPLATES } from '../../lib/whatsapp';
+import { loadInventory, subscribeInventory, getBoards, saveBoards } from '../../lib/inventory';
+import { subscribeRentals, addRental, updateRental, deleteRental } from '../../services/rentalService';
+import type { RentalRecord } from '../../services/rentalService';
 
 interface ColumnOption {
   id: string;
@@ -731,30 +733,13 @@ const Tarefas = () => {
   const { role } = useAuth();
   const { Orçamentos, events } = useCRM();
 
-const [boards, setBoards] = useState<BoardType[]>(() => {
-  const stored = localStorage.getItem('axium_boards_v3');
-  if (stored) {
-    const parsed = JSON.parse(stored) as BoardType[];
-    if (Array.isArray(parsed) && parsed.length > 0) {
-      const existingNames = new Set(parsed[0].rows.map(r => String(r.values['col-1'] || '').toLowerCase().trim()));
-      const missing = DEFAULT_BOARD.rows.filter(r => !existingNames.has(String(r.values['col-1'] || '').toLowerCase().trim()));
-      if (missing.length > 0) {
-        parsed[0].rows = [...parsed[0].rows, ...missing];
-      }
-      return parsed;
-    }
-  }
-  return [DEFAULT_BOARD];
-});
+  const [boards, setBoards] = useState<BoardType[]>([DEFAULT_BOARD]);
 
   const [activeTab, setActiveTab] = useState<'inventario' | 'aluguel'>('inventario');
   const [estoqueZeroFilter, setEstoqueZeroFilter] = useState(false);
   const [dateFilterEstoque, setDateFilterEstoque] = useState('');
 
-  const [rentalRecords, setRentalRecords] = useState<RentalRecord[]>(() => {
-    const stored = localStorage.getItem('axium_rental_v1');
-    return stored ? JSON.parse(stored) : [];
-  });
+  const [rentalRecords, setRentalRecords] = useState<RentalRecord[]>([]);
 
   const [showRentalModal, setShowRentalModal] = useState(false);
   const [editingRental, setEditingRental] = useState<RentalRecord | null>(null);
@@ -800,15 +785,47 @@ const [boards, setBoards] = useState<BoardType[]>(() => {
     return map;
   }, [dateFilterEstoque, events, Orçamentos]);
 
-  useEffect(() => {
-    localStorage.setItem('axium_rental_v1', JSON.stringify(rentalRecords));
-  }, [rentalRecords]);
-
-  const [saving, setSaving] = useState(false);
+  const autoSaveRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [saveFeedback, setSaveFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [showCreateTaskModal, setShowCreateTaskModal] = useState(false);
   const [editingNote, setEditingNote] = useState<{ rowId: string; colId: string; boardId: string } | null>(null);
   const [noteContent, setNoteContent] = useState('');
+
+  useEffect(() => {
+    const unsubBoards = subscribeInventory(() => {
+      const current = getBoards();
+      if (current && current.length > 0) {
+        setBoards(current as BoardType[]);
+      }
+    });
+    loadInventory().then(() => {
+      const current = getBoards();
+      if (current && current.length > 0) {
+        setBoards(current as BoardType[]);
+      }
+    }).catch(() => {});
+    const unsubRentals = subscribeRentals(records => {
+      setRentalRecords(records);
+    });
+    return () => {
+      unsubBoards();
+      unsubRentals();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (autoSaveRef.current) clearTimeout(autoSaveRef.current);
+    autoSaveRef.current = setTimeout(() => {
+      saveBoards(boards).then(() => {
+        setSaveFeedback({ type: 'success', message: 'Salvo no Firestore' });
+        setTimeout(() => setSaveFeedback(null), 3000);
+      }).catch(err => {
+        console.error('[Tarefas] Erro auto-save boards:', err);
+        setSaveFeedback({ type: 'error', message: 'Erro ao salvar no Firestore' });
+        setTimeout(() => setSaveFeedback(null), 5000);
+      });
+    }, 800);
+  }, [boards]);
 
   useEffect(() => {
     const handleOpenNoteEditor = (e: Event) => {
@@ -821,27 +838,11 @@ const [boards, setBoards] = useState<BoardType[]>(() => {
     return () => window.removeEventListener('openNoteEditor', handleOpenNoteEditor);
   }, []);
 
-  useEffect(() => {
-    localStorage.setItem('axium_boards_v3', JSON.stringify(boards));
-  }, [boards]);
-
   const handleUpdateBoard = (updatedBoard: BoardType) => {
     setBoards(boards.map(b => b.id === updatedBoard.id ? updatedBoard : b));
   };
 
-  const handleSaveToFirebase = async () => {
-    setSaving(true);
-    setSaveFeedback(null);
-    try {
-      await saveBoards(boards);
-      setSaveFeedback({ type: 'success', message: 'Alterações salvas no Firestore com sucesso!' });
-    } catch {
-      setSaveFeedback({ type: 'error', message: 'Erro ao salvar no Firestore.' });
-    } finally {
-      setSaving(false);
-      setTimeout(() => setSaveFeedback(null), 4000);
-    }
-  };
+
 
   const [seedFeedback, setSeedFeedback] = useState<string | null>(null);
 
@@ -944,7 +945,7 @@ const [boards, setBoards] = useState<BoardType[]>(() => {
     setShowRentalModal(true);
   };
 
-  const handleSaveRental = (e: React.FormEvent) => {
+  const handleSaveRental = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!rentalForm.client.trim()) return;
     const validItems = rentalForm.items.filter(i => i.item.trim());
@@ -952,17 +953,25 @@ const [boards, setBoards] = useState<BoardType[]>(() => {
 
     const payload = { ...rentalForm, items: validItems };
 
-    if (isNewRental || !editingRental) {
-      setRentalRecords(prev => [payload, ...prev]);
-    } else {
-      setRentalRecords(prev => prev.map(r => r.id === editingRental.id ? payload : r));
+    try {
+      if (isNewRental || !editingRental) {
+        await addRental({ client: payload.client, dataSaida: payload.dataSaida, dataDevolucao: payload.dataDevolucao, items: payload.items });
+      } else {
+        await updateRental(editingRental.id!, { client: payload.client, dataSaida: payload.dataSaida, dataDevolucao: payload.dataDevolucao, items: payload.items });
+      }
+    } catch (err) {
+      console.error('[Tarefas] Erro ao salvar aluguel:', err);
     }
     setShowRentalModal(false);
   };
 
-  const handleDeleteRental = (id: string) => {
+  const handleDeleteRental = async (id: string) => {
     if (confirm('Excluir este registro de aluguel?')) {
-      setRentalRecords(prev => prev.filter(r => r.id !== id));
+      try {
+        await deleteRental(id);
+      } catch (err) {
+        console.error('[Tarefas] Erro ao excluir aluguel:', err);
+      }
     }
   };
 
@@ -1035,13 +1044,6 @@ const [boards, setBoards] = useState<BoardType[]>(() => {
           </div>
 
           <div className="flex flex-wrap gap-3">
-            <button
-              onClick={handleSaveToFirebase}
-              disabled={saving}
-              className="flex items-center gap-2 px-6 py-3 bg-[#2d2d2d] text-white font-black rounded-lg hover:bg-[#3d3d3d] transition-colors border border-[#444] disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <Save size={18} /> {saving ? 'Salvando...' : 'Salvar Alterações'}
-            </button>
             <button
               onClick={handleSeedEstoque}
               className="flex items-center gap-2 px-6 py-3 bg-[#1a1a2e] text-[#B5FF03] font-black rounded-lg hover:bg-[#2a2a4e] transition-colors border border-[#B5FF03]/30"
