@@ -1138,7 +1138,7 @@ const CRMDashboard = () => {
                       />
                     </div>
                     {clientSearchOpen && (
-                      <div className="absolute top-full left-0 right-0 mt-1 bg-[#1a1a1a] border border-[#333] rounded-lg max-h-48 overflow-y-auto z-50 shadow-xl">
+                      <div className="mt-1 bg-[#1a1a1a] border border-[#333] rounded-lg max-h-48 overflow-y-auto z-50 shadow-xl">
                         {filteredClients.length === 0 ? (
                           <div className="px-3 py-2 text-xs text-neutral-500 italic">Nenhum cliente encontrado</div>
                         ) : (
@@ -1193,7 +1193,7 @@ const CRMDashboard = () => {
                         <ChevronDown size={14} className={`text-neutral-500 transition-transform ${eventTypeOpen ? 'rotate-180' : ''}`} />
                       </button>
                       {eventTypeOpen && (
-                        <div className="absolute top-full left-0 right-0 mt-1 bg-[#1a1a1a] border border-[#333] rounded-lg overflow-hidden z-50 shadow-xl">
+                        <div className="mt-1 bg-[#1a1a1a] border border-[#333] rounded-lg overflow-hidden z-50 shadow-xl">
                           {EVENT_TYPES.map(t => (
                             <button
                               type="button"
@@ -1272,7 +1272,7 @@ const CRMDashboard = () => {
                         <ChevronDown size={14} className={`text-neutral-500 transition-transform ${statusOpen ? 'rotate-180' : ''}`} />
                       </button>
                       {statusOpen && (
-                        <div className="absolute top-full left-0 right-0 mt-1 bg-[#1a1a1a] border border-[#333] rounded-lg overflow-hidden z-50 shadow-xl">
+                        <div className="mt-1 bg-[#1a1a1a] border border-[#333] rounded-lg overflow-hidden z-50 shadow-xl">
                           {Object.entries(statusLabel).map(([key, label]) => (
                             <button
                               type="button"
@@ -1383,7 +1383,7 @@ const CRMDashboard = () => {
                                 <ChevronDown size={12} className="text-neutral-500 shrink-0" />
                               </button>
                               {editingItemId === item.id && (
-                                <div className="absolute top-full left-0 right-0 mt-1 bg-[#1a1a1a] border border-[#333] rounded-lg overflow-hidden z-50 shadow-xl">
+                                <div className="mt-1 bg-[#1a1a1a] border border-[#333] rounded-lg overflow-hidden z-50 shadow-xl">
                                   <div className="flex items-center bg-[#111] border-b border-[#333]">
                                     <Search size={12} className="text-neutral-500 ml-3 shrink-0" />
                                     <input

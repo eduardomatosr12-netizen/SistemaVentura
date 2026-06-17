@@ -950,7 +950,7 @@ const CRMCalendario = () => {
                     />
                   </div>
                   {showClientDropdown && (
-                    <div className="absolute z-50 top-full mt-1 left-0 right-0 bg-[#1a1a1a] border border-[#333] rounded-md shadow-xl max-h-48 overflow-y-auto">
+                    <div className="mt-1 bg-[#1a1a1a] border border-[#333] rounded-md shadow-xl max-h-48 overflow-y-auto">
                       {filteredClients.length === 0 ? (
                         <p className="px-3 py-3 text-xs text-neutral-500 text-center">
                           Nenhum orçamento fechado encontrado
@@ -1090,7 +1090,7 @@ const CRMCalendario = () => {
                     className="w-full bg-[#0a0a0a] border border-[#333] rounded-md px-3 py-2 text-xs font-black text-white focus:ring-1 focus:ring-[#B5FF03] outline-none transition-all"
                   />
                   {showEquipeDropdown && (
-                    <div className="absolute z-50 top-full mt-1 left-0 right-0 bg-[#1a1a1a] border border-[#333] rounded-md shadow-xl max-h-48 overflow-y-auto">
+                    <div className="mt-1 bg-[#1a1a1a] border border-[#333] rounded-md shadow-xl max-h-48 overflow-y-auto">
                       {(() => {
                         const selected = formData.equipe ? formData.equipe.split(',').map(s => s.trim()).filter(Boolean) : [];
                         const q = equipeSearch.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');

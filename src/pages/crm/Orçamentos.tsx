@@ -933,7 +933,7 @@ const CRMOrçamentos = () => {
                         className="w-full bg-[#1a1a1a] border border-gray-700 rounded-md py-2 pl-8 pr-3 text-white text-xs placeholder-gray-500 focus:outline-none focus:border-[#B5FF03] transition-colors"
                       />
                       {showInvDropdown && (
-                        <div className="absolute z-50 top-full mt-1 left-0 right-0 bg-[#1a1a1a] border border-[#333] rounded-md shadow-xl max-h-48 overflow-y-auto">
+                        <div className="mt-1 bg-[#1a1a1a] border border-[#333] rounded-md shadow-xl max-h-48 overflow-y-auto">
                           {filteredInvItems.length === 0 ? (
                             <p className="px-3 py-3 text-xs text-neutral-500 text-center">Nenhum produto encontrado no estoque</p>
                           ) : (

@@ -982,7 +982,7 @@ const Tarefas = () => {
   };
 
   return (
-    <div className="p-6 space-y-8 min-h-screen bg-black">
+    <div className="p-4 md:p-6 space-y-4 md:space-y-8 min-h-screen bg-black">
       <div>
         <h1 className="text-3xl font-black text-white tracking-tight mb-1">Controle de Estoque</h1>
         <p className="text-neutral-400 text-sm font-medium mb-6">Gerencie seus itens, categorias e fornecedores.</p>
@@ -1196,7 +1196,7 @@ const Tarefas = () => {
 
       {showRentalModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="bg-[#111] border border-[#333] rounded-2xl p-8 max-w-full md:max-w-2xl w-full shadow-2xl max-h-[90vh] overflow-y-auto">
+          <div className="bg-[#111] border border-[#333] rounded-2xl p-4 md:p-8 max-w-full md:max-w-2xl w-full shadow-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xl font-black text-white">{isNewRental ? 'Novo Aluguel' : 'Editar Aluguel'}</h3>
               <button onClick={() => setShowRentalModal(false)} className="text-neutral-400 hover:text-white p-2 min-h-[44px]">
@@ -1371,7 +1371,7 @@ const Tarefas = () => {
 
       {showCreateTaskModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="bg-[#111] border border-[#333] rounded-2xl p-8 max-w-full md:max-w-md w-full shadow-2xl">
+          <div className="bg-[#111] border border-[#333] rounded-2xl p-4 md:p-8 max-w-full md:max-w-md w-full shadow-2xl">
             <h3 className="text-xl font-black text-white mb-6">Qual categoria deseja adicionar o item?</h3>
             <div className="space-y-3">
               {boards.map(board => (
@@ -1397,7 +1397,7 @@ const Tarefas = () => {
 
       {editingNote && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="bg-[#111] border border-[#333] rounded-2xl p-8 max-w-full md:max-w-2xl w-full shadow-2xl">
+          <div className="bg-[#111] border border-[#333] rounded-2xl p-4 md:p-8 max-w-full md:max-w-2xl w-full shadow-2xl">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xl font-black text-white">Editar Notas</h3>
               <button onClick={() => { setEditingNote(null); setNoteContent(''); }} className="text-neutral-400 hover:text-white p-2 min-h-[44px]">
