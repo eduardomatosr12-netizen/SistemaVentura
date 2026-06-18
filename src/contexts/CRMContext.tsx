@@ -64,14 +64,14 @@ interface CRMContextType {
   searchTerm: string;
   setSearchTerm: (term: string) => void;
   addLead: (lead: LeadInput) => Promise<string | undefined>;
-  updateLead: (id: string, fields: LeadUpdate) => void;
-  updateOrçamentostage: (id: string, stage: string) => void;
-  deleteLead: (id: string) => void;
+  updateLead: (id: string, fields: LeadUpdate) => Promise<void>;
+  updateOrçamentostage: (id: string, stage: string) => Promise<void>;
+  deleteLead: (id: string) => Promise<void>;
   getOrçamentosByStage: (stage: string) => Lead[];
   getTotalValueByStage: (stage: string) => number;
-  addEvent: (event: Omit<CalendarEvent, 'id'>) => void;
-  updateEvent: (id: string, event: Partial<CalendarEvent>) => void;
-  deleteEvent: (id: string) => void;
+  addEvent: (event: Omit<CalendarEvent, 'id'>) => Promise<string>;
+  updateEvent: (id: string, event: Partial<CalendarEvent>) => Promise<void>;
+  deleteEvent: (id: string) => Promise<void>;
   OrçamentosByStage: Record<Stage, Lead[]>;
 }
 
@@ -109,25 +109,26 @@ export const CRMProvider = ({ children }: { children: ReactNode }) => {
     });
   }, []);
 
-  const updateLead = useCallback((id: string, fields: LeadUpdate) => {
-    leadService.updateLead(id, fields).catch(err => console.error('[CRM] Erro ao atualizar lead:', err));
+  const updateLead = useCallback(async (id: string, fields: LeadUpdate) => {
+    await leadService.updateLead(id, fields);
   }, []);
 
-  const updateOrçamentostage = useCallback((id: string, stage: string) => {
-    leadService.updateLeadStage(id, stage).catch(err => console.error('[CRM] Erro ao atualizar etapa:', err));
+  const updateOrçamentostage = useCallback(async (id: string, stage: string) => {
+    await leadService.updateLeadStage(id, stage);
   }, []);
 
-  const deleteLead = useCallback((id: string) => {
-    leadService.deleteLead(id).catch(err => console.error('[CRM] Erro ao excluir lead:', err));
+  const deleteLead = useCallback(async (id: string) => {
+    await leadService.deleteLead(id);
   }, []);
 
-  const addEvent = useCallback((event: Omit<CalendarEvent, 'id'>) => {
-    eventService.addEvent(event).catch(err => console.error('[CRM] Erro ao adicionar evento:', err));
+  const addEvent = useCallback(async (event: Omit<CalendarEvent, 'id'>) => {
+    const id = await eventService.addEvent(event);
+    return id;
   }, []);
 
-  const updateEvent = useCallback((id: string, fields: Partial<CalendarEvent>) => {
+  const updateEvent = useCallback(async (id: string, fields: Partial<CalendarEvent>) => {
     const previous = events.find(e => e.id === id);
-    eventService.updateEvent(id, fields).catch(err => console.error('[CRM] Erro ao atualizar evento:', err));
+    await eventService.updateEvent(id, fields);
 
     if (fields.status === 'realizado' && previous?.status !== 'realizado') {
       const title = fields.title ?? previous?.title ?? 'Evento';
@@ -151,8 +152,8 @@ export const CRMProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [events]);
 
-  const deleteEvent = useCallback((id: string) => {
-    eventService.deleteEvent(id).catch(err => console.error('[CRM] Erro ao excluir evento:', err));
+  const deleteEvent = useCallback(async (id: string) => {
+    await eventService.deleteEvent(id);
   }, []);
 
   const getOrçamentosByStage = useCallback((stage: string) => {

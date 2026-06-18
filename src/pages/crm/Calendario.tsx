@@ -340,8 +340,11 @@ const CRMCalendario = () => {
     setShowViewModal(true);
   };
 
-  const handleSave = (e: React.FormEvent) => {
+  const [saveError, setSaveError] = useState<string | null>(null);
+
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
+    setSaveError(null);
     const itemsText = eventItems.length > 0
       ? `\n\nItens do Evento:\n${eventItems.map(i => `- ${i.qtdAtual}x ${i.item} (R$ ${(i.qtdAtual * i.valorUnit).toFixed(2)})`).join('\n')}`
       : '';
@@ -349,13 +352,18 @@ const CRMCalendario = () => {
       ...formData,
       description: formData.description + itemsText,
     };
-    if (modalMode === 'create') {
-      addEvent(payload);
-    } else if (selectedEvent) {
-      updateEvent(selectedEvent.id, payload);
+    try {
+      if (modalMode === 'create') {
+        await addEvent(payload);
+      } else if (selectedEvent) {
+        await updateEvent(selectedEvent.id, payload);
+      }
+      setIsModalOpen(false);
+      setEventItems([]);
+    } catch (err) {
+      console.error('[Calendario] Erro ao salvar evento:', err);
+      setSaveError('Erro ao salvar evento. Verifique sua conexão e tente novamente.');
     }
-    setIsModalOpen(false);
-    setEventItems([]);
   };
 
   const handleDelete = () => {
@@ -1180,6 +1188,12 @@ const CRMCalendario = () => {
                   />
                 </div>
               </div>
+
+              {saveError && (
+                <div className="px-8 py-3 bg-red-900/20 border-t border-red-900/40">
+                  <p className="text-[11px] text-red-400 font-bold">{saveError}</p>
+                </div>
+              )}
 
               <div className="px-8 py-5 bg-[#0a0a0a] flex justify-between items-center border-t border-[#333]">
                 <div className="flex items-center gap-2">

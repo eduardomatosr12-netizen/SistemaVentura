@@ -313,65 +313,16 @@ const CRMDashboard = () => {
     setSelectedDate(null);
   };
 
-  const handleCreateSubmit = (e: React.FormEvent) => {
+  const [submitError, setSubmitError] = useState<string | null>(null);
+
+  const handleCreateSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (editingEventId) {
-      const eventFields: Partial<CalendarEvent> = {
-        title: formData.eventType ? `${formData.eventType} - ${formData.name}` : formData.name,
-        client: formData.name,
-        clientPhone: formData.whatsapp,
-        clientEmail: formData.email,
-        clientCpf: formData.cpf,
-        eventType: formData.eventType,
-        date: formData.date,
-        time: formData.time,
-        city: formData.city,
-        dataMontagem: formData.dataMontagem,
-        dataDesmontagem: formData.dataDesmontagem,
-        description: formData.observacao,
-        status: (formData.status as CalendarEvent['status']) || 'pendente',
-        valorTotal: total,
-      };
-      updateEvent(editingEventId, eventFields);
-      if (selectedClientId) {
-        const leadUpdate: Partial<Lead> = {
-          name: formData.name,
-          whatsapp: formData.whatsapp,
-          email: formData.email,
-          address: formData.city || '',
-          notes: formData.observacao || '',
-        };
-        if (formData.orcamentoItems.length > 0) {
-          leadUpdate.value = total.toString();
-          leadUpdate.items = formData.orcamentoItems;
-        }
-        updateLead(selectedClientId, leadUpdate);
-      }
-      setEditingEventId(null);
-    } else if (createMode === 'novo_cliente') {
-      const leadInput: Partial<Omit<Lead, 'id'>> = {
-        name: formData.name,
-        niche: formData.eventType || 'Evento',
-        whatsapp: formData.whatsapp,
-        email: formData.email,
-        instagram: '',
-        stage: 'Novos Orçamentos',
-        origin: 'evento',
-        firstContact: formData.date || new Date().toISOString().split('T')[0],
-        closingDate: '',
-        followUpReminder: '',
-        address: formData.city || '',
-        notes: formData.observacao || '',
-      };
-      if (formData.orcamentoItems.length > 0) {
-        leadInput.value = total.toString();
-        leadInput.items = formData.orcamentoItems;
-      }
-      addLead(leadInput as Omit<Lead, 'id'>).then(newLeadId => {
-        addEvent({
+    setSubmitError(null);
+    try {
+      if (editingEventId) {
+        const eventFields: Partial<CalendarEvent> = {
           title: formData.eventType ? `${formData.eventType} - ${formData.name}` : formData.name,
           client: formData.name,
-          clientId: newLeadId,
           clientPhone: formData.whatsapp,
           clientEmail: formData.email,
           clientCpf: formData.cpf,
@@ -384,38 +335,96 @@ const CRMDashboard = () => {
           description: formData.observacao,
           status: (formData.status as CalendarEvent['status']) || 'pendente',
           valorTotal: total,
+        };
+        await updateEvent(editingEventId, eventFields);
+        if (selectedClientId) {
+          const leadUpdate: Partial<Lead> = {
+            name: formData.name,
+            whatsapp: formData.whatsapp,
+            email: formData.email,
+            address: formData.city || '',
+            notes: formData.observacao || '',
+          };
+          if (formData.orcamentoItems.length > 0) {
+            leadUpdate.value = total.toString();
+            leadUpdate.items = formData.orcamentoItems;
+          }
+          updateLead(selectedClientId, leadUpdate);
+        }
+        setEditingEventId(null);
+      } else if (createMode === 'novo_cliente') {
+        const leadInput: Partial<Omit<Lead, 'id'>> = {
+          name: formData.name,
+          niche: formData.eventType || 'Evento',
+          whatsapp: formData.whatsapp,
+          email: formData.email,
+          instagram: '',
+          stage: 'Novos Orçamentos',
+          origin: 'evento',
+          firstContact: formData.date || new Date().toISOString().split('T')[0],
+          closingDate: '',
+          followUpReminder: '',
+          address: formData.city || '',
+          notes: formData.observacao || '',
+        };
+        if (formData.orcamentoItems.length > 0) {
+          leadInput.value = total.toString();
+          leadInput.items = formData.orcamentoItems;
+        }
+        const newLeadId = await addLead(leadInput as Omit<Lead, 'id'>);
+        if (newLeadId) {
+          await addEvent({
+            title: formData.eventType ? `${formData.eventType} - ${formData.name}` : formData.name,
+            client: formData.name,
+            clientId: newLeadId,
+            clientPhone: formData.whatsapp,
+            clientEmail: formData.email,
+            clientCpf: formData.cpf,
+            eventType: formData.eventType,
+            date: formData.date,
+            time: formData.time,
+            city: formData.city,
+            dataMontagem: formData.dataMontagem,
+            dataDesmontagem: formData.dataDesmontagem,
+            description: formData.observacao,
+            status: (formData.status as CalendarEvent['status']) || 'pendente',
+            valorTotal: total,
+          });
+        }
+        addTransaction({
+          client: formData.name,
+          description: `Evento: ${formData.eventType || 'Evento'} - ${formData.name}${formData.observacao ? ' • ' + formData.observacao : ''}`,
+          amount: total,
+          date: formData.date || new Date().toISOString().split('T')[0],
+          status: 'Pendente',
+          type: 'receita',
+          source: 'evento',
         });
-      });
-      addTransaction({
-        client: formData.name,
-        description: `Evento: ${formData.eventType || 'Evento'} - ${formData.name}${formData.observacao ? ' • ' + formData.observacao : ''}`,
-        amount: total,
-        date: formData.date || new Date().toISOString().split('T')[0],
-        status: 'Pendente',
-        type: 'receita',
-        source: 'evento',
-      });
-    } else {
-      const client = Orçamentos.find(l => l.id === selectedClientId);
-      if (!client) return;
-      addEvent({
-        title: formData.eventType ? `${formData.eventType} - ${client.name}` : client.name,
-        client: client.name,
-        clientId: client.id,
-        clientPhone: client.whatsapp,
-        clientEmail: client.email,
-        clientCpf: '',
-        eventType: formData.eventType,
-        date: formData.date,
-        time: formData.time,
-        city: formData.city,
-        dataMontagem: formData.dataMontagem,
-        dataDesmontagem: formData.dataDesmontagem,
-        description: formData.observacao,
-        status: (formData.status as CalendarEvent['status']) || 'pendente',
-      });
+      } else {
+        const client = Orçamentos.find(l => l.id === selectedClientId);
+        if (!client) return;
+        await addEvent({
+          title: formData.eventType ? `${formData.eventType} - ${client.name}` : client.name,
+          client: client.name,
+          clientId: client.id,
+          clientPhone: client.whatsapp,
+          clientEmail: client.email,
+          clientCpf: '',
+          eventType: formData.eventType,
+          date: formData.date,
+          time: formData.time,
+          city: formData.city,
+          dataMontagem: formData.dataMontagem,
+          dataDesmontagem: formData.dataDesmontagem,
+          description: formData.observacao,
+          status: (formData.status as CalendarEvent['status']) || 'pendente',
+        });
+      }
+      setIsCreateOpen(false);
+    } catch (err) {
+      console.error('[Painel] Erro ao salvar:', err);
+      setSubmitError('Erro ao salvar. Verifique sua conexão e tente novamente.');
     }
-    setIsCreateOpen(false);
   };
 
   const displayLogs = useMemo(() => {
@@ -1483,6 +1492,11 @@ const CRMDashboard = () => {
                   </div>
                 </div>
               </div>
+              {submitError && (
+                <div className="px-4 py-3 bg-red-900/20 border-t border-red-900/40">
+                  <p className="text-[11px] text-red-400 font-bold">{submitError}</p>
+                </div>
+              )}
               <div className="flex items-center gap-2">
                 {editingEventId && (
                   <button type="button" onClick={handleDeleteEvent}
