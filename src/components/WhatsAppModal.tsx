@@ -1,7 +1,8 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
 import { X, MessageCircle, Edit3, Send, ChevronDown, ChevronUp, AlertCircle, ExternalLink } from 'lucide-react';
 import { cleanPhoneNumber, generateWhatsAppLink } from '../lib/whatsapp';
-import { getTemplates, fillTemplate, type WhatsAppTemplate } from '../lib/whatsappTemplates';
+import { fetchTemplates } from '../services/whatsappTemplateService';
+import { fillTemplate, type WhatsAppTemplate } from '../lib/whatsappTemplates';
 import { useAuth } from '../contexts/AuthContext';
 
 interface WhatsAppModalProps {
@@ -39,9 +40,17 @@ const WhatsAppModal = ({
   const [expandedTemplates, setExpandedTemplates] = useState(true);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  const templates = useMemo(() => {
-    return getTemplates().filter(t => t.active).sort((a, b) => a.order - b.order);
+  const [allTemplates, setAllTemplates] = useState<WhatsAppTemplate[]>([]);
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchTemplates().then(tpls => setAllTemplates(tpls)).catch(() => {});
+    }
   }, [isOpen]);
+
+  const templates = useMemo(() => {
+    return allTemplates.filter(t => t.active).sort((a, b) => a.order - b.order);
+  }, [allTemplates]);
 
   const hasPhone = leadWhatsapp && leadWhatsapp.replace(/\D/g, '').length >= 10;
 

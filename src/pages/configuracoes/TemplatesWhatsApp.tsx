@@ -5,11 +5,11 @@ import {
   MessageCircle, AlertCircle, CheckCircle2, ToggleLeft, ToggleRight
 } from 'lucide-react';
 import {
-  getTemplates, addTemplate, updateTemplate,
+  subscribeTemplates, addTemplate, updateTemplate,
   deleteTemplate, duplicateTemplate, moveTemplateUp, moveTemplateDown,
-  fillTemplate, TEMPLATE_VARIABLES,
-  type WhatsAppTemplate
-} from '../../lib/whatsappTemplates';
+  fetchTemplates,
+} from '../../services/whatsappTemplateService';
+import { fillTemplate, TEMPLATE_VARIABLES, type WhatsAppTemplate } from '../../lib/whatsappTemplates';
 
 type FormMode = 'create' | 'edit';
 
@@ -26,7 +26,10 @@ const TemplatesWhatsApp = () => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
-    setTemplates(getTemplates().sort((a, b) => a.order - b.order));
+    const unsub = subscribeTemplates(tpls => {
+      setTemplates(tpls.sort((a, b) => a.order - b.order));
+    });
+    return () => unsub();
   }, []);
 
   const showToast = (type: 'success' | 'error', message: string) => {
@@ -34,8 +37,9 @@ const TemplatesWhatsApp = () => {
     setTimeout(() => setToast(null), 3000);
   };
 
-  const refreshTemplates = () => {
-    setTemplates(getTemplates().sort((a, b) => a.order - b.order));
+  const refreshTemplates = async () => {
+    const tpls = await fetchTemplates();
+    setTemplates(tpls.sort((a, b) => a.order - b.order));
   };
 
   const openCreate = () => {
@@ -92,53 +96,72 @@ const TemplatesWhatsApp = () => {
     return fillTemplate(formMessage, exampleValues);
   }, [formMessage]);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const errors: { name?: string; message?: string } = {};
     if (!formName.trim()) errors.name = 'Nome é obrigatório';
     if (!formMessage.trim()) errors.message = 'Mensagem é obrigatória';
     setFormErrors(errors);
     if (Object.keys(errors).length > 0) return;
 
-    if (formMode === 'create') {
-      addTemplate({ name: formName.trim(), message: formMessage.trim(), active: formActive });
-      showToast('success', 'Template criado com sucesso!');
-    } else if (formId) {
-      updateTemplate(formId, { name: formName.trim(), message: formMessage.trim(), active: formActive });
-      showToast('success', 'Template atualizado com sucesso!');
+    try {
+      if (formMode === 'create') {
+        await addTemplate({ name: formName.trim(), message: formMessage.trim(), active: formActive });
+        showToast('success', 'Template criado com sucesso!');
+      } else if (formId) {
+        await updateTemplate(formId, { name: formName.trim(), message: formMessage.trim(), active: formActive });
+        showToast('success', 'Template atualizado com sucesso!');
+      }
+    } catch (err) {
+      console.error('[Templates] Erro ao salvar:', err);
+      showToast('error', 'Erro ao salvar no Firestore');
     }
-    refreshTemplates();
+    await refreshTemplates();
     closeForm();
   };
 
-  const handleDelete = (id: string, name: string) => {
+  const handleDelete = async (id: string, name: string) => {
     if (!confirm(`Excluir o template "${name}"?`)) return;
-    deleteTemplate(id);
-    refreshTemplates();
-    showToast('success', 'Template excluído com sucesso!');
-  };
-
-  const handleDuplicate = (id: string) => {
-    const result = duplicateTemplate(id);
-    if (result) {
-      refreshTemplates();
-      showToast('success', 'Template duplicado com sucesso!');
+    try {
+      await deleteTemplate(id);
+      await refreshTemplates();
+      showToast('success', 'Template excluído com sucesso!');
+    } catch (err) {
+      console.error('[Templates] Erro ao excluir:', err);
+      showToast('error', 'Erro ao excluir do Firestore');
     }
   };
 
-  const handleToggleActive = (tpl: WhatsAppTemplate) => {
-    updateTemplate(tpl.id, { active: !tpl.active });
-    refreshTemplates();
+  const handleDuplicate = async (id: string) => {
+    try {
+      const result = await duplicateTemplate(id);
+      if (result) {
+        await refreshTemplates();
+        showToast('success', 'Template duplicado com sucesso!');
+      }
+    } catch (err) {
+      console.error('[Templates] Erro ao duplicar:', err);
+      showToast('error', 'Erro ao duplicar no Firestore');
+    }
+  };
+
+  const handleToggleActive = async (tpl: WhatsAppTemplate) => {
+    try {
+      await updateTemplate(tpl.id, { active: !tpl.active });
+      await refreshTemplates();
+    } catch (err) {
+      console.error('[Templates] Erro ao alterar status:', err);
+    }
     showToast('success', `Template ${tpl.active ? 'desativado' : 'ativado'} com sucesso!`);
   };
 
-  const handleMoveUp = (id: string) => {
-    moveTemplateUp(id);
-    refreshTemplates();
+  const handleMoveUp = async (id: string) => {
+    await moveTemplateUp(id);
+    await refreshTemplates();
   };
 
-  const handleMoveDown = (id: string) => {
-    moveTemplateDown(id);
-    refreshTemplates();
+  const handleMoveDown = async (id: string) => {
+    await moveTemplateDown(id);
+    await refreshTemplates();
   };
 
   return (

@@ -290,25 +290,6 @@ const CRMOrçamentos = () => {
 
   // Add pending revenue when a lead becomes "Contrato Fechado"
   const addPendingRevenue = (leadName: string, value: string, closingDate: string, numInstallments?: number) => {
-    const storageKey = 'axium_finance_v1';
-    const stored = localStorage.getItem(storageKey);
-    const finance = stored ? JSON.parse(stored) : { manualInvoices: [] };
-    
-    const pendingInvoice = {
-      id: `lead-revenue-${generateUUID()}`,
-      client: leadName,
-      amount: value,
-      date: closingDate || new Date().toISOString().split('T')[0],
-      status: 'Pendente',
-      source: 'lead',
-      paymentMethod: numInstallments && numInstallments > 1 ? 'parcelado' : 'pix',
-      installments: numInstallments && numInstallments > 1 ? String(numInstallments) : undefined,
-      lastModifiedBy: employeeName || 'Sistema',
-    };
-
-    finance.manualInvoices = [...(finance.manualInvoices || []), pendingInvoice];
-    localStorage.setItem(storageKey, JSON.stringify(finance));
-
     addTransaction({
       client: leadName,
       description: `Orçamento fechado - ${leadName}`,
@@ -319,7 +300,6 @@ const CRMOrçamentos = () => {
       source: 'lead',
     });
 
-    // If parcelado, create projected revenues for future months
     if (numInstallments && numInstallments > 1) {
       const totalValue = parseMonetaryValue(value);
       const installmentValue = totalValue / numInstallments;
@@ -328,20 +308,16 @@ const CRMOrçamentos = () => {
       for (let i = 1; i < numInstallments; i++) {
         const projectedDate = new Date(baseDate);
         projectedDate.setMonth(projectedDate.getMonth() + i);
-        const projectedInvoice = {
-          id: `lead-revenue-proj-${generateUUID()}`,
+        addTransaction({
           client: `${leadName} (Parcela ${i + 1}/${numInstallments})`,
-          amount: formatCurrency(installmentValue),
+          description: `Projeção de parcela - ${leadName}`,
+          amount: installmentValue,
           date: projectedDate.toISOString().split('T')[0],
           status: 'Pendente',
+          type: 'receita',
           source: 'lead',
-          paymentMethod: 'parcelado',
-          installments: String(numInstallments),
-          lastModifiedBy: 'Sistema (Projeção)',
-        };
-        finance.manualInvoices.push(projectedInvoice);
+        });
       }
-      localStorage.setItem(storageKey, JSON.stringify(finance));
     }
   };
 

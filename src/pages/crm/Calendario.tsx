@@ -189,13 +189,6 @@ const CRMCalendario = () => {
   }, []);
 
   useEffect(() => {
-    const cached = localStorage.getItem('axium_equipe_members');
-    if (cached) {
-      try { setEquipeMembers(JSON.parse(cached)); } catch { }
-    }
-  }, []);
-
-  useEffect(() => {
     const unsub = subscribeInventory(() => {
       setInvStockItems(getAllInventoryItems());
     });

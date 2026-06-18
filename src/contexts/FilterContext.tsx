@@ -45,17 +45,7 @@ const ORIGINS = ['Orgânico', 'Indicação', 'Facebook', 'Instagram', 'Google', 
 const PRIORITIES = ['Baixa', 'Média', 'Alta'];
 
 function FilterProvider({ children }: { children: ReactNode }) {
-  const [filters, setFilters] = useState<FilterState>(() => {
-    if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem('crm_filters');
-      if (stored) return { ...defaultFilters, ...JSON.parse(stored) };
-    }
-    return defaultFilters;
-  });
-
-  useEffect(() => {
-    localStorage.setItem('crm_filters', JSON.stringify(filters));
-  }, [filters]);
+  const [filters, setFilters] = useState<FilterState>(defaultFilters);
 
   const setFilter = useCallback(<K extends keyof FilterState>(key: K, value: FilterState[K]) => {
     setFilters(prev => ({ ...prev, [key]: value }));

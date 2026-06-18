@@ -12,8 +12,6 @@ export interface AppNotification {
   link: string;
 }
 
-const READ_STATE_KEY = 'axium_notifications_read';
-const DISMISSED_KEY = 'axium_notifications_dismissed';
 const MAX_NOTIFICATIONS = 50;
 
 function formatRelativeTime(dateStr: string): string {
@@ -32,35 +30,10 @@ function formatRelativeTime(dateStr: string): string {
   return date.toLocaleDateString('pt-BR');
 }
 
-function loadReadMap(): Record<string, boolean> {
-  try {
-    return JSON.parse(localStorage.getItem(READ_STATE_KEY) || '{}');
-  } catch {
-    return {};
-  }
-}
-
-function saveReadMap(map: Record<string, boolean>): void {
-  localStorage.setItem(READ_STATE_KEY, JSON.stringify(map));
-}
-
-function loadDismissed(): Set<string> {
-  try {
-    const raw = localStorage.getItem(DISMISSED_KEY);
-    return new Set<string>(raw ? JSON.parse(raw) : []);
-  } catch {
-    return new Set();
-  }
-}
-
-function saveDismissed(set: Set<string>): void {
-  localStorage.setItem(DISMISSED_KEY, JSON.stringify([...set]));
-}
-
 export function useNotifications() {
   const { Orçamentos, events } = useCRM();
-  const [readMap, setReadMap] = useState<Record<string, boolean>>(loadReadMap);
-  const [dismissed, setDismissed] = useState<Set<string>>(loadDismissed);
+  const [readMap, setReadMap] = useState<Record<string, boolean>>({});
+  const [dismissed, setDismissed] = useState<Set<string>>(new Set());
   const notificationsRef = useRef<AppNotification[]>([]);
 
   const notifications = useMemo<AppNotification[]>(() => {
@@ -123,57 +96,7 @@ export function useNotifications() {
       });
     }
 
-    try {
-      const boards = JSON.parse(localStorage.getItem('axium_boards_v3') || '[]');
-      for (const board of boards) {
-        for (const row of board.rows || []) {
-          const name = String(row.values?.['col-1'] || '');
-          const qty = Number(row.values?.['col-3']) || 0;
-          if (!name || qty !== 0) continue;
-          const id = `equipamento-${row.id}`;
-          list.push({
-            id, title: 'Equipamento Indisponível',
-            description: `Equipamento ${name} está totalmente alugado`,
-            time: 'Agora', timestamp: nowISO,
-            isRead: readMap[id] || false,
-            type: 'equipamento', link: '/tarefas',
-          });
-        }
-      }
-    } catch {}
 
-    try {
-      const financeData = JSON.parse(localStorage.getItem('axium_finance_v1') || '{}');
-      const manualInvoices: any[] = financeData.manualInvoices || [];
-      for (const inv of manualInvoices) {
-        if (inv.status !== 'Pendente') continue;
-        const id = `financeiro-${inv.id}`;
-        list.push({
-          id, title: 'Transação Pendente',
-          description: `Transação ${inv.client} está pendente de confirmação`,
-          time: formatRelativeTime(inv.date),
-          timestamp: inv.date || nowISO,
-          isRead: readMap[id] || false,
-          type: 'financeiro', link: '/financeiro',
-        });
-      }
-    } catch {}
-
-    try {
-      const expenses: any[] = JSON.parse(localStorage.getItem('axium_expenses_v1') || '[]');
-      for (const exp of expenses) {
-        if (exp.status !== 'Pendente') continue;
-        const id = `financeiro-${exp.id}`;
-        list.push({
-          id, title: 'Transação Pendente',
-          description: `Transação ${exp.description} está pendente de confirmação`,
-          time: formatRelativeTime(exp.date),
-          timestamp: exp.date || nowISO,
-          isRead: readMap[id] || false,
-          type: 'financeiro', link: '/financeiro',
-        });
-      }
-    } catch {}
 
     list.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
     return list.slice(0, MAX_NOTIFICATIONS).filter(n => !dismissed.has(n.id));
@@ -186,9 +109,7 @@ export function useNotifications() {
   const markAsRead = useCallback((id: string) => {
     setReadMap(prev => {
       if (prev[id]) return prev;
-      const next = { ...prev, [id]: true };
-      saveReadMap(next);
-      return next;
+      return { ...prev, [id]: true };
     });
   }, []);
 
@@ -202,9 +123,7 @@ export function useNotifications() {
           changed = true;
         }
       }
-      if (!changed) return prev;
-      saveReadMap(next);
-      return next;
+      return changed ? next : prev;
     });
   }, []);
 
@@ -213,7 +132,6 @@ export function useNotifications() {
       if (prev.has(id)) return prev;
       const next = new Set(prev);
       next.add(id);
-      saveDismissed(next);
       return next;
     });
   }, []);
@@ -224,7 +142,6 @@ export function useNotifications() {
       for (const n of notificationsRef.current) {
         next.add(n.id);
       }
-      saveDismissed(next);
       return next;
     });
     setReadMap(prev => {
@@ -232,7 +149,6 @@ export function useNotifications() {
       for (const n of notificationsRef.current) {
         next[n.id] = true;
       }
-      saveReadMap(next);
       return next;
     });
   }, []);

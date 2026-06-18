@@ -20,8 +20,7 @@ interface Employee {
 
 type ModalType = 'perfil' | 'equipe';
 
-const PROFILE_CACHE_KEY = 'axium_profile_cache';
-const EMPLOYEES_KEY = 'axium_employees_local';
+
 
 const Configuracoes = () => {
   const { user, logout } = useAuth();
@@ -84,21 +83,7 @@ const Configuracoes = () => {
           }
         }
       } catch (err) {
-        console.warn('[CONFIG] Erro ao carregar perfil, tentando cache local:', err);
-        const cached = localStorage.getItem(PROFILE_CACHE_KEY);
-        if (cached) {
-          try {
-            const parsed = JSON.parse(cached);
-            setProfileData({
-              name: parsed.nome || '',
-              email: parsed.email || user.email || '',
-              phone: parsed.telefone || '',
-              avatar: parsed.avatar || ''
-            });
-            if (parsed.avatar) setAvatarPreview(parsed.avatar);
-            return;
-          } catch { /* ignore */ }
-        }
+        console.warn('[CONFIG] Erro ao carregar perfil:', err);
         setProfileData({ name: '', email: user.email || '', phone: '', avatar: '' });
       }
     };
@@ -118,14 +103,9 @@ const Configuracoes = () => {
       if (error) throw error;
       if (data) {
         setEmployees(data);
-        localStorage.setItem(EMPLOYEES_KEY, JSON.stringify(data));
       }
     } catch (err) {
-      console.warn('[CONFIG] Supabase indisponível, usando cache local:', err);
-      const cached = localStorage.getItem(EMPLOYEES_KEY);
-      if (cached) {
-        try { setEmployees(JSON.parse(cached)); } catch { /* ignore */ }
-      }
+      console.warn('[CONFIG] Supabase indisponível:', err);
     } finally {
       setIsLoadingEmployees(false);
     }
@@ -136,14 +116,6 @@ const Configuracoes = () => {
       loadEmployees();
     }
   }, [user?.id]);
-
-  useEffect(() => {
-    try {
-      if (employees.length > 0) {
-        localStorage.setItem('axium_equipe_members', JSON.stringify(employees.map(e => e.name)));
-      }
-    } catch {}
-  }, [employees]);
 
   const handleAddEmployee = async () => {
     if (!newEmployee.name.trim()) {
@@ -180,12 +152,8 @@ const Configuracoes = () => {
 
       setEmployees(prev => [...prev, data]);
     } catch (err: any) {
-      console.warn('[CONFIG] Supabase indisponível, salvando localmente:', err);
-      setEmployees(prev => {
-        const updated = [...prev, newMember];
-        localStorage.setItem(EMPLOYEES_KEY, JSON.stringify(updated));
-        return updated;
-      });
+      console.warn('[CONFIG] Supabase indisponível:', err);
+      setEmployees(prev => [...prev, newMember]);
     }
 
     setNewEmployee({ name: '', role: 'tecnico' });
@@ -211,11 +179,7 @@ const Configuracoes = () => {
       console.warn('[CONFIG] Supabase indisponível, removendo localmente:', err);
     }
 
-    setEmployees(prev => {
-      const updated = prev.filter(emp => emp.id !== id);
-      localStorage.setItem(EMPLOYEES_KEY, JSON.stringify(updated));
-      return updated;
-    });
+    setEmployees(prev => prev.filter(emp => emp.id !== id));
   };
 
   const handleSaveProfile = async (e: React.FormEvent) => {
@@ -273,8 +237,6 @@ const Configuracoes = () => {
     } catch (err: any) {
       console.warn('[CONFIG] Supabase indisponível, salvando perfil localmente:', err);
     }
-
-    localStorage.setItem(PROFILE_CACHE_KEY, JSON.stringify(profileCache));
 
     setProfileSuccess('Perfil atualizado com sucesso!');
     setProfileData(prev => ({ ...prev, avatar: finalAvatar, email: profileData.email.trim() || prev.email }));
