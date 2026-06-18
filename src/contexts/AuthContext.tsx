@@ -65,32 +65,31 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [isAuthenticated, user]);
 
   useEffect(() => {
-    const sessionId = getOrCreateSessionId();
-    const loadSession = async () => {
-      try {
-        const snap = await getDoc(doc(db, 'sessions', sessionId));
-        if (snap.exists()) {
-          const data = snap.data();
-          if (data?.email && data?.userId) {
-            const userRole: UserRole = data.role || 'user';
-            setUser({
-              id: data.userId,
-              email: data.email,
-              name: data.name || 'Usuário',
-              role: userRole,
-              createdAt: data.createdAt
-            });
-            setRole(userRole);
-            setEmployeeName(data.employeeName || data.name || 'Usuário');
-            setIsAuthenticated(true);
-          }
-        }
-      } catch (err) {
-        console.error('[AUTH] Erro ao carregar sessão:', err);
-      }
+    const key = 'ventura_session_id';
+    const storedId = sessionStorage.getItem(key);
+    if (!storedId || !isValidUUID(storedId)) {
       setIsLoading(false);
-    };
-    loadSession();
+      return;
+    }
+    getDoc(doc(db, 'sessions', storedId)).then(snap => {
+      if (snap.exists()) {
+        const data = snap.data();
+        if (data?.email && data?.userId) {
+          const userRole: UserRole = data.role || 'user';
+          setUser({
+            id: data.userId,
+            email: data.email,
+            name: data.name || 'Usuário',
+            role: userRole,
+            createdAt: data.createdAt
+          });
+          setRole(userRole);
+          setEmployeeName(data.employeeName || data.name || 'Usuário');
+          setIsAuthenticated(true);
+        }
+      }
+    }).catch(err => console.error('[AUTH] Erro ao carregar sessão:', err))
+    .finally(() => setIsLoading(false));
   }, []);
 
   const login = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
@@ -114,7 +113,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       const sessionId = getOrCreateSessionId();
 
-      await setDoc(doc(db, 'sessions', sessionId), {
+      setUser(authUser);
+      setRole(credential.role);
+      setEmployeeName(credential.name);
+      setIsAuthenticated(true);
+
+      setDoc(doc(db, 'sessions', sessionId), {
         userId: authUser.id,
         email: authUser.email,
         name: authUser.name,
@@ -122,12 +126,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         employeeName: authUser.name,
         createdAt: authUser.createdAt,
         lastActiveAt: Timestamp.now(),
-      });
-
-      setUser(authUser);
-      setRole(credential.role);
-      setEmployeeName(credential.name);
-      setIsAuthenticated(true);
+      }).catch(err => console.error('[AUTH] Erro ao salvar sessão:', err));
 
       return { success: true };
     } catch (err) {

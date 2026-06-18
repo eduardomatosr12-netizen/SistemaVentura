@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback, useEffect, useMemo, useRef } from 'react';
+import { createContext, useContext, useState, useCallback, useEffect, useMemo } from 'react';
 import type { ReactNode } from 'react';
 import { STAGES, STAGE_CONFIG, parseMonetaryValue, calculateTotalValue, groupOrçamentosByStage, type Stage } from '../lib/crmHelpers';
 import * as leadService from '../services/leadService';
@@ -82,23 +82,16 @@ export const CRMProvider = ({ children }: { children: ReactNode }) => {
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const loadCount = useRef(0);
 
   useEffect(() => {
-    const onLoad = () => {
-      loadCount.current += 1;
-      if (loadCount.current >= 3) setIsLoading(false);
-    };
-
     const unsubLeads = leadService.subscribeLeads(leads => {
       setOrçamentos(leads);
-      onLoad();
+      setIsLoading(false);
     });
     const unsubEvents = eventService.subscribeEvents(events => {
       setEvents(events);
-      onLoad();
     });
-    const unsubInventory = subscribeInventory(onLoad);
+    const unsubInventory = subscribeInventory();
 
     return () => {
       unsubLeads();
