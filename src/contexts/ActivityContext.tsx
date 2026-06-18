@@ -1,11 +1,20 @@
 import { createContext, useContext, useState, useCallback, type ReactNode } from 'react';
-import { supabase, ACTIVITY_LOGS_TABLE, type ActivityLog } from '../lib/supabase';
+import { collection, addDoc, getDocs, query, orderBy, limit, Timestamp } from 'firebase/firestore';
+import { db } from '../services/firebase';
+
+export interface ActivityLog {
+  id: string;
+  user_id: string;
+  acao: 'lead_criado' | 'lead_movido' | 'tarefa_concluida' | 'lead_atualizado';
+  descricao: string;
+  timestamp: string;
+}
 
 interface ActivityLogsContextType {
   activityLogs: ActivityLog[];
   isLoadingLogs: boolean;
   fetchActivityLogsError: string | null;
-  fetchActivityLogs: (limit?: number) => Promise<void>;
+  fetchActivityLogs: (limitCount?: number) => Promise<void>;
   logActivity: (acao: ActivityLog['acao'], descricao: string) => Promise<void>;
 }
 
@@ -19,44 +28,31 @@ const defaultActivityLogsContext: ActivityLogsContextType = {
   logActivity: async () => {},
 };
 
+const COLLECTION = 'activity_logs';
+
 export const ActivityLogsProvider = ({ children }: { children: ReactNode }) => {
   const [activityLogs, setActivityLogs] = useState<ActivityLog[]>([]);
   const [isLoadingLogs, setIsLoadingLogs] = useState(false);
   const [fetchActivityLogsError, setFetchActivityLogsError] = useState<string | null>(null);
 
-  const fetchActivityLogs = useCallback(async (limit = 20) => {
+  const fetchActivityLogs = useCallback(async (limitCount = 20) => {
     setIsLoadingLogs(true);
     setFetchActivityLogsError(null);
-    
+
     const timeoutId = setTimeout(() => {
       setFetchActivityLogsError('Tempo limite excedido (5s). Verifique sua conexão.');
       setIsLoadingLogs(false);
     }, 5000);
 
     try {
-      const { data, error } = await supabase
-        .from(ACTIVITY_LOGS_TABLE)
-        .select('*')
-        .order('timestamp', { ascending: false })
-        .limit(limit);
-      
+      const q = query(collection(db, COLLECTION), orderBy('timestamp', 'desc'), limit(limitCount));
+      const snapshot = await getDocs(q);
       clearTimeout(timeoutId);
-      
-      if (error) {
-        if (error.code === '404' || error.message.includes('not found')) {
-          console.warn('Tabela de logs de atividade não encontrada:', error.message);
-          setActivityLogs([]);
-          setIsLoadingLogs(false);
-          return;
-        }
-        console.error('Erro ao buscar logs de atividade:', error);
-        setFetchActivityLogsError('Erro ao carregar atividades. Tente novamente mais tarde.');
-        return;
-      }
-      setActivityLogs(data || []);
+      const logs = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as ActivityLog));
+      setActivityLogs(logs);
     } catch (err: any) {
       clearTimeout(timeoutId);
-      console.error('Erro ao buscar logs de atividade:', err);
+      console.error('[ActivityLogs] Erro ao buscar logs:', err);
       if (err?.message?.includes('fetch')) {
         setFetchActivityLogsError('Erro de conexão. Verifique sua internet.');
       } else {
@@ -69,26 +65,21 @@ export const ActivityLogsProvider = ({ children }: { children: ReactNode }) => {
 
   const logActivity = async (acao: ActivityLog['acao'], descricao: string) => {
     try {
-      const { data, error } = await supabase
-        .from(ACTIVITY_LOGS_TABLE)
-        .insert({ acao, descricao, timestamp: new Date().toISOString() })
-        .select()
-        .single();
-      
-      if (error) {
-        if (error.code === '404' || error.message.includes('not found')) {
-          console.warn('Tabela de logs não encontrada. Atividade não será registrada.');
-          return;
-        }
-        console.error('Erro ao registrar atividade:', error);
-        return;
-      }
-      
-      if (data) {
-        setActivityLogs(prev => [data, ...prev]);
-      }
+      const docRef = await addDoc(collection(db, COLLECTION), {
+        acao,
+        descricao,
+        timestamp: new Date().toISOString(),
+      });
+      const newLog: ActivityLog = {
+        id: docRef.id,
+        acao,
+        descricao,
+        timestamp: new Date().toISOString(),
+        user_id: '',
+      };
+      setActivityLogs(prev => [newLog, ...prev]);
     } catch (err) {
-      console.error('Erro ao registrar atividade:', err);
+      console.error('[ActivityLogs] Erro ao registrar atividade:', err);
     }
   };
 

@@ -6,9 +6,10 @@ import {
   RefreshCw, Users,
   AlertCircle, MessageCircle
 } from 'lucide-react';
+import { doc, getDoc, setDoc, collection, getDocs, addDoc, deleteDoc, query, orderBy, Timestamp } from 'firebase/firestore';
+import { db } from '../../services/firebase';
 import { useAuth } from '../../contexts/AuthContext';
-import { supabase, PROFILES_TABLE } from '../../lib/supabase';
-import { generateUUID, isValidUUID } from '../../lib/uuid';
+import { generateUUID } from '../../lib/uuid';
 import { useNavigate, Link } from 'react-router-dom';
 
 interface Employee {
@@ -54,24 +55,9 @@ const Configuracoes = () => {
     const loadData = async () => {
       if (!user?.id) return;
       try {
-        const { data, error } = await supabase
-          .from(PROFILES_TABLE)
-          .select('nome, telefone, avatar')
-          .eq('user_id', user.id)
-          .single();
-        
-        if (error) {
-          if (error.code === '404' || error.message?.includes('not found') || error.message?.includes('no rows')) {
-            console.warn('Profiles table not found, using defaults');
-            setProfileData({ name: '', email: user.email || '', phone: '', avatar: '' });
-            return;
-          }
-          console.warn('Profile load error:', error.message);
-          setProfileData({ name: '', email: user.email || '', phone: '', avatar: '' });
-          return;
-        }
-        
-        if (data) {
+        const snap = await getDoc(doc(db, 'profiles', user.id));
+        if (snap.exists()) {
+          const data = snap.data();
           setProfileData({
             name: data.nome || '',
             email: user.email || '',
@@ -84,7 +70,6 @@ const Configuracoes = () => {
         }
       } catch (err) {
         console.warn('[CONFIG] Erro ao carregar perfil:', err);
-        setProfileData({ name: '', email: user.email || '', phone: '', avatar: '' });
       }
     };
     loadData();
@@ -94,18 +79,11 @@ const Configuracoes = () => {
     if (!user?.id) return;
     setIsLoadingEmployees(true);
     try {
-      const { data, error } = await supabase
-        .from('employees')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: true });
-      
-      if (error) throw error;
-      if (data) {
-        setEmployees(data);
-      }
+      const q = query(collection(db, 'employees'), orderBy('createdAt', 'asc'));
+      const snapshot = await getDocs(q);
+      setEmployees(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Employee)));
     } catch (err) {
-      console.warn('[CONFIG] Supabase indisponível:', err);
+      console.warn('[CONFIG] Erro ao carregar funcionários:', err);
     } finally {
       setIsLoadingEmployees(false);
     }
@@ -123,37 +101,22 @@ const Configuracoes = () => {
       return;
     }
 
-    if (!user?.id || !isValidUUID(user.id)) {
-      setInviteError('ID de usuário inválido. Faça logout e login novamente.');
-      console.error('[CONFIG] user.id inválido:', user?.id);
+    if (!user?.id) {
+      setInviteError('Usuário não autenticado. Faça logout e login novamente.');
       return;
     }
 
-    const newMember = {
-      id: generateUUID(),
-      user_id: user.id,
-      name: newEmployee.name.trim(),
-      role: newEmployee.role,
-      created_at: new Date().toISOString(),
-    };
-
     try {
-      const { data, error } = await supabase
-        .from('employees')
-        .insert([{
-          user_id: user.id,
-          name: newEmployee.name.trim(),
-          role: newEmployee.role,
-        }])
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      setEmployees(prev => [...prev, data]);
-    } catch (err: any) {
-      console.warn('[CONFIG] Supabase indisponível:', err);
-      setEmployees(prev => [...prev, newMember]);
+      const docRef = await addDoc(collection(db, 'employees'), {
+        name: newEmployee.name.trim(),
+        role: newEmployee.role,
+        createdAt: Timestamp.now(),
+      });
+      setEmployees(prev => [...prev, { id: docRef.id, name: newEmployee.name.trim(), role: newEmployee.role, createdAt: new Date().toISOString() }]);
+    } catch (err) {
+      console.error('[CONFIG] Erro ao adicionar funcionário:', err);
+      setInviteError('Erro ao adicionar funcionário');
+      return;
     }
 
     setNewEmployee({ name: '', role: 'tecnico' });
@@ -169,14 +132,9 @@ const Configuracoes = () => {
     if (!confirm('Remover funcionário?')) return;
 
     try {
-      const { error } = await supabase
-        .from('employees')
-        .delete()
-        .eq('id', id);
-
-      if (error) throw error;
-    } catch (err: any) {
-      console.warn('[CONFIG] Supabase indisponível, removendo localmente:', err);
+      await deleteDoc(doc(db, 'employees', id));
+    } catch (err) {
+      console.error('[CONFIG] Erro ao remover funcionário:', err);
     }
 
     setEmployees(prev => prev.filter(emp => emp.id !== id));
@@ -184,22 +142,18 @@ const Configuracoes = () => {
 
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('[CONFIG] handleSaveProfile iniciado', { userId: user?.id, name: profileData.name });
     
     if (!user?.id) {
       setProfileError('Usuário não autenticado');
-      console.error('[CONFIG] Erro: usuário não autenticado');
       return;
     }
     if (!profileData.name.trim()) {
       setProfileError('Nome não pode ser vazio');
-      console.error('[CONFIG] Erro: nome vazio');
       return;
     }
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (profileData.email && profileData.email.trim() && !emailRegex.test(profileData.email.trim())) {
       setProfileError('Email profissional inválido');
-      console.error('[CONFIG] Erro: email inválido');
       return;
     }
     
@@ -209,33 +163,19 @@ const Configuracoes = () => {
     
     const finalAvatar = avatarPreview || profileData.avatar;
 
-    const profileCache = {
-      nome: profileData.name.trim(),
-      telefone: profileData.phone.trim(),
-      email: profileData.email.trim(),
-      avatar: finalAvatar,
-    };
-
     try {
-      const updateData: Record<string, unknown> = {
+      await setDoc(doc(db, 'profiles', user.id), {
         nome: profileData.name.trim(),
         telefone: profileData.phone.trim(),
-      };
-
-      if (finalAvatar && finalAvatar !== profileData.avatar) {
-        updateData.avatar = finalAvatar;
-      }
-
-      const { error } = await supabase
-        .from(PROFILES_TABLE)
-        .update(updateData)
-        .eq('user_id', user.id)
-        .select()
-        .single();
-
-      if (error) throw error;
-    } catch (err: any) {
-      console.warn('[CONFIG] Supabase indisponível, salvando perfil localmente:', err);
+        email: profileData.email.trim(),
+        avatar: finalAvatar,
+        updatedAt: Timestamp.now(),
+      }, { merge: true });
+    } catch (err) {
+      console.error('[CONFIG] Erro ao salvar perfil:', err);
+      setProfileError('Erro ao salvar perfil');
+      setIsSavingProfile(false);
+      return;
     }
 
     setProfileSuccess('Perfil atualizado com sucesso!');
@@ -268,37 +208,17 @@ const Configuracoes = () => {
     setProfileError('');
     
     try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${user?.id}/avatar-${Date.now()}.${fileExt}`;
-      
-      const { error: uploadError } = await supabase.storage
-        .from('avatars')
-        .upload(fileName, file, { upsert: true });
-      
-      if (uploadError) throw uploadError;
-      
-      const { data: { publicUrl } } = supabase.storage
-        .from('avatars')
-        .getPublicUrl(fileName);
-      
-      setAvatarPreview(publicUrl);
-      setProfileSuccess('Avatar atualizado! Clique em Salvar para confirmar.');
+      const base64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result as string);
+        reader.onerror = () => reject(new Error('Erro ao ler arquivo'));
+        reader.readAsDataURL(file);
+      });
+      setAvatarPreview(base64);
+      setProfileSuccess('Avatar carregado! Clique em Salvar para confirmar.');
       setTimeout(() => setProfileSuccess(''), 3000);
     } catch {
-      console.warn('[CONFIG] Upload direto falhou, usando Base64 como fallback');
-      try {
-        const base64 = await new Promise<string>((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(reader.result as string);
-          reader.onerror = () => reject(new Error('Erro ao ler arquivo'));
-          reader.readAsDataURL(file);
-        });
-        setAvatarPreview(base64);
-        setProfileSuccess('Avatar carregado via Base64! Clique em Salvar para confirmar.');
-        setTimeout(() => setProfileSuccess(''), 3000);
-      } catch {
-        setProfileError('Erro ao processar a imagem. Tente novamente.');
-      }
+      setProfileError('Erro ao processar a imagem. Tente novamente.');
     } finally {
       setIsUploadingAvatar(false);
     }

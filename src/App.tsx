@@ -9,7 +9,6 @@ import { FilterProvider } from './contexts/FilterContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import ErrorBoundary from './components/ErrorBoundary';
 import Login from './pages/Login';
-import UpdatePassword from './pages/UpdatePassword';
 import MainLayout from './layouts/MainLayout';
 import CRMPainel from './pages/crm/Painel';
 import OrçamentosPage from './pages/crm/Orçamentos';
@@ -43,12 +42,6 @@ function AppRoutes() {
             </div>
           </div>
         }
-      />
-
-      {/* Update Password Route */}
-      <Route
-        path="/update-password"
-        element={<UpdatePassword />}
       />
 
       {/* HOME - Página Principal (Dashboard) */}
