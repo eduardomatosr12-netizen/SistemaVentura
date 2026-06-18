@@ -1,8 +1,9 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import type { ReactNode } from 'react';
+import { doc, getDoc, setDoc, deleteDoc, Timestamp } from 'firebase/firestore';
+import { db } from '../services/firebase';
 import { generateUUID, isValidUUID } from '../lib/uuid';
 
-// Exportar como typeonly e como const para compatibilidade
 type UserRole = 'admin' | 'manager' | 'user';
 export type { UserRole };
 
@@ -32,8 +33,6 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const STORAGE_KEY = 'auth_user';
-
 const EMPLOYEES = ['Maria', 'João', 'Pedro', 'Ana'];
 
 const CREDENTIALS: Record<string, { password: string; role: UserRole; name: string }> = {
@@ -43,6 +42,15 @@ const CREDENTIALS: Record<string, { password: string; role: UserRole; name: stri
     name: 'Administrador'
   }
 };
+
+function getOrCreateSessionId(): string {
+  const key = 'ventura_session_id';
+  const existing = sessionStorage.getItem(key);
+  if (existing && isValidUUID(existing)) return existing;
+  const id = generateUUID();
+  sessionStorage.setItem(key, id);
+  return id;
+}
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -57,38 +65,32 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [isAuthenticated, user]);
 
   useEffect(() => {
-    const loadStoredAuth = () => {
+    const sessionId = getOrCreateSessionId();
+    const loadSession = async () => {
       try {
-        const stored = localStorage.getItem(STORAGE_KEY);
-        if (stored) {
-          const authData = JSON.parse(stored);
-          if (authData?.email && authData?.id) {
-            // Corrigir ID inválido se não for UUID
-            if (!isValidUUID(authData.id)) {
-              authData.id = generateUUID();
-              localStorage.setItem(STORAGE_KEY, JSON.stringify(authData));
-            }
-            
-            const userRole = authData.role || 'user';
+        const snap = await getDoc(doc(db, 'sessions', sessionId));
+        if (snap.exists()) {
+          const data = snap.data();
+          if (data?.email && data?.userId) {
+            const userRole: UserRole = data.role || 'user';
             setUser({
-              id: authData.id,
-              email: authData.email,
-              name: authData.name || 'Usuário',
+              id: data.userId,
+              email: data.email,
+              name: data.name || 'Usuário',
               role: userRole,
-              createdAt: authData.createdAt
+              createdAt: data.createdAt
             });
             setRole(userRole);
-            setEmployeeName(authData.name || authData.employeeName || 'Usuário');
+            setEmployeeName(data.employeeName || data.name || 'Usuário');
             setIsAuthenticated(true);
           }
         }
       } catch (err) {
-        console.error('[AUTH] Error loading stored auth:', err);
-        localStorage.removeItem(STORAGE_KEY);
+        console.error('[AUTH] Erro ao carregar sessão:', err);
       }
       setIsLoading(false);
     };
-    loadStoredAuth();
+    loadSession();
   }, []);
 
   const login = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
@@ -97,7 +99,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const normalizedPassword = password.trim();
 
       const credential = CREDENTIALS[normalizedEmail];
-      
+
       if (!credential || credential.password !== normalizedPassword) {
         return { success: false, error: 'E-mail ou senha incorretos' };
       }
@@ -110,19 +112,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         createdAt: new Date().toISOString()
       };
 
-      setUser(authUser);
-      setRole(credential.role);
-      setEmployeeName(credential.name);
-      setIsAuthenticated(true);
+      const sessionId = getOrCreateSessionId();
 
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({
-        id: authUser.id,
+      await setDoc(doc(db, 'sessions', sessionId), {
+        userId: authUser.id,
         email: authUser.email,
         name: authUser.name,
         role: authUser.role,
         employeeName: authUser.name,
-        createdAt: authUser.createdAt
-      }));
+        createdAt: authUser.createdAt,
+        lastActiveAt: Timestamp.now(),
+      });
+
+      setUser(authUser);
+      setRole(credential.role);
+      setEmployeeName(credential.name);
+      setIsAuthenticated(true);
 
       return { success: true };
     } catch (err) {
@@ -133,29 +138,31 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const selectEmployee = (name: string) => {
     if (!EMPLOYEES.includes(name)) return;
-    
+
     setEmployeeName(name);
     setUser(prev => prev ? { ...prev, name: name } : null);
 
+    const sessionId = getOrCreateSessionId();
     const currentRole = role;
     if (currentRole) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({
-        id: user?.id,
-        email: user?.email,
-        name: name,
+      setDoc(doc(db, 'sessions', sessionId), {
+        name,
+        employeeName: name,
         role: currentRole,
-        employeeName: name
-      }));
+        lastActiveAt: Timestamp.now(),
+      }, { merge: true }).catch(err => console.error('[AUTH] Erro ao atualizar sessão:', err));
     }
   };
 
   const logout = async () => {
     try {
+      const sessionId = getOrCreateSessionId();
+      await deleteDoc(doc(db, 'sessions', sessionId)).catch(() => {});
+      sessionStorage.removeItem('ventura_session_id');
       setUser(null);
       setRole(null);
       setEmployeeName(null);
       setIsAuthenticated(false);
-      localStorage.removeItem(STORAGE_KEY);
     } catch (err) {
       console.error('[AUTH] Logout error:', err);
     }

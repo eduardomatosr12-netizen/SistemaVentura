@@ -308,8 +308,6 @@ const Configuracoes = () => {
     if (confirmationText !== 'DELETE') return;
     setIsDeleting(true);
     await new Promise(resolve => setTimeout(resolve, 2000));
-    const keysToRemove = Object.keys(localStorage).filter(key => key.startsWith('axium_'));
-    keysToRemove.forEach(key => localStorage.removeItem(key));
     logout();
     navigate('/login');
   };
