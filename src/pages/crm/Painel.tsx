@@ -6,7 +6,7 @@ import type { CalendarEvent, Lead, OrcamentoItem } from '../../contexts/CRMConte
 import { parseMonetaryValue, formatCurrency, generatePDF } from '../../lib/crmHelpers';
 import { useActivityLogs } from '../../contexts/ActivityContext';
 import { generateUUID } from '../../lib/uuid';
-import { getAllInventoryItems, getAvailableQuantity, loadInventory, subscribeInventory, refreshReservedCache } from '../../lib/inventory';
+import { getAllInventoryItems, getAvailableQuantity, ensureDefaultBoards, subscribeInventory, refreshReservedCache } from '../../lib/inventory';
 import { collection, getDocs, query, orderBy } from 'firebase/firestore';
 import { db } from '../../services/firebase';
 import { addTransaction } from '../../services/financeService';
@@ -165,17 +165,22 @@ const CRMDashboard = () => {
   }, []);
 
   useEffect(() => {
+    let active = true;
     const unsub = subscribeInventory(() => {
-      setInvStockItems(getAllInventoryItems());
+      if (active) setInvStockItems(getAllInventoryItems());
     });
+    ensureDefaultBoards().then(() => {
+      if (active) setInvStockItems(getAllInventoryItems());
+    }).catch(() => {});
+    return () => { active = false; unsub(); };
+  }, []);
+
+  useEffect(() => {
     if (isCreateOpen) {
-      (async () => {
-        await loadInventory();
-        await refreshReservedCache(formData.date || new Date().toISOString().split('T')[0]);
+      refreshReservedCache(formData.date || new Date().toISOString().split('T')[0]).then(() => {
         setInvStockItems(getAllInventoryItems());
-      })();
+      });
     }
-    return () => unsub();
   }, [isCreateOpen]);
 
   const filteredInvItems = useMemo(() => {
