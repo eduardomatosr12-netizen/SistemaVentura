@@ -1,7 +1,7 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
 import { X, MessageCircle, Edit3, Send, ChevronDown, ChevronUp, AlertCircle, ExternalLink } from 'lucide-react';
 import { cleanPhoneNumber, generateWhatsAppLink } from '../lib/whatsapp';
-import { fetchTemplates } from '../services/whatsappTemplateService';
+import { subscribeTemplates } from '../services/whatsappTemplateService';
 import { fillTemplate, type WhatsAppTemplate } from '../lib/whatsappTemplates';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -43,10 +43,11 @@ const WhatsAppModal = ({
   const [allTemplates, setAllTemplates] = useState<WhatsAppTemplate[]>([]);
 
   useEffect(() => {
-    if (isOpen) {
-      fetchTemplates().then(tpls => setAllTemplates(tpls)).catch(() => {});
-    }
-  }, [isOpen]);
+    const unsub = subscribeTemplates(tpls => {
+      setAllTemplates(tpls);
+    });
+    return () => unsub();
+  }, []);
 
   const templates = useMemo(() => {
     return allTemplates.filter(t => t.active).sort((a, b) => a.order - b.order);
