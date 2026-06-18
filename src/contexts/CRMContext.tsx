@@ -63,7 +63,7 @@ interface CRMContextType {
   isLoading: boolean;
   searchTerm: string;
   setSearchTerm: (term: string) => void;
-  addLead: (lead: LeadInput) => void;
+  addLead: (lead: LeadInput) => Promise<string | undefined>;
   updateLead: (id: string, fields: LeadUpdate) => void;
   updateOrçamentostage: (id: string, stage: string) => void;
   deleteLead: (id: string) => void;
@@ -103,7 +103,10 @@ export const CRMProvider = ({ children }: { children: ReactNode }) => {
   const OrçamentosByStage = useMemo(() => groupOrçamentosByStage(Orçamentos), [Orçamentos]);
 
   const addLead = useCallback((lead: LeadInput) => {
-    leadService.addLead(lead).catch(err => console.error('[CRM] Erro ao adicionar lead:', err));
+    return leadService.addLead(lead).catch(err => {
+      console.error('[CRM] Erro ao adicionar lead:', err);
+      return undefined;
+    });
   }, []);
 
   const updateLead = useCallback((id: string, fields: LeadUpdate) => {
