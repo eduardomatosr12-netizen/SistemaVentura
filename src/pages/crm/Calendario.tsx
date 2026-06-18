@@ -190,12 +190,12 @@ const CRMCalendario = () => {
 
   useEffect(() => {
     let active = true;
-    ensureDefaultBoards().then(() => {
-      if (active) setInvStockItems(getAllInventoryItems());
-    }).catch(() => {});
     const unsub = subscribeInventory(() => {
       if (active) setInvStockItems(getAllInventoryItems());
     });
+    ensureDefaultBoards().then(() => {
+      if (active) setInvStockItems(getAllInventoryItems());
+    }).catch(() => {});
     return () => { active = false; unsub(); };
   }, []);
 
