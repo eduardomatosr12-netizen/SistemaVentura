@@ -3,7 +3,7 @@ import { useCRM } from '../../contexts/CRMContext';
 import type { CalendarEvent } from '../../contexts/CRMContext';
 import { generateUUID } from '../../lib/uuid';
 import { generateWhatsAppLink } from '../../lib/whatsapp';
-import { loadInventory, subscribeInventory, getAllInventoryItems, ensureDefaultBoards } from '../../lib/inventory';
+import { subscribeInventory, getAllInventoryItems, ensureDefaultBoards } from '../../lib/inventory';
 import { X, ExternalLink, Clock, User, Users, MessageSquare, Plus, Trash2, Calendar as CalendarIcon, Link as LinkIcon, FileText, ChevronLeft, ChevronRight, Search, MapPin, Mail, Phone, CreditCard, Flag, MessageCircle, Package } from 'lucide-react';
 
 const toBR = (iso: string): string => {
@@ -189,16 +189,14 @@ const CRMCalendario = () => {
   }, []);
 
   useEffect(() => {
-    const unsub = subscribeInventory(() => {
-      setInvStockItems(getAllInventoryItems());
-    });
+    let active = true;
     ensureDefaultBoards().then(() => {
-      setInvStockItems(getAllInventoryItems());
+      if (active) setInvStockItems(getAllInventoryItems());
     }).catch(() => {});
-    loadInventory().then(() => {
-      setInvStockItems(getAllInventoryItems());
-    }).catch(() => {});
-    return () => unsub();
+    const unsub = subscribeInventory(() => {
+      if (active) setInvStockItems(getAllInventoryItems());
+    });
+    return () => { active = false; unsub(); };
   }, []);
 
   useEffect(() => {

@@ -6,7 +6,7 @@ import { useCRM, type Lead, type OrcamentoItem } from '../../contexts/CRMContext
 import { useFilters } from '../../contexts/FilterContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { generateUUID } from '../../lib/uuid';
-import { loadInventory, subscribeInventory, getAllInventoryItems, getAvailableQuantity, deductInventory, restoreInventory } from '../../lib/inventory';
+import { subscribeInventory, getAllInventoryItems, ensureDefaultBoards, getAvailableQuantity, deductInventory, restoreInventory } from '../../lib/inventory';
 import { generatePDF } from '../../lib/crmHelpers';
 import { addTransaction } from '../../services/financeService';
 
@@ -136,18 +136,19 @@ const CRMOrçamentos = () => {
   const [citySearch, setCitySearch] = useState<string>('');
 
   useEffect(() => {
+    let active = true;
+    ensureDefaultBoards().then(() => {
+      if (active) setInvStockItems(getAllInventoryItems());
+    }).catch(() => {});
     const unsub = subscribeInventory(() => {
-      setInvStockItems(getAllInventoryItems());
+      if (active) setInvStockItems(getAllInventoryItems());
     });
-    return () => unsub();
+    return () => { active = false; unsub(); };
   }, []);
 
   useEffect(() => {
     if (isOpen) {
-      (async () => {
-        await loadInventory();
-        setInvStockItems(getAllInventoryItems());
-      })();
+      setInvStockItems(getAllInventoryItems());
       setInvSearch('');
       setShowInvDropdown(false);
       const lead = Orçamentos.find(o => o.id === current.id);
