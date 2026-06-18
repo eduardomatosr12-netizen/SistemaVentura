@@ -4,8 +4,7 @@ import { useLocation, useNavigate, Link } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import TopHeader from '../components/TopHeader';
 import { useAuth } from '../contexts/AuthContext';
-import { useCRM } from '../contexts/CRMContext';
-import { LayoutDashboard, Users, DollarSign, Loader2 } from 'lucide-react';
+import { LayoutDashboard, Users, DollarSign } from 'lucide-react';
 
 type UserRole = 'admin' | 'employee';
 
@@ -155,18 +154,8 @@ const MainLayout = ({ children, hideSubmenu }: MainLayoutProps) => {
     );
   }
 
-  const { isLoading: crmLoading } = useCRM();
-
   return (
     <div className="flex h-screen bg-black overflow-hidden">
-      {crmLoading && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 backdrop-blur-sm">
-          <div className="flex flex-col items-center gap-4">
-            <Loader2 size={40} className="text-[#B5FF03] animate-spin" />
-            <span className="text-sm font-bold text-[#B5FF03]">Carregando dados...</span>
-          </div>
-        </div>
-      )}
 
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
