@@ -3,7 +3,7 @@ import { useCRM } from '../../contexts/CRMContext';
 import type { CalendarEvent } from '../../contexts/CRMContext';
 import { generateUUID } from '../../lib/uuid';
 import { generateWhatsAppLink } from '../../lib/whatsapp';
-import { subscribeInventory, getAllInventoryItems, ensureDefaultBoards } from '../../lib/inventory';
+import { subscribeInventoryChanges, getAllInventoryItems } from '../../lib/inventory';
 import { X, ExternalLink, Clock, User, Users, MessageSquare, Plus, Trash2, Calendar as CalendarIcon, Link as LinkIcon, FileText, ChevronLeft, ChevronRight, Search, MapPin, Mail, Phone, CreditCard, Flag, MessageCircle, Package } from 'lucide-react';
 
 const toBR = (iso: string): string => {
@@ -189,14 +189,11 @@ const CRMCalendario = () => {
   }, []);
 
   useEffect(() => {
-    let active = true;
-    const unsub = subscribeInventory(() => {
-      if (active) setInvStockItems(getAllInventoryItems());
+    setInvStockItems(getAllInventoryItems());
+    const unsub = subscribeInventoryChanges(() => {
+      setInvStockItems(getAllInventoryItems());
     });
-    ensureDefaultBoards().then(() => {
-      if (active) setInvStockItems(getAllInventoryItems());
-    }).catch(() => {});
-    return () => { active = false; unsub(); };
+    return unsub;
   }, []);
 
   useEffect(() => {

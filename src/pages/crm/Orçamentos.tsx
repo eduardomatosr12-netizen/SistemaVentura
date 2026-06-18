@@ -6,7 +6,7 @@ import { useCRM, type Lead, type OrcamentoItem } from '../../contexts/CRMContext
 import { useFilters } from '../../contexts/FilterContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { generateUUID } from '../../lib/uuid';
-import { subscribeInventory, getAllInventoryItems, ensureDefaultBoards, getAvailableQuantity, deductInventory, restoreInventory } from '../../lib/inventory';
+import { subscribeInventoryChanges, getAllInventoryItems, getAvailableQuantity, deductInventory, restoreInventory } from '../../lib/inventory';
 import { generatePDF } from '../../lib/crmHelpers';
 import { addTransaction } from '../../services/financeService';
 
@@ -136,14 +136,11 @@ const CRMOrçamentos = () => {
   const [citySearch, setCitySearch] = useState<string>('');
 
   useEffect(() => {
-    let active = true;
-    ensureDefaultBoards().then(() => {
-      if (active) setInvStockItems(getAllInventoryItems());
-    }).catch(() => {});
-    const unsub = subscribeInventory(() => {
-      if (active) setInvStockItems(getAllInventoryItems());
+    setInvStockItems(getAllInventoryItems());
+    const unsub = subscribeInventoryChanges(() => {
+      setInvStockItems(getAllInventoryItems());
     });
-    return () => { active = false; unsub(); };
+    return unsub;
   }, []);
 
   useEffect(() => {

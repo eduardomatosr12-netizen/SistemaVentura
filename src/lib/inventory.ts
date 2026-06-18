@@ -40,6 +40,13 @@ let boardsCache: InventoryBoard[] | null = null;
 let reservedCache: Map<string, number> = new Map();
 let reservedCacheDate = '';
 
+const inventoryChangeListeners: Set<() => void> = new Set();
+
+export const subscribeInventoryChanges = (callback: () => void): (() => void) => {
+  inventoryChangeListeners.add(callback);
+  return () => inventoryChangeListeners.delete(callback);
+};
+
 export const loadInventory = async (): Promise<void> => {
   try {
     const q = query(collection(db, COLLECTION), orderBy('title'));
@@ -68,6 +75,7 @@ export const subscribeInventory = (onUpdate?: () => void): () => void => {
       rows: d.data().rows || [],
     })) as InventoryBoard[];
     onUpdate?.();
+    inventoryChangeListeners.forEach(cb => cb());
   }, err => console.error('[Firestore] Erro no listener de inventário:', err));
   return unsubscribe;
 };

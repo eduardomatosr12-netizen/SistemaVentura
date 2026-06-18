@@ -6,7 +6,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useCRM } from '../../contexts/CRMContext';
 import { generateUUID } from '../../lib/uuid';
 import { generateWhatsAppLink, WHATSAPP_MESSAGE_TEMPLATES } from '../../lib/whatsapp';
-import { loadInventory, subscribeInventory, getBoards, saveBoards } from '../../lib/inventory';
+import { subscribeInventoryChanges, getBoards, saveBoards } from '../../lib/inventory';
 import { subscribeRentals, addRental, updateRental, deleteRental } from '../../services/rentalService';
 import type { RentalRecord } from '../../services/rentalService';
 
@@ -792,18 +792,16 @@ const Tarefas = () => {
   const [noteContent, setNoteContent] = useState('');
 
   useEffect(() => {
-    const unsubBoards = subscribeInventory(() => {
+    const current = getBoards();
+    if (current && current.length > 0) {
+      setBoards(current as BoardType[]);
+    }
+    const unsubBoards = subscribeInventoryChanges(() => {
       const current = getBoards();
       if (current && current.length > 0) {
         setBoards(current as BoardType[]);
       }
     });
-    loadInventory().then(() => {
-      const current = getBoards();
-      if (current && current.length > 0) {
-        setBoards(current as BoardType[]);
-      }
-    }).catch(() => {});
     const unsubRentals = subscribeRentals(records => {
       setRentalRecords(records);
     });

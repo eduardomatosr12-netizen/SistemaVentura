@@ -6,9 +6,7 @@ import type { CalendarEvent, Lead, OrcamentoItem } from '../../contexts/CRMConte
 import { parseMonetaryValue, formatCurrency, generatePDF } from '../../lib/crmHelpers';
 import { useActivityLogs } from '../../contexts/ActivityContext';
 import { generateUUID } from '../../lib/uuid';
-import { getAllInventoryItems, getAvailableQuantity, ensureDefaultBoards, subscribeInventory, refreshReservedCache } from '../../lib/inventory';
-import { collection, getDocs, query, orderBy } from 'firebase/firestore';
-import { db } from '../../services/firebase';
+import { getAllInventoryItems, getAvailableQuantity, subscribeInventoryChanges, refreshReservedCache } from '../../lib/inventory';
 import { addTransaction } from '../../services/financeService';
 import { generateWhatsAppLink } from '../../lib/whatsapp';
 
@@ -140,39 +138,21 @@ const CRMDashboard = () => {
   const [inlineItemSearch, setInlineItemSearch] = useState('');
   const invSearchRef = useRef<HTMLDivElement>(null);
 
-  const [clientList, setClientList] = useState<{ id: string; nome: string; whatsapp: string; cidade: string }[]>([]);
+  const clientList = useMemo(() => {
+    return Orçamentos.map(o => ({
+      id: o.id,
+      nome: o.name,
+      whatsapp: o.whatsapp,
+      cidade: o.address,
+    }));
+  }, [Orçamentos]);
 
   useEffect(() => {
-    const fetchClients = async () => {
-      try {
-        const q = query(collection(db, 'leads'), orderBy('name'));
-        const snapshot = await getDocs(q);
-        const list = snapshot.docs.map(d => {
-          const data = d.data();
-          return {
-            id: d.id,
-            nome: data.nome || data.name || '',
-            whatsapp: data.whatsapp || data.telefone || '',
-            cidade: data.cidade || data.address || '',
-          };
-        });
-        setClientList(list);
-      } catch (err) {
-        console.error('[Painel] Erro ao carregar clientes:', err);
-      }
-    };
-    fetchClients();
-  }, []);
-
-  useEffect(() => {
-    let active = true;
-    const unsub = subscribeInventory(() => {
-      if (active) setInvStockItems(getAllInventoryItems());
+    setInvStockItems(getAllInventoryItems());
+    const unsub = subscribeInventoryChanges(() => {
+      setInvStockItems(getAllInventoryItems());
     });
-    ensureDefaultBoards().then(() => {
-      if (active) setInvStockItems(getAllInventoryItems());
-    }).catch(() => {});
-    return () => { active = false; unsub(); };
+    return unsub;
   }, []);
 
   useEffect(() => {
