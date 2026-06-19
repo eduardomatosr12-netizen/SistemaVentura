@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import { STAGES, STAGE_CONFIG, parseMonetaryValue, calculateTotalValue, groupOrçamentosByStage, type Stage } from '../lib/crmHelpers';
 import * as leadService from '../services/leadService';
 import * as eventService from '../services/eventService';
-import { subscribeInventory } from '../lib/inventory';
+import { subscribeInventory, ensureDefaultBoards } from '../lib/inventory';
 import { addTransaction, getTransactionByEventId } from '../services/financeService';
 
 export interface OrcamentoItem {
@@ -91,6 +91,7 @@ export const CRMProvider = ({ children }: { children: ReactNode }) => {
     const unsubEvents = eventService.subscribeEvents(events => {
       setEvents(events);
     });
+    ensureDefaultBoards();
     const unsubInventory = subscribeInventory();
 
     return () => {
