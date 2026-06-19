@@ -349,7 +349,7 @@ const CRMDashboard = () => {
             leadUpdate.value = total.toString();
             leadUpdate.items = formData.orcamentoItems;
           }
-          updateLead(selectedClientId, leadUpdate);
+          await updateLead(selectedClientId, leadUpdate);
         }
         setEditingEventId(null);
       } else if (createMode === 'novo_cliente') {
@@ -391,7 +391,7 @@ const CRMDashboard = () => {
             valorTotal: total,
           });
         }
-        addTransaction({
+        await addTransaction({
           client: formData.name,
           description: `Evento: ${formData.eventType || 'Evento'} - ${formData.name}${formData.observacao ? ' • ' + formData.observacao : ''}`,
           amount: total,
@@ -402,7 +402,10 @@ const CRMDashboard = () => {
         });
       } else {
         const client = Orçamentos.find(l => l.id === selectedClientId);
-        if (!client) return;
+        if (!client) {
+          setSubmitError('Cliente não encontrado. Selecione um cliente válido.');
+          return;
+        }
         await addEvent({
           title: formData.eventType ? `${formData.eventType} - ${client.name}` : client.name,
           client: client.name,
