@@ -311,6 +311,7 @@ const CRMCalendario = () => {
     setModalMode('edit');
     setSelectedEvent(event);
     const brDate = toBR(event.date || '');
+    const desc = (event.description || '').replace(/\n\nItens do Evento:\n[\s\S]*$/, '');
     setFormData({
       title: event.title || '',
       eventType: event.eventType || '',
@@ -325,7 +326,7 @@ const CRMCalendario = () => {
       status: event.status || 'pendente',
       city: event.city || '',
       decorator: event.decorator || '',
-      description: event.description || '',
+      description: desc,
       equipe: event.equipe || '',
       dataMontagem: event.dataMontagem || '',
       dataDesmontagem: event.dataDesmontagem || '',
@@ -345,12 +346,13 @@ const CRMCalendario = () => {
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaveError(null);
+    const cleanDescription = formData.description.replace(/\n\nItens do Evento:\n[\s\S]*$/, '');
     const itemsText = eventItems.length > 0
       ? `\n\nItens do Evento:\n${eventItems.map(i => `- ${i.qtdAtual}x ${i.item} (R$ ${(i.qtdAtual * i.valorUnit).toFixed(2)})`).join('\n')}`
       : '';
     const payload = {
       ...formData,
-      description: formData.description + itemsText,
+      description: cleanDescription + itemsText,
     };
     try {
       if (modalMode === 'create') {
@@ -890,19 +892,10 @@ const CRMCalendario = () => {
                   </div>
                 </div>
 
-                {/* Três Marcos Temporais */}
+                {/* Marcos Temporais (Montagem / Desmontagem) */}
                 <div className="border border-[#1a1a1a] rounded-md p-4 space-y-3">
                   <label className="text-[9px] font-black text-[#B5FF03] uppercase tracking-widest block">MARCOS DO EVENTO</label>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <div className="space-y-1">
-                      <label className="text-[8px] font-bold text-neutral-500 uppercase tracking-widest">Data do Evento</label>
-                      <input
-                        type="date"
-                        value={formData.date || ''}
-                        onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                        className="w-full bg-[#0a0a0a] border border-[#333] rounded-md px-2 py-2 text-xs font-black text-white focus:ring-1 focus:ring-[#B5FF03] outline-none transition-all [color-scheme:dark]"
-                      />
-                    </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div className="space-y-1">
                       <label className="text-[8px] font-bold text-neutral-500 uppercase tracking-widest">Montagem</label>
                       <input

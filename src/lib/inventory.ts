@@ -80,33 +80,8 @@ export const subscribeInventory = (onUpdate?: () => void): () => void => {
   return unsubscribe;
 };
 
-export const refreshReservedCache = async (eventDate: string): Promise<void> => {
-  if (reservedCacheDate === eventDate && reservedCache.size > 0) return;
+export const refreshReservedCache = async (_eventDate: string): Promise<void> => {
   reservedCache = new Map();
-  reservedCacheDate = eventDate;
-  try {
-    const eventsSnap = await getDocs(collection(db, EVENTS_COLLECTION));
-    const confirmedClients = new Set<string>();
-    eventsSnap.forEach(d => {
-      const data = d.data();
-      if (data.date === eventDate && (data.status === 'confirmado' || data.status === 'realizado') && data.client) {
-        confirmedClients.add(String(data.client).toLowerCase());
-      }
-    });
-    const leadsSnap = await getDocs(collection(db, ORCAMENTOS_COLLECTION));
-    leadsSnap.forEach(d => {
-      const data = d.data();
-      if (data.firstContact !== eventDate || !data.name) return;
-      if (!confirmedClients.has(String(data.name).toLowerCase())) return;
-      const items = data.items || [];
-      for (const item of items) {
-        const key = String(item.item || '').toLowerCase();
-        reservedCache.set(key, (reservedCache.get(key) || 0) + (Number(item.qtdAtual) || 0));
-      }
-    });
-  } catch (err) {
-    console.error('[Inventory] Erro ao carregar reservas:', err);
-  }
 };
 
 export const getBoards = (): InventoryBoard[] => boardsCache || [];
@@ -144,11 +119,10 @@ export const getReservedQuantity = (itemName: string, _eventDate: string): numbe
   return reservedCache.get(itemName.toLowerCase()) || 0;
 };
 
-export const getAvailableQuantity = (itemName: string, eventDate: string): number => {
+export const getAvailableQuantity = (itemName: string, _eventDate: string): number => {
   const info = findInventoryItem(itemName);
   if (!info) return 0;
-  const reserved = getReservedQuantity(itemName, eventDate);
-  return Math.max(0, info.currentQty - reserved);
+  return Math.max(0, info.currentQty);
 };
 
 export const deductInventory = async (itemName: string, quantity: number): Promise<void> => {

@@ -30,6 +30,7 @@ export const subscribeEvents = (callback: (events: CalendarEvent[]) => void): ()
         status: data.status || 'pendente',
         dataMontagem: data.dataMontagem || '',
         dataDesmontagem: data.dataDesmontagem || '',
+        valorTotal: data.valorTotal ?? 0,
       } as CalendarEvent;
     });
     callback(events);
@@ -61,6 +62,7 @@ export const fetchEvents = async (): Promise<CalendarEvent[]> => {
       status: data.status || 'pendente',
       dataMontagem: data.dataMontagem || '',
       dataDesmontagem: data.dataDesmontagem || '',
+      valorTotal: data.valorTotal ?? 0,
     } as CalendarEvent;
   });
 };

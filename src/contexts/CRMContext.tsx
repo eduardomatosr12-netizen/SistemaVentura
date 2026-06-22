@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import { STAGES, STAGE_CONFIG, parseMonetaryValue, calculateTotalValue, groupOrçamentosByStage, type Stage } from '../lib/crmHelpers';
 import * as leadService from '../services/leadService';
 import * as eventService from '../services/eventService';
-import { subscribeInventory, ensureDefaultBoards } from '../lib/inventory';
+import { subscribeInventory, ensureDefaultBoards, deductInventory, restoreInventory } from '../lib/inventory';
 import { addTransaction, getTransactionByEventId } from '../services/financeService';
 
 export interface OrcamentoItem {
@@ -131,18 +131,33 @@ export const CRMProvider = ({ children }: { children: ReactNode }) => {
     const previous = events.find(e => e.id === id);
     await eventService.updateEvent(id, fields);
 
+    const clientId = fields.clientId ?? previous?.clientId ?? '';
+    const lead = Orçamentos.find(o => o.id === clientId);
+
+    if (fields.status === 'confirmado' && previous?.status !== 'confirmado') {
+      if (lead?.items && lead.items.length > 0) {
+        await Promise.all(lead.items.map(item => deductInventory(item.item, item.qtdAtual)));
+      }
+    }
+
+    if (previous?.status === 'confirmado' && fields.status !== 'confirmado') {
+      if (lead?.items && lead.items.length > 0) {
+        await Promise.all(lead.items.map(item => restoreInventory(item.item, item.qtdAtual)));
+      }
+    }
+
     if (fields.status === 'realizado' && previous?.status !== 'realizado') {
       const title = fields.title ?? previous?.title ?? 'Evento';
       const client = fields.client ?? previous?.client ?? '';
-      const valorTotal = fields.valorTotal ?? previous?.valorTotal ?? 0;
       const dataEvento = fields.date ?? previous?.date ?? '';
+      const valorOrcamento = lead ? parseMonetaryValue(lead.value) : 0;
 
       getTransactionByEventId(id).then(existing => {
         if (existing) return;
         addTransaction({
           client,
           description: `Evento: ${title} - ${client}`,
-          amount: Number(valorTotal),
+          amount: Number(valorOrcamento),
           date: dataEvento,
           status: 'Pendente',
           type: 'receita',
@@ -151,7 +166,7 @@ export const CRMProvider = ({ children }: { children: ReactNode }) => {
         }).catch(err => console.error('[CRM] Erro ao criar transação do evento:', err));
       });
     }
-  }, [events]);
+  }, [events, Orçamentos]);
 
   const deleteEvent = useCallback(async (id: string) => {
     await eventService.deleteEvent(id);
