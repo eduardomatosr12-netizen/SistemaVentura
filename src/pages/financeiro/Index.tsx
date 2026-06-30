@@ -96,7 +96,7 @@ const RadioFilter = ({ label, checked, onChange }: { label: string; checked: boo
 );
 
 const Financeiro = () => {
-  const { Orçamentos } = useCRM();
+  const { Orçamentos, updateEvent } = useCRM();
   const { role, employeeName } = useAuth();
   const { transactions, addTransaction, updateTransaction, deleteTransaction } = useFinance();
 
@@ -392,18 +392,28 @@ const Financeiro = () => {
     
   const handleDeleteInvoice = async (id: string) => {
     const inv = allInvoices.find(i => i.id === id);
-    if (inv?.source === 'lead' || inv?.source === 'evento') {
-      alert('Faturas de leads ou eventos não podem ser excluídas manualmente.');
+    if (inv?.source === 'lead') {
+      alert('Faturas de leads não podem ser excluídas manualmente.');
       return;
     }
-    if (confirm('Excluir esta fatura?')) {
-      try {
-        await deleteTransaction(id);
-      } catch (err) {
-        console.error('[Finance] Erro ao excluir fatura:', err);
+    const msg = inv?.source === 'evento'
+      ? 'Esta fatura está vinculada a um evento. Deseja mesmo excluí-la?'
+      : 'Excluir esta fatura?';
+    if (!confirm(msg)) return;
+    try {
+      if (inv?.source === 'evento') {
+        const fbRecord = transactions.find(t => t.id === id);
+        if (fbRecord?.origemEventoId) {
+          updateEvent(fbRecord.origemEventoId, { status: 'pendente' }).catch(err =>
+            console.error('[Finance] Erro ao reabrir evento:', err)
+          );
+        }
       }
-      setIsInvoiceModalOpen(false);
+      await deleteTransaction(id);
+    } catch (err) {
+      console.error('[Finance] Erro ao excluir fatura:', err);
     }
+    setIsInvoiceModalOpen(false);
   };
     
   const handleOpenExpenseModal = (expense?: Expense) => {

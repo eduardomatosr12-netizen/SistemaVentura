@@ -4,7 +4,7 @@ import { STAGES, STAGE_CONFIG, parseMonetaryValue, calculateTotalValue, groupOr�
 import * as leadService from '../services/leadService';
 import * as eventService from '../services/eventService';
 import { subscribeInventory, ensureDefaultBoards, deductInventory, restoreInventory } from '../lib/inventory';
-import { addTransaction, getTransactionByEventId } from '../services/financeService';
+import { addTransaction, updateTransaction, getTransactionByEventId } from '../services/financeService';
 
 export interface OrcamentoItem {
   id: string;
@@ -165,6 +165,14 @@ export const CRMProvider = ({ children }: { children: ReactNode }) => {
           source: 'evento',
           origemEventoId: id,
         }).catch(err => console.error('[CRM] Erro ao criar transação do evento:', err));
+      });
+    }
+
+    if (fields.status === 'cancelado' && previous?.status !== 'cancelado') {
+      getTransactionByEventId(id).then(existing => {
+        if (!existing) return;
+        updateTransaction(existing.id!, { status: 'Cancelado' })
+          .catch(err => console.error('[CRM] Erro ao cancelar fatura do evento:', err));
       });
     }
   }, [events, Orçamentos]);
