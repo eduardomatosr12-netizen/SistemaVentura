@@ -976,7 +976,7 @@ const Tarefas = () => {
   const statusRentalColor: Record<string, string> = {
     'Em Trânsito': 'text-[#f59e0b] border-[#f59e0b]/50',
     'Montado': 'text-[#B5FF03] border-[#B5FF03]',
-    'Devolvido': 'text-[#888888] border-[#222222]',
+    'Devolvido': 'text-[#aaaaaa] border-[#222222]',
   };
 
   return (
@@ -992,7 +992,7 @@ const Tarefas = () => {
           className={`py-3 px-1 border-b-2 font-bold text-xs uppercase tracking-widest transition-colors whitespace-nowrap ${
             activeTab === 'inventario'
               ? 'border-[#B5FF03] text-[#B5FF03]'
-              : 'border-transparent text-[#888888] hover:text-white'
+              : 'border-transparent text-[#aaaaaa] hover:text-white'
           }`}
         >
           <Package size={16} className="inline mr-2" />
@@ -1003,7 +1003,7 @@ const Tarefas = () => {
           className={`py-3 px-1 border-b-2 font-bold text-xs uppercase tracking-widest transition-colors whitespace-nowrap ${
             activeTab === 'aluguel'
               ? 'border-[#B5FF03] text-[#B5FF03]'
-              : 'border-transparent text-[#888888] hover:text-white'
+              : 'border-transparent text-[#aaaaaa] hover:text-white'
           }`}
         >
           <Building2 size={16} className="inline mr-2" />
@@ -1122,18 +1122,18 @@ const Tarefas = () => {
                 {rentalRecords.map(record => (
                   <tr key={record.id} className="border-b border-[#222222] hover:bg-[#1a1a1a] transition-colors">
                     <td className="p-4 text-sm text-white">{record.client}</td>
-                    <td className="p-4 text-sm text-[#888888]">
+                    <td className="p-4 text-sm text-[#aaaaaa]">
                       {record.items.map((item, idx) => (
                         <div key={item.id} className="flex items-center gap-2 mb-1 last:mb-0">
                           <span className="text-white">{item.item}</span>
                           <span className={`px-1.5 py-0.5 rounded text-[10px] border ${statusRentalColor[item.status]}`}>{item.status}</span>
-                          <span className="text-[#888888]">{item.quantidade}x</span>
+                          <span className="text-[#aaaaaa]">{item.quantidade}x</span>
                           {idx < record.items.length - 1 && <span className="text-[#333]">|</span>}
                         </div>
                       ))}
                     </td>
-                    <td className="p-4 text-sm text-[#888888]">{record.dataSaida}</td>
-                    <td className="p-4 text-sm text-[#888888]">{record.dataDevolucao || '—'}</td>
+                    <td className="p-4 text-sm text-[#aaaaaa]">{record.dataSaida}</td>
+                    <td className="p-4 text-sm text-[#aaaaaa]">{record.dataDevolucao || '—'}</td>
                     <td className="p-4 text-right">
                       <button
                         onClick={() => handleOpenRentalModal(record)}
@@ -1152,7 +1152,7 @@ const Tarefas = () => {
                 ))}
                 {rentalRecords.length === 0 && (
                   <tr>
-                    <td colSpan={5} className="p-8 text-center text-sm text-[#888888]">
+                    <td colSpan={5} className="p-8 text-center text-sm text-[#aaaaaa]">
                       Nenhum aluguel registrado
                     </td>
                   </tr>
@@ -1178,7 +1178,7 @@ const Tarefas = () => {
                         <span className="text-white text-xs font-bold">{item.item}</span>
                         <span className={`ml-2 px-1.5 py-0.5 rounded text-[10px] border ${statusRentalColor[item.status]}`}>{item.status}</span>
                       </div>
-                      <span className="text-[#888888] text-xs ml-2">{item.quantidade}x</span>
+                      <span className="text-[#aaaaaa] text-xs ml-2">{item.quantidade}x</span>
                     </div>
                   ))}
                 </div>

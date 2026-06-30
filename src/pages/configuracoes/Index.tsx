@@ -242,7 +242,7 @@ const Configuracoes = () => {
       <div className="mb-10 flex justify-between items-end">
         <div>
           <h1 className="text-4xl font-black text-[#ffffff] tracking-tighter mb-1">Configurações</h1>
-          <p className="text-[#888888] text-sm font-medium">Controle central de perfil e preferências.</p>
+          <p className="text-[#aaaaaa] text-sm font-medium">Controle central de perfil e preferências.</p>
         </div>
       </div>
 
@@ -258,7 +258,7 @@ const Configuracoes = () => {
                   </div>
                   <div>
                     <h3 className="font-black text-[#ffffff] text-lg tracking-tight">{section.title}</h3>
-                    <p className="text-xs text-[#888888] font-bold uppercase tracking-widest mt-1">{section.description}</p>
+                    <p className="text-xs text-[#aaaaaa] font-bold uppercase tracking-widest mt-1">{section.description}</p>
                   </div>
                 </div>
                 <button 
@@ -270,7 +270,7 @@ const Configuracoes = () => {
               </div>
               <div className="flex gap-2 flex-wrap mt-8 pt-8 border-t border-[#222222]">
                 {section.items.map((item, itemIdx) => (
-                  <span key={itemIdx} className="px-4 py-2 bg-[#111111] text-[#888888] text-[10px] font-black uppercase tracking-[1.5px] rounded-md border border-[#222222]">
+                  <span key={itemIdx} className="px-4 py-2 bg-[#111111] text-[#aaaaaa] text-[10px] font-black uppercase tracking-[1.5px] rounded-md border border-[#222222]">
                     {item}
                   </span>
                 ))}
@@ -293,7 +293,7 @@ const Configuracoes = () => {
               </div>
               <div>
                 <h3 className="font-black text-[#ffffff] text-lg tracking-tight">Templates WhatsApp</h3>
-                <p className="text-xs text-[#888888] font-bold uppercase tracking-widest mt-1">Crie e gerencie modelos de mensagens para envio rápido</p>
+                <p className="text-xs text-[#aaaaaa] font-bold uppercase tracking-widest mt-1">Crie e gerencie modelos de mensagens para envio rápido</p>
               </div>
             </div>
             <span className="bg-[#b5ff03] text-black font-bold px-6 py-3 rounded-md text-[11px] uppercase tracking-widest hover:bg-[#b5ff03]/90 transition-all active:scale-[0.95] shadow-lg shadow-black/10">
@@ -329,10 +329,10 @@ const Configuracoes = () => {
               <form onSubmit={handleSaveProfile}>
                 <div className="px-4 md:px-12 py-10 border-b border-[#222222] flex justify-between items-start">
                   <div>
-                    <span className="text-[10px] font-black text-[#888888] uppercase tracking-[3px] mb-3 block">Preferências do Sistema</span>
+                    <span className="text-[10px] font-black text-[#aaaaaa] uppercase tracking-[3px] mb-3 block">Preferências do Sistema</span>
                     <h2 className="text-4xl font-black text-white tracking-tighter">Configurações de Perfil</h2>
                   </div>
-                  <button type="button" onClick={() => { setActiveModal(null); setProfileError(''); setProfileSuccess(''); }} className="p-3 hover:bg-[#111111] rounded-2xl transition-colors text-[#888888] hover:text-white border border-transparent hover:border-[#222222]">
+                  <button type="button" onClick={() => { setActiveModal(null); setProfileError(''); setProfileSuccess(''); }} className="p-3 hover:bg-[#111111] rounded-2xl transition-colors text-[#aaaaaa] hover:text-white border border-transparent hover:border-[#222222]">
                     <X size={24} />
                   </button>
                 </div>
@@ -364,23 +364,23 @@ const Configuracoes = () => {
                       </div>
                       <div className="space-y-2">
                         <h4 className="font-black text-white text-lg">Avatar do Administrador</h4>
-                        <p className="text-xs text-[#888888] font-medium">Clique para fazer upload de um novo arquivo PNG ou JPG.</p>
+                        <p className="text-xs text-[#aaaaaa] font-medium">Clique para fazer upload de um novo arquivo PNG ou JPG.</p>
                       </div>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                       <div className="space-y-3">
-                        <label className="text-[10px] font-black text-[#888888] uppercase tracking-widest ml-1">Nome Completo</label>
+                        <label className="text-[10px] font-black text-[#aaaaaa] uppercase tracking-widest ml-1">Nome Completo</label>
                         <input type="text" value={profileData.name} onChange={(e) => setProfileData({...profileData, name: e.target.value})} className="w-full bg-[#1a1a1a] border border-[#222222] rounded-xl px-4 py-3.5 font-bold text-white placeholder-[#555555] focus:border-[#B5FF03] outline-none transition-all" placeholder="Seu nome completo" />
                       </div>
                       <div className="space-y-3">
-                        <label className="text-[10px] font-black text-[#888888] uppercase tracking-widest ml-1">Email Profissional</label>
+                        <label className="text-[10px] font-black text-[#aaaaaa] uppercase tracking-widest ml-1">Email Profissional</label>
                         <input type="email" value={profileData.email} onChange={(e) => setProfileData({...profileData, email: e.target.value})} className="w-full bg-[#1a1a1a] border border-[#222222] rounded-xl px-4 py-3.5 font-bold text-white placeholder-[#555555] focus:border-[#B5FF03] outline-none transition-all" placeholder="seu@email.com" />
                       </div>
                     </div>
                   </div>
                 </div>
                 <div className="px-4 md:px-12 py-10 border-t border-[#222222] flex gap-4">
-                  <button type="button" onClick={() => setActiveModal(null)} className="flex-1 py-4 rounded-[20px] font-black text-[11px] uppercase tracking-widest text-[#888888] hover:text-white hover:bg-[#111111] transition-all border border-transparent hover:border-[#222222]">Cancelar</button>
+                  <button type="button" onClick={() => setActiveModal(null)} className="flex-1 py-4 rounded-[20px] font-black text-[11px] uppercase tracking-widest text-[#aaaaaa] hover:text-white hover:bg-[#111111] transition-all border border-transparent hover:border-[#222222]">Cancelar</button>
                   <button type="submit" disabled={isSavingProfile} className="flex-[2] py-4 rounded-[20px] bg-[#B5FF03] text-black font-black text-[11px] uppercase tracking-widest hover:bg-[#a1e600] transition-all active:scale-[0.98] flex items-center justify-center gap-3">
                     {isSavingProfile ? <><RefreshCw size={18} className="animate-spin" /> Salvando...</> : <><Save size={18} /> Salvar Perfil</>}
                   </button>
@@ -390,10 +390,10 @@ const Configuracoes = () => {
               <div className="bg-[#000000]">
                 <div className="px-4 md:px-12 py-10 border-b border-[#222222] flex justify-between items-start">
                   <div>
-                    <span className="text-[10px] font-black text-[#888888] uppercase tracking-[3px] mb-3 block">Preferências do Sistema</span>
+                    <span className="text-[10px] font-black text-[#aaaaaa] uppercase tracking-[3px] mb-3 block">Preferências do Sistema</span>
                     <h2 className="text-4xl font-black text-white tracking-tighter">Equipe</h2>
                   </div>
-                  <button type="button" onClick={() => { setActiveModal(null); setInviteError(''); setInviteSuccess(''); }} className="p-3 hover:bg-[#111111] rounded-2xl transition-colors text-[#888888] hover:text-white border border-transparent hover:border-[#222222]">
+                  <button type="button" onClick={() => { setActiveModal(null); setInviteError(''); setInviteSuccess(''); }} className="p-3 hover:bg-[#111111] rounded-2xl transition-colors text-[#aaaaaa] hover:text-white border border-transparent hover:border-[#222222]">
                     <X size={24} />
                   </button>
                 </div>
@@ -436,7 +436,7 @@ const Configuracoes = () => {
                           <div key={emp.id} className="p-4 bg-[#111111] border border-[#222222] rounded-xl flex items-center justify-between">
                             <div>
                               <p className="font-black text-white">{emp.name}</p>
-                              <p className="text-xs text-[#888888] font-medium uppercase">Cargo: {emp.role === 'tecnico' ? 'Técnico' : emp.role === 'motorista' ? 'Motorista' : emp.role === 'decorador' ? 'Decorador' : 'Administrativo'}</p>
+                              <p className="text-xs text-[#aaaaaa] font-medium uppercase">Cargo: {emp.role === 'tecnico' ? 'Técnico' : emp.role === 'motorista' ? 'Motorista' : emp.role === 'decorador' ? 'Decorador' : 'Administrativo'}</p>
                             </div>
                             <button type="button" onClick={() => handleRemoveEmployee(emp.id)} className="px-4 py-2 bg-red-500/10 text-red-400 rounded-lg font-bold text-xs uppercase hover:bg-red-500/20 transition-all">
                               Remover
@@ -448,7 +448,7 @@ const Configuracoes = () => {
                   </div>
                 </div>
                 <div className="px-4 md:px-12 py-10 border-t border-[#222222]">
-                  <button type="button" onClick={() => setActiveModal(null)} className="w-full py-5 rounded-[20px] font-black text-[11px] uppercase tracking-widest text-[#888888] hover:text-white hover:bg-[#111111] transition-all border border-transparent hover:border-[#222222]">Fechar</button>
+                  <button type="button" onClick={() => setActiveModal(null)} className="w-full py-5 rounded-[20px] font-black text-[11px] uppercase tracking-widest text-[#aaaaaa] hover:text-white hover:bg-[#111111] transition-all border border-transparent hover:border-[#222222]">Fechar</button>
                 </div>
               </div>
             ) : null}

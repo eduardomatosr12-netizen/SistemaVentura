@@ -560,7 +560,7 @@ const CRMDashboard = () => {
           className={`pb-2 border-b-2 font-bold text-xs uppercase tracking-widest transition-colors whitespace-nowrap ${
             activeTab === 'calendario'
               ? 'border-[#B5FF03] text-[#B5FF03]'
-              : 'border-transparent text-[#888888] hover:text-white'
+              : 'border-transparent text-[#aaaaaa] hover:text-white'
           }`}
         >
           Calendário
@@ -570,7 +570,7 @@ const CRMDashboard = () => {
           className={`pb-2 border-b-2 font-bold text-xs uppercase tracking-widest transition-colors whitespace-nowrap ${
             activeTab === 'eventos'
               ? 'border-[#B5FF03] text-[#B5FF03]'
-              : 'border-transparent text-[#888888] hover:text-white'
+              : 'border-transparent text-[#aaaaaa] hover:text-white'
           }`}
         >
           Histórico de Eventos
@@ -580,7 +580,7 @@ const CRMDashboard = () => {
           className={`pb-2 border-b-2 font-bold text-xs uppercase tracking-widest transition-colors whitespace-nowrap ${
             activeTab === 'orcamentos'
               ? 'border-[#B5FF03] text-[#B5FF03]'
-              : 'border-transparent text-[#888888] hover:text-white'
+              : 'border-transparent text-[#aaaaaa] hover:text-white'
           }`}
         >
           Histórico de Orçamentos

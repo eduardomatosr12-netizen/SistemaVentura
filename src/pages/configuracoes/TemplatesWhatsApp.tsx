@@ -180,7 +180,7 @@ const TemplatesWhatsApp = () => {
       <div className="mb-10 flex justify-between items-end">
         <div>
           <h1 className="text-4xl font-black text-[#ffffff] tracking-tighter mb-1">Templates de WhatsApp</h1>
-          <p className="text-[#888888] text-sm font-medium">Gerencie seus modelos de mensagens rápidas para WhatsApp.</p>
+          <p className="text-[#aaaaaa] text-sm font-medium">Gerencie seus modelos de mensagens rápidas para WhatsApp.</p>
         </div>
         <button
           onClick={openCreate}

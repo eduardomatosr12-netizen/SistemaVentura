@@ -8,7 +8,7 @@
   --bg-main: #000000;
   --bg-card: #111111;
   --text-main: #ffffff;
-  --text-muted: #a3a3a3;
+  --text-muted: #c0c0c0;
   --border-main: #1a1a1a;
 }
 
@@ -17,6 +17,7 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
+  font-weight: inherit;
 }
 
 html,
@@ -35,6 +36,7 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   font-feature-settings: 'cv11', 'ss01';
+  font-weight: 500;
 }
 
 #root {
@@ -139,7 +141,7 @@ body {
   }
 
   .page-subtitle {
-    color: #a3a3a3;
+    color: var(--text-muted);
     @apply text-sm font-medium mt-1;
   }
 

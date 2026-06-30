@@ -66,7 +66,7 @@ const FilterSection = ({ title, children, defaultOpen = true }: { title: string;
         className="flex items-center justify-between w-full text-left py-1"
       >
         <span className="text-[10px] font-black text-[#B5FF03] uppercase tracking-widest pl-1">{title}</span>
-        {isOpen ? <ChevronUp size={14} className="text-[#888888]" /> : <ChevronDown size={14} className="text-[#888888]" />}
+        {isOpen ? <ChevronUp size={14} className="text-[#aaaaaa]" /> : <ChevronDown size={14} className="text-[#aaaaaa]" />}
       </button>
       {isOpen && <div className="mt-3 space-y-2.5 pl-1">{children}</div>}
     </div>
@@ -81,7 +81,7 @@ const CheckboxFilter = ({ label, checked, onChange }: { label: string; checked: 
       </svg>}
     </div>
     <input type="checkbox" className="hidden" checked={checked} onChange={e => onChange(e.target.checked)} />
-    <span className={`text-xs font-medium ${checked ? 'text-white' : 'text-[#888888]'}`}>{label}</span>
+    <span className={`text-xs font-medium ${checked ? 'text-white' : 'text-[#aaaaaa]'}`}>{label}</span>
   </label>
 );
 
@@ -91,7 +91,7 @@ const RadioFilter = ({ label, checked, onChange }: { label: string; checked: boo
       {checked && <div className="w-2 h-2 bg-black rounded-full" />}
     </div>
     <input type="radio" className="hidden" checked={checked} onChange={onChange} />
-    <span className={`text-xs font-medium ${checked ? 'text-white' : 'text-[#888888]'}`}>{label}</span>
+    <span className={`text-xs font-medium ${checked ? 'text-white' : 'text-[#aaaaaa]'}`}>{label}</span>
   </label>
 );
 
@@ -469,9 +469,9 @@ const Financeiro = () => {
     
   const statusStyle: Record<string, string> = {
     Pago: 'bg-[#111111] text-[#B5FF03] font-black uppercase tracking-widest border border-[#B5FF03]',
-    Pendente: 'bg-[#111111] text-[#888888] font-black uppercase tracking-widest border border-[#222222]',
+    Pendente: 'bg-[#111111] text-[#aaaaaa] font-black uppercase tracking-widest border border-[#222222]',
     Vencida: 'bg-[#111111] text-[#ff4444] font-black uppercase tracking-widest border border-[#ff4444]/50',
-    Cancelado: 'bg-[#111111] text-[#888888] font-black uppercase tracking-widest border border-[#222222]',
+    Cancelado: 'bg-[#111111] text-[#aaaaaa] font-black uppercase tracking-widest border border-[#222222]',
   };
     
   const categoryLabel = (cat: string) => {
@@ -485,7 +485,7 @@ const Financeiro = () => {
         {hasActiveFilters && (
           <button
             onClick={clearFilters}
-            className="text-xs text-[#888888] hover:text-[#B5FF03] transition-colors flex items-center gap-1"
+            className="text-xs text-[#aaaaaa] hover:text-[#B5FF03] transition-colors flex items-center gap-1"
           >
             <XCircle size={12} />
             Limpar
@@ -532,7 +532,7 @@ const Financeiro = () => {
         {filtersState.period === 'custom' && (
           <div className="space-y-3 pt-2 pl-1">
             <div>
-              <label className="text-xs text-[#888888] uppercase tracking-widest mb-1 block">De:</label>
+              <label className="text-xs text-[#aaaaaa] uppercase tracking-widest mb-1 block">De:</label>
               <input
                 type="date"
                 value={filtersState.customDateStart}
@@ -541,7 +541,7 @@ const Financeiro = () => {
               />
             </div>
             <div>
-              <label className="text-xs text-[#888888] uppercase tracking-widest mb-1 block">Até:</label>
+              <label className="text-xs text-[#aaaaaa] uppercase tracking-widest mb-1 block">Até:</label>
               <input
                 type="date"
                 value={filtersState.customDateEnd}
@@ -611,7 +611,7 @@ const Financeiro = () => {
       <FilterSection title="Valor">
         <div className="space-y-3">
           <div>
-            <label className="text-xs text-[#888888] uppercase tracking-widest">Mínimo (R$)</label>
+            <label className="text-xs text-[#aaaaaa] uppercase tracking-widest">Mínimo (R$)</label>
             <input
               type="number"
               value={filtersState.minValue}
@@ -620,7 +620,7 @@ const Financeiro = () => {
             />
           </div>
           <div>
-            <label className="text-xs text-[#888888] uppercase tracking-widest">Máximo (R$)</label>
+            <label className="text-xs text-[#aaaaaa] uppercase tracking-widest">Máximo (R$)</label>
             <input
               type="number"
               value={filtersState.maxValue}
@@ -667,28 +667,28 @@ const Financeiro = () => {
       <div className="p-6 grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="bg-[#111111] border border-[#222222] rounded-lg p-4">
           <div className="flex justify-between items-center mb-2">
-            <span className="text-xs font-black uppercase tracking-widest text-[#888888]">Total Receitas</span>
+            <span className="text-xs font-black uppercase tracking-widest text-[#aaaaaa]">Total Receitas</span>
             <TrendingUp size={16} className="text-[#B5FF03]" />
           </div>
           <p className="text-2xl font-black text-white">{formatCurrency(computedTotalRevenue)}</p>
         </div>
         <div className="bg-[#111111] border border-[#222222] rounded-lg p-4">
           <div className="flex justify-between items-center mb-2">
-            <span className="text-xs font-black uppercase tracking-widest text-[#888888]">Receitas Pendentes</span>
-            <Clock size={16} className="text-[#888888]" />
+            <span className="text-xs font-black uppercase tracking-widest text-[#aaaaaa]">Receitas Pendentes</span>
+            <Clock size={16} className="text-[#aaaaaa]" />
           </div>
           <p className="text-2xl font-black text-white">{formatCurrency(computedPendingRevenue)}</p>
         </div>
         <div className="bg-[#111111] border border-[#222222] rounded-lg p-4">
           <div className="flex justify-between items-center mb-2">
-            <span className="text-xs font-black uppercase tracking-widest text-[#888888]">Total Despesas</span>
+            <span className="text-xs font-black uppercase tracking-widest text-[#aaaaaa]">Total Despesas</span>
             <TrendingDown size={16} className="text-[#ff4444]" />
           </div>
           <p className="text-2xl font-black text-white">{formatCurrency(computedTotalExpenses)}</p>
         </div>
         <div className="bg-[#111111] border border-[#222222] rounded-lg p-4">
           <div className="flex justify-between items-center mb-2">
-            <span className="text-xs font-black uppercase tracking-widest text-[#888888]">Despesas Pendentes</span>
+            <span className="text-xs font-black uppercase tracking-widest text-[#aaaaaa]">Despesas Pendentes</span>
             <AlertTriangle size={16} className="text-[#ff4444]" />
           </div>
           <p className="text-2xl font-black text-white">{formatCurrency(computedPendingExpenses)}</p>
@@ -703,7 +703,7 @@ const Financeiro = () => {
             className={`py-3 px-1 border-b-2 font-bold text-xs uppercase tracking-widest transition-colors ${
               activeTab === 'receitas'
                 ? 'border-[#B5FF03] text-[#B5FF03]'
-                : 'border-transparent text-[#888888] hover:text-white'
+                : 'border-transparent text-[#aaaaaa] hover:text-white'
             }`}
           >
             Receitas ({filteredInvoices.length})
@@ -713,7 +713,7 @@ const Financeiro = () => {
             className={`py-3 px-1 border-b-2 font-bold text-xs uppercase tracking-widest transition-colors ${
               activeTab === 'fluxo'
                 ? 'border-[#B5FF03] text-[#B5FF03]'
-                : 'border-transparent text-[#888888] hover:text-white'
+                : 'border-transparent text-[#aaaaaa] hover:text-white'
             }`}
           >
             Fluxo de Caixa ({filteredExpenses.length})
@@ -723,7 +723,7 @@ const Financeiro = () => {
             className={`py-3 px-1 border-b-2 font-bold text-xs uppercase tracking-widest transition-colors ${
               activeTab === 'projecao'
                 ? 'border-[#B5FF03] text-[#B5FF03]'
-                : 'border-transparent text-[#888888] hover:text-white'
+                : 'border-transparent text-[#aaaaaa] hover:text-white'
             }`}
           >
             Projeção (Parcelas)
@@ -752,16 +752,16 @@ const Financeiro = () => {
                 <tbody>
                   {filteredInvoices.map(invoice => (
                     <tr key={invoice.id} className="border-b border-[#222222] hover:bg-[#1a1a1a] transition-colors">
-                      <td className="p-4 text-sm text-[#888888]">{invoice.id}</td>
+                      <td className="p-4 text-sm text-[#aaaaaa]">{invoice.id}</td>
                       <td className="p-4 text-sm text-white">{invoice.client}</td>
                       <td className="p-4 text-sm text-white">{invoice.amount}</td>
-                      <td className="p-4 text-sm text-[#888888]">{invoice.date}</td>
+                      <td className="p-4 text-sm text-[#aaaaaa]">{invoice.date}</td>
                       <td className="p-4">
                         <span className={`px-2 py-1 rounded-full text-xs ${statusStyle[invoice.status]}`}>
                           {invoice.status}
                         </span>
                       </td>
-                      <td className="p-4 text-sm text-[#888888]">{paymentMethodLabel(invoice.paymentMethod, invoice.installments)}</td>
+                      <td className="p-4 text-sm text-[#aaaaaa]">{paymentMethodLabel(invoice.paymentMethod, invoice.installments)}</td>
                       <td className="p-4 text-right">
                         <button
                           onClick={() => handleOpenInvoiceModal(invoice)}
@@ -774,7 +774,7 @@ const Financeiro = () => {
                   ))}
                   {filteredInvoices.length === 0 && (
                     <tr>
-                      <td colSpan={7} className="p-8 text-center text-sm text-[#888888]">
+                      <td colSpan={7} className="p-8 text-center text-sm text-[#aaaaaa]">
                         Nenhuma fatura encontrada
                       </td>
                     </tr>
@@ -801,7 +801,7 @@ const Financeiro = () => {
                 </div>
               ))}
               {filteredInvoices.length === 0 && (
-                <p className="text-center text-sm text-[#888888] py-8">Nenhuma fatura encontrada</p>
+                <p className="text-center text-sm text-[#aaaaaa] py-8">Nenhuma fatura encontrada</p>
               )}
             </div>
             </>
@@ -823,10 +823,10 @@ const Financeiro = () => {
                 <tbody>
                   {filteredExpenses.map(expense => (
                     <tr key={expense.id} className="border-b border-[#222222] hover:bg-[#1a1a1a] transition-colors">
-                      <td className="p-4 text-sm text-[#888888]">{categoryLabel(expense.category)}</td>
+                      <td className="p-4 text-sm text-[#aaaaaa]">{categoryLabel(expense.category)}</td>
                       <td className="p-4 text-sm text-white">{expense.description}</td>
                       <td className="p-4 text-sm text-white">{expense.amount}</td>
-                      <td className="p-4 text-sm text-[#888888]">{expense.date}</td>
+                      <td className="p-4 text-sm text-[#aaaaaa]">{expense.date}</td>
                       <td className="p-4">
                         <span className={`px-2 py-1 rounded-full text-xs ${statusStyle[expense.status]}`}>
                           {expense.status}
@@ -850,7 +850,7 @@ const Financeiro = () => {
                   ))}
                   {filteredExpenses.length === 0 && (
                     <tr>
-                      <td colSpan={6} className="p-8 text-center text-sm text-[#888888]">
+                      <td colSpan={6} className="p-8 text-center text-sm text-[#aaaaaa]">
                         Nenhuma despesa encontrada
                       </td>
                     </tr>
@@ -878,7 +878,7 @@ const Financeiro = () => {
                 </div>
               ))}
               {filteredExpenses.length === 0 && (
-                <p className="text-center text-sm text-[#888888] py-8">Nenhuma despesa encontrada</p>
+                <p className="text-center text-sm text-[#aaaaaa] py-8">Nenhuma despesa encontrada</p>
               )}
             </div>
             </>
@@ -930,8 +930,8 @@ const Financeiro = () => {
                     <tr key={inv.id} className="border-b border-[#222222] hover:bg-[#1a1a1a]">
                       <td className="p-4 text-sm text-white">{inv.client}</td>
                       <td className="p-4 text-sm text-white">{inv.amount}</td>
-                      <td className="p-4 text-sm text-[#888888]">{inv.date}</td>
-                      <td className="p-4 text-sm text-[#888888]">{inv.installments ? `${inv.installments}x` : '—'}</td>
+                      <td className="p-4 text-sm text-[#aaaaaa]">{inv.date}</td>
+                      <td className="p-4 text-sm text-[#aaaaaa]">{inv.installments ? `${inv.installments}x` : '—'}</td>
                       <td className="p-4">
                         <span className={`px-2 py-1 rounded-full text-xs ${statusStyle[inv.status] || statusStyle.Pendente}`}>
                           {inv.status}
@@ -940,7 +940,7 @@ const Financeiro = () => {
                     </tr>
                   ))}
                   {allInvoices.filter(inv => inv.paymentMethod === 'parcelado').length === 0 && (
-                    <tr><td colSpan={5} className="p-8 text-center text-sm text-[#888888]">Nenhuma projeção disponível.</td></tr>
+                    <tr><td colSpan={5} className="p-8 text-center text-sm text-[#aaaaaa]">Nenhuma projeção disponível.</td></tr>
                   )}
                 </tbody>
               </table>
@@ -971,13 +971,13 @@ const Financeiro = () => {
               <h3 className="text-lg font-black uppercase tracking-widest text-white">
                 {isNewInvoice ? 'Nova Fatura' : 'Editar Fatura'}
               </h3>
-              <button onClick={() => setIsInvoiceModalOpen(false)} className="text-[#888888] hover:text-white transition-colors">
+              <button onClick={() => setIsInvoiceModalOpen(false)} className="text-[#aaaaaa] hover:text-white transition-colors">
                 <X size={20} />
               </button>
             </div>
             <form onSubmit={handleSaveInvoice} className="space-y-4">
               <div>
-                <label className="block text-xs font-black uppercase tracking-widest text-[#888888] mb-2">Cliente</label>
+                <label className="block text-xs font-black uppercase tracking-widest text-[#aaaaaa] mb-2">Cliente</label>
                 <input
                   type="text"
                   value={editingInvoice.client}
@@ -987,7 +987,7 @@ const Financeiro = () => {
                 />
               </div>
               <div>
-                <label className="block text-xs font-black uppercase tracking-widest text-[#888888] mb-2">Valor (R$)</label>
+                <label className="block text-xs font-black uppercase tracking-widest text-[#aaaaaa] mb-2">Valor (R$)</label>
                 <input
                   type="text"
                   value={editingInvoice.amount}
@@ -997,7 +997,7 @@ const Financeiro = () => {
                 />
               </div>
               <div>
-                <label className="block text-xs font-black uppercase tracking-widest text-[#888888] mb-2">Data</label>
+                <label className="block text-xs font-black uppercase tracking-widest text-[#aaaaaa] mb-2">Data</label>
                 <input
                   type="date"
                   value={editingInvoice.date}
@@ -1007,7 +1007,7 @@ const Financeiro = () => {
                 />
               </div>
               <div>
-                <label className="block text-xs font-black uppercase tracking-widest text-[#888888] mb-2">Status</label>
+                <label className="block text-xs font-black uppercase tracking-widest text-[#aaaaaa] mb-2">Status</label>
                 <select
                   value={editingInvoice.status}
                   onChange={(e) => setEditingInvoice({ ...editingInvoice, status: e.target.value as Invoice['status'] })}
@@ -1019,7 +1019,7 @@ const Financeiro = () => {
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-black uppercase tracking-widest text-[#888888] mb-2">Forma de Pagamento</label>
+                <label className="block text-xs font-black uppercase tracking-widest text-[#aaaaaa] mb-2">Forma de Pagamento</label>
                 <select
                   value={editingInvoice.paymentMethod || ''}
                   onChange={(e) => setEditingInvoice({
@@ -1036,7 +1036,7 @@ const Financeiro = () => {
                 </select>
               </div>
               <div style={{ display: editingInvoice.paymentMethod === 'parcelado' ? 'block' : 'none' }}>
-                <label className="block text-xs font-black uppercase tracking-widest text-[#888888] mb-2">Qtd. Parcelas</label>
+                <label className="block text-xs font-black uppercase tracking-widest text-[#aaaaaa] mb-2">Qtd. Parcelas</label>
                 <select
                   value={editingInvoice.installments || '1'}
                   onChange={(e) => setEditingInvoice({ ...editingInvoice, installments: e.target.value })}
@@ -1077,13 +1077,13 @@ const Financeiro = () => {
               <h3 className="text-lg font-black uppercase tracking-widest text-white">
                 {isNewExpense ? 'Nova Despesa' : 'Editar Despesa'}
               </h3>
-              <button onClick={() => setIsExpenseModalOpen(false)} className="text-[#888888] hover:text-white transition-colors">
+              <button onClick={() => setIsExpenseModalOpen(false)} className="text-[#aaaaaa] hover:text-white transition-colors">
                 <X size={20} />
               </button>
             </div>
             <form onSubmit={handleSaveExpense} className="space-y-4">
               <div>
-                <label className="block text-xs font-black uppercase tracking-widest text-[#888888] mb-2">Categoria</label>
+                <label className="block text-xs font-black uppercase tracking-widest text-[#aaaaaa] mb-2">Categoria</label>
                 <select
                   value={editingExpense.category}
                   onChange={(e) => setEditingExpense({ ...editingExpense, category: e.target.value })}
@@ -1095,7 +1095,7 @@ const Financeiro = () => {
                 </select>
               </div>
               <div>
-                <label className="block text-xs font-black uppercase tracking-widest text-[#888888] mb-2">Descrição</label>
+                <label className="block text-xs font-black uppercase tracking-widest text-[#aaaaaa] mb-2">Descrição</label>
                 <input
                   type="text"
                   value={editingExpense.description}
@@ -1105,7 +1105,7 @@ const Financeiro = () => {
                 />
               </div>
               <div>
-                <label className="block text-xs font-black uppercase tracking-widest text-[#888888] mb-2">Valor (R$)</label>
+                <label className="block text-xs font-black uppercase tracking-widest text-[#aaaaaa] mb-2">Valor (R$)</label>
                 <input
                   type="text"
                   value={editingExpense.amount}
@@ -1115,7 +1115,7 @@ const Financeiro = () => {
                 />
               </div>
               <div>
-                <label className="block text-xs font-black uppercase tracking-widest text-[#888888] mb-2">Data</label>
+                <label className="block text-xs font-black uppercase tracking-widest text-[#aaaaaa] mb-2">Data</label>
                 <input
                   type="date"
                   value={editingExpense.date}
@@ -1125,7 +1125,7 @@ const Financeiro = () => {
                 />
               </div>
               <div>
-                <label className="block text-xs font-black uppercase tracking-widest text-[#888888] mb-2">Status</label>
+                <label className="block text-xs font-black uppercase tracking-widest text-[#aaaaaa] mb-2">Status</label>
                 <select
                   value={editingExpense.status}
                   onChange={(e) => setEditingExpense({ ...editingExpense, status: e.target.value as Expense['status'] })}
