@@ -1,5 +1,5 @@
 import {
-  collection, addDoc, updateDoc, deleteDoc, doc, query, orderBy, getDocs, onSnapshot, Timestamp, where,
+  collection, addDoc, updateDoc, deleteDoc, doc, query, getDocs, onSnapshot, Timestamp, where,
 } from 'firebase/firestore';
 import { db } from './firebase';
 
@@ -23,25 +23,35 @@ export interface FinanceRecord {
 
 const COLLECTION = 'transacoes';
 
+const sortByDateDesc = (records: FinanceRecord[]): FinanceRecord[] =>
+  records.sort((a, b) => {
+    if (!a.date && !b.date) return 0;
+    if (!a.date) return 1;
+    if (!b.date) return -1;
+    return new Date(b.date).getTime() - new Date(a.date).getTime();
+  });
+
+const mapTransacaoDoc = (d: { id: string; data: () => Record<string, unknown> }): FinanceRecord => ({
+  id: d.id,
+  ...d.data(),
+}) as FinanceRecord;
+
 export const subscribeTransactions = (callback: (records: FinanceRecord[]) => void): (() => void) => {
-  const q = query(collection(db, COLLECTION), orderBy('date', 'desc'));
+  const q = query(collection(db, COLLECTION));
   const unsubscribe = onSnapshot(q, snapshot => {
-    const records = snapshot.docs.map(d => ({
-      id: d.id,
-      ...d.data(),
-    })) as FinanceRecord[];
-    callback(records);
-  }, err => console.error('[Firestore] Erro no listener de transações:', err));
+    const records = snapshot.docs.map(mapTransacaoDoc);
+    callback(sortByDateDesc(records));
+  }, err => {
+    console.error('[Firestore] Erro no listener de transações (tentando fallback):', err);
+    fetchTransactions().then(callback).catch(e => console.error('[Firestore] Fallback também falhou:', e));
+  });
   return unsubscribe;
 };
 
 export const fetchTransactions = async (): Promise<FinanceRecord[]> => {
-  const q = query(collection(db, COLLECTION), orderBy('date', 'desc'));
+  const q = query(collection(db, COLLECTION));
   const snapshot = await getDocs(q);
-  return snapshot.docs.map(d => ({
-    id: d.id,
-    ...d.data(),
-  })) as FinanceRecord[];
+  return sortByDateDesc(snapshot.docs.map(mapTransacaoDoc));
 };
 
 export const addTransaction = async (record: Omit<FinanceRecord, 'id' | 'createdAt'>): Promise<string> => {

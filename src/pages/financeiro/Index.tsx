@@ -210,7 +210,8 @@ const Financeiro = () => {
     let result = allInvoices || [];
       
     if (filtersState.statuses?.length > 0) {
-      result = result.filter(inv => filtersState.statuses.includes(inv.status));
+      const selectedLower = filtersState.statuses.map(s => s.toLowerCase());
+      result = result.filter(inv => selectedLower.includes(inv.status.toLowerCase()));
     }
       
     if (filtersState.origins?.length > 0) {
@@ -256,7 +257,8 @@ const Financeiro = () => {
     }
       
     if (filtersState.statuses?.length > 0) {
-      result = result.filter(exp => filtersState.statuses.includes(exp.status));
+      const selectedLower = filtersState.statuses.map(s => s.toLowerCase());
+      result = result.filter(exp => selectedLower.includes(exp.status.toLowerCase()));
     }
       
     result = result.filter(exp => isInDateRange(exp.date));
@@ -273,27 +275,31 @@ const Financeiro = () => {
     return result;
   }, [firebaseExpenses, filtersState, activeTab, isInDateRange]);
     
+  const isPaid = (s: string) => s.toLowerCase() === 'pago';
+  const isCancelled = (s: string) => s.toLowerCase() === 'cancelado';
+  const isPending = (s: string) => s.toLowerCase() === 'pendente';
+
   const computedTotalRevenue = useMemo(() => 
     filteredInvoices
-      .filter(inv => inv.status === 'Pago')
+      .filter(inv => isPaid(inv.status))
       .reduce((acc, inv) => acc + parseBRL(inv.amount), 0),
   [filteredInvoices]);
     
   const computedPendingRevenue = useMemo(() => 
     filteredInvoices
-      .filter(inv => inv.status !== 'Pago' && inv.status !== 'Cancelado')
+      .filter(inv => !isPaid(inv.status) && !isCancelled(inv.status))
       .reduce((acc, inv) => acc + parseBRL(inv.amount), 0),
   [filteredInvoices]);
     
   const computedTotalExpenses = useMemo(() => 
     filteredExpenses
-      .filter(exp => exp.status === 'Pago')
+      .filter(exp => isPaid(exp.status))
       .reduce((acc, exp) => acc + parseBRL(exp.amount), 0),
   [filteredExpenses]);
     
   const computedPendingExpenses = useMemo(() => 
     filteredExpenses
-      .filter(exp => exp.status === 'Pendente')
+      .filter(exp => isPending(exp.status))
       .reduce((acc, exp) => acc + parseBRL(exp.amount), 0),
   [filteredExpenses]);
     
