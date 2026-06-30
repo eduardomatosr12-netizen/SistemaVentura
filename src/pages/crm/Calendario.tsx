@@ -109,6 +109,7 @@ const CRMCalendario = () => {
     equipe: '',
     dataMontagem: '',
     dataDesmontagem: '',
+    valorTotal: 0,
   });
 
   const [clientSearch, setClientSearch] = useState('');
@@ -299,6 +300,7 @@ const CRMCalendario = () => {
       equipe: '',
       dataMontagem: '',
       dataDesmontagem: '',
+      valorTotal: 0,
     });
     setDateDisplay(`${dd}/${mm}/${yyyy}`);
     setClientSearch('');
@@ -330,6 +332,7 @@ const CRMCalendario = () => {
       equipe: event.equipe || '',
       dataMontagem: event.dataMontagem || '',
       dataDesmontagem: event.dataDesmontagem || '',
+      valorTotal: event.valorTotal || 0,
     });
     setDateDisplay(brDate);
     setClientSearch(event.client || '');
@@ -711,6 +714,16 @@ const CRMCalendario = () => {
                 </div>
               </div>
 
+              {/* Valor */}
+              {(viewEvent.valorTotal ?? 0) > 0 && (
+                <div className="flex items-center gap-2">
+                  <CreditCard size={12} className="text-[#B5FF03]" />
+                  <span className="text-sm text-white font-black">
+                    {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(viewEvent.valorTotal ?? 0)}
+                  </span>
+                </div>
+              )}
+
               {/* Local */}
               {viewEvent.local && (
                 <div className="flex items-center gap-2">
@@ -915,6 +928,23 @@ const CRMCalendario = () => {
                       />
                     </div>
                   </div>
+                </div>
+
+                {/* Valor do Evento */}
+                <div className="space-y-2">
+                  <label className="flex items-center gap-2 text-[9px] font-black text-[#B5FF03] uppercase tracking-widest">
+                    <CreditCard size={12} strokeWidth={3} className="text-[#B5FF03]" />
+                    VALOR DO EVENTO (R$)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={formData.valorTotal ?? 0}
+                    onChange={(e) => setFormData({ ...formData, valorTotal: parseFloat(e.target.value) || 0 })}
+                    placeholder="0,00"
+                    className="w-full bg-[#0a0a0a] border border-[#333] rounded-md px-3 py-2 text-xs font-black text-white focus:ring-1 focus:ring-[#B5FF03] outline-none transition-all"
+                  />
                 </div>
 
                 {/* Cliente */}
