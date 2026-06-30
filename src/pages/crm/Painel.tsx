@@ -1,6 +1,7 @@
 import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import { Calendar, UserPlus, ArrowRight, CheckSquare, Activity, AlertCircle, LayoutDashboard, X, ChevronLeft, ChevronRight, ChevronDown, Search, User, Phone, Mail, CreditCard, CalendarDays, Clock, Plus, Trash2, MapPin, Pencil, FileText, MessageCircle } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell, LabelList } from 'recharts';
 import { useCRM } from '../../contexts/CRMContext';
 import type { CalendarEvent, Lead, OrcamentoItem } from '../../contexts/CRMContext';
 import { parseMonetaryValue, formatCurrency, generatePDF } from '../../lib/crmHelpers';
@@ -430,6 +431,25 @@ const CRMDashboard = () => {
     }
   };
 
+  const eventCountsByStatus = useMemo(() => {
+    const counts: Record<string, number> = {
+      confirmado: 0,
+      pendente: 0,
+      cancelado: 0,
+      realizado: 0,
+    };
+    safeEvents.forEach(event => {
+      const status = event.status || 'pendente';
+      if (status in counts) counts[status]++;
+    });
+    return [
+      { name: 'Confirmado', value: counts.confirmado, color: '#B5FF03' },
+      { name: 'Pendente', value: counts.pendente, color: '#f59e0b' },
+      { name: 'Cancelado', value: counts.cancelado, color: '#ef4444' },
+      { name: 'Realizado', value: counts.realizado, color: '#3b82f6' },
+    ];
+  }, [safeEvents]);
+
   const displayLogs = useMemo(() => {
     return activityLogs.slice(0, 10).filter(log => log?.id && log?.acao);
   }, [activityLogs]);
@@ -758,11 +778,45 @@ const CRMDashboard = () => {
           </div>
         </div>
 
-        {/* Atividades Recentes */}
+        {/* Gráfico de Eventos por Status */}
         <div className="p-4 md:p-8 border-t border-[#222]">
           <div className="flex items-center gap-2 mb-6">
             <Activity className="w-4 h-4 text-[#B5FF03]" aria-hidden="true" />
-            <h2 className="text-lg md:text-xl font-bold text-white">Atividades Recentes</h2>
+            <h2 className="text-lg md:text-xl font-bold text-white">Eventos por Status</h2>
+          </div>
+          <div className="bg-[#111] border border-[#333] rounded-2xl p-4 md:p-6">
+            <ResponsiveContainer width="100%" height={260}>
+              <BarChart data={eventCountsByStatus} margin={{ top: 20, right: 20, left: 0, bottom: 10 }} barCategoryGap="30%">
+                <XAxis
+                  dataKey="name"
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fill: '#aaaaaa', fontSize: 11, fontWeight: 700 }}
+                  dy={8}
+                />
+                <YAxis hide />
+                <Bar dataKey="value" radius={[6, 6, 0, 0]} background={{ fill: '#1a1a1a', radius: 6 }}>
+                  <LabelList
+                    dataKey="value"
+                    position="inside"
+                    fill="#fff"
+                    fontSize={20}
+                    fontWeight={900}
+                    offset={-8}
+                  />
+                  {eventCountsByStatus.map((entry, index) => (
+                    <Cell key={index} fill={entry.color} />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+
+        {/* Atividades Recentes */}
+        <div className="px-4 md:px-8 pb-4 md:pb-8">
+          <div className="flex items-center gap-2 mb-4">
+            <h3 className="text-sm font-black uppercase tracking-widest text-neutral-400">Atividades Recentes</h3>
           </div>
           {isLoadingLogs ? (
             <div className="flex items-center justify-center py-8">
