@@ -11,7 +11,7 @@ interface Invoice {
   amount: string;
   date: string;
   status: 'Pago' | 'Pendente' | 'Vencida' | 'Cancelado';
-  source?: 'manual' | 'lead' | 'asaas';
+  source?: 'manual' | 'lead' | 'evento' | 'asaas';
   paymentMethod?: string;
   installments?: string;
   lastModifiedBy?: string;
@@ -180,7 +180,7 @@ const Financeiro = () => {
         amount: formatCurrency(t.amount),
         date: t.date,
         status: t.status,
-        source: (t.source === 'asaas' ? 'asaas' : 'manual') as 'manual' | 'asaas',
+        source: (t.source as Invoice['source']) || 'manual',
         paymentMethod: t.paymentMethod,
         installments: t.installments,
         lastModifiedBy: t.lastModifiedBy,
@@ -392,8 +392,8 @@ const Financeiro = () => {
     
   const handleDeleteInvoice = async (id: string) => {
     const inv = allInvoices.find(i => i.id === id);
-    if (inv?.source === 'lead') {
-      alert('Faturas de leads não podem ser excluídas manualmente.');
+    if (inv?.source === 'lead' || inv?.source === 'evento') {
+      alert('Faturas de leads ou eventos não podem ser excluídas manualmente.');
       return;
     }
     if (confirm('Excluir esta fatura?')) {

@@ -150,7 +150,8 @@ export const CRMProvider = ({ children }: { children: ReactNode }) => {
       const title = fields.title ?? previous?.title ?? 'Evento';
       const client = fields.client ?? previous?.client ?? '';
       const dataEvento = fields.date ?? previous?.date ?? '';
-      const valorOrcamento = lead ? parseMonetaryValue(lead.value) : 0;
+      const eventValue = fields.valorTotal ?? previous?.valorTotal ?? 0;
+      const valorOrcamento = lead ? parseMonetaryValue(lead.value) : Number(eventValue);
 
       getTransactionByEventId(id).then(existing => {
         if (existing) return;
