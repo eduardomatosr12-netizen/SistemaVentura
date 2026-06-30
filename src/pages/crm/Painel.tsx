@@ -804,12 +804,13 @@ const CRMDashboard = () => {
                   <th className="text-[10px] font-black uppercase tracking-widest text-neutral-500 px-4 py-3">Data</th>
                   <th className="text-[10px] font-black uppercase tracking-widest text-neutral-500 px-4 py-3">Cidade</th>
                   <th className="text-[10px] font-black uppercase tracking-widest text-neutral-500 px-4 py-3">Status</th>
+                  <th className="text-[10px] font-black uppercase tracking-widest text-neutral-500 px-4 py-3 text-right">Ações</th>
                 </tr>
               </thead>
               <tbody>
                 {paginatedEvents.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="text-center py-8 text-neutral-500 text-xs italic">Nenhum evento encontrado.</td>
+                    <td colSpan={6} className="text-center py-8 text-neutral-500 text-xs italic">Nenhum evento encontrado.</td>
                   </tr>
                 ) : (
                   paginatedEvents.map(event => (
@@ -832,6 +833,20 @@ const CRMDashboard = () => {
                         ) : (
                           <span className="text-neutral-500 text-xs">—</span>
                         )}
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <button
+                          onClick={() => {
+                            const name = event.client || event.title || 'este evento';
+                            if (confirm(`Tem certeza que deseja excluir "${name}"?`)) {
+                              deleteEvent(event.id);
+                            }
+                          }}
+                          className="p-1.5 rounded-md text-neutral-500 hover:text-red-400 hover:bg-red-400/10 transition-colors"
+                          title="Excluir evento"
+                        >
+                          <Trash2 size={14} />
+                        </button>
                       </td>
                     </tr>
                   ))
@@ -883,12 +898,13 @@ const CRMDashboard = () => {
                   <th className="text-[10px] font-black uppercase tracking-widest text-neutral-500 px-4 py-3">Data de Criação</th>
                   <th className="text-[10px] font-black uppercase tracking-widest text-neutral-500 px-4 py-3">Valor Total</th>
                   <th className="text-[10px] font-black uppercase tracking-widest text-neutral-500 px-4 py-3">Status</th>
+                  <th className="text-[10px] font-black uppercase tracking-widest text-neutral-500 px-4 py-3 text-right">Ações</th>
                 </tr>
               </thead>
               <tbody>
                 {paginatedOrcamentos.length === 0 ? (
                   <tr>
-                    <td colSpan={4} className="text-center py-8 text-neutral-500 text-xs italic">Nenhum orçamento encontrado.</td>
+                    <td colSpan={5} className="text-center py-8 text-neutral-500 text-xs italic">Nenhum orçamento encontrado.</td>
                   </tr>
                 ) : (
                   paginatedOrcamentos.map(lead => (
@@ -902,6 +918,19 @@ const CRMDashboard = () => {
                         <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#333] text-white">
                           {lead.stage || '—'}
                         </span>
+                      </td>
+                      <td className="px-4 py-3 text-right">
+                        <button
+                          onClick={() => {
+                            if (confirm(`Tem certeza que deseja excluir o orçamento de "${lead.name || '—'}"?`)) {
+                              deleteLead(lead.id);
+                            }
+                          }}
+                          className="p-1.5 rounded-md text-neutral-500 hover:text-red-400 hover:bg-red-400/10 transition-colors"
+                          title="Excluir orçamento"
+                        >
+                          <Trash2 size={14} />
+                        </button>
                       </td>
                     </tr>
                   ))
