@@ -486,10 +486,15 @@ const CRMDashboard = () => {
 
   const upcomingEvents = useMemo(() => {
     return safeEvents
-      .filter(e => e.date && new Date(e.date + 'T12:00:00') >= new Date())
+      .filter(e => {
+        if (!e.date) return false;
+        const d = new Date(e.date + 'T12:00:00');
+        if (isNaN(d.getTime())) return false;
+        return d.getMonth() === viewMonth && d.getFullYear() === viewYear;
+      })
       .sort((a, b) => new Date(a.date + 'T12:00:00').getTime() - new Date(b.date + 'T12:00:00').getTime())
       .slice(0, 10);
-  }, [safeEvents]);
+  }, [safeEvents, viewMonth, viewYear]);
 
   const handleDayClick = (day: number) => {
     const occurrences = getOccurrencesForDay(day);
