@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useCRM } from '../../contexts/CRMContext';
-import type { CalendarEvent } from '../../contexts/CRMContext';
+import type { CalendarEvent } from '../../types/crm';
 import { generateUUID } from '../../lib/uuid';
 import { generateWhatsAppLink } from '../../lib/whatsapp';
 import { subscribeInventoryChanges, getAllInventoryItems } from '../../lib/inventory';

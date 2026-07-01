@@ -2,7 +2,7 @@ import {
   collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, orderBy, onSnapshot, Timestamp,
 } from 'firebase/firestore';
 import { db } from './firebase';
-import type { CalendarEvent } from '../contexts/CRMContext';
+import type { CalendarEvent } from '../types/crm';
 
 const COLLECTION = 'events';
 

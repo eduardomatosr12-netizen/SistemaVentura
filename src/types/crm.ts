@@ -1,0 +1,47 @@
+export interface OrcamentoItem {
+  id: string;
+  item: string;
+  qtdAtual: number;
+  valorUnit: number;
+}
+
+export interface Lead {
+  id: string;
+  name: string;
+  niche: string;
+  whatsapp: string;
+  email: string;
+  instagram: string;
+  stage: string;
+  origin?: string;
+  firstContact: string;
+  closingDate: string;
+  followUpReminder: string;
+  address: string;
+  notes: string;
+  value: string;
+  items?: OrcamentoItem[];
+  lastModifiedBy?: string;
+}
+
+export interface CalendarEvent {
+  id: string;
+  title: string;
+  client?: string;
+  clientId?: string;
+  eventType?: string;
+  date: string;
+  time?: string;
+  local?: string;
+  decorator?: string;
+  city?: string;
+  description?: string;
+  equipe?: string;
+  clientEmail?: string;
+  clientPhone?: string;
+  clientCpf?: string;
+  status?: 'confirmado' | 'pendente' | 'cancelado' | 'realizado';
+  dataMontagem?: string;
+  dataDesmontagem?: string;
+  valorTotal?: number;
+}

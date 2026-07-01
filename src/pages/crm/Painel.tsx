@@ -3,7 +3,7 @@ import { Calendar, UserPlus, ArrowRight, CheckSquare, Activity, AlertCircle, Lay
 import type { LucideIcon } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell, LabelList } from 'recharts';
 import { useCRM } from '../../contexts/CRMContext';
-import type { CalendarEvent, Lead, OrcamentoItem } from '../../contexts/CRMContext';
+import type { CalendarEvent, Lead, OrcamentoItem } from '../../types/crm';
 import { parseMonetaryValue, formatCurrency, generatePDF } from '../../lib/crmHelpers';
 import { useActivityLogs } from '../../contexts/ActivityContext';
 import { generateUUID } from '../../lib/uuid';

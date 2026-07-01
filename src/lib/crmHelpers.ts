@@ -1,4 +1,4 @@
-import type { Lead } from '../contexts/CRMContext';
+import type { Lead } from '../types/crm';
 import { cleanPhoneNumber, generateWhatsAppLink } from './whatsapp';
 
 export const STAGES = [

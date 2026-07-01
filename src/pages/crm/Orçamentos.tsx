@@ -2,7 +2,8 @@
 import { ReactNode } from 'react';
 import { Plus, Pencil, Trash2, X, Save, Filter, XCircle, ChevronDown, ChevronUp, AlertCircle, MessageCircle, Package, Search, FileText, Percent, DollarSign } from 'lucide-react';
 import WhatsAppModal from '../../components/WhatsAppModal';
-import { useCRM, type Lead, type OrcamentoItem } from '../../contexts/CRMContext';
+import { useCRM } from '../../contexts/CRMContext';
+import type { Lead, OrcamentoItem } from '../../types/crm';
 import { useFilters } from '../../contexts/FilterContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { generateUUID } from '../../lib/uuid';

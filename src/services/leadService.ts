@@ -2,7 +2,7 @@ import {
   collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, orderBy, onSnapshot, Timestamp,
 } from 'firebase/firestore';
 import { db } from './firebase';
-import type { Lead } from '../contexts/CRMContext';
+import type { Lead } from '../types/crm';
 const COLLECTION = 'leads';
 
 const toDate = (ts: Timestamp | string | undefined): string => {
