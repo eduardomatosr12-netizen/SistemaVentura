@@ -811,24 +811,7 @@ const CRMDashboard = () => {
           </div>
         </div>
 
-        {/* Atividades Recentes */}
-        <div className="px-4 md:px-8 pb-4 md:pb-8">
-          <div className="flex items-center gap-2 mb-4">
-            <h3 className="text-sm font-black uppercase tracking-widest text-neutral-400">Atividades Recentes</h3>
-          </div>
-          {isLoadingLogs ? (
-            <div className="flex items-center justify-center py-8">
-              <div className="w-6 h-6 border-2 border-[#B5FF03]/20 border-t-[#B5FF03] rounded-full animate-spin" />
-              <span className="ml-2 text-sm text-neutral-400">Carregando atividades...</span>
-            </div>
-          ) : fetchActivityLogsError ? (
-            <div className="flex items-center gap-2 p-4 bg-red-50 border border-red-100 rounded-md" role="alert">
-              <AlertCircle className="w-5 h-5 text-red-500" aria-hidden="true" />
-              <p className="text-sm text-red-600">{fetchActivityLogsError}</p>
-            </div>
-          ) : displayLogs.length === 0 ? (
-            <p className="text-neutral-400 text-xs">Nenhuma atividade registrada.</p>
-          ) : (
+        {displayLogs.length > 0 && (
             <div className="space-y-3">
               {displayLogs.map((log) => {
                 const Icon = ACTION_ICONS[log.acao] || Activity;
@@ -846,7 +829,6 @@ const CRMDashboard = () => {
               })}
             </div>
           )}
-        </div>
       </>)}
 
       {/* HISTÓRICO DE EVENTOS */}
