@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { Plus, Trash2, X, Edit3, MessageCircle, Package, Building2, Search, Calendar, Filter as FilterIcon, CheckCircle2, AlertCircle, Database } from 'lucide-react';
+import { Plus, Trash2, X, Edit3, MessageCircle, Package, Building2, Search, Calendar, Filter as FilterIcon, CheckCircle2, AlertCircle, AlertTriangle, Database } from 'lucide-react';
 import { collection, getDocs, deleteDoc, doc, writeBatch, Timestamp } from 'firebase/firestore';
 import { db } from '../../services/firebase';
 import { useAuth } from '../../contexts/AuthContext';
@@ -851,9 +851,27 @@ const Tarefas = () => {
 
 
   const [seedFeedback, setSeedFeedback] = useState<string | null>(null);
+  const [showSeedModal, setShowSeedModal] = useState(false);
+  const [seedLoading, setSeedLoading] = useState(false);
+  const [seedError, setSeedError] = useState<string | null>(null);
 
-  const handleSeedEstoque = async () => {
-    setSeedFeedback('Limpando registros antigos...');
+  useEffect(() => {
+    if (!showSeedModal) return;
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && !seedLoading) setShowSeedModal(false);
+    };
+    document.addEventListener('keydown', handleKey);
+    return () => document.removeEventListener('keydown', handleKey);
+  }, [showSeedModal, seedLoading]);
+
+  const handleSeedEstoque = () => {
+    setSeedError(null);
+    setShowSeedModal(true);
+  };
+
+  const handleConfirmSeed = async () => {
+    setSeedLoading(true);
+    setSeedError(null);
     const colRef = collection(db, 'estoque');
     try {
       const snapshot = await getDocs(colRef);
@@ -864,7 +882,6 @@ const Tarefas = () => {
         deleted++;
       });
       if (deleted > 0) await batchDelete.commit();
-      setSeedFeedback(`Deletados ${deleted} registros antigos. Inserindo novos...`);
     } catch (err) {
       console.warn('Erro ao limpar estoque antigo:', err);
     }
@@ -900,10 +917,13 @@ const Tarefas = () => {
         batch.set(ref, { ...item, createdAt: Timestamp.now() });
       }
       await batch.commit();
-      setSeedFeedback(`${itensSeed.length} itens inseridos com sucesso!`);
+      setShowSeedModal(false);
+      setSeedFeedback('Estoque populado com sucesso!');
       setTimeout(() => setSeedFeedback(null), 5000);
     } catch (err) {
-      setSeedFeedback('Erro na inserção: ' + (err instanceof Error ? err.message : String(err)));
+      setSeedError('Erro na inserção: ' + (err instanceof Error ? err.message : String(err)));
+    } finally {
+      setSeedLoading(false);
     }
   };
 
@@ -1397,6 +1417,51 @@ const Tarefas = () => {
             >
               Cancelar
             </button>
+          </div>
+        </div>
+      )}
+
+      {showSeedModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={() => { if (!seedLoading) setShowSeedModal(false); }}>
+          <div className="bg-[#111] border border-[#333] rounded-2xl p-6 md:p-8 max-w-full md:max-w-md w-full shadow-2xl" onClick={e => e.stopPropagation()}>
+            <div className="w-12 h-12 bg-yellow-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+              <AlertTriangle size={24} className="text-yellow-500" />
+            </div>
+            <h3 className="text-lg font-black text-white text-center mb-2">Popular estoque com dados de teste?</h3>
+            <p className="text-sm text-neutral-400 text-center mb-6 leading-relaxed">
+              Esta ação vai inserir equipamentos fictícios no estoque. Se já existirem registros cadastrados, eles podem ser duplicados. Use apenas em ambiente de desenvolvimento.
+            </p>
+            {seedError && (
+              <div className="flex items-center gap-2 p-3 mb-4 bg-red-500/10 border border-red-500/20 rounded-lg">
+                <AlertCircle size={16} className="text-red-500 shrink-0" />
+                <p className="text-sm text-red-400">{seedError}</p>
+              </div>
+            )}
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => setShowSeedModal(false)}
+                disabled={seedLoading}
+                className="flex-1 p-3 border border-[#333] rounded-lg text-neutral-400 hover:text-white hover:bg-[#222] transition-colors font-bold min-h-[44px] disabled:opacity-50"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmSeed}
+                disabled={seedLoading}
+                className="flex-1 p-3 bg-[#B5FF03] text-black rounded-lg font-bold hover:bg-[#a1e600] transition-colors min-h-[44px] disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {seedLoading ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-black/30 border-t-black rounded-full animate-spin" />
+                    Populando...
+                  </>
+                ) : (
+                  'Confirmar Seed'
+                )}
+              </button>
+            </div>
           </div>
         </div>
       )}
