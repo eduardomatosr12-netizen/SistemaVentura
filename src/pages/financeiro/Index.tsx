@@ -1,9 +1,10 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { useCRM } from '../../contexts/CRMContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { useFinance } from '../../contexts/FinanceContext';
 import { generateUUID } from '../../lib/uuid';
-import { Pencil, X, TrendingUp, TrendingDown, Clock, AlertTriangle, XCircle, ChevronDown, ChevronUp, SlidersHorizontal } from 'lucide-react';
+import { parseMonetaryValue } from '../../lib/crmHelpers';
+import { Pencil, X, TrendingUp, TrendingDown, Clock, AlertTriangle, XCircle, ChevronDown, ChevronUp, SlidersHorizontal, CreditCard, CheckCircle2 } from 'lucide-react';
 
 interface Invoice {
   id: string;
@@ -96,7 +97,7 @@ const RadioFilter = ({ label, checked, onChange }: { label: string; checked: boo
 );
 
 const Financeiro = () => {
-  const { Orçamentos, updateEvent } = useCRM();
+  const { Orçamentos, events, updateEvent } = useCRM();
   const { role, employeeName } = useAuth();
   const { transactions, addTransaction, updateTransaction, deleteTransaction } = useFinance();
 
@@ -279,29 +280,105 @@ const Financeiro = () => {
   const isCancelled = (s: string) => s.toLowerCase() === 'cancelado';
   const isPending = (s: string) => s.toLowerCase() === 'pendente';
 
-  const computedTotalRevenue = useMemo(() => 
-    filteredInvoices
-      .filter(inv => isPaid(inv.status))
-      .reduce((acc, inv) => acc + parseBRL(inv.amount), 0),
-  [filteredInvoices]);
-    
-  const computedPendingRevenue = useMemo(() => 
-    filteredInvoices
-      .filter(inv => !isPaid(inv.status) && !isCancelled(inv.status))
-      .reduce((acc, inv) => acc + parseBRL(inv.amount), 0),
-  [filteredInvoices]);
-    
-  const computedTotalExpenses = useMemo(() => 
-    filteredExpenses
-      .filter(exp => isPaid(exp.status))
-      .reduce((acc, exp) => acc + parseBRL(exp.amount), 0),
-  [filteredExpenses]);
-    
-  const computedPendingExpenses = useMemo(() => 
-    filteredExpenses
-      .filter(exp => isPending(exp.status))
-      .reduce((acc, exp) => acc + parseBRL(exp.amount), 0),
-  [filteredExpenses]);
+  const cardData = useMemo(() => {
+    if (activeTab === 'receitas') {
+      return {
+        card1: {
+          label: 'Total Receitas',
+          icon: TrendingUp,
+          iconColor: 'text-[#B5FF03]',
+          value: filteredInvoices.filter(inv => isPaid(inv.status)).reduce((acc, inv) => acc + parseBRL(inv.amount), 0),
+        },
+        card2: {
+          label: 'Receitas Pendentes',
+          icon: Clock,
+          iconColor: 'text-[#aaaaaa]',
+          value: filteredInvoices.filter(inv => !isPaid(inv.status) && !isCancelled(inv.status)).reduce((acc, inv) => acc + parseBRL(inv.amount), 0),
+        },
+        card3: {
+          label: 'Total Despesas',
+          icon: TrendingDown,
+          iconColor: 'text-[#ff4444]',
+          value: filteredExpenses.filter(exp => isPaid(exp.status)).reduce((acc, exp) => acc + parseBRL(exp.amount), 0),
+        },
+        card4: {
+          label: 'Despesas Pendentes',
+          icon: AlertTriangle,
+          iconColor: 'text-[#ff4444]',
+          value: filteredExpenses.filter(exp => isPending(exp.status)).reduce((acc, exp) => acc + parseBRL(exp.amount), 0),
+        },
+      };
+    }
+
+    if (activeTab === 'fluxo') {
+      return {
+        card1: {
+          label: 'Entradas Realizadas',
+          icon: TrendingUp,
+          iconColor: 'text-[#B5FF03]',
+          value: filteredInvoices.filter(inv => isPaid(inv.status)).reduce((acc, inv) => acc + parseBRL(inv.amount), 0),
+        },
+        card2: {
+          label: 'Entradas Pendentes',
+          icon: Clock,
+          iconColor: 'text-[#aaaaaa]',
+          value: filteredInvoices.filter(inv => !isPaid(inv.status) && !isCancelled(inv.status)).reduce((acc, inv) => acc + parseBRL(inv.amount), 0),
+        },
+        card3: {
+          label: 'Saídas Realizadas',
+          icon: TrendingDown,
+          iconColor: 'text-[#ff4444]',
+          value: filteredExpenses.filter(exp => isPaid(exp.status)).reduce((acc, exp) => acc + parseBRL(exp.amount), 0),
+        },
+        card4: {
+          label: 'Saídas Pendentes',
+          icon: AlertTriangle,
+          iconColor: 'text-[#ff4444]',
+          value: filteredExpenses.filter(exp => isPending(exp.status)).reduce((acc, exp) => acc + parseBRL(exp.amount), 0),
+        },
+      };
+    }
+
+    const parceladas = allInvoices.filter(inv => inv.paymentMethod === 'parcelado');
+    const totalParcelas = parceladas.filter(inv => inv.status !== 'Cancelado').reduce((acc, inv) => acc + parseBRL(inv.amount), 0);
+    const emAberto = parceladas.filter(inv => !isPaid(inv.status) && !isCancelled(inv.status)).reduce((acc, inv) => acc + parseBRL(inv.amount), 0);
+    const jaPago = parceladas.filter(inv => isPaid(inv.status)).reduce((acc, inv) => acc + parseBRL(inv.amount), 0);
+    const now = new Date();
+    const dozeMeses = new Date(now.getFullYear() + 1, now.getMonth(), 1);
+    const noPeriodo = parceladas.filter(inv => {
+      if (!inv.date || inv.date === '—') return false;
+      const d = new Date(inv.date);
+      return d >= now && d < dozeMeses;
+    });
+    const totalPeriodo = noPeriodo.reduce((acc, inv) => acc + parseBRL(inv.amount), 0);
+
+    return {
+      card1: {
+        label: 'Total Parcelas',
+        icon: CreditCard,
+        iconColor: 'text-[#B5FF03]',
+        value: totalParcelas,
+      },
+      card2: {
+        label: 'Parcelas em Aberto',
+        icon: Clock,
+        iconColor: 'text-[#aaaaaa]',
+        value: emAberto,
+      },
+      card3: {
+        label: 'Total Pago',
+        icon: CheckCircle2,
+        iconColor: 'text-[#B5FF03]',
+        value: jaPago,
+      },
+      card4: {
+        label: 'Próximos 12 Meses',
+        icon: TrendingUp,
+        iconColor: 'text-[#B5FF03]',
+        value: totalPeriodo,
+      },
+    };
+  }, [activeTab, filteredInvoices, filteredExpenses, allInvoices]);
     
   const hasActiveFilters = filtersState.period !== '' || filtersState.statuses.length > 0 || 
     filtersState.categories.length > 0 || filtersState.origins.length > 0 || 
@@ -319,6 +396,31 @@ const Financeiro = () => {
       maxValue: '',
     });
   };
+
+  useEffect(() => {
+    if (!events || !transactions) return;
+    const eventTransactions = new Set(
+      transactions.filter(t => t.origemEventoId).map(t => t.origemEventoId)
+    );
+    const eventosSemFatura = events.filter(
+      e => e.status === 'realizado' && e.id && !eventTransactions.has(e.id)
+    );
+    for (const event of eventosSemFatura) {
+      const lead = Orçamentos.find(o => o.id === event.clientId);
+      const valorOrcamento = lead ? parseMonetaryValue(lead.value) : Number(event.valorTotal ?? 0);
+      if (!valorOrcamento) continue;
+      addTransaction({
+        client: event.client || '',
+        description: `Evento: ${event.title} - ${event.client}`,
+        amount: Number(valorOrcamento),
+        date: event.date,
+        status: 'Pendente',
+        type: 'receita',
+        source: 'evento',
+        origemEventoId: event.id,
+      }).catch(err => console.error('[Finance] Erro ao criar receita de evento:', err));
+    }
+  }, [events, transactions, Orçamentos, addTransaction]);
     
   const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
   const [editingInvoice, setEditingInvoice] = useState<Invoice | null>(null);
@@ -681,34 +783,18 @@ const Financeiro = () => {
 
       {/* KPI Cards */}
       <div className="p-6 grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-[#111111] border border-[#222222] rounded-lg p-4">
-          <div className="flex justify-between items-center mb-2">
-            <span className="text-xs font-black uppercase tracking-widest text-[#aaaaaa]">Total Receitas</span>
-            <TrendingUp size={16} className="text-[#B5FF03]" />
-          </div>
-          <p className="text-2xl font-black text-white">{formatCurrency(computedTotalRevenue)}</p>
-        </div>
-        <div className="bg-[#111111] border border-[#222222] rounded-lg p-4">
-          <div className="flex justify-between items-center mb-2">
-            <span className="text-xs font-black uppercase tracking-widest text-[#aaaaaa]">Receitas Pendentes</span>
-            <Clock size={16} className="text-[#aaaaaa]" />
-          </div>
-          <p className="text-2xl font-black text-white">{formatCurrency(computedPendingRevenue)}</p>
-        </div>
-        <div className="bg-[#111111] border border-[#222222] rounded-lg p-4">
-          <div className="flex justify-between items-center mb-2">
-            <span className="text-xs font-black uppercase tracking-widest text-[#aaaaaa]">Total Despesas</span>
-            <TrendingDown size={16} className="text-[#ff4444]" />
-          </div>
-          <p className="text-2xl font-black text-white">{formatCurrency(computedTotalExpenses)}</p>
-        </div>
-        <div className="bg-[#111111] border border-[#222222] rounded-lg p-4">
-          <div className="flex justify-between items-center mb-2">
-            <span className="text-xs font-black uppercase tracking-widest text-[#aaaaaa]">Despesas Pendentes</span>
-            <AlertTriangle size={16} className="text-[#ff4444]" />
-          </div>
-          <p className="text-2xl font-black text-white">{formatCurrency(computedPendingExpenses)}</p>
-        </div>
+        {[cardData.card1, cardData.card2, cardData.card3, cardData.card4].map((card, idx) => {
+          const Icon = card.icon;
+          return (
+            <div key={idx} className="bg-[#111111] border border-[#222222] rounded-lg p-4">
+              <div className="flex justify-between items-center mb-2">
+                <span className="text-xs font-black uppercase tracking-widest text-[#aaaaaa]">{card.label}</span>
+                <Icon size={16} className={card.iconColor} />
+              </div>
+              <p className="text-2xl font-black text-white">{formatCurrency(card.value)}</p>
+            </div>
+          );
+        })}
       </div>
 
       {/* Tabs */}
