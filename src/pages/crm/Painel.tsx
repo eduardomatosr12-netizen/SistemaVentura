@@ -429,6 +429,9 @@ const CRMDashboard = () => {
     }
   };
 
+  const safeEvents = Array.isArray(events) ? events : [];
+  const today = new Date();
+
   const eventCountsByStatus = useMemo(() => {
     const counts: Record<string, number> = {
       confirmado: 0,
@@ -451,9 +454,6 @@ const CRMDashboard = () => {
   const displayLogs = useMemo(() => {
     return activityLogs.slice(0, 10).filter(log => log?.id && log?.acao);
   }, [activityLogs]);
-
-  const today = new Date();
-  const safeEvents = Array.isArray(events) ? events : [];
 
   type DayOccurrence = {
     event: CalendarEvent;
