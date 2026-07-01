@@ -42,7 +42,7 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,svg,png,jpg,ico,json,woff2}'],
         runtimeCaching: [
           {
-            urlPattern: /^https?:\/\/.*/,
+            urlPattern: /^https?:\/\/(?!.*(?:firestore|firebaseremoteconfig|firebaseio|googleapis\.com\/firestore)).*/,
             handler: 'NetworkFirst',
             options: {
               cacheName: 'external-cache',

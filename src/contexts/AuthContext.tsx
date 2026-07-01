@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import type { ReactNode } from 'react';
-import { doc, getDoc, setDoc, deleteDoc, Timestamp } from 'firebase/firestore';
+import { doc, onSnapshot, setDoc, deleteDoc, Timestamp } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import { generateUUID, isValidUUID } from '../lib/uuid';
 
@@ -71,7 +71,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setIsLoading(false);
       return;
     }
-    getDoc(doc(db, 'sessions', storedId)).then(snap => {
+
+    const unsub = onSnapshot(doc(db, 'sessions', storedId), snap => {
       if (snap.exists()) {
         const data = snap.data();
         if (data?.email && data?.userId) {
@@ -87,9 +88,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           setEmployeeName(data.employeeName || data.name || 'Usuário');
           setIsAuthenticated(true);
         }
+      } else {
+        setIsAuthenticated(false);
+        setUser(null);
+        setRole(null);
+        setEmployeeName(null);
       }
-    }).catch(err => console.error('[AUTH] Erro ao carregar sessão:', err))
-    .finally(() => setIsLoading(false));
+      setIsLoading(false);
+    }, err => {
+      console.error('[AUTH] Erro ao monitorar sessão:', err);
+      setIsLoading(false);
+    });
+
+    return () => unsub();
   }, []);
 
   const login = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {

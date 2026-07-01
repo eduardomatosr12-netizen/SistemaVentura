@@ -3,8 +3,6 @@ import {
 } from 'firebase/firestore';
 import { db } from './firebase';
 import type { Lead } from '../contexts/CRMContext';
-import { generateUUID } from '../lib/uuid';
-
 const COLLECTION = 'leads';
 
 const toDate = (ts: Timestamp | string | undefined): string => {
@@ -69,22 +67,46 @@ export const fetchLeads = async (): Promise<Lead[]> => {
 };
 
 export const addLead = async (lead: Omit<Lead, 'id'>): Promise<string> => {
-  const docRef = await addDoc(collection(db, COLLECTION), {
-    ...lead,
-    firstContact: lead.firstContact || new Date().toISOString().split('T')[0],
-    createdAt: Timestamp.now(),
-  });
-  return docRef.id;
+  try {
+    const docRef = await addDoc(collection(db, COLLECTION), {
+      ...lead,
+      firstContact: lead.firstContact || new Date().toISOString().split('T')[0],
+      createdAt: Timestamp.now(),
+    });
+    console.log('[Firestore] Lead criado:', docRef.id);
+    return docRef.id;
+  } catch (err) {
+    console.error('[Firestore] Erro ao criar lead:', err);
+    throw err;
+  }
 };
 
 export const updateLead = async (id: string, fields: Partial<Lead>): Promise<void> => {
-  await updateDoc(doc(db, COLLECTION, id), { ...fields, updatedAt: Timestamp.now() });
+  try {
+    await updateDoc(doc(db, COLLECTION, id), { ...fields, updatedAt: Timestamp.now() });
+    console.log('[Firestore] Lead atualizado:', id);
+  } catch (err) {
+    console.error('[Firestore] Erro ao atualizar lead:', id, err);
+    throw err;
+  }
 };
 
 export const deleteLead = async (id: string): Promise<void> => {
-  await deleteDoc(doc(db, COLLECTION, id));
+  try {
+    await deleteDoc(doc(db, COLLECTION, id));
+    console.log('[Firestore] Lead excluído:', id);
+  } catch (err) {
+    console.error('[Firestore] Erro ao excluir lead:', id, err);
+    throw err;
+  }
 };
 
 export const updateLeadStage = async (id: string, stage: string): Promise<void> => {
-  await updateDoc(doc(db, COLLECTION, id), { stage, updatedAt: Timestamp.now() });
+  try {
+    await updateDoc(doc(db, COLLECTION, id), { stage, updatedAt: Timestamp.now() });
+    console.log('[Firestore] Stage do lead atualizado:', id, '->', stage);
+  } catch (err) {
+    console.error('[Firestore] Erro ao atualizar stage do lead:', id, err);
+    throw err;
+  }
 };

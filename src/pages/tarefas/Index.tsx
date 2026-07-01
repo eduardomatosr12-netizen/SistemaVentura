@@ -6,7 +6,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useCRM } from '../../contexts/CRMContext';
 import { generateUUID } from '../../lib/uuid';
 import { generateWhatsAppLink, WHATSAPP_MESSAGE_TEMPLATES } from '../../lib/whatsapp';
-import { subscribeInventoryChanges, getBoards, saveBoards } from '../../lib/inventory';
+import { subscribeInventoryChanges, getBoards, updateBoard } from '../../lib/inventory';
 import { subscribeRentals, addRental, updateRental, deleteRental } from '../../services/rentalService';
 import type { RentalRecord } from '../../services/rentalService';
 
@@ -785,7 +785,7 @@ const Tarefas = () => {
     return map;
   }, [dateFilterEstoque, events, Orçamentos]);
 
-  const autoSaveRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pendingBoardWrites = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
   const [saveFeedback, setSaveFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [showCreateTaskModal, setShowCreateTaskModal] = useState(false);
   const [editingNote, setEditingNote] = useState<{ rowId: string; colId: string; boardId: string } | null>(null);
@@ -808,22 +808,11 @@ const Tarefas = () => {
     return () => {
       unsubBoards();
       unsubRentals();
+      Object.values(pendingBoardWrites.current).forEach(clearTimeout);
     };
   }, []);
 
-  useEffect(() => {
-    if (autoSaveRef.current) clearTimeout(autoSaveRef.current);
-    autoSaveRef.current = setTimeout(() => {
-      saveBoards(boards).then(() => {
-        setSaveFeedback({ type: 'success', message: 'Salvo no Firestore' });
-        setTimeout(() => setSaveFeedback(null), 3000);
-      }).catch(err => {
-        console.error('[Tarefas] Erro auto-save boards:', err);
-        setSaveFeedback({ type: 'error', message: 'Erro ao salvar no Firestore' });
-        setTimeout(() => setSaveFeedback(null), 5000);
-      });
-    }, 800);
-  }, [boards]);
+
 
   useEffect(() => {
     const handleOpenNoteEditor = (e: Event) => {
@@ -838,6 +827,25 @@ const Tarefas = () => {
 
   const handleUpdateBoard = (updatedBoard: BoardType) => {
     setBoards(boards.map(b => b.id === updatedBoard.id ? updatedBoard : b));
+
+    if (pendingBoardWrites.current[updatedBoard.id]) {
+      clearTimeout(pendingBoardWrites.current[updatedBoard.id]);
+    }
+    pendingBoardWrites.current[updatedBoard.id] = setTimeout(() => {
+      updateBoard(updatedBoard.id, {
+        title: updatedBoard.title,
+        color: updatedBoard.color,
+        columns: updatedBoard.columns as any,
+        rows: updatedBoard.rows as any,
+      }).then(() => {
+        setSaveFeedback({ type: 'success', message: 'Salvo no Firestore' });
+        setTimeout(() => setSaveFeedback(null), 3000);
+      }).catch(err => {
+        console.error('[Tarefas] Erro ao salvar board:', err);
+        setSaveFeedback({ type: 'error', message: 'Erro ao salvar no Firestore' });
+        setTimeout(() => setSaveFeedback(null), 5000);
+      });
+    }, 500);
   };
 
 

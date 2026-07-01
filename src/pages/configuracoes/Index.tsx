@@ -6,7 +6,7 @@ import {
   RefreshCw, Users,
   AlertCircle, MessageCircle
 } from 'lucide-react';
-import { doc, getDoc, setDoc, collection, getDocs, addDoc, deleteDoc, query, orderBy, Timestamp } from 'firebase/firestore';
+import { doc, onSnapshot, setDoc, collection, addDoc, deleteDoc, query, orderBy, Timestamp } from 'firebase/firestore';
 import { db } from '../../services/firebase';
 import { useAuth } from '../../contexts/AuthContext';
 import { generateUUID } from '../../lib/uuid';
@@ -52,47 +52,37 @@ const Configuracoes = () => {
   });
 
   useEffect(() => {
-    const loadData = async () => {
-      if (!user?.id) return;
-      try {
-        const snap = await getDoc(doc(db, 'profiles', user.id));
-        if (snap.exists()) {
-          const data = snap.data();
-          setProfileData({
-            name: data.nome || '',
-            email: user.email || '',
-            phone: data.telefone || '',
-            avatar: data.avatar || ''
-          });
-          if (data.avatar) {
-            setAvatarPreview(data.avatar);
-          }
-        }
-      } catch (err) {
-        console.warn('[CONFIG] Erro ao carregar perfil:', err);
-      }
-    };
-    loadData();
-  }, [user?.id]);
-
-  const loadEmployees = async () => {
     if (!user?.id) return;
-    setIsLoadingEmployees(true);
-    try {
-      const q = query(collection(db, 'employees'), orderBy('createdAt', 'asc'));
-      const snapshot = await getDocs(q);
-      setEmployees(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Employee)));
-    } catch (err) {
-      console.warn('[CONFIG] Erro ao carregar funcionários:', err);
-    } finally {
-      setIsLoadingEmployees(false);
-    }
-  };
 
-  useEffect(() => {
-    if (user?.id) {
-      loadEmployees();
-    }
+    const unsubProfile = onSnapshot(doc(db, 'profiles', user.id), snap => {
+      if (snap.exists()) {
+        const data = snap.data();
+        setProfileData({
+          name: data.nome || '',
+          email: user.email || '',
+          phone: data.telefone || '',
+          avatar: data.avatar || ''
+        });
+        if (data.avatar) {
+          setAvatarPreview(data.avatar);
+        }
+      }
+    }, err => console.warn('[CONFIG] Erro ao carregar perfil:', err));
+
+    setIsLoadingEmployees(true);
+    const q = query(collection(db, 'employees'), orderBy('createdAt', 'asc'));
+    const unsubEmployees = onSnapshot(q, snapshot => {
+      setEmployees(snapshot.docs.map(d => ({ id: d.id, ...d.data() } as Employee)));
+      setIsLoadingEmployees(false);
+    }, err => {
+      console.warn('[CONFIG] Erro ao carregar funcionários:', err);
+      setIsLoadingEmployees(false);
+    });
+
+    return () => {
+      unsubProfile();
+      unsubEmployees();
+    };
   }, [user?.id]);
 
   const handleAddEmployee = async () => {

@@ -1,5 +1,5 @@
 import {
-  collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, onSnapshot, Timestamp,
+  collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, orderBy, onSnapshot, Timestamp,
 } from 'firebase/firestore';
 import { db } from './firebase';
 import type { CalendarEvent } from '../contexts/CRMContext';
@@ -40,13 +40,12 @@ const sortByDate = (events: CalendarEvent[]): CalendarEvent[] =>
   });
 
 export const subscribeEvents = (callback: (events: CalendarEvent[]) => void): () => void => {
-  const q = query(collection(db, COLLECTION));
+  const q = query(collection(db, COLLECTION), orderBy('date'));
   const unsubscribe = onSnapshot(q, snapshot => {
     const events = snapshot.docs.map(mapEventDoc);
     callback(sortByDate(events));
   }, err => {
-    console.error('[Firestore] Erro no listener de eventos (tentando fallback):', err);
-    fetchEvents().then(callback).catch(e => console.error('[Firestore] Fallback também falhou:', e));
+    console.error('[Firestore] Erro no listener de eventos:', err);
   });
   return unsubscribe;
 };
@@ -58,17 +57,35 @@ export const fetchEvents = async (): Promise<CalendarEvent[]> => {
 };
 
 export const addEvent = async (event: Omit<CalendarEvent, 'id'>): Promise<string> => {
-  const docRef = await addDoc(collection(db, COLLECTION), {
-    ...event,
-    createdAt: Timestamp.now(),
-  });
-  return docRef.id;
+  try {
+    const docRef = await addDoc(collection(db, COLLECTION), {
+      ...event,
+      createdAt: Timestamp.now(),
+    });
+    console.log('[Firestore] Evento criado:', docRef.id);
+    return docRef.id;
+  } catch (err) {
+    console.error('[Firestore] Erro ao criar evento:', err);
+    throw err;
+  }
 };
 
 export const updateEvent = async (id: string, fields: Partial<CalendarEvent>): Promise<void> => {
-  await updateDoc(doc(db, COLLECTION, id), { ...fields, updatedAt: Timestamp.now() });
+  try {
+    await updateDoc(doc(db, COLLECTION, id), { ...fields, updatedAt: Timestamp.now() });
+    console.log('[Firestore] Evento atualizado:', id);
+  } catch (err) {
+    console.error('[Firestore] Erro ao atualizar evento:', id, err);
+    throw err;
+  }
 };
 
 export const deleteEvent = async (id: string): Promise<void> => {
-  await deleteDoc(doc(db, COLLECTION, id));
+  try {
+    await deleteDoc(doc(db, COLLECTION, id));
+    console.log('[Firestore] Evento excluído:', id);
+  } catch (err) {
+    console.error('[Firestore] Erro ao excluir evento:', id, err);
+    throw err;
+  }
 };

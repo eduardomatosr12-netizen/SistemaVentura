@@ -1,5 +1,5 @@
-import { createContext, useContext, useState, useCallback, type ReactNode } from 'react';
-import { collection, addDoc, getDocs, query, orderBy, limit, Timestamp } from 'firebase/firestore';
+import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react';
+import { collection, addDoc, query, orderBy, limit, onSnapshot, Timestamp } from 'firebase/firestore';
 import { db } from '../services/firebase';
 
 export interface ActivityLog {
@@ -14,7 +14,6 @@ interface ActivityLogsContextType {
   activityLogs: ActivityLog[];
   isLoadingLogs: boolean;
   fetchActivityLogsError: string | null;
-  fetchActivityLogs: (limitCount?: number) => Promise<void>;
   logActivity: (acao: ActivityLog['acao'], descricao: string) => Promise<void>;
 }
 
@@ -24,7 +23,6 @@ const defaultActivityLogsContext: ActivityLogsContextType = {
   activityLogs: [],
   isLoadingLogs: false,
   fetchActivityLogsError: null,
-  fetchActivityLogs: async () => {},
   logActivity: async () => {},
 };
 
@@ -35,56 +33,41 @@ export const ActivityLogsProvider = ({ children }: { children: ReactNode }) => {
   const [isLoadingLogs, setIsLoadingLogs] = useState(false);
   const [fetchActivityLogsError, setFetchActivityLogsError] = useState<string | null>(null);
 
-  const fetchActivityLogs = useCallback(async (limitCount = 20) => {
-    setIsLoadingLogs(true);
-    setFetchActivityLogsError(null);
-
-    const timeoutId = setTimeout(() => {
-      setFetchActivityLogsError('Tempo limite excedido (5s). Verifique sua conexão.');
-      setIsLoadingLogs(false);
-    }, 5000);
-
-    try {
-      const q = query(collection(db, COLLECTION), orderBy('timestamp', 'desc'), limit(limitCount));
-      const snapshot = await getDocs(q);
-      clearTimeout(timeoutId);
+  useEffect(() => {
+    const q = query(collection(db, COLLECTION), orderBy('timestamp', 'desc'), limit(50));
+    const unsubscribe = onSnapshot(q, snapshot => {
       const logs = snapshot.docs.map(d => ({ id: d.id, ...d.data() } as ActivityLog));
       setActivityLogs(logs);
-    } catch (err: any) {
-      clearTimeout(timeoutId);
-      console.error('[ActivityLogs] Erro ao buscar logs:', err);
+      setIsLoadingLogs(false);
+      setFetchActivityLogsError(null);
+    }, err => {
+      console.error('[ActivityLogs] Erro no listener de logs:', err);
+      setIsLoadingLogs(false);
       if (err?.message?.includes('fetch')) {
         setFetchActivityLogsError('Erro de conexão. Verifique sua internet.');
       } else {
         setFetchActivityLogsError('Erro ao carregar atividades. Tente novamente.');
       }
-    } finally {
-      setIsLoadingLogs(false);
-    }
+    });
+    return unsubscribe;
   }, []);
 
   const logActivity = async (acao: ActivityLog['acao'], descricao: string) => {
     try {
-      const docRef = await addDoc(collection(db, COLLECTION), {
+      await addDoc(collection(db, COLLECTION), {
         acao,
         descricao,
-        timestamp: new Date().toISOString(),
-      });
-      const newLog: ActivityLog = {
-        id: docRef.id,
-        acao,
-        descricao,
-        timestamp: new Date().toISOString(),
+        timestamp: Timestamp.now(),
         user_id: '',
-      };
-      setActivityLogs(prev => [newLog, ...prev]);
+      });
+      console.log(`[ActivityLogs] Atividade registrada: ${acao}`);
     } catch (err) {
       console.error('[ActivityLogs] Erro ao registrar atividade:', err);
     }
   };
 
   return (
-    <ActivityLogsContext.Provider value={{ activityLogs, isLoadingLogs, fetchActivityLogsError, fetchActivityLogs, logActivity }}>
+    <ActivityLogsContext.Provider value={{ activityLogs, isLoadingLogs, fetchActivityLogsError, logActivity }}>
       {children}
     </ActivityLogsContext.Provider>
   );

@@ -7,7 +7,7 @@ import type { CalendarEvent, Lead, OrcamentoItem } from '../../contexts/CRMConte
 import { parseMonetaryValue, formatCurrency, generatePDF } from '../../lib/crmHelpers';
 import { useActivityLogs } from '../../contexts/ActivityContext';
 import { generateUUID } from '../../lib/uuid';
-import { getAllInventoryItems, getAvailableQuantity, subscribeInventoryChanges, refreshReservedCache } from '../../lib/inventory';
+import { getAllInventoryItems, getAvailableQuantity, subscribeInventoryChanges } from '../../lib/inventory';
 import { addTransaction } from '../../services/financeService';
 import { generateWhatsAppLink } from '../../lib/whatsapp';
 
@@ -158,9 +158,7 @@ const CRMDashboard = () => {
 
   useEffect(() => {
     if (isCreateOpen) {
-      refreshReservedCache(formData.date || new Date().toISOString().split('T')[0]).then(() => {
-        setInvStockItems(getAllInventoryItems());
-      });
+      setInvStockItems(getAllInventoryItems());
     }
   }, [isCreateOpen]);
 

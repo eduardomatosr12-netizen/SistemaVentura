@@ -44,17 +44,35 @@ export const fetchRentals = async (): Promise<RentalRecord[]> => {
 };
 
 export const addRental = async (record: Omit<RentalRecord, 'id' | 'createdAt'>): Promise<string> => {
-  const docRef = await addDoc(collection(db, COLLECTION), {
-    ...record,
-    createdAt: Timestamp.now(),
-  });
-  return docRef.id;
+  try {
+    const docRef = await addDoc(collection(db, COLLECTION), {
+      ...record,
+      createdAt: Timestamp.now(),
+    });
+    console.log('[Firestore] Aluguel criado:', docRef.id);
+    return docRef.id;
+  } catch (err) {
+    console.error('[Firestore] Erro ao criar aluguel:', err);
+    throw err;
+  }
 };
 
 export const updateRental = async (id: string, fields: Partial<RentalRecord>): Promise<void> => {
-  await updateDoc(doc(db, COLLECTION, id), { ...fields, updatedAt: Timestamp.now() });
+  try {
+    await updateDoc(doc(db, COLLECTION, id), { ...fields, updatedAt: Timestamp.now() });
+    console.log('[Firestore] Aluguel atualizado:', id);
+  } catch (err) {
+    console.error('[Firestore] Erro ao atualizar aluguel:', id, err);
+    throw err;
+  }
 };
 
 export const deleteRental = async (id: string): Promise<void> => {
-  await deleteDoc(doc(db, COLLECTION, id));
+  try {
+    await deleteDoc(doc(db, COLLECTION, id));
+    console.log('[Firestore] Aluguel excluído:', id);
+  } catch (err) {
+    console.error('[Firestore] Erro ao excluir aluguel:', id, err);
+    throw err;
+  }
 };
