@@ -140,8 +140,9 @@ const CRMCalendario = () => {
     const seen = new Set<string>();
     return Orçamentos.filter(o => {
       if (o.stage !== 'Contrato Fechado') return false;
-      if (seen.has(o.id)) return false;
-      seen.add(o.id);
+      const key = o.name?.trim().toLowerCase() || o.id;
+      if (seen.has(key)) return false;
+      seen.add(key);
       return true;
     });
   }, [Orçamentos]);

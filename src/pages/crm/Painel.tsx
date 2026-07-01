@@ -142,8 +142,9 @@ const CRMDashboard = () => {
   const clientList = useMemo(() => {
     const seen = new Set<string>();
     return Orçamentos.flatMap(o => {
-      if (seen.has(o.id)) return [];
-      seen.add(o.id);
+      const key = o.name?.trim().toLowerCase() || o.id;
+      if (seen.has(key)) return [];
+      seen.add(key);
       return [{
         id: o.id,
         nome: o.name,
