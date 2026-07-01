@@ -68,7 +68,7 @@ const EVENT_TYPES = [
 ];
 
 const CRMDashboard = () => {
-  const { events, Orçamentos, addLead, addEvent, updateEvent, updateLead, deleteEvent } = useCRM();
+  const { events, Orçamentos, addLead, addEvent, updateEvent, updateLead, deleteEvent, deleteLead } = useCRM();
   const { activityLogs, isLoadingLogs, fetchActivityLogsError } = useActivityLogs();
   const [selectedDayEvents, setSelectedDayEvents] = useState<CalendarEvent[] | null>(null);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
@@ -140,12 +140,17 @@ const CRMDashboard = () => {
   const invSearchRef = useRef<HTMLDivElement>(null);
 
   const clientList = useMemo(() => {
-    return Orçamentos.map(o => ({
-      id: o.id,
-      nome: o.name,
-      whatsapp: o.whatsapp,
-      cidade: o.address,
-    }));
+    const seen = new Set<string>();
+    return Orçamentos.flatMap(o => {
+      if (seen.has(o.id)) return [];
+      seen.add(o.id);
+      return [{
+        id: o.id,
+        nome: o.name,
+        whatsapp: o.whatsapp,
+        cidade: o.address,
+      }];
+    });
   }, [Orçamentos]);
 
   useEffect(() => {

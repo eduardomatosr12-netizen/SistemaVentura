@@ -137,7 +137,13 @@ const CRMCalendario = () => {
   }, [invStockItems, invSearch]);
 
   const closedOrçamentos = useMemo(() => {
-    return Orçamentos.filter(o => o.stage === 'Contrato Fechado');
+    const seen = new Set<string>();
+    return Orçamentos.filter(o => {
+      if (o.stage !== 'Contrato Fechado') return false;
+      if (seen.has(o.id)) return false;
+      seen.add(o.id);
+      return true;
+    });
   }, [Orçamentos]);
 
   const filteredClients = useMemo(() => {

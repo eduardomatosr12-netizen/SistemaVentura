@@ -42,13 +42,13 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,svg,png,jpg,ico,json,woff2}'],
         runtimeCaching: [
           {
-            urlPattern: /^https?:\/\/(?!.*(?:firestore|firebaseremoteconfig|firebaseio|googleapis\.com\/firestore)).*/,
+            urlPattern: /^https:\/\/api\.(asaas|whatsapp)\.com\/.*/,
             handler: 'NetworkFirst',
             options: {
-              cacheName: 'external-cache',
+              cacheName: 'external-api-cache',
               expiration: {
-                maxEntries: 100,
-                maxAgeSeconds: 60 * 60 * 24 * 7,
+                maxEntries: 50,
+                maxAgeSeconds: 60 * 60 * 24,
               },
             },
           },
