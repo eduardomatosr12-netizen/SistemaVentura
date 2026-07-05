@@ -446,10 +446,6 @@ const CRMDashboard = () => {
       realizado: 0,
     };
     safeEvents.forEach(event => {
-      if (!event.date) return;
-      const d = new Date(event.date + 'T12:00:00');
-      if (isNaN(d.getTime())) return;
-      if (d.getMonth() !== viewMonth || d.getFullYear() !== viewYear) return;
       const status = event.status || 'pendente';
       if (status in counts) counts[status]++;
     });
@@ -459,7 +455,7 @@ const CRMDashboard = () => {
       { name: 'Cancelado', value: counts.cancelado, color: '#ef4444' },
       { name: 'Realizado', value: counts.realizado, color: '#3b82f6' },
     ];
-  }, [safeEvents, viewMonth, viewYear]);
+  }, [safeEvents]);
 
   const displayLogs = useMemo(() => {
     return activityLogs.slice(0, 10).filter(log => log?.id && log?.acao);
@@ -790,11 +786,11 @@ const CRMDashboard = () => {
         <div className="p-4 md:p-8 border-t border-[#222]">
           <div className="flex items-center gap-2 mb-6">
             <Activity className="w-4 h-4 text-[#B5FF03]" aria-hidden="true" />
-            <h2 className="text-lg md:text-xl font-bold text-white">Eventos por Status — {monthNames[viewMonth]} {viewYear}</h2>
+            <h2 className="text-lg md:text-xl font-bold text-white">Eventos por Status</h2>
           </div>
           <div className="bg-[#111] border border-[#333] rounded-2xl p-4 md:p-6">
             <ResponsiveContainer width="100%" height={260}>
-              <BarChart data={eventCountsByStatus} margin={{ top: 20, right: 20, left: 0, bottom: 10 }} barCategoryGap="30%">
+              <BarChart key={`chart-${viewMonth}-${viewYear}`} data={eventCountsByStatus} margin={{ top: 20, right: 20, left: 0, bottom: 10 }} barCategoryGap="30%">
                 <XAxis
                   dataKey="name"
                   axisLine={false}
