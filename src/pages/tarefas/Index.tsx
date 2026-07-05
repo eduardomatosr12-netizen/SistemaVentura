@@ -227,7 +227,6 @@ const Board = ({
 
   const renderCell = (row: Row, col: Column) => {
     const value = row.values[col.id] ?? '';
-    const { employeeName } = useAuth();
 
     // Check if value looks like a phone number for WhatsApp
     const isPhone = typeof value === 'string' && /[\d\s\-()]+$/.test(value) && value.replace(/\D/g, '').length >= 10;
@@ -719,11 +718,70 @@ const Board = ({
             </tbody>
           </table>
         </div>
-        <div className="p-3 border-t border-[#333] bg-[#111]">
+        <div className="p-3 border-t border-[#333] bg-[#111] hidden md:block">
           <button onClick={handleAddRow} className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-neutral-400 hover:text-white hover:bg-[#222] rounded-lg transition-colors">
             <Plus size={16} /> Nova Linha
           </button>
         </div>
+      </div>
+
+      {/* Mobile inventory cards */}
+      <div className="md:hidden space-y-3">
+        {board.rows.map(row => (
+          <div key={row.id} className="bg-[#111] border border-[#333] rounded-lg p-4 space-y-2">
+            <div className="flex justify-between items-start">
+              <div className="flex-1 min-w-0">
+                <span className="text-white text-sm font-bold block truncate">{String(row.values['col-1'] || '')}</span>
+                {row.values['col-2'] && (
+                  <span className="text-[10px] text-neutral-400 font-medium uppercase tracking-wider">{String(row.values['col-2'])}</span>
+                )}
+              </div>
+              <button onClick={() => handleDeleteRow(row.id)} className="text-neutral-400 hover:text-red-400 p-2 min-h-[44px] shrink-0">
+                <Trash2 size={16} />
+              </button>
+            </div>
+            <div className="grid grid-cols-2 gap-2 text-xs">
+              <div className="bg-[#1a1a1a] rounded-lg px-3 py-2">
+                <span className="text-neutral-500 block">Qtd. Atual</span>
+                <span className="text-white font-bold">{String(row.values['col-3'] ?? '0')}</span>
+              </div>
+              <div className="bg-[#1a1a1a] rounded-lg px-3 py-2">
+                <span className="text-neutral-500 block">Estoque</span>
+                <span className="text-white font-bold">{String(row.values['col-4'] ?? '0')}</span>
+              </div>
+              {row.values['col-5'] && (
+                <div className="bg-[#1a1a1a] rounded-lg px-3 py-2">
+                  <span className="text-neutral-500 block">Fornecedor</span>
+                  <span className="text-white font-bold truncate block">{String(row.values['col-5'])}</span>
+                </div>
+              )}
+              {row.values['col-6'] && (
+                <div className="bg-[#1a1a1a] rounded-lg px-3 py-2">
+                  <span className="text-neutral-500 block">Últ. Entrada</span>
+                  <span className="text-white font-bold">{String(row.values['col-6'])}</span>
+                </div>
+              )}
+              {row.values['col-7'] && (
+                <div className="bg-[#1a1a1a] rounded-lg px-3 py-2">
+                  <span className="text-neutral-500 block">Valor Unit.</span>
+                  <span className="text-[#B5FF03] font-bold">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(row.values['col-7']) || 0)}</span>
+                </div>
+              )}
+              {row.values['col-8'] && Number(row.values['col-8']) > 0 && (
+                <div className="bg-[#1a1a1a] rounded-lg px-3 py-2">
+                  <span className="text-neutral-500 block">Custo Unit.</span>
+                  <span className="text-white font-bold">R$ {String(row.values['col-8'])}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
+        {board.rows.length === 0 && (
+          <div className="text-center py-8 text-sm text-neutral-500">Nenhum item no inventário</div>
+        )}
+        <button onClick={handleAddRow} className="w-full flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium text-neutral-400 hover:text-white hover:bg-[#222] rounded-lg border border-dashed border-[#333] transition-colors">
+          <Plus size={16} /> Nova Linha
+        </button>
       </div>
     </div>
   );

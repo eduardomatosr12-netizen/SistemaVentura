@@ -46,7 +46,7 @@ function FilterDropdown({ label, options, value, onChange }: FilterDropdownProps
         )}
       </button>
       {isOpen && (
-        <div className="absolute top-full left-0 mt-1 w-48 bg-white border border-neutral-200 rounded-xl shadow-xl z-[999] overflow-hidden">
+        <div className="absolute top-full left-0 right-auto mt-1 min-w-48 w-max max-w-[80vw] bg-white border border-neutral-200 rounded-xl shadow-xl z-[999] overflow-hidden">
           {value && (
             <button
               onClick={() => { onChange(null); setIsOpen(false); }}

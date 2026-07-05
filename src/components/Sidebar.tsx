@@ -41,7 +41,7 @@ const Sidebar = ({ isOpen = false, onClose }: SidebarProps) => {
         />
       )}
       
-      <aside className={`fixed md:hidden left-0 top-0 h-screen w-[85%] max-w-80 bg-black border-r border-[#333] flex-col overflow-y-auto z-50 transform transition-transform duration-300 ease-out safe-area-top ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+      <aside className={`fixed md:hidden left-0 top-0 h-dvh w-[85%] max-w-80 bg-black border-r border-[#333] flex-col overflow-y-auto z-50 transform transition-transform duration-300 ease-out safe-area-top ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <button
           onClick={onClose}
           className="absolute top-4 right-4 p-2 rounded-md hover:bg-[#222]"
@@ -94,7 +94,7 @@ const Sidebar = ({ isOpen = false, onClose }: SidebarProps) => {
         </div>
       </aside>
 
-      <aside className="fixed left-0 top-0 h-screen w-64 bg-black border-r border-[#333] flex-col overflow-y-auto z-40 hidden md:flex">
+      <aside className="fixed left-0 top-0 h-dvh w-64 bg-black border-r border-[#333] flex-col overflow-y-auto z-40 hidden md:flex">
         <div className="px-6 pt-4 pb-4 border-b border-[#333] flex items-center justify-center">
           <img src="/logo.jpg" alt="VENTURA" className="w-full object-contain" style={{ maxWidth: 140 }} />
         </div>

@@ -502,7 +502,7 @@ const CRMCalendario = () => {
                 return (
                   <div
                     key={idx}
-                    className={`min-h-[120px] p-2 border border-[#1a1a1a] rounded-md flex flex-col gap-1 transition-all ${
+                    className={`min-h-[60px] md:min-h-[120px] p-1 md:p-2 border border-[#1a1a1a] rounded-md flex flex-col gap-1 transition-all ${
                       isCurrentMonth ? 'bg-[#000000] hover:border-[#333]' : 'bg-[#000000]/50'
                     } ${isToday ? 'ring-2 ring-[#B5FF03] ring-inset' : ''}`}
                   >

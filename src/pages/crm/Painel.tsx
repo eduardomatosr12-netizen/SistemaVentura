@@ -672,7 +672,7 @@ const CRMDashboard = () => {
                   </div>
                 ))}
                 {Array.from({ length: startOffset }).map((_, i) => (
-                  <div key={`empty-${i}`} className="bg-[#111] min-h-[90px] md:min-h-[110px] border-r border-b border-[#222]" />
+                  <div key={`empty-${i}`} className="bg-[#111] min-h-[60px] md:min-h-[110px] border-r border-b border-[#222]" />
                 ))}
                 {Array.from({ length: daysInMonth }).map((_, i) => {
                   const day = i + 1;
@@ -690,7 +690,7 @@ const CRMDashboard = () => {
                       tabIndex={0}
                       onClick={() => handleDayClick(day)}
                       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleDayClick(day); }}
-                      className={`min-h-[90px] md:min-h-[110px] p-1.5 text-left align-top border-r border-b border-[#222] select-none transition-colors
+                      className={`min-h-[60px] md:min-h-[110px] p-1 md:p-1.5 text-left align-top border-r border-b border-[#222] select-none transition-colors
                         ${isToday ? 'bg-[#1a1a1a] ring-1 ring-inset ring-[#B5FF03]' : 'bg-[#111]'}
                         hover:bg-[#1a1a1a]`}
                       style={{ cursor: 'pointer !important', pointerEvents: 'auto !important' } as React.CSSProperties}

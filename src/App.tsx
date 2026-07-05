@@ -34,7 +34,7 @@ function AppRoutes() {
       <Route
         path="/unauthorized"
         element={
-          <div className="h-screen flex items-center justify-center">
+          <div className="h-dvh flex items-center justify-center">
             <div className="text-center">
               <h1 className="text-2xl font-black text-black mb-2">Acesso Negado</h1>
               <p className="text-neutral-500">Você não tem permissão para acessar esta página.</p>

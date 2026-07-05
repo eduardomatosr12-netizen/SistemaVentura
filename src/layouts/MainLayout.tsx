@@ -55,7 +55,7 @@ const MainLayout = ({ children, hideSubmenu }: MainLayoutProps) => {
 
   if (isLoading) {
     return (
-      <div className="h-screen flex items-center justify-center bg-black">
+      <div className="min-h-dvh flex items-center justify-center bg-black">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#B5FF03]"></div>
       </div>
     );
@@ -63,7 +63,7 @@ const MainLayout = ({ children, hideSubmenu }: MainLayoutProps) => {
 
   if (!isAuthenticated) {
     return (
-      <div className="h-screen flex items-center justify-center bg-black p-4">
+      <div className="min-h-dvh flex items-center justify-center bg-black p-4">
         <div className="w-full max-w-md">
           <div className="bg-[#111] rounded-3xl shadow-xl p-8 md:p-12 border border-[#333]">
             <div className="text-center mb-8">
@@ -155,7 +155,7 @@ const MainLayout = ({ children, hideSubmenu }: MainLayoutProps) => {
   }
 
   return (
-    <div className="flex h-screen bg-black overflow-hidden">
+    <div className="flex h-dvh bg-black overflow-hidden">
 
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
