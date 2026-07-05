@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
-import { useCRM } from '../../contexts/CRMContext';
+import { useCRM, type CalendarEvent } from '../../contexts/CRMContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { useFinance } from '../../contexts/FinanceContext';
 import { generateUUID } from '../../lib/uuid';
@@ -16,6 +16,8 @@ interface Invoice {
   paymentMethod?: string;
   installments?: string;
   lastModifiedBy?: string;
+  eventType?: string;
+  city?: string;
 }
 
 interface Expense {
@@ -172,35 +174,57 @@ const Financeiro = () => {
     return date >= range.start && date <= range.end;
   }, [getDateRange]);
     
+  const eventsById = useMemo(() => {
+    const map = new Map<string, CalendarEvent>();
+    (events || []).forEach(e => { if (e.id) map.set(e.id, e); });
+    return map;
+  }, [events]);
+
+  const eventsByClientId = useMemo(() => {
+    const map = new Map<string, CalendarEvent>();
+    (events || []).forEach(e => { if (e.clientId) map.set(e.clientId, e); });
+    return map;
+  }, [events]);
+
   const firebaseInvoices: Invoice[] = useMemo(() =>
     (transactions || [])
       .filter(t => t.type === 'receita' && t.source !== 'lead')
-      .map(t => ({
-        id: t.id!,
-        client: t.client || '',
-        amount: formatCurrency(t.amount),
-        date: t.date,
-        status: t.status,
-        source: (t.source as Invoice['source']) || 'manual',
-        paymentMethod: t.paymentMethod,
-        installments: t.installments,
-        lastModifiedBy: t.lastModifiedBy,
-      })),
-  [transactions]);
+      .map(t => {
+        const event = t.origemEventoId ? eventsById.get(t.origemEventoId) : undefined;
+        return {
+          id: t.id!,
+          client: t.client || '',
+          amount: formatCurrency(t.amount),
+          date: t.date,
+          status: t.status,
+          source: (t.source as Invoice['source']) || 'manual',
+          paymentMethod: t.paymentMethod,
+          installments: t.installments,
+          lastModifiedBy: t.lastModifiedBy,
+          eventType: event?.eventType,
+          city: event?.city,
+        };
+      }),
+  [transactions, eventsById]);
 
   const [asaasInvoices] = useState<Invoice[]>([]);
     
   const computedLeadInvoices: Invoice[] = (Orçamentos || [])
     .filter(l => l.stage === 'Contrato Fechado')
-    .map(l => ({
-      id: `lead-${l.id}`,
-      client: l.name,
-      amount: l.value || 'R$ 0,00',
-      date: l.closingDate || '—',
-      status: 'Pago',
-      source: 'lead',
-      paymentMethod: 'pix',
-    }));
+    .map(l => {
+      const event = eventsByClientId.get(l.id);
+      return {
+        id: `lead-${l.id}`,
+        client: l.name,
+        amount: l.value || 'R$ 0,00',
+        date: l.closingDate || '—',
+        status: 'Pago',
+        source: 'lead',
+        paymentMethod: 'pix',
+        eventType: event?.eventType,
+        city: event?.city,
+      };
+    });
     
   const allInvoices = useMemo(() => 
     [...asaasInvoices, ...firebaseInvoices, ...computedLeadInvoices].sort((a, b) => 
@@ -842,19 +866,20 @@ const Financeiro = () => {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-[#222222]">
-                    <th className="text-left p-4 text-xs font-black uppercase tracking-widest text-[#B5FF03]">ID</th>
+                    <th className="text-left p-4 text-xs font-black uppercase tracking-widest text-[#B5FF03]">Tipo de Evento</th>
                     <th className="text-left p-4 text-xs font-black uppercase tracking-widest text-[#B5FF03]">Cliente</th>
                     <th className="text-left p-4 text-xs font-black uppercase tracking-widest text-[#B5FF03]">Valor</th>
                     <th className="text-left p-4 text-xs font-black uppercase tracking-widest text-[#B5FF03]">Data</th>
                     <th className="text-left p-4 text-xs font-black uppercase tracking-widest text-[#B5FF03]">Status</th>
                     <th className="text-left p-4 text-xs font-black uppercase tracking-widest text-[#B5FF03]">Pagamento</th>
+                    <th className="text-left p-4 text-xs font-black uppercase tracking-widest text-[#B5FF03]">Cidade</th>
                     <th className="text-right p-4 text-xs font-black uppercase tracking-widest text-[#B5FF03]">Ações</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredInvoices.map(invoice => (
                     <tr key={invoice.id} className="border-b border-[#222222] hover:bg-[#1a1a1a] transition-colors">
-                      <td className="p-4 text-sm text-[#aaaaaa]">{invoice.id}</td>
+                      <td className="p-4 text-sm text-[#aaaaaa]">{invoice.eventType || '—'}</td>
                       <td className="p-4 text-sm text-white">{invoice.client}</td>
                       <td className="p-4 text-sm text-white">{invoice.amount}</td>
                       <td className="p-4 text-sm text-[#aaaaaa]">{invoice.date}</td>
@@ -864,6 +889,7 @@ const Financeiro = () => {
                         </span>
                       </td>
                       <td className="p-4 text-sm text-[#aaaaaa]">{paymentMethodLabel(invoice.paymentMethod, invoice.installments)}</td>
+                      <td className="p-4 text-sm text-[#aaaaaa]">{invoice.city || '—'}</td>
                       <td className="p-4 text-right">
                         <button
                           onClick={() => handleOpenInvoiceModal(invoice)}
@@ -876,7 +902,7 @@ const Financeiro = () => {
                   ))}
                   {filteredInvoices.length === 0 && (
                     <tr>
-                      <td colSpan={7} className="p-8 text-center text-sm text-[#aaaaaa]">
+                      <td colSpan={8} className="p-8 text-center text-sm text-[#aaaaaa]">
                         Nenhuma fatura encontrada
                       </td>
                     </tr>
@@ -892,9 +918,10 @@ const Financeiro = () => {
                     <span className={`px-2 py-0.5 rounded-full text-[10px] ${statusStyle[invoice.status]}`}>{invoice.status}</span>
                   </div>
                   <div className="grid grid-cols-2 gap-2 text-xs">
-                    <div><span className="text-neutral-500">ID:</span> <span className="text-white">{invoice.id}</span></div>
+                    <div><span className="text-neutral-500">Tipo:</span> <span className="text-white">{invoice.eventType || '—'}</span></div>
                     <div><span className="text-neutral-500">Valor:</span> <span className="text-white">{invoice.amount}</span></div>
                     <div><span className="text-neutral-500">Data:</span> <span className="text-white">{invoice.date}</span></div>
+                    <div><span className="text-neutral-500">Cidade:</span> <span className="text-white">{invoice.city || '—'}</span></div>
                     <div><span className="text-neutral-500">Pagamento:</span> <span className="text-white">{paymentMethodLabel(invoice.paymentMethod, invoice.installments)}</span></div>
                   </div>
                   <div className="flex justify-end gap-2 pt-2 border-t border-[#222]">
