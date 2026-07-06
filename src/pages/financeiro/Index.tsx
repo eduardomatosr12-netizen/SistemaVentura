@@ -192,20 +192,17 @@ const Financeiro = () => {
     return date >= range.start && date <= range.end;
   }, [getDateRange]);
     
-  const eventsById = useMemo(() => {
-    const map = new Map<string, CalendarEvent>();
-    (events || []).forEach(e => { if (e.id) map.set(e.id, e); });
-    return map;
-  }, [events]);
+  const isPaid = (s: string) => s.toLowerCase() === 'pago';
+  const isCancelled = (s: string) => s.toLowerCase() === 'cancelado';
+  const isPending = (s: string) => s.toLowerCase() === 'pendente';
 
-  const eventsByClientId = useMemo(() => {
-    const map = new Map<string, CalendarEvent>();
-    (events || []).forEach(e => { if (e.clientId) map.set(e.clientId, e); });
-    return map;
-  }, [events]);
+  const displayData = useMemo(() => {
+    const eventsById = new Map<string, CalendarEvent>();
+    (events || []).forEach(e => { if (e.id) eventsById.set(e.id, e); });
+    const eventsByClientId = new Map<string, CalendarEvent>();
+    (events || []).forEach(e => { if (e.clientId) eventsByClientId.set(e.clientId, e); });
 
-  const firebaseInvoices: Invoice[] = useMemo(() =>
-    (transactions || [])
+    const rawInvoices: Invoice[] = (transactions || [])
       .filter(t => t.type === 'receita' && t.source !== 'lead')
       .map(t => {
         const event = t.origemEventoId ? eventsById.get(t.origemEventoId) : undefined;
@@ -222,72 +219,51 @@ const Financeiro = () => {
           eventType: event?.eventType,
           city: event?.city,
         };
-      }),
-  [transactions, eventsById]);
-
-  const [asaasInvoices] = useState<Invoice[]>([]);
-    
-  const computedLeadInvoices: Invoice[] = (Orçamentos || [])
-    .filter(l => l.stage === 'Contrato Fechado')
-    .map(l => {
-      const event = eventsByClientId.get(l.id);
-      return {
-        id: `lead-${l.id}`,
-        client: l.name,
-        amount: l.value || 'R$ 0,00',
-        date: l.closingDate || '—',
-        status: 'Pago',
-        source: 'lead',
-        paymentMethod: 'pix',
-        eventType: event?.eventType,
-        city: event?.city,
-      };
-    });
-    
-  const allInvoices = useMemo(() => 
-    [...asaasInvoices, ...firebaseInvoices, ...computedLeadInvoices].sort((a, b) => 
-      new Date(b.date).getTime() - new Date(a.date).getTime()
-    ), [asaasInvoices, firebaseInvoices, computedLeadInvoices]);
-
-  const filteredInvoices = useMemo(() => {
-    let result = allInvoices || [];
-      
-    if (activeFilters.statuses?.length > 0) {
-      const selectedLower = activeFilters.statuses.map(s => s.toLowerCase());
-      result = result.filter(inv => selectedLower.includes(inv.status.toLowerCase()));
-    }
-      
-    if (activeFilters.origins?.length > 0) {
-      result = result.filter(inv => {
-        const method = inv.paymentMethod || '';
-        return activeFilters.origins.includes(method);
       });
-    }
-      
-    result = result.filter(inv => isInDateRange(inv.date));
-      
-    if (activeFilters.minValue) {
-      const min = parseFloat(activeFilters.minValue);
-      result = result.filter(inv => parseBRL(inv.amount) >= min);
-    }
-    if (activeFilters.maxValue) {
-      const max = parseFloat(activeFilters.maxValue);
-      result = result.filter(inv => parseBRL(inv.amount) <= max);
-    }
-      
-    return result;
-  }, [allInvoices, activeFilters, isInDateRange]);
 
-  useEffect(() => {
-    if (transactions.length > 0) {
-      console.log('[DEBUG] transactions:', transactions.length);
-      console.log('[DEBUG] despesas:', transactions.filter(t => t.type === 'despesa').length);
-      console.log('[DEBUG] despesas sample:', transactions.filter(t => t.type === 'despesa').slice(0, 2));
-    }
-  }, [transactions]);
+    const leadInvoices: Invoice[] = (Orçamentos || [])
+      .filter(l => l.stage === 'Contrato Fechado')
+      .map(l => {
+        const event = eventsByClientId.get(l.id);
+        return {
+          id: `lead-${l.id}`,
+          client: l.name,
+          amount: l.value || 'R$ 0,00',
+          date: l.closingDate || '—',
+          status: 'Pago',
+          source: 'lead',
+          paymentMethod: 'pix',
+          eventType: event?.eventType,
+          city: event?.city,
+        };
+      });
 
-  const firebaseExpenses: Expense[] = useMemo(() =>
-    (transactions || [])
+    const allInvoices: Invoice[] = [...rawInvoices, ...leadInvoices].sort((a, b) =>
+      new Date(b.date).getTime() - new Date(a.date).getTime()
+    );
+
+    const filteredInvoices = allInvoices.filter(inv => {
+      if (activeFilters.statuses?.length > 0) {
+        const selectedLower = activeFilters.statuses.map(s => s.toLowerCase());
+        if (!selectedLower.includes(inv.status.toLowerCase())) return false;
+      }
+      if (activeFilters.origins?.length > 0) {
+        const method = inv.paymentMethod || '';
+        if (!activeFilters.origins.includes(method)) return false;
+      }
+      if (!isInDateRange(inv.date)) return false;
+      if (activeFilters.minValue) {
+        const min = parseFloat(activeFilters.minValue);
+        if (parseBRL(inv.amount) < min) return false;
+      }
+      if (activeFilters.maxValue) {
+        const max = parseFloat(activeFilters.maxValue);
+        if (parseBRL(inv.amount) > max) return false;
+      }
+      return true;
+    });
+
+    const allExpenses: Expense[] = (transactions || [])
       .filter(t => t.type === 'despesa')
       .map(t => ({
         id: t.id!,
@@ -303,111 +279,58 @@ const Financeiro = () => {
         parentId: t.parentId,
         origemEventoId: t.origemEventoId,
         lastModifiedBy: t.lastModifiedBy,
-      })),
-  [transactions]);
-    
-  const filteredExpenses = useMemo(() => {
-    let result = firebaseExpenses || [];
+      }));
 
-    if (viewMode === 'despesas' && (activeTab === 'fixas' || activeTab === 'variaveis')) {
-      const expenseTypeMap: Record<string, string> = { fixas: 'fixa', variaveis: 'variavel' };
-      result = result.filter(exp => exp.expenseType === expenseTypeMap[activeTab]);
-    }
-      
-    if (activeFilters.categories?.length > 0) {
-      result = result.filter(exp => activeFilters.categories.includes(exp.category));
-    }
-      
-    if (activeFilters.statuses?.length > 0) {
-      const selectedLower = activeFilters.statuses.map(s => s.toLowerCase());
-      result = result.filter(exp => selectedLower.includes(exp.status.toLowerCase()));
-    }
-      
-    result = result.filter(exp => isInDateRange(exp.date));
-      
-    if (activeFilters.minValue) {
-      const min = parseFloat(activeFilters.minValue);
-      result = result.filter(exp => parseBRL(exp.amount) >= min);
-    }
-    if (activeFilters.maxValue) {
-      const max = parseFloat(activeFilters.maxValue);
-      result = result.filter(exp => parseBRL(exp.amount) <= max);
-    }
-      
-    return result;
-  }, [firebaseExpenses, activeFilters, viewMode, activeTab, isInDateRange]);
-    
-  const isPaid = (s: string) => s.toLowerCase() === 'pago';
-  const isCancelled = (s: string) => s.toLowerCase() === 'cancelado';
-  const isPending = (s: string) => s.toLowerCase() === 'pendente';
+    const filteredExpenses = allExpenses.filter(exp => {
+      if (viewMode === 'despesas' && (activeTab === 'fixas' || activeTab === 'variaveis')) {
+        const expenseTypeMap: Record<string, string> = { fixas: 'fixa', variaveis: 'variavel' };
+        if (exp.expenseType !== expenseTypeMap[activeTab]) return false;
+      }
+      if (activeFilters.categories?.length > 0) {
+        if (!activeFilters.categories.includes(exp.category)) return false;
+      }
+      if (activeFilters.statuses?.length > 0) {
+        const selectedLower = activeFilters.statuses.map(s => s.toLowerCase());
+        if (!selectedLower.includes(exp.status.toLowerCase())) return false;
+      }
+      if (!isInDateRange(exp.date)) return false;
+      if (activeFilters.minValue) {
+        const min = parseFloat(activeFilters.minValue);
+        if (parseBRL(exp.amount) < min) return false;
+      }
+      if (activeFilters.maxValue) {
+        const max = parseFloat(activeFilters.maxValue);
+        if (parseBRL(exp.amount) > max) return false;
+      }
+      return true;
+    });
 
-  const cardsData = useMemo(() => {
-    if (viewMode === 'receitas') {
-      const base = firebaseInvoices;
-      return {
-        card1: {
-          label: 'Total Recebido',
-          icon: TrendingUp,
-          iconColor: 'text-[#B5FF03]',
-          value: base.filter(inv => isPaid(inv.status)).reduce((acc, inv) => acc + parseBRL(inv.amount), 0),
-          dimmed: false,
-        },
-        card2: {
-          label: 'Receitas Pendentes',
-          icon: Clock,
-          iconColor: 'text-[#aaaaaa]',
-          value: base.filter(inv => isPending(inv.status)).reduce((acc, inv) => acc + parseBRL(inv.amount), 0),
-          dimmed: false,
-        },
-      };
-    }
-
-    const fixas = firebaseExpenses.filter(exp => exp.expenseType === 'fixa');
-    const variaveis = firebaseExpenses.filter(exp => exp.expenseType === 'variavel');
+    const fixas = allExpenses.filter(exp => exp.expenseType === 'fixa');
+    const variaveis = allExpenses.filter(exp => exp.expenseType === 'variavel');
     const isFixasTab = activeTab === 'fixas';
     const isVariaveisTab = activeTab === 'variaveis';
 
-    return {
-      card1: {
-        label: 'Fixas Pagas',
-        icon: TrendingDown,
-        iconColor: 'text-[#22c55e]',
-        value: fixas.filter(exp => isPaid(exp.status)).reduce((acc, exp) => acc + parseBRL(exp.amount), 0),
-        dimmed: isVariaveisTab,
-      },
-      card2: {
-        label: 'Fixas Pendentes',
-        icon: Clock,
-        iconColor: 'text-[#aaaaaa]',
-        value: fixas.filter(exp => isPending(exp.status)).reduce((acc, exp) => acc + parseBRL(exp.amount), 0),
-        dimmed: isVariaveisTab,
-      },
-      card3: {
-        label: 'Variáveis Pagas',
-        icon: TrendingDown,
-        iconColor: 'text-[#f97316]',
-        value: variaveis.filter(exp => isPaid(exp.status)).reduce((acc, exp) => acc + parseBRL(exp.amount), 0),
-        dimmed: isFixasTab,
-      },
-      card4: {
-        label: 'Variáveis Pendentes',
-        icon: AlertTriangle,
-        iconColor: 'text-[#f97316]',
-        value: variaveis.filter(exp => isPending(exp.status)).reduce((acc, exp) => acc + parseBRL(exp.amount), 0),
-        dimmed: isFixasTab,
-      },
-    };
-  }, [viewMode, firebaseInvoices, firebaseExpenses, activeTab]);
+    const cards = viewMode === 'receitas'
+      ? [
+          { label: 'Total Recebido', icon: TrendingUp, iconColor: 'text-[#B5FF03]', value: rawInvoices.filter(inv => isPaid(inv.status)).reduce((acc, inv) => acc + parseBRL(inv.amount), 0), dimmed: false },
+          { label: 'Receitas Pendentes', icon: Clock, iconColor: 'text-[#aaaaaa]', value: rawInvoices.filter(inv => isPending(inv.status)).reduce((acc, inv) => acc + parseBRL(inv.amount), 0), dimmed: false },
+        ]
+      : [
+          { label: 'Fixas Pagas', icon: TrendingDown, iconColor: 'text-[#22c55e]', value: fixas.filter(exp => isPaid(exp.status)).reduce((acc, exp) => acc + parseBRL(exp.amount), 0), dimmed: isVariaveisTab },
+          { label: 'Fixas Pendentes', icon: Clock, iconColor: 'text-[#aaaaaa]', value: fixas.filter(exp => isPending(exp.status)).reduce((acc, exp) => acc + parseBRL(exp.amount), 0), dimmed: isVariaveisTab },
+          { label: 'Variáveis Pagas', icon: TrendingDown, iconColor: 'text-[#f97316]', value: variaveis.filter(exp => isPaid(exp.status)).reduce((acc, exp) => acc + parseBRL(exp.amount), 0), dimmed: isFixasTab },
+          { label: 'Variáveis Pendentes', icon: AlertTriangle, iconColor: 'text-[#f97316]', value: variaveis.filter(exp => isPending(exp.status)).reduce((acc, exp) => acc + parseBRL(exp.amount), 0), dimmed: isFixasTab },
+        ];
 
-  /* Cash flow card data for sub-tabs */
-  const fluxoData = useMemo(() => {
-    return {
+    const fluxo = {
       entradaRealizada: filteredInvoices.filter(inv => isPaid(inv.status)).reduce((acc, inv) => acc + parseBRL(inv.amount), 0),
       entradaPendente: filteredInvoices.filter(inv => !isPaid(inv.status) && !isCancelled(inv.status)).reduce((acc, inv) => acc + parseBRL(inv.amount), 0),
       saidaRealizada: filteredExpenses.filter(exp => isPaid(exp.status)).reduce((acc, exp) => acc + parseBRL(exp.amount), 0),
       saidaPendente: filteredExpenses.filter(exp => isPending(exp.status)).reduce((acc, exp) => acc + parseBRL(exp.amount), 0),
     };
-  }, [filteredInvoices, filteredExpenses]);
+
+    return { rawInvoices, allInvoices, filteredInvoices, allExpenses, filteredExpenses, cards, fluxo };
+  }, [transactions, events, Orçamentos, activeFilters, viewMode, activeTab, isInDateRange]);
 
   const hasActiveFilters = activeFilters.period !== '' || activeFilters.statuses.length > 0 || 
     activeFilters.categories.length > 0 || activeFilters.origins.length > 0 || 
@@ -517,7 +440,7 @@ const Financeiro = () => {
   };
     
   const handleDeleteInvoice = async (id: string) => {
-    const inv = allInvoices.find(i => i.id === id);
+    const inv = displayData.allInvoices.find(i => i.id === id);
     if (inv?.source === 'lead') {
       alert('Faturas de leads não podem ser excluídas manualmente.');
       return;
@@ -923,7 +846,7 @@ const Financeiro = () => {
 
       {/* KPI Cards */}
       <div className={`p-6 grid grid-cols-1 gap-4 ${viewMode === 'receitas' ? 'md:grid-cols-2' : 'md:grid-cols-4'}`}>
-        {Object.values(cardsData).map((card, idx) => {
+        {Object.values(displayData.cards).map((card, idx) => {
           const Icon = card.icon;
           return (
             <div
@@ -954,7 +877,7 @@ const Financeiro = () => {
                   : 'border-transparent text-[#aaaaaa] hover:text-white'
               }`}
             >
-              Receitas ({filteredInvoices.length})
+              Receitas ({displayData.filteredInvoices.length})
             </button>
             <button
               onClick={() => setActiveTab('fluxo')}
@@ -964,7 +887,7 @@ const Financeiro = () => {
                   : 'border-transparent text-[#aaaaaa] hover:text-white'
               }`}
             >
-              Fluxo de Caixa ({filteredExpenses.length + filteredInvoices.length})
+              Fluxo de Caixa ({displayData.filteredExpenses.length + displayData.filteredInvoices.length})
             </button>
             <button
               onClick={() => setActiveTab('projecao')}
@@ -987,7 +910,7 @@ const Financeiro = () => {
                   : 'border-transparent text-[#aaaaaa] hover:text-white'
               }`}
             >
-              Fixas ({firebaseExpenses.filter(e => e.expenseType === 'fixa').length})
+              Fixas ({displayData.allExpenses.filter(e => e.expenseType === 'fixa').length})
             </button>
             <button
               onClick={() => setActiveTab('variaveis')}
@@ -997,7 +920,7 @@ const Financeiro = () => {
                   : 'border-transparent text-[#aaaaaa] hover:text-white'
               }`}
             >
-              Variáveis ({firebaseExpenses.filter(e => e.expenseType === 'variavel').length})
+              Variáveis ({displayData.allExpenses.filter(e => e.expenseType === 'variavel').length})
             </button>
             <button
               onClick={() => setActiveTab('fluxo')}
@@ -1007,7 +930,7 @@ const Financeiro = () => {
                   : 'border-transparent text-[#aaaaaa] hover:text-white'
               }`}
             >
-              Fluxo de Saídas ({filteredExpenses.length})
+              Fluxo de Saídas ({displayData.filteredExpenses.length})
             </button>
             <button
               onClick={() => setActiveTab('projecao')}
@@ -1044,7 +967,7 @@ const Financeiro = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredInvoices.map(invoice => (
+                  {displayData.filteredInvoices.map(invoice => (
                     <tr key={invoice.id} className="border-b border-[#222222] hover:bg-[#1a1a1a] transition-colors">
                       <td className="p-4 text-sm text-[#aaaaaa]">{invoice.eventType || '—'}</td>
                       <td className="p-4 text-sm text-white">{invoice.client}</td>
@@ -1067,7 +990,7 @@ const Financeiro = () => {
                       </td>
                     </tr>
                   ))}
-                  {filteredInvoices.length === 0 && (
+                  {displayData.filteredInvoices.length === 0 && (
                     <tr>
                       <td colSpan={8} className="p-8 text-center text-sm text-[#aaaaaa]">
                         Nenhuma fatura encontrada
@@ -1078,7 +1001,7 @@ const Financeiro = () => {
               </table>
             </div>
             <div className="md:hidden space-y-3">
-              {filteredInvoices.map(invoice => (
+              {displayData.filteredInvoices.map(invoice => (
                 <div key={invoice.id} className="bg-[#111] border border-[#333] rounded-lg p-4 space-y-2">
                   <div className="flex justify-between items-start">
                     <span className="text-white font-bold text-sm">{invoice.client}</span>
@@ -1096,7 +1019,7 @@ const Financeiro = () => {
                   </div>
                 </div>
               ))}
-              {filteredInvoices.length === 0 && (
+              {displayData.filteredInvoices.length === 0 && (
                 <p className="text-center text-sm text-[#aaaaaa] py-8">Nenhuma fatura encontrada</p>
               )}
             </div>
@@ -1112,28 +1035,28 @@ const Financeiro = () => {
                   <span className="text-xs font-black uppercase tracking-widest text-[#aaaaaa]">Entradas Realizadas</span>
                   <TrendingUp size={16} className="text-[#B5FF03]" />
                 </div>
-                <p className="text-2xl font-black text-[#B5FF03]">{formatCurrency(fluxoData.entradaRealizada)}</p>
+                <p className="text-2xl font-black text-[#B5FF03]">{formatCurrency(displayData.fluxo.entradaRealizada)}</p>
               </div>
               <div className="bg-[#111111] border border-[#222222] rounded-lg p-4">
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-xs font-black uppercase tracking-widest text-[#aaaaaa]">Entradas Pendentes</span>
                   <Clock size={16} className="text-[#aaaaaa]" />
                 </div>
-                <p className="text-2xl font-black text-white">{formatCurrency(fluxoData.entradaPendente)}</p>
+                <p className="text-2xl font-black text-white">{formatCurrency(displayData.fluxo.entradaPendente)}</p>
               </div>
               <div className="bg-[#111111] border border-[#222222] rounded-lg p-4">
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-xs font-black uppercase tracking-widest text-[#aaaaaa]">Saídas Realizadas</span>
                   <TrendingDown size={16} className="text-[#ff4444]" />
                 </div>
-                <p className="text-2xl font-black text-[#ff4444]">{formatCurrency(fluxoData.saidaRealizada)}</p>
+                <p className="text-2xl font-black text-[#ff4444]">{formatCurrency(displayData.fluxo.saidaRealizada)}</p>
               </div>
               <div className="bg-[#111111] border border-[#222222] rounded-lg p-4">
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-xs font-black uppercase tracking-widest text-[#aaaaaa]">Saídas Pendentes</span>
                   <AlertTriangle size={16} className="text-[#ff4444]" />
                 </div>
-                <p className="text-2xl font-black text-[#ff4444]">{formatCurrency(fluxoData.saidaPendente)}</p>
+                <p className="text-2xl font-black text-[#ff4444]">{formatCurrency(displayData.fluxo.saidaPendente)}</p>
               </div>
             </div>
             <div className="bg-[#111111] border border-[#222222] rounded-lg overflow-x-auto">
@@ -1148,7 +1071,7 @@ const Financeiro = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {[...filteredInvoices, ...filteredExpenses]
+                  {[...displayData.filteredInvoices, ...displayData.filteredExpenses]
                     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
                     .map(item => {
                       const isInvoice = 'client' in item;
@@ -1170,7 +1093,7 @@ const Financeiro = () => {
                         </tr>
                       );
                     })}
-                  {filteredInvoices.length === 0 && filteredExpenses.length === 0 && (
+                  {displayData.filteredInvoices.length === 0 && displayData.filteredExpenses.length === 0 && (
                     <tr>
                       <td colSpan={5} className="p-8 text-center text-sm text-[#aaaaaa]">
                         Nenhum registro encontrado
@@ -1192,7 +1115,7 @@ const Financeiro = () => {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
               {(() => {
-                const projectedInvoices = allInvoices.filter(inv => inv.paymentMethod === 'parcelado' && inv.status !== 'Cancelado');
+                const projectedInvoices = displayData.allInvoices.filter(inv => inv.paymentMethod === 'parcelado' && inv.status !== 'Cancelado');
                 const projectionByMonth: Record<string, number> = {};
                 projectedInvoices.forEach(inv => {
                   if (!inv.date || inv.date === '—') return;
@@ -1227,7 +1150,7 @@ const Financeiro = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {allInvoices.filter(inv => inv.paymentMethod === 'parcelado').sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()).map(inv => (
+                  {displayData.allInvoices.filter(inv => inv.paymentMethod === 'parcelado').sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()).map(inv => (
                     <tr key={inv.id} className="border-b border-[#222222] hover:bg-[#1a1a1a]">
                       <td className="p-4 text-sm text-white">{inv.client}</td>
                       <td className="p-4 text-sm text-white">{inv.amount}</td>
@@ -1240,7 +1163,7 @@ const Financeiro = () => {
                       </td>
                     </tr>
                   ))}
-                  {allInvoices.filter(inv => inv.paymentMethod === 'parcelado').length === 0 && (
+                  {displayData.allInvoices.filter(inv => inv.paymentMethod === 'parcelado').length === 0 && (
                     <tr><td colSpan={5} className="p-8 text-center text-sm text-[#aaaaaa]">Nenhuma projeção disponível.</td></tr>
                   )}
                 </tbody>
@@ -1267,7 +1190,7 @@ const Financeiro = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredExpenses.map(expense => (
+                  {displayData.filteredExpenses.map(expense => (
                     <tr key={expense.id} className="border-b border-[#222222] hover:bg-[#1a1a1a] transition-colors">
                       <td className="p-4 text-sm text-white">{expense.description}</td>
                       <td className="p-4">
@@ -1300,7 +1223,7 @@ const Financeiro = () => {
                       </td>
                     </tr>
                   ))}
-                  {filteredExpenses.length === 0 && (
+                  {displayData.filteredExpenses.length === 0 && (
                     <tr>
                       <td colSpan={8} className="p-8 text-center text-sm text-[#aaaaaa]">
                         Nenhuma despesa fixa encontrada
@@ -1311,7 +1234,7 @@ const Financeiro = () => {
               </table>
             </div>
             <div className="md:hidden space-y-3">
-              {filteredExpenses.map(expense => (
+              {displayData.filteredExpenses.map(expense => (
                 <div key={expense.id} className="bg-[#111] border border-[#333] rounded-lg p-4 space-y-2">
                   <div className="flex justify-between items-start">
                     <div className="flex items-center gap-2">
@@ -1334,7 +1257,7 @@ const Financeiro = () => {
                   </div>
                 </div>
               ))}
-              {filteredExpenses.length === 0 && (
+              {displayData.filteredExpenses.length === 0 && (
                 <p className="text-center text-sm text-[#aaaaaa] py-8">Nenhuma despesa fixa encontrada</p>
               )}
             </div>
@@ -1359,7 +1282,7 @@ const Financeiro = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredExpenses.map(expense => (
+                  {displayData.filteredExpenses.map(expense => (
                     <tr key={expense.id} className="border-b border-[#222222] hover:bg-[#1a1a1a] transition-colors">
                       <td className="p-4 text-sm text-white">{expense.description}</td>
                       <td className="p-4">
@@ -1392,7 +1315,7 @@ const Financeiro = () => {
                       </td>
                     </tr>
                   ))}
-                  {filteredExpenses.length === 0 && (
+                  {displayData.filteredExpenses.length === 0 && (
                     <tr>
                       <td colSpan={8} className="p-8 text-center text-sm text-[#aaaaaa]">
                         Nenhuma despesa variável encontrada
@@ -1403,7 +1326,7 @@ const Financeiro = () => {
               </table>
             </div>
             <div className="md:hidden space-y-3">
-              {filteredExpenses.map(expense => (
+              {displayData.filteredExpenses.map(expense => (
                 <div key={expense.id} className="bg-[#111] border border-[#333] rounded-lg p-4 space-y-2">
                   <div className="flex justify-between items-start">
                     <div className="flex items-center gap-2">
@@ -1426,7 +1349,7 @@ const Financeiro = () => {
                   </div>
                 </div>
               ))}
-              {filteredExpenses.length === 0 && (
+              {displayData.filteredExpenses.length === 0 && (
                 <p className="text-center text-sm text-[#aaaaaa] py-8">Nenhuma despesa variável encontrada</p>
               )}
             </div>
@@ -1442,14 +1365,14 @@ const Financeiro = () => {
                   <span className="text-xs font-black uppercase tracking-widest text-[#aaaaaa]">Total Pago</span>
                   <TrendingDown size={16} className="text-[#ff4444]" />
                 </div>
-                <p className="text-2xl font-black text-[#ff4444]">{formatCurrency(fluxoData.saidaRealizada)}</p>
+                <p className="text-2xl font-black text-[#ff4444]">{formatCurrency(displayData.fluxo.saidaRealizada)}</p>
               </div>
               <div className="bg-[#111111] border border-[#222222] rounded-lg p-4">
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-xs font-black uppercase tracking-widest text-[#aaaaaa]">Saídas Pendentes</span>
                   <AlertTriangle size={16} className="text-[#ff4444]" />
                 </div>
-                <p className="text-2xl font-black text-[#ff4444]">{formatCurrency(fluxoData.saidaPendente)}</p>
+                <p className="text-2xl font-black text-[#ff4444]">{formatCurrency(displayData.fluxo.saidaPendente)}</p>
               </div>
             </div>
             <div className="bg-[#111111] border border-[#222222] rounded-lg overflow-x-auto">
@@ -1465,7 +1388,7 @@ const Financeiro = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredExpenses.map(expense => (
+                  {displayData.filteredExpenses.map(expense => (
                     <tr key={expense.id} className="border-b border-[#222222] hover:bg-[#1a1a1a] transition-colors">
                       <td className="p-4 text-sm text-white">{expense.description}</td>
                       <td className="p-4">
@@ -1483,7 +1406,7 @@ const Financeiro = () => {
                       </td>
                     </tr>
                   ))}
-                  {filteredExpenses.length === 0 && (
+                  {displayData.filteredExpenses.length === 0 && (
                     <tr>
                       <td colSpan={6} className="p-8 text-center text-sm text-[#aaaaaa]">
                         Nenhuma despesa encontrada
@@ -1505,7 +1428,7 @@ const Financeiro = () => {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
               {(() => {
-                const projected = allInvoices.filter(inv => inv.paymentMethod === 'parcelado' && inv.status !== 'Cancelado');
+                const projected = displayData.allInvoices.filter(inv => inv.paymentMethod === 'parcelado' && inv.status !== 'Cancelado');
                 const projectionByMonth: Record<string, number> = {};
                 projected.forEach(inv => {
                   if (!inv.date || inv.date === '—') return;
@@ -1540,7 +1463,7 @@ const Financeiro = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {allInvoices.filter(inv => inv.paymentMethod === 'parcelado').sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()).map(inv => (
+                  {displayData.allInvoices.filter(inv => inv.paymentMethod === 'parcelado').sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()).map(inv => (
                     <tr key={inv.id} className="border-b border-[#222222] hover:bg-[#1a1a1a]">
                       <td className="p-4 text-sm text-white">{inv.client}</td>
                       <td className="p-4 text-sm text-white">{inv.amount}</td>
@@ -1553,7 +1476,7 @@ const Financeiro = () => {
                       </td>
                     </tr>
                   ))}
-                  {allInvoices.filter(inv => inv.paymentMethod === 'parcelado').length === 0 && (
+                  {displayData.allInvoices.filter(inv => inv.paymentMethod === 'parcelado').length === 0 && (
                     <tr><td colSpan={5} className="p-8 text-center text-sm text-[#aaaaaa]">Nenhuma projeção disponível.</td></tr>
                   )}
                 </tbody>
