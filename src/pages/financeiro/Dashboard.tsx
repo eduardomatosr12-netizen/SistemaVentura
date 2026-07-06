@@ -10,7 +10,8 @@ import {
   ArrowLeft, TrendingUp, TrendingDown, Clock, DollarSign,
 } from 'lucide-react';
 
-const C_GREEN = '#88CC00';
+const C_GREEN = '#B5FF03';
+const C_GREEN_DARK = '#77AA00';
 const C_RED = '#FF4444';
 const C_YELLOW = '#FFB800';
 const C_BLUE = '#4488FF';
@@ -239,7 +240,7 @@ export default function DashboardFinanceiro() {
     + metrics.despesasPagas + metrics.despesasPendentes;
 
   const chart1Data = useMemo(() => [
-    { name: 'Receitas Pagas', value: metrics.receitasPagas, color: C_GREEN },
+    { name: 'Receitas Pagas', value: metrics.receitasPagas, color: C_GREEN_DARK },
     { name: 'Despesas Pagas', value: metrics.despesasPagas, color: C_RED },
     { name: 'Pendências', value: metrics.receitasPendentes + metrics.despesasPendentes, color: C_YELLOW },
   ].filter(d => d.value > 0), [metrics]);
@@ -250,7 +251,7 @@ export default function DashboardFinanceiro() {
   ].filter(d => d.value > 0), [metrics]);
 
   const chart3Data = useMemo(() => [
-    { name: 'Total Pago', value: metrics.totalPago, color: C_GREEN },
+    { name: 'Total Pago', value: metrics.totalPago, color: C_GREEN_DARK },
     { name: 'Total Pendente', value: metrics.totalPendente, color: C_YELLOW },
   ].filter(d => d.value > 0), [metrics]);
 
@@ -285,7 +286,7 @@ export default function DashboardFinanceiro() {
       <div className="flex items-center gap-4">
         <button
           onClick={() => navigate('/financeiro')}
-          className="p-2 rounded-lg bg-[#111] border border-[#222] text-neutral-400 hover:text-white hover:border-[#88CC00] transition-colors"
+          className="p-2 rounded-lg bg-[#111] border border-[#222] text-neutral-400 hover:text-white hover:border-[#B5FF03] transition-colors"
           title="Voltar ao Financeiro"
         >
           <ArrowLeft size={18} />
@@ -303,8 +304,8 @@ export default function DashboardFinanceiro() {
             onClick={() => setPeriod(key)}
             className={`px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest transition-colors ${
               period === key
-                ? 'bg-[#88CC00] text-black'
-                : 'bg-[#111] border border-[#222] text-neutral-400 hover:text-white hover:border-[#88CC00]'
+                ? 'bg-[#B5FF03] text-black'
+                : 'bg-[#111] border border-[#222] text-neutral-400 hover:text-white hover:border-[#B5FF03]'
             }`}
           >
             {label}
@@ -316,14 +317,14 @@ export default function DashboardFinanceiro() {
               type="date"
               value={customStart}
               onChange={e => setCustomStart(e.target.value)}
-              className="bg-[#111] border border-[#222] rounded-lg px-3 py-2 text-sm text-white focus:border-[#88CC00] outline-none"
+              className="bg-[#111] border border-[#222] rounded-lg px-3 py-2 text-sm text-white focus:border-[#B5FF03] outline-none"
             />
             <span className="text-neutral-500 text-xs">até</span>
             <input
               type="date"
               value={customEnd}
               onChange={e => setCustomEnd(e.target.value)}
-              className="bg-[#111] border border-[#222] rounded-lg px-3 py-2 text-sm text-white focus:border-[#88CC00] outline-none"
+              className="bg-[#111] border border-[#222] rounded-lg px-3 py-2 text-sm text-white focus:border-[#B5FF03] outline-none"
             />
           </div>
         )}
