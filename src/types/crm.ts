@@ -33,6 +33,7 @@ export interface EventExpense {
   paymentMethod?: 'Pix' | 'Dinheiro' | 'Cartão' | 'Boleto';
   tipo: 'variavel';
   interno: true;
+  financeiroId?: string;
 }
 
 export interface CalendarEvent {

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Plus, Trash2, Lock, Check, X } from 'lucide-react';
+import { Plus, Trash2, Lock, Check } from 'lucide-react';
 import { generateUUID } from '../lib/uuid';
+import { addTransaction, updateTransaction, deleteTransaction } from '../services/financeService';
 import type { EventExpense } from '../types/crm';
 
 const STORAGE_KEY = 'despesas_evento';
@@ -41,7 +42,21 @@ export default function DespesasDoEvento({ eventId }: Props) {
 
   useEffect(() => {
     if (eventId) {
-      setExpenses(loadExpenses(eventId));
+      const local = loadExpenses(eventId);
+      setExpenses(local);
+      local.forEach(exp => {
+        if (!exp.financeiroId) {
+          syncExpenseToFirestore(eventId, exp).then(financeiroId => {
+            if (financeiroId) {
+              const updated = loadExpenses(eventId).map(e =>
+                e.id === exp.id ? { ...e, financeiroId } : e
+              );
+              saveExpenses(eventId, updated);
+              setExpenses(updated);
+            }
+          });
+        }
+      });
     }
   }, [eventId]);
 
@@ -55,6 +70,27 @@ export default function DespesasDoEvento({ eventId }: Props) {
     );
   }
 
+  const syncExpenseToFirestore = async (evId: string, exp: EventExpense): Promise<string | null> => {
+    try {
+      const id = await addTransaction({
+        type: 'despesa',
+        description: exp.description,
+        category: exp.category,
+        amount: exp.valor,
+        date: new Date().toISOString().split('T')[0],
+        status: exp.status === 'Pago' ? 'Pago' : 'Pendente',
+        paymentMethod: exp.paymentMethod,
+        expenseType: 'variavel',
+        source: 'evento',
+        origemEventoId: evId,
+      });
+      return id;
+    } catch (err) {
+      console.error('[DespesasDoEvento] Erro ao sincronizar despesa:', err);
+      return null;
+    }
+  };
+
   const resetForm = () => {
     setFormDesc('');
     setFormCat('Outros');
@@ -64,7 +100,7 @@ export default function DespesasDoEvento({ eventId }: Props) {
     setShowForm(false);
   };
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     if (!formDesc.trim() || !formValor) return;
     const nova: EventExpense = {
       id: generateUUID(),
@@ -76,21 +112,45 @@ export default function DespesasDoEvento({ eventId }: Props) {
       tipo: 'variavel',
       interno: true,
     };
+
+    const financeiroId = await syncExpenseToFirestore(eventId, nova);
+    if (financeiroId) {
+      nova.financeiroId = financeiroId;
+    }
+
     const updated = [...expenses, nova];
     setExpenses(updated);
     saveExpenses(eventId, updated);
     resetForm();
   };
 
-  const handleRemove = (id: string) => {
-    const updated = expenses.filter(e => e.id !== id);
+  const handleRemove = async (expId: string) => {
+    const exp = expenses.find(e => e.id === expId);
+    if (exp?.financeiroId) {
+      try {
+        await deleteTransaction(exp.financeiroId);
+      } catch (err) {
+        console.error('[DespesasDoEvento] Erro ao excluir transação:', err);
+      }
+    }
+    const updated = expenses.filter(e => e.id !== expId);
     setExpenses(updated);
     saveExpenses(eventId, updated);
   };
 
-  const toggleStatus = (id: string) => {
+  const toggleStatus = async (expId: string) => {
+    const exp = expenses.find(e => e.id === expId);
+    if (!exp) return;
+    const novoStatus = exp.status === 'Pago' ? 'Pendente' as const : 'Pago' as const;
+    if (exp.financeiroId) {
+      try {
+        await updateTransaction(exp.financeiroId, { status: novoStatus });
+      } catch (err) {
+        console.error('[DespesasDoEvento] Erro ao atualizar transação:', err);
+      }
+    }
     const updated = expenses.map(e =>
-      e.id === id ? { ...e, status: e.status === 'Pago' ? 'Pendente' as const : 'Pago' as const } : e
+      e.id === expId ? { ...e, status: novoStatus } : e
     );
     setExpenses(updated);
     saveExpenses(eventId, updated);
