@@ -302,7 +302,8 @@ const Financeiro = () => {
     let result = firebaseExpenses || [];
 
     if (viewMode === 'despesas' && (activeTab === 'fixas' || activeTab === 'variaveis')) {
-      result = result.filter(exp => exp.expenseType === activeTab.slice(0, -1));
+      const expenseTypeMap: Record<string, string> = { fixas: 'fixa', variaveis: 'variavel' };
+      result = result.filter(exp => exp.expenseType === expenseTypeMap[activeTab]);
     }
       
     if (activeFilters.categories?.length > 0) {
