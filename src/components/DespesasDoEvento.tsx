@@ -175,7 +175,7 @@ export default function DespesasDoEvento({ eventId }: Props) {
   return (
     <div className="space-y-4">
       {/* Header interno */}
-      <div className="flex items-center gap-2 text-[9px] font-black uppercase tracking-widest text-neutral-500">
+      <div className="flex items-center gap-2 section-label">
         <Lock size={12} />
         Despesas internas — não aparecem em exportações
       </div>
@@ -183,19 +183,19 @@ export default function DespesasDoEvento({ eventId }: Props) {
       {/* Lista */}
       <div className="space-y-2">
         {expenses.length === 0 && (
-          <div className="text-center py-6 text-neutral-500 text-xs italic">
+          <div className="text-center py-6 text-[#606060] text-xs italic">
             Nenhuma despesa interna cadastrada.
           </div>
         )}
         {expenses.map(exp => (
-          <div key={exp.id} className="bg-[#111] border border-[#222] rounded-lg p-3 flex items-start gap-3">
+          <div key={exp.id} className="card p-3 flex items-start gap-3">
             <button
               type="button"
               onClick={() => toggleStatus(exp.id)}
               className={`mt-0.5 w-4 h-4 rounded border flex items-center justify-center shrink-0 transition-colors ${
                 exp.status === 'Pago'
-                  ? 'bg-[#B5FF03] border-[#B5FF03] text-black'
-                  : 'border-neutral-600 hover:border-[#B5FF03]'
+                  ? 'bg-[#CCFF00] border-[#CCFF00] text-black'
+                  : 'border-[rgba(255,255,255,0.2)] hover:border-[#CCFF00]'
               }`}
             >
               {exp.status === 'Pago' && <Check size={10} strokeWidth={3} />}
@@ -203,16 +203,16 @@ export default function DespesasDoEvento({ eventId }: Props) {
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
                 <span className="text-sm text-white font-medium truncate">{exp.description}</span>
-                <span className="px-1.5 py-0.5 rounded text-[8px] font-bold bg-neutral-800 text-neutral-300 shrink-0">
+                <span className="px-1.5 py-0.5 rounded text-[8px] font-bold bg-[#222] text-[#A0A0A0] shrink-0">
                   {exp.category}
                 </span>
               </div>
               <div className="flex items-center gap-2 mt-0.5">
                 <span className="text-sm text-white font-bold">{formatMoeda(exp.valor)}</span>
                 {exp.paymentMethod && (
-                  <span className="text-[9px] text-neutral-500">{exp.paymentMethod}</span>
+                  <span className="text-[9px] text-[#606060]">{exp.paymentMethod}</span>
                 )}
-                <span className={`text-[9px] font-bold ${exp.status === 'Pago' ? 'text-[#B5FF03]' : 'text-amber-400'}`}>
+                <span className={`badge ${exp.status === 'Pago' ? 'badge-pago' : 'badge-pendente'}`}>
                   {exp.status}
                 </span>
               </div>
@@ -220,7 +220,7 @@ export default function DespesasDoEvento({ eventId }: Props) {
             <button
               type="button"
               onClick={() => handleRemove(exp.id)}
-              className="p-1 rounded-md text-neutral-500 hover:text-red-400 hover:bg-red-400/10 transition-colors shrink-0"
+              className="p-1 rounded-md text-[#606060] hover:text-[#FF4444] hover:bg-[rgba(255,68,68,0.1)] transition-colors shrink-0"
             >
               <Trash2 size={12} />
             </button>
@@ -230,24 +230,24 @@ export default function DespesasDoEvento({ eventId }: Props) {
 
       {/* Formulário inline */}
       {showForm && (
-        <div className="bg-[#1a1a1a] border border-[#333] rounded-lg p-4 space-y-3">
+        <div className="card p-4 space-y-4">
           <div>
-            <label className="block text-[9px] font-black uppercase tracking-widest text-neutral-400 mb-1">Descrição *</label>
+            <label className="section-label mb-1 block">Descrição *</label>
             <input
               type="text"
               value={formDesc}
               onChange={e => setFormDesc(e.target.value)}
-              className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-sm text-white focus:border-[#B5FF03] outline-none"
+              className="input-field w-full"
               placeholder="Ex: Combustível"
             />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-[9px] font-black uppercase tracking-widest text-neutral-400 mb-1">Categoria</label>
+              <label className="section-label mb-1 block">Categoria</label>
               <select
                 value={formCat}
                 onChange={e => setFormCat(e.target.value as EventExpense['category'])}
-                className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-sm text-white focus:border-[#B5FF03] outline-none"
+                className="input-field w-full"
               >
                 {CATEGORIES.map(c => (
                   <option key={c} value={c}>{c}</option>
@@ -255,35 +255,35 @@ export default function DespesasDoEvento({ eventId }: Props) {
               </select>
             </div>
             <div>
-              <label className="block text-[9px] font-black uppercase tracking-widest text-neutral-400 mb-1">Valor (R$) *</label>
+              <label className="section-label mb-1 block">Valor (R$) *</label>
               <input
                 type="text"
                 inputMode="decimal"
                 value={formValor}
                 onChange={e => setFormValor(e.target.value)}
-                className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-sm text-white focus:border-[#B5FF03] outline-none"
+                className="input-field w-full"
                 placeholder="0,00"
               />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-[9px] font-black uppercase tracking-widest text-neutral-400 mb-1">Status</label>
+              <label className="section-label mb-1 block">Status</label>
               <select
                 value={formStatus}
                 onChange={e => setFormStatus(e.target.value as EventExpense['status'])}
-                className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-sm text-white focus:border-[#B5FF03] outline-none"
+                className="input-field w-full"
               >
                 <option value="Pendente">Pendente</option>
                 <option value="Pago">Pago</option>
               </select>
             </div>
             <div>
-              <label className="block text-[9px] font-black uppercase tracking-widest text-neutral-400 mb-1">Forma de Pagamento</label>
+              <label className="section-label mb-1 block">Forma de Pagamento</label>
               <select
                 value={formPayment}
                 onChange={e => setFormPayment(e.target.value as EventExpense['paymentMethod'] | '')}
-                className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-sm text-white focus:border-[#B5FF03] outline-none"
+                className="input-field w-full"
               >
                 <option value="">—</option>
                 {PAYMENT_METHODS.map(p => (
@@ -297,14 +297,14 @@ export default function DespesasDoEvento({ eventId }: Props) {
               type="button"
               onClick={handleAdd}
               disabled={!formDesc.trim() || !formValor}
-              className="px-4 py-2 bg-[#B5FF03] text-black font-bold text-[10px] uppercase tracking-widest rounded-lg hover:bg-[#a1e600] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              className="btn-primary px-4 py-2 text-[10px] disabled:opacity-40 disabled:cursor-not-allowed"
             >
               Adicionar
             </button>
             <button
               type="button"
               onClick={resetForm}
-              className="px-4 py-2 text-neutral-400 font-bold text-[10px] uppercase tracking-widest rounded-lg hover:text-white transition-colors"
+              className="px-4 py-2 text-[#A0A0A0] font-bold text-[10px] uppercase tracking-widest rounded-lg hover:text-white transition-colors"
             >
               Cancelar
             </button>
@@ -316,7 +316,7 @@ export default function DespesasDoEvento({ eventId }: Props) {
         <button
           type="button"
           onClick={() => setShowForm(true)}
-          className="flex items-center gap-1.5 text-[10px] font-bold text-[#B5FF03] hover:text-white transition-colors"
+          className="flex items-center gap-1.5 text-[10px] font-bold text-[#CCFF00] hover:text-white transition-colors"
         >
           <Plus size={12} />
           Adicionar Despesa
@@ -325,18 +325,18 @@ export default function DespesasDoEvento({ eventId }: Props) {
 
       {/* Totais */}
       {expenses.length > 0 && (
-        <div className="border-t border-[#222] pt-3 space-y-1.5">
+        <div className="border-t border-[rgba(255,255,255,0.08)] pt-3 space-y-1.5">
           <div className="flex justify-between text-xs">
-            <span className="text-neutral-400">Total Geral</span>
+            <span className="text-[#A0A0A0]">Total Geral</span>
             <span className="text-white font-bold">{formatMoeda(totalGeral)}</span>
           </div>
           <div className="flex justify-between text-xs">
-            <span className="text-neutral-400">Total Pago</span>
-            <span className="text-[#B5FF03] font-bold">{formatMoeda(totalPago)}</span>
+            <span className="text-[#A0A0A0]">Total Pago</span>
+            <span className="text-[#CCFF00] font-bold">{formatMoeda(totalPago)}</span>
           </div>
           <div className="flex justify-between text-xs">
-            <span className="text-neutral-400">Total Pendente</span>
-            <span className="text-amber-400 font-bold">{formatMoeda(totalPendente)}</span>
+            <span className="text-[#A0A0A0]">Total Pendente</span>
+            <span className="text-[#FFB800] font-bold">{formatMoeda(totalPendente)}</span>
           </div>
         </div>
       )}

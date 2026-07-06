@@ -8,8 +8,10 @@
   --bg-main: #000000;
   --bg-card: #111111;
   --text-main: #ffffff;
-  --text-muted: #c0c0c0;
-  --border-main: #1a1a1a;
+  --text-secondary: #A0A0A0;
+  --text-tertiary: #606060;
+  --border-main: rgba(255,255,255,0.08);
+  --neon: #CCFF00;
 }
 
 * {
@@ -17,7 +19,6 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
-  font-weight: inherit;
 }
 
 html,
@@ -27,8 +28,7 @@ body {
   height: 100%;
   height: 100dvh;
   background-color: var(--bg-main);
-  color: var(--text-main);
-  transition: background-color 0.3s ease, color 0.3s ease;
+  color: #FFFFFF;
   overscroll-behavior: none;
 }
 
@@ -37,7 +37,9 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   font-feature-settings: 'cv11', 'ss01';
-  font-weight: 500;
+  font-weight: 400;
+  line-height: 1.6;
+  font-size: 14px;
 }
 
 #root {
@@ -118,46 +120,193 @@ body {
 @layer components {
   /* ---- Sidebar navigation items ---- */
   .sidebar-item {
-    @apply flex items-center gap-3 px-4 py-2.5 rounded-md transition-all duration-150
-           cursor-pointer text-neutral-400 font-medium text-sm tracking-[-0.01em];
-    color: var(--text-muted);
+    @apply flex items-center gap-3 px-5 py-3.5 rounded-md transition-all duration-150
+           cursor-pointer text-sm tracking-[-0.01em];
+    color: #A0A0A0;
+    font-weight: 500;
   }
 
   .sidebar-item:hover {
     @apply bg-[#222];
-    color: var(--text-main);
+    color: #FFFFFF;
   }
 
   .sidebar-item.active {
-    background-color: var(--primary);
-    @apply text-white font-semibold;
+    background-color: rgba(204,255,0,0.1);
+    color: #CCFF00;
+    @apply font-semibold;
   }
 
-  /* ---- Utility classes ---- */
-  .btn-primary {
-    background-color: var(--primary);
-    @apply text-white font-semibold px-4 py-2 rounded-md
-           hover:brightness-90 active:scale-[0.98] transition-all duration-150 text-sm;
-  }
-
-  .card {
-    background-color: var(--bg-card);
-    border: 1px solid var(--border-main);
-    @apply rounded-md text-white;
-  }
-
+  /* ---- Page Title ---- */
   .page-title {
-    color: #ffffff;
-    @apply text-3xl font-extrabold tracking-tighter leading-none;
+    @apply text-white font-extrabold tracking-tight leading-none;
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
   }
 
   .page-subtitle {
-    color: var(--text-muted);
+    color: #A0A0A0;
     @apply text-sm font-medium mt-1;
   }
 
   .section-label {
     @apply text-xs font-semibold uppercase tracking-widest;
-    color: var(--text-muted);
+    color: #A0A0A0;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+  }
+
+  /* ---- Cards ---- */
+  .card {
+    background-color: #111111;
+    border: 1px solid rgba(255,255,255,0.08);
+    @apply rounded-xl;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.04);
+  }
+
+  .card-clickable {
+    transition: border-color 0.2s ease;
+  }
+  .card-clickable:hover {
+    border-color: rgba(204,255,0,0.3);
+  }
+
+  .card-value {
+    @apply font-bold text-white leading-none;
+    font-size: 32px;
+    font-weight: 700;
+  }
+
+  .card-label {
+    @apply uppercase tracking-widest;
+    color: #A0A0A0;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+  }
+
+  /* ---- Buttons ---- */
+  .btn-primary {
+    background-color: #CCFF00;
+    color: #000000;
+    @apply font-bold px-5 py-2.5 rounded-lg text-sm transition-all duration-150;
+    font-weight: 700;
+    font-size: 13px;
+    letter-spacing: 0.04em;
+  }
+  .btn-primary:hover {
+    background-color: #BBEE00;
+    transform: translateY(-1px);
+  }
+
+  .btn-secondary {
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.2);
+    color: #FFFFFF;
+    @apply px-5 py-2.5 rounded-lg text-sm transition-all duration-150;
+    font-size: 13px;
+  }
+  .btn-secondary:hover {
+    border-color: rgba(255,255,255,0.5);
+    background: rgba(255,255,255,0.05);
+  }
+
+  .btn-destructive {
+    color: #FF4444;
+    @apply transition-all duration-150;
+  }
+  .btn-destructive:hover {
+    background: rgba(255,68,68,0.1);
+  }
+
+  /* ---- Badges ---- */
+  .badge {
+    @apply inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold border;
+    font-size: 11px;
+    font-weight: 600;
+    border-radius: 20px;
+  }
+
+  .badge-pago, .badge-paga, .badge-recebido, .badge-recebida {
+    background: rgba(204,255,0,0.15);
+    color: #CCFF00;
+    border-color: rgba(204,255,0,0.3);
+  }
+
+  .badge-pendente {
+    background: rgba(255,184,0,0.15);
+    color: #FFB800;
+    border-color: rgba(255,184,0,0.3);
+  }
+
+  .badge-variavel, .badge-variável {
+    background: rgba(255,140,0,0.15);
+    color: #FF8C00;
+    border-color: rgba(255,140,0,0.3);
+  }
+
+  .badge-fixa {
+    background: rgba(68,136,255,0.15);
+    color: #4488FF;
+    border-color: rgba(68,136,255,0.3);
+  }
+
+  /* ---- Tables ---- */
+  .table-header {
+    background-color: #0A0A0A;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    @apply text-xs font-semibold uppercase tracking-widest text-[#A0A0A0] px-4 py-3 text-left;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+  }
+
+  .table-row {
+    @apply transition-colors duration-150;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+  .table-row:nth-child(even) {
+    background: rgba(255,255,255,0.02);
+  }
+  .table-row:hover {
+    background: rgba(204,255,0,0.04);
+    cursor: pointer;
+  }
+
+  .table-cell {
+    @apply px-4 py-4 text-sm;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 1.6;
+    min-height: 56px;
+  }
+
+  .table-action-icon {
+    opacity: 0.5;
+    @apply transition-opacity duration-150;
+  }
+  .table-row:hover .table-action-icon {
+    opacity: 1;
+  }
+
+  /* ---- Inputs ---- */
+  .input-field {
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.08);
+    color: #FFFFFF;
+    @apply rounded-lg text-sm transition-all duration-150;
+    padding: 12px 16px;
+    font-size: 14px;
+    font-weight: 400;
+  }
+  .input-field::placeholder {
+    color: #606060;
+  }
+  .input-field:focus {
+    border-color: rgba(204,255,0,0.5);
+    outline: none;
+    box-shadow: 0 0 0 1px rgba(204,255,0,0.2);
   }
 }
