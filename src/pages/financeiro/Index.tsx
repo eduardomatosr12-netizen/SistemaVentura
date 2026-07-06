@@ -1,10 +1,11 @@
 import { useState, useMemo, useCallback, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useCRM, type CalendarEvent } from '../../contexts/CRMContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { useFinance } from '../../contexts/FinanceContext';
 import { generateUUID } from '../../lib/uuid';
 import { parseMonetaryValue } from '../../lib/crmHelpers';
-import { Pencil, X, TrendingUp, TrendingDown, Clock, AlertTriangle, XCircle, ChevronDown, ChevronUp, SlidersHorizontal, Trash2 } from 'lucide-react';
+import { Pencil, X, TrendingUp, TrendingDown, Clock, AlertTriangle, XCircle, ChevronDown, ChevronUp, SlidersHorizontal, Trash2, BarChart3 } from 'lucide-react';
 
 interface Invoice {
   id: string;
@@ -114,6 +115,7 @@ const Financeiro = () => {
   const { Orçamentos, events, updateEvent } = useCRM();
   const { role, employeeName } = useAuth();
   const { transactions, addTransaction, updateTransaction, deleteTransaction } = useFinance();
+  const navigate = useNavigate();
 
   const [syncCounter, setSyncCounter] = useState(0);
   const [viewMode, setViewMode] = useState<'receitas' | 'despesas'>('receitas');
@@ -878,6 +880,13 @@ const Financeiro = () => {
       {/* View Toggle */}
       <div className="px-6 pt-6 pb-2">
         <div className="flex gap-3">
+          <button
+            onClick={() => navigate('/financeiro/dashboard')}
+            className="rounded-full px-5 py-2 font-bold text-xs uppercase tracking-widest transition-colors bg-[#111111] text-[#B5FF03] border border-[#B5FF03] hover:bg-[#B5FF03] hover:text-black"
+          >
+            <BarChart3 className="w-3.5 h-3.5 inline-block mr-1.5 -mt-0.5" />
+            DASHBOARD
+          </button>
           <button
             onClick={() => { setViewMode('receitas'); setActiveTab('receitas'); }}
             className={`rounded-full px-5 py-2 font-bold text-xs uppercase tracking-widest transition-colors ${

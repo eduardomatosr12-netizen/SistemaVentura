@@ -15,6 +15,7 @@ import OrçamentosPage from './pages/crm/Orçamentos';
 import CRMCalendario from './pages/crm/Calendario';
 import CRMImportar from './pages/crm/Importar';
 import Financeiro from './pages/financeiro/Index';
+import DashboardFinanceiro from './pages/financeiro/Dashboard';
 import Tarefas from './pages/tarefas/Index';
 import Configuracoes from './pages/configuracoes/Index';
 import TemplatesWhatsApp from './pages/configuracoes/TemplatesWhatsApp';
@@ -121,6 +122,16 @@ function AppRoutes() {
           <ProtectedRoute allowedRoles={['admin', 'manager']}>
             <MainLayout hideSubmenu>
               <Financeiro />
+            </MainLayout>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/financeiro/dashboard"
+        element={
+          <ProtectedRoute allowedRoles={['admin', 'manager']}>
+            <MainLayout hideSubmenu>
+              <DashboardFinanceiro />
             </MainLayout>
           </ProtectedRoute>
         }
