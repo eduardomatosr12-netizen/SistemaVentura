@@ -278,6 +278,14 @@ const Financeiro = () => {
     return result;
   }, [allInvoices, activeFilters, isInDateRange]);
 
+  useEffect(() => {
+    if (transactions.length > 0) {
+      console.log('[DEBUG] transactions:', transactions.length);
+      console.log('[DEBUG] despesas:', transactions.filter(t => t.type === 'despesa').length);
+      console.log('[DEBUG] despesas sample:', transactions.filter(t => t.type === 'despesa').slice(0, 2));
+    }
+  }, [transactions]);
+
   const firebaseExpenses: Expense[] = useMemo(() =>
     (transactions || [])
       .filter(t => t.type === 'despesa')

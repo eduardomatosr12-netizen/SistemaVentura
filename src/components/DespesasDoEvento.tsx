@@ -114,6 +114,7 @@ export default function DespesasDoEvento({ eventId }: Props) {
     };
 
     const financeiroId = await syncExpenseToFirestore(eventId, nova);
+    console.log('[DEBUG] syncExpenseToFirestore result:', financeiroId);
     if (financeiroId) {
       nova.financeiroId = financeiroId;
     }
