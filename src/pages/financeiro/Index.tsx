@@ -137,7 +137,7 @@ const Financeiro = () => {
 
   const parseBRL = (val: string): number => {
     if (!val) return 0;
-    const clean = val.replace('R$ ', '').replace(/\./g, '').replace(',', '.').trim();
+    const clean = val.replace(/R\$\s*/g, '').replace(/\./g, '').replace(',', '.').trim();
     return parseFloat(clean) || 0;
   };
 
