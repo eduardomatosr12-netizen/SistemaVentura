@@ -24,6 +24,17 @@ export interface Lead {
   lastModifiedBy?: string;
 }
 
+export interface EventExpense {
+  id: string;
+  description: string;
+  category: 'Transporte' | 'Alimentação' | 'Hospedagem' | 'Material' | 'Equipe' | 'Outros';
+  valor: number;
+  status: 'Pendente' | 'Pago';
+  paymentMethod?: 'Pix' | 'Dinheiro' | 'Cartão' | 'Boleto';
+  tipo: 'variavel';
+  interno: true;
+}
+
 export interface CalendarEvent {
   id: string;
   title: string;
@@ -44,4 +55,5 @@ export interface CalendarEvent {
   dataMontagem?: string;
   dataDesmontagem?: string;
   valorTotal?: number;
+  despesasInternas?: EventExpense[];
 }

@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
-import { Calendar, UserPlus, ArrowRight, CheckSquare, Activity, AlertCircle, LayoutDashboard, X, ChevronLeft, ChevronRight, ChevronDown, Search, User, Phone, Mail, CreditCard, CalendarDays, Clock, Plus, Trash2, MapPin, Pencil, FileText, MessageCircle } from 'lucide-react';
+import { Calendar, UserPlus, ArrowRight, CheckSquare, Activity, AlertCircle, LayoutDashboard, X, ChevronLeft, ChevronRight, ChevronDown, Search, User, Phone, Mail, CreditCard, CalendarDays, Clock, Plus, Trash2, MapPin, Pencil, FileText, MessageCircle, Lock } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell, LabelList } from 'recharts';
 import { useCRM } from '../../contexts/CRMContext';
@@ -10,6 +10,7 @@ import { generateUUID } from '../../lib/uuid';
 import { getAllInventoryItems, getAvailableQuantity, subscribeInventoryChanges } from '../../lib/inventory';
 import { addTransaction } from '../../services/financeService';
 import { generateWhatsAppLink } from '../../lib/whatsapp';
+import DespesasDoEvento from '../../components/DespesasDoEvento';
 
 const ACTION_ICONS: Record<string, LucideIcon> = {
   lead_criado: UserPlus,
@@ -81,7 +82,7 @@ const CRMDashboard = () => {
 
   // Create modal state
   const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [createMode, setCreateMode] = useState<'novo_cliente' | 'novo_evento'>('novo_cliente');
+  const [abaAtiva, setAbaAtiva] = useState<'cliente' | 'evento' | 'despesas'>('cliente');
   const [createDate, setCreateDate] = useState('');
   const [formData, setFormData] = useState({
     name: '', whatsapp: '', email: '', cpf: '',
@@ -278,7 +279,7 @@ const CRMDashboard = () => {
     setClientSearch('');
     setInvSearch('');
     setInvSearchOpen(false);
-    setCreateMode('novo_cliente');
+    setAbaAtiva('cliente');
     setIsCreateOpen(true);
   };
 
@@ -312,7 +313,7 @@ const CRMDashboard = () => {
     setClientSearch(event.client ? `${event.client} — ${event.clientPhone || ''}` : '');
     setInvSearch('');
     setInvSearchOpen(false);
-    setCreateMode(leadId ? (event.clientId ? 'cliente_existente' : 'novo_cliente') : 'novo_cliente');
+    setAbaAtiva(leadId ? (event.clientId ? 'cliente_existente' : 'cliente') : 'cliente');
     setIsCreateOpen(true);
     setSelectedDayEvents(null);
     setSelectedDate(null);
@@ -357,7 +358,7 @@ const CRMDashboard = () => {
           await updateLead(selectedClientId, leadUpdate);
         }
         setEditingEventId(null);
-      } else if (createMode === 'novo_cliente') {
+      } else if (abaAtiva === 'cliente') {
         const leadInput: Partial<Omit<Lead, 'id'>> = {
           name: formData.name,
           niche: formData.eventType || 'Evento',
@@ -1148,20 +1149,32 @@ const CRMDashboard = () => {
             {/* Mode toggle */}
             <div className="flex border-b border-[#222] shrink-0">
               <button
-                onClick={() => setCreateMode('novo_cliente')}
-                className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest transition-colors ${createMode === 'novo_cliente' ? 'text-[#B5FF03] border-b-2 border-[#B5FF03]' : 'text-neutral-500 hover:text-white'}`}
+                onClick={() => setAbaAtiva('cliente')}
+                className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest transition-colors ${abaAtiva === 'cliente' ? 'text-[#B5FF03] border-b-2 border-[#B5FF03]' : 'text-neutral-500 hover:text-white'}`}
               >
                 Novo Cliente
               </button>
               <button
-                onClick={() => setCreateMode('novo_evento')}
-                className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest transition-colors ${createMode === 'novo_evento' ? 'text-[#B5FF03] border-b-2 border-[#B5FF03]' : 'text-neutral-500 hover:text-white'}`}
+                onClick={() => setAbaAtiva('evento')}
+                className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest transition-colors ${abaAtiva === 'evento' ? 'text-[#B5FF03] border-b-2 border-[#B5FF03]' : 'text-neutral-500 hover:text-white'}`}
               >
                 Novo Evento
               </button>
+              <button
+                onClick={() => setAbaAtiva('despesas')}
+                className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest transition-colors flex items-center justify-center gap-1.5 ${abaAtiva === 'despesas' ? 'text-[#B5FF03] border-b-2 border-[#B5FF03]' : 'text-neutral-500 hover:text-white'}`}
+              >
+                <Lock size={10} />
+                Despesas do Evento
+              </button>
             </div>
+            {abaAtiva === 'despesas' ? (
+              <div className="p-4 overflow-y-auto [&::-webkit-scrollbar]:w-[6px] [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-[#333] [&::-webkit-scrollbar-thumb]:rounded-[10px] [&::-webkit-scrollbar-thumb:hover]:bg-[#555]">
+                <DespesasDoEvento eventId={editingEventId} />
+              </div>
+            ) : (
             <form onSubmit={handleCreateSubmit} className="p-4 space-y-4 overflow-y-auto [&::-webkit-scrollbar]:w-[6px] [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-[#333] [&::-webkit-scrollbar-thumb]:rounded-[10px] [&::-webkit-scrollbar-thumb:hover]:bg-[#555]">
-              {createMode === 'novo_cliente' ? (
+              {abaAtiva === 'cliente' ? (
                 <>
                   <div>
                     <label className="block text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-1.5 flex items-center gap-1.5">
@@ -1598,10 +1611,10 @@ const CRMDashboard = () => {
                 </button>
                 <button type="submit"
                   className="flex-[1.5] py-3 bg-[#B5FF03] text-black font-bold text-[10px] uppercase tracking-widest rounded-lg hover:bg-[#a1e600] transition-colors text-center leading-tight">
-                  {editingEventId ? 'Salvar Alterações' : createMode === 'novo_cliente' ? 'Cadastrar e Agendar' : 'Agendar Evento'}
+                  {editingEventId ? 'Salvar Alterações' : abaAtiva === 'cliente' ? 'Cadastrar e Agendar' : 'Agendar Evento'}
                 </button>
               </div>
-            </form>
+            </form>)}
           </div>
         </div>
       )}
