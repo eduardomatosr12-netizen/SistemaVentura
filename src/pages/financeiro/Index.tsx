@@ -115,6 +115,7 @@ const Financeiro = () => {
   const { role, employeeName } = useAuth();
   const { transactions, addTransaction, updateTransaction, deleteTransaction } = useFinance();
 
+  const [syncCounter, setSyncCounter] = useState(0);
   const [viewMode, setViewMode] = useState<'receitas' | 'despesas'>('receitas');
   const [activeTab, setActiveTab] = useState<'receitas' | 'fixas' | 'variaveis' | 'despesas' | 'fluxo' | 'projecao'>('receitas');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -330,7 +331,7 @@ const Financeiro = () => {
     };
 
     return { rawInvoices, allInvoices, filteredInvoices, allExpenses, filteredExpenses, cards, fluxo };
-  }, [transactions, events, Orçamentos, activeFilters, viewMode, activeTab, isInDateRange]);
+  }, [transactions, events, Orçamentos, activeFilters, viewMode, activeTab, isInDateRange, syncCounter]);
 
   const hasActiveFilters = activeFilters.period !== '' || activeFilters.statuses.length > 0 || 
     activeFilters.categories.length > 0 || activeFilters.origins.length > 0 || 
@@ -341,6 +342,12 @@ const Financeiro = () => {
     if (viewMode === 'receitas') setFiltersReceitas(cleared);
     else setFiltersDespesas(cleared);
   };
+
+  useEffect(() => {
+    const handler = () => setSyncCounter(c => c + 1);
+    window.addEventListener('despesas-atualizadas', handler);
+    return () => window.removeEventListener('despesas-atualizadas', handler);
+  }, []);
 
   useEffect(() => {
     if (!events || !transactions) return;

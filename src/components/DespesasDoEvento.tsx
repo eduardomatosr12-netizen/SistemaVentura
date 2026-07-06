@@ -26,6 +26,10 @@ function saveExpenses(eventId: string, expenses: EventExpense[]) {
   localStorage.setItem(`${STORAGE_KEY}_${eventId}`, JSON.stringify(expenses));
 }
 
+function notifyFinanceiro() {
+  window.dispatchEvent(new CustomEvent('despesas-atualizadas'));
+}
+
 interface Props {
   eventId: string | null;
 }
@@ -53,6 +57,7 @@ export default function DespesasDoEvento({ eventId }: Props) {
               );
               saveExpenses(eventId, updated);
               setExpenses(updated);
+              notifyFinanceiro();
             }
           });
         }
@@ -122,6 +127,7 @@ export default function DespesasDoEvento({ eventId }: Props) {
     const updated = [...expenses, nova];
     setExpenses(updated);
     saveExpenses(eventId, updated);
+    notifyFinanceiro();
     resetForm();
   };
 
@@ -137,6 +143,7 @@ export default function DespesasDoEvento({ eventId }: Props) {
     const updated = expenses.filter(e => e.id !== expId);
     setExpenses(updated);
     saveExpenses(eventId, updated);
+    notifyFinanceiro();
   };
 
   const toggleStatus = async (expId: string) => {
@@ -155,6 +162,7 @@ export default function DespesasDoEvento({ eventId }: Props) {
     );
     setExpenses(updated);
     saveExpenses(eventId, updated);
+    notifyFinanceiro();
   };
 
   const totalGeral = expenses.reduce((s, e) => s + e.valor, 0);
