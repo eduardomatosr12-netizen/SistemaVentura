@@ -197,6 +197,61 @@ const Financeiro = () => {
   const isCancelled = (s: string) => s.toLowerCase() === 'cancelado';
   const isPending = (s: string) => s.toLowerCase() === 'pendente';
 
+  const rawReceitas = useMemo(
+    () => (transactions || []).filter(t => t.type === 'receita' && t.source !== 'lead'),
+    [transactions]
+  );
+
+  const rawDespesas = useMemo(
+    () => (transactions || []).filter(t => t.type === 'despesa'),
+    [transactions]
+  );
+
+  const totalRecebido = useMemo(() =>
+    rawReceitas
+      .filter(r => (r.status || '').toLowerCase() === 'pago')
+      .reduce((acc, r) => acc + (Number(r.amount) || 0), 0),
+    [rawReceitas]
+  );
+
+  const receitasPendentes = useMemo(() =>
+    rawReceitas
+      .filter(r => (r.status || '').toLowerCase() === 'pendente')
+      .reduce((acc, r) => acc + (Number(r.amount) || 0), 0),
+    [rawReceitas]
+  );
+
+  const fixasPagas = useMemo(() =>
+    rawDespesas
+      .filter(d => d.expenseType === 'fixa' && (d.status || '').toLowerCase() === 'pago')
+      .reduce((acc, d) => acc + (Number(d.amount) || 0), 0),
+    [rawDespesas]
+  );
+
+  const fixasPendentes = useMemo(() =>
+    rawDespesas
+      .filter(d => d.expenseType === 'fixa' && (d.status || '').toLowerCase() === 'pendente')
+      .reduce((acc, d) => acc + (Number(d.amount) || 0), 0),
+    [rawDespesas]
+  );
+
+  const variaveisPagas = useMemo(() =>
+    rawDespesas
+      .filter(d => (d.expenseType || 'variavel') === 'variavel' && (d.status || '').toLowerCase() === 'pago')
+      .reduce((acc, d) => acc + (Number(d.amount) || 0), 0),
+    [rawDespesas]
+  );
+
+  const variaveisPendentes = useMemo(() =>
+    rawDespesas
+      .filter(d => (d.expenseType || 'variavel') === 'variavel' && (d.status || '').toLowerCase() === 'pendente')
+      .reduce((acc, d) => acc + (Number(d.amount) || 0), 0),
+    [rawDespesas]
+  );
+
+  const isFixasTab = activeTab === 'fixas';
+  const isVariaveisTab = activeTab === 'variaveis';
+
   const displayData = useMemo(() => {
     const eventsById = new Map<string, CalendarEvent>();
     (events || []).forEach(e => { if (e.id) eventsById.set(e.id, e); });
@@ -306,21 +361,16 @@ const Financeiro = () => {
       return true;
     });
 
-    const fixas = allExpenses.filter(exp => exp.expenseType === 'fixa');
-    const variaveis = allExpenses.filter(exp => exp.expenseType === 'variavel');
-    const isFixasTab = activeTab === 'fixas';
-    const isVariaveisTab = activeTab === 'variaveis';
-
     const cards = viewMode === 'receitas'
       ? [
-          { label: 'Total Recebido', icon: TrendingUp, iconColor: 'text-[#B5FF03]', value: rawInvoices.filter(inv => isPaid(inv.status)).reduce((acc, inv) => acc + parseBRL(inv.amount), 0), dimmed: false },
-          { label: 'Receitas Pendentes', icon: Clock, iconColor: 'text-[#aaaaaa]', value: rawInvoices.filter(inv => isPending(inv.status)).reduce((acc, inv) => acc + parseBRL(inv.amount), 0), dimmed: false },
+          { label: 'Total Recebido', icon: TrendingUp, iconColor: 'text-[#B5FF03]', value: totalRecebido, dimmed: false },
+          { label: 'Receitas Pendentes', icon: Clock, iconColor: 'text-[#aaaaaa]', value: receitasPendentes, dimmed: false },
         ]
       : [
-          { label: 'Fixas Pagas', icon: TrendingDown, iconColor: 'text-[#22c55e]', value: fixas.filter(exp => isPaid(exp.status)).reduce((acc, exp) => acc + parseBRL(exp.amount), 0), dimmed: isVariaveisTab },
-          { label: 'Fixas Pendentes', icon: Clock, iconColor: 'text-[#aaaaaa]', value: fixas.filter(exp => isPending(exp.status)).reduce((acc, exp) => acc + parseBRL(exp.amount), 0), dimmed: isVariaveisTab },
-          { label: 'Variáveis Pagas', icon: TrendingDown, iconColor: 'text-[#f97316]', value: variaveis.filter(exp => isPaid(exp.status)).reduce((acc, exp) => acc + parseBRL(exp.amount), 0), dimmed: isFixasTab },
-          { label: 'Variáveis Pendentes', icon: AlertTriangle, iconColor: 'text-[#f97316]', value: variaveis.filter(exp => isPending(exp.status)).reduce((acc, exp) => acc + parseBRL(exp.amount), 0), dimmed: isFixasTab },
+          { label: 'Fixas Pagas', icon: TrendingDown, iconColor: 'text-[#22c55e]', value: fixasPagas, dimmed: isVariaveisTab },
+          { label: 'Fixas Pendentes', icon: Clock, iconColor: 'text-[#aaaaaa]', value: fixasPendentes, dimmed: isVariaveisTab },
+          { label: 'Variáveis Pagas', icon: TrendingDown, iconColor: 'text-[#f97316]', value: variaveisPagas, dimmed: isFixasTab },
+          { label: 'Variáveis Pendentes', icon: AlertTriangle, iconColor: 'text-[#f97316]', value: variaveisPendentes, dimmed: isFixasTab },
         ];
 
     const fluxo = {
