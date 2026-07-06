@@ -27,6 +27,7 @@ interface Expense {
   amount: string;
   date: string;
   status: 'Pago' | 'Pendente' | 'Cancelado';
+  paymentMethod?: string;
   lastModifiedBy?: string;
 }
 
@@ -103,10 +104,16 @@ const Financeiro = () => {
   const { role, employeeName } = useAuth();
   const { transactions, addTransaction, updateTransaction, deleteTransaction } = useFinance();
 
-  const [activeTab, setActiveTab] = useState<'receitas' | 'fluxo' | 'projecao'>('receitas');
+  const [viewMode, setViewMode] = useState<'receitas' | 'despesas'>('receitas');
+  const [activeTab, setActiveTab] = useState<'receitas' | 'despesas' | 'fluxo' | 'projecao'>('receitas');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  
-  const [filtersState, setFiltersState] = useState({
+
+  useEffect(() => {
+    if (viewMode === 'receitas') setActiveTab('receitas');
+    else setActiveTab('despesas');
+  }, [viewMode]);
+
+  const initialFilterState = {
     period: '' as '' | 'today' | 'this_week' | 'this_month' | 'last_month' | '90_days' | 'this_year' | 'custom',
     customDateStart: '',
     customDateEnd: '',
@@ -115,7 +122,13 @@ const Financeiro = () => {
     origins: [] as string[],
     minValue: '',
     maxValue: '',
-  });
+  };
+
+  const [filtersReceitas, setFiltersReceitas] = useState({ ...initialFilterState });
+  const [filtersDespesas, setFiltersDespesas] = useState({ ...initialFilterState });
+
+  const activeFilters = viewMode === 'receitas' ? filtersReceitas : filtersDespesas;
+  const setActiveFilters = viewMode === 'receitas' ? setFiltersReceitas : setFiltersDespesas;
 
   const parseBRL = (val: string): number => {
     if (!val) return 0;
@@ -131,9 +144,9 @@ const Financeiro = () => {
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
-    if (filtersState.period === 'today') {
+    if (activeFilters.period === 'today') {
       return { start: today, end: today };
-    } else if (filtersState.period === 'this_week') {
+    } else if (activeFilters.period === 'this_week') {
       const dayOfWeek = today.getDay();
       const diff = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
       const start = new Date(today);
@@ -141,30 +154,30 @@ const Financeiro = () => {
       const end = new Date(today);
       end.setDate(start.getDate() + 6);
       return { start, end };
-    } else if (filtersState.period === 'this_month') {
+    } else if (activeFilters.period === 'this_month') {
       const start = new Date(now.getFullYear(), now.getMonth(), 1);
       const end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
       return { start, end };
-    } else if (filtersState.period === 'last_month') {
+    } else if (activeFilters.period === 'last_month') {
       const start = new Date(now.getFullYear(), now.getMonth() - 1, 1);
       const end = new Date(now.getFullYear(), now.getMonth(), 0);
       return { start, end };
-    } else if (filtersState.period === '90_days') {
+    } else if (activeFilters.period === '90_days') {
       const start = new Date(today);
       start.setDate(start.getDate() - 90);
       return { start, end: today };
-    } else if (filtersState.period === 'this_year') {
+    } else if (activeFilters.period === 'this_year') {
       const start = new Date(now.getFullYear(), 0, 1);
       const end = new Date(now.getFullYear(), 11, 31);
       return { start, end };
-    } else if (filtersState.period === 'custom' && filtersState.customDateStart && filtersState.customDateEnd) {
+    } else if (activeFilters.period === 'custom' && activeFilters.customDateStart && activeFilters.customDateEnd) {
       return { 
-        start: new Date(filtersState.customDateStart), 
-        end: new Date(filtersState.customDateEnd) 
+        start: new Date(activeFilters.customDateStart), 
+        end: new Date(activeFilters.customDateEnd) 
       };
     }
     return null;
-  }, [filtersState]);
+  }, [activeFilters]);
 
   const isInDateRange = useCallback((dateStr: string) => {
     if (!dateStr || dateStr === '—') return true;
@@ -234,31 +247,31 @@ const Financeiro = () => {
   const filteredInvoices = useMemo(() => {
     let result = allInvoices || [];
       
-    if (filtersState.statuses?.length > 0) {
-      const selectedLower = filtersState.statuses.map(s => s.toLowerCase());
+    if (activeFilters.statuses?.length > 0) {
+      const selectedLower = activeFilters.statuses.map(s => s.toLowerCase());
       result = result.filter(inv => selectedLower.includes(inv.status.toLowerCase()));
     }
       
-    if (filtersState.origins?.length > 0) {
+    if (activeFilters.origins?.length > 0) {
       result = result.filter(inv => {
         const method = inv.paymentMethod || '';
-        return filtersState.origins.includes(method);
+        return activeFilters.origins.includes(method);
       });
     }
       
     result = result.filter(inv => isInDateRange(inv.date));
       
-    if (filtersState.minValue) {
-      const min = parseFloat(filtersState.minValue);
+    if (activeFilters.minValue) {
+      const min = parseFloat(activeFilters.minValue);
       result = result.filter(inv => parseBRL(inv.amount) >= min);
     }
-    if (filtersState.maxValue) {
-      const max = parseFloat(filtersState.maxValue);
+    if (activeFilters.maxValue) {
+      const max = parseFloat(activeFilters.maxValue);
       result = result.filter(inv => parseBRL(inv.amount) <= max);
     }
       
     return result;
-  }, [allInvoices, filtersState, isInDateRange]);
+  }, [allInvoices, activeFilters, isInDateRange]);
 
   const firebaseExpenses: Expense[] = useMemo(() =>
     (transactions || [])
@@ -270,6 +283,7 @@ const Financeiro = () => {
         amount: formatCurrency(t.amount),
         date: t.date,
         status: t.status as Expense['status'],
+        paymentMethod: t.paymentMethod,
         lastModifiedBy: t.lastModifiedBy,
       })),
   [transactions]);
@@ -277,148 +291,87 @@ const Financeiro = () => {
   const filteredExpenses = useMemo(() => {
     let result = firebaseExpenses || [];
       
-    if (activeTab === 'fluxo' && filtersState.categories?.length > 0) {
-      result = result.filter(exp => filtersState.categories.includes(exp.category));
+    if (activeFilters.categories?.length > 0) {
+      result = result.filter(exp => activeFilters.categories.includes(exp.category));
     }
       
-    if (filtersState.statuses?.length > 0) {
-      const selectedLower = filtersState.statuses.map(s => s.toLowerCase());
+    if (activeFilters.statuses?.length > 0) {
+      const selectedLower = activeFilters.statuses.map(s => s.toLowerCase());
       result = result.filter(exp => selectedLower.includes(exp.status.toLowerCase()));
     }
       
     result = result.filter(exp => isInDateRange(exp.date));
       
-    if (filtersState.minValue) {
-      const min = parseFloat(filtersState.minValue);
+    if (activeFilters.minValue) {
+      const min = parseFloat(activeFilters.minValue);
       result = result.filter(exp => parseBRL(exp.amount) >= min);
     }
-    if (filtersState.maxValue) {
-      const max = parseFloat(filtersState.maxValue);
+    if (activeFilters.maxValue) {
+      const max = parseFloat(activeFilters.maxValue);
       result = result.filter(exp => parseBRL(exp.amount) <= max);
     }
       
     return result;
-  }, [firebaseExpenses, filtersState, activeTab, isInDateRange]);
+  }, [firebaseExpenses, activeFilters, isInDateRange]);
     
   const isPaid = (s: string) => s.toLowerCase() === 'pago';
   const isCancelled = (s: string) => s.toLowerCase() === 'cancelado';
   const isPending = (s: string) => s.toLowerCase() === 'pendente';
 
-  const cardData = useMemo(() => {
-    if (activeTab === 'receitas') {
+  const cardsData = useMemo(() => {
+    if (viewMode === 'receitas') {
+      const base = firebaseInvoices;
       return {
         card1: {
-          label: 'Total Receitas',
+          label: 'Total Recebido',
           icon: TrendingUp,
           iconColor: 'text-[#B5FF03]',
-          value: filteredInvoices.filter(inv => isPaid(inv.status)).reduce((acc, inv) => acc + parseBRL(inv.amount), 0),
+          value: base.filter(inv => isPaid(inv.status)).reduce((acc, inv) => acc + parseBRL(inv.amount), 0),
         },
         card2: {
           label: 'Receitas Pendentes',
           icon: Clock,
           iconColor: 'text-[#aaaaaa]',
-          value: filteredInvoices.filter(inv => !isPaid(inv.status) && !isCancelled(inv.status)).reduce((acc, inv) => acc + parseBRL(inv.amount), 0),
-        },
-        card3: {
-          label: 'Total Despesas',
-          icon: TrendingDown,
-          iconColor: 'text-[#ff4444]',
-          value: filteredExpenses.filter(exp => isPaid(exp.status)).reduce((acc, exp) => acc + parseBRL(exp.amount), 0),
-        },
-        card4: {
-          label: 'Despesas Pendentes',
-          icon: AlertTriangle,
-          iconColor: 'text-[#ff4444]',
-          value: filteredExpenses.filter(exp => isPending(exp.status)).reduce((acc, exp) => acc + parseBRL(exp.amount), 0),
+          value: base.filter(inv => isPending(inv.status)).reduce((acc, inv) => acc + parseBRL(inv.amount), 0),
         },
       };
     }
 
-    if (activeTab === 'fluxo') {
-      return {
-        card1: {
-          label: 'Entradas Realizadas',
-          icon: TrendingUp,
-          iconColor: 'text-[#B5FF03]',
-          value: filteredInvoices.filter(inv => isPaid(inv.status)).reduce((acc, inv) => acc + parseBRL(inv.amount), 0),
-        },
-        card2: {
-          label: 'Entradas Pendentes',
-          icon: Clock,
-          iconColor: 'text-[#aaaaaa]',
-          value: filteredInvoices.filter(inv => !isPaid(inv.status) && !isCancelled(inv.status)).reduce((acc, inv) => acc + parseBRL(inv.amount), 0),
-        },
-        card3: {
-          label: 'Saídas Realizadas',
-          icon: TrendingDown,
-          iconColor: 'text-[#ff4444]',
-          value: filteredExpenses.filter(exp => isPaid(exp.status)).reduce((acc, exp) => acc + parseBRL(exp.amount), 0),
-        },
-        card4: {
-          label: 'Saídas Pendentes',
-          icon: AlertTriangle,
-          iconColor: 'text-[#ff4444]',
-          value: filteredExpenses.filter(exp => isPending(exp.status)).reduce((acc, exp) => acc + parseBRL(exp.amount), 0),
-        },
-      };
-    }
-
-    const parceladas = allInvoices.filter(inv => inv.paymentMethod === 'parcelado');
-    const totalParcelas = parceladas.filter(inv => inv.status !== 'Cancelado').reduce((acc, inv) => acc + parseBRL(inv.amount), 0);
-    const emAberto = parceladas.filter(inv => !isPaid(inv.status) && !isCancelled(inv.status)).reduce((acc, inv) => acc + parseBRL(inv.amount), 0);
-    const jaPago = parceladas.filter(inv => isPaid(inv.status)).reduce((acc, inv) => acc + parseBRL(inv.amount), 0);
-    const now = new Date();
-    const dozeMeses = new Date(now.getFullYear() + 1, now.getMonth(), 1);
-    const noPeriodo = parceladas.filter(inv => {
-      if (!inv.date || inv.date === '—') return false;
-      const d = new Date(inv.date);
-      return d >= now && d < dozeMeses;
-    });
-    const totalPeriodo = noPeriodo.reduce((acc, inv) => acc + parseBRL(inv.amount), 0);
-
+    const base = firebaseExpenses;
     return {
       card1: {
-        label: 'Total Parcelas',
-        icon: CreditCard,
-        iconColor: 'text-[#B5FF03]',
-        value: totalParcelas,
+        label: 'Total Pago',
+        icon: TrendingDown,
+        iconColor: 'text-[#ff4444]',
+        value: base.filter(exp => isPaid(exp.status)).reduce((acc, exp) => acc + parseBRL(exp.amount), 0),
       },
       card2: {
-        label: 'Parcelas em Aberto',
-        icon: Clock,
-        iconColor: 'text-[#aaaaaa]',
-        value: emAberto,
-      },
-      card3: {
-        label: 'Total Pago',
-        icon: CheckCircle2,
-        iconColor: 'text-[#B5FF03]',
-        value: jaPago,
-      },
-      card4: {
-        label: 'Próximos 12 Meses',
-        icon: TrendingUp,
-        iconColor: 'text-[#B5FF03]',
-        value: totalPeriodo,
+        label: 'Despesas Pendentes',
+        icon: AlertTriangle,
+        iconColor: 'text-[#ff4444]',
+        value: base.filter(exp => isPending(exp.status)).reduce((acc, exp) => acc + parseBRL(exp.amount), 0),
       },
     };
-  }, [activeTab, filteredInvoices, filteredExpenses, allInvoices]);
-    
-  const hasActiveFilters = filtersState.period !== '' || filtersState.statuses.length > 0 || 
-    filtersState.categories.length > 0 || filtersState.origins.length > 0 || 
-    filtersState.minValue !== '' || filtersState.maxValue !== '';
-    
+  }, [viewMode, firebaseInvoices, firebaseExpenses]);
+
+  /* Cash flow card data for sub-tabs */
+  const fluxoData = useMemo(() => {
+    return {
+      entradaRealizada: filteredInvoices.filter(inv => isPaid(inv.status)).reduce((acc, inv) => acc + parseBRL(inv.amount), 0),
+      entradaPendente: filteredInvoices.filter(inv => !isPaid(inv.status) && !isCancelled(inv.status)).reduce((acc, inv) => acc + parseBRL(inv.amount), 0),
+      saidaRealizada: filteredExpenses.filter(exp => isPaid(exp.status)).reduce((acc, exp) => acc + parseBRL(exp.amount), 0),
+      saidaPendente: filteredExpenses.filter(exp => isPending(exp.status)).reduce((acc, exp) => acc + parseBRL(exp.amount), 0),
+    };
+  }, [filteredInvoices, filteredExpenses]);
+
+  const hasActiveFilters = activeFilters.period !== '' || activeFilters.statuses.length > 0 || 
+    activeFilters.categories.length > 0 || activeFilters.origins.length > 0 || 
+    activeFilters.minValue !== '' || activeFilters.maxValue !== '';
+
   const clearFilters = () => {
-    setFiltersState({
-      period: '',
-      customDateStart: '',
-      customDateEnd: '',
-      statuses: [],
-      categories: [],
-      origins: [],
-      minValue: '',
-      maxValue: '',
-    });
+    const cleared = { ...initialFilterState };
+    if (viewMode === 'receitas') setFiltersReceitas(cleared);
+    else setFiltersDespesas(cleared);
   };
 
   useEffect(() => {
@@ -576,6 +529,7 @@ const Financeiro = () => {
           date: editingExpense.date,
           status: editingExpense.status,
           source: 'manual',
+          paymentMethod: editingExpense.paymentMethod || 'pix',
           lastModifiedBy: employeeName || (role === 'admin' ? 'Administrador' : 'Funcionário'),
         });
       } catch (err) {
@@ -589,6 +543,7 @@ const Financeiro = () => {
           amount: amountValue,
           date: editingExpense.date,
           status: editingExpense.status,
+          paymentMethod: editingExpense.paymentMethod,
           lastModifiedBy: employeeName || (role === 'admin' ? 'Administrador' : 'Funcionário'),
         });
       } catch (err) {
@@ -619,6 +574,14 @@ const Financeiro = () => {
   const categoryLabel = (cat: string) => {
     return EXPENSE_CATEGORIES.find(c => c.value === cat)?.label || cat;
   };
+
+  const handleFilterChange = (updater: (prev: typeof initialFilterState) => typeof initialFilterState) => {
+    if (viewMode === 'receitas') {
+      setFiltersReceitas(updater);
+    } else {
+      setFiltersDespesas(updater);
+    }
+  };
     
   const filterContent = (
     <>
@@ -638,47 +601,47 @@ const Financeiro = () => {
       <FilterSection title="Período">
         <RadioFilter
           label="Hoje"
-          checked={filtersState.period === 'today'}
-          onChange={() => setFiltersState(prev => ({ ...prev, period: prev.period === 'today' ? '' : 'today' }))}
+          checked={activeFilters.period === 'today'}
+          onChange={() => handleFilterChange(prev => ({ ...prev, period: prev.period === 'today' ? '' : 'today' }))}
         />
         <RadioFilter
           label="Esta Semana"
-          checked={filtersState.period === 'this_week'}
-          onChange={() => setFiltersState(prev => ({ ...prev, period: prev.period === 'this_week' ? '' : 'this_week' }))}
+          checked={activeFilters.period === 'this_week'}
+          onChange={() => handleFilterChange(prev => ({ ...prev, period: prev.period === 'this_week' ? '' : 'this_week' }))}
         />
         <RadioFilter
           label="Este Mês"
-          checked={filtersState.period === 'this_month'}
-          onChange={() => setFiltersState(prev => ({ ...prev, period: prev.period === 'this_month' ? '' : 'this_month' }))}
+          checked={activeFilters.period === 'this_month'}
+          onChange={() => handleFilterChange(prev => ({ ...prev, period: prev.period === 'this_month' ? '' : 'this_month' }))}
         />
         <RadioFilter
           label="Mês Passado"
-          checked={filtersState.period === 'last_month'}
-          onChange={() => setFiltersState(prev => ({ ...prev, period: prev.period === 'last_month' ? '' : 'last_month' }))}
+          checked={activeFilters.period === 'last_month'}
+          onChange={() => handleFilterChange(prev => ({ ...prev, period: prev.period === 'last_month' ? '' : 'last_month' }))}
         />
         <RadioFilter
           label="Últimos 90 Dias"
-          checked={filtersState.period === '90_days'}
-          onChange={() => setFiltersState(prev => ({ ...prev, period: prev.period === '90_days' ? '' : '90_days' }))}
+          checked={activeFilters.period === '90_days'}
+          onChange={() => handleFilterChange(prev => ({ ...prev, period: prev.period === '90_days' ? '' : '90_days' }))}
         />
         <RadioFilter
           label="Este Ano"
-          checked={filtersState.period === 'this_year'}
-          onChange={() => setFiltersState(prev => ({ ...prev, period: prev.period === 'this_year' ? '' : 'this_year' }))}
+          checked={activeFilters.period === 'this_year'}
+          onChange={() => handleFilterChange(prev => ({ ...prev, period: prev.period === 'this_year' ? '' : 'this_year' }))}
         />
         <RadioFilter
           label="Personalizado"
-          checked={filtersState.period === 'custom'}
-          onChange={() => setFiltersState(prev => ({ ...prev, period: prev.period === 'custom' ? '' : 'custom' }))}
+          checked={activeFilters.period === 'custom'}
+          onChange={() => handleFilterChange(prev => ({ ...prev, period: prev.period === 'custom' ? '' : 'custom' }))}
         />
-        {filtersState.period === 'custom' && (
+        {activeFilters.period === 'custom' && (
           <div className="space-y-3 pt-2 pl-1">
             <div>
               <label className="text-xs text-[#aaaaaa] uppercase tracking-widest mb-1 block">De:</label>
               <input
                 type="date"
-                value={filtersState.customDateStart}
-                onChange={(e) => setFiltersState(prev => ({ ...prev, customDateStart: e.target.value }))}
+                value={activeFilters.customDateStart}
+                onChange={(e) => handleFilterChange(prev => ({ ...prev, customDateStart: e.target.value }))}
                 className="w-full bg-[#111111] border border-[#222222] rounded px-3 py-2 text-sm text-white focus:border-[#B5FF03] outline-none transition-colors"
               />
             </div>
@@ -686,8 +649,8 @@ const Financeiro = () => {
               <label className="text-xs text-[#aaaaaa] uppercase tracking-widest mb-1 block">Até:</label>
               <input
                 type="date"
-                value={filtersState.customDateEnd}
-                onChange={(e) => setFiltersState(prev => ({ ...prev, customDateEnd: e.target.value }))}
+                value={activeFilters.customDateEnd}
+                onChange={(e) => handleFilterChange(prev => ({ ...prev, customDateEnd: e.target.value }))}
                 className="w-full bg-[#111111] border border-[#222222] rounded px-3 py-2 text-sm text-white focus:border-[#B5FF03] outline-none transition-colors"
               />
             </div>
@@ -696,34 +659,34 @@ const Financeiro = () => {
       </FilterSection>
 
       <FilterSection title="Status">
-        {(activeTab === 'receitas' ? INVOICE_STATUSES : EXPENSE_STATUSES).map(status => (
+        {(viewMode === 'receitas' ? INVOICE_STATUSES : EXPENSE_STATUSES).map(status => (
           <CheckboxFilter
             key={status}
             label={status}
-            checked={filtersState.statuses.includes(status)}
+            checked={activeFilters.statuses.includes(status)}
             onChange={(checked) => {
               if (checked) {
-                setFiltersState(prev => ({ ...prev, statuses: [...prev.statuses, status] }));
+                handleFilterChange(prev => ({ ...prev, statuses: [...prev.statuses, status] }));
               } else {
-                setFiltersState(prev => ({ ...prev, statuses: prev.statuses.filter(s => s !== status) }));
+                handleFilterChange(prev => ({ ...prev, statuses: prev.statuses.filter(s => s !== status) }));
               }
             }}
           />
         ))}
       </FilterSection>
 
-      {activeTab === 'receitas' && (
+      {viewMode === 'receitas' && (
         <FilterSection title="Forma de Pagamento">
           {PAYMENT_METHODS.map(pm => (
             <CheckboxFilter
               key={pm.value}
               label={pm.label}
-              checked={filtersState.origins.includes(pm.value)}
+              checked={activeFilters.origins.includes(pm.value)}
               onChange={(checked) => {
                 if (checked) {
-                  setFiltersState(prev => ({ ...prev, origins: [...prev.origins, pm.value] }));
+                  handleFilterChange(prev => ({ ...prev, origins: [...prev.origins, pm.value] }));
                 } else {
-                  setFiltersState(prev => ({ ...prev, origins: prev.origins.filter(o => o !== pm.value) }));
+                  handleFilterChange(prev => ({ ...prev, origins: prev.origins.filter(o => o !== pm.value) }));
                 }
               }}
             />
@@ -731,18 +694,18 @@ const Financeiro = () => {
         </FilterSection>
       )}
 
-      {activeTab === 'fluxo' && (
+      {viewMode === 'despesas' && (
         <FilterSection title="Categorias">
           {EXPENSE_CATEGORIES.map(cat => (
             <CheckboxFilter
               key={cat.value}
               label={cat.label}
-              checked={filtersState.categories.includes(cat.value)}
+              checked={activeFilters.categories.includes(cat.value)}
               onChange={(checked) => {
                 if (checked) {
-                  setFiltersState(prev => ({ ...prev, categories: [...prev.categories, cat.value] }));
+                  handleFilterChange(prev => ({ ...prev, categories: [...prev.categories, cat.value] }));
                 } else {
-                  setFiltersState(prev => ({ ...prev, categories: prev.categories.filter(c => c !== cat.value) }));
+                  handleFilterChange(prev => ({ ...prev, categories: prev.categories.filter(c => c !== cat.value) }));
                 }
               }}
             />
@@ -756,8 +719,8 @@ const Financeiro = () => {
             <label className="text-xs text-[#aaaaaa] uppercase tracking-widest">Mínimo (R$)</label>
             <input
               type="number"
-              value={filtersState.minValue}
-              onChange={(e) => setFiltersState(prev => ({ ...prev, minValue: e.target.value }))}
+              value={activeFilters.minValue}
+              onChange={(e) => handleFilterChange(prev => ({ ...prev, minValue: e.target.value }))}
               className="w-full bg-[#111111] border border-[#222222] rounded px-3 py-2 text-sm text-white focus:border-[#B5FF03] outline-none transition-colors"
             />
           </div>
@@ -765,8 +728,8 @@ const Financeiro = () => {
             <label className="text-xs text-[#aaaaaa] uppercase tracking-widest">Máximo (R$)</label>
             <input
               type="number"
-              value={filtersState.maxValue}
-              onChange={(e) => setFiltersState(prev => ({ ...prev, maxValue: e.target.value }))}
+              value={activeFilters.maxValue}
+              onChange={(e) => handleFilterChange(prev => ({ ...prev, maxValue: e.target.value }))}
               className="w-full bg-[#111111] border border-[#222222] rounded px-3 py-2 text-sm text-white focus:border-[#B5FF03] outline-none transition-colors"
             />
           </div>
@@ -782,18 +745,21 @@ const Financeiro = () => {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <h1 className="text-2xl font-black uppercase tracking-widest text-white">Financeiro</h1>
           <div className="flex flex-wrap gap-3">
-            <button
-              onClick={() => handleOpenInvoiceModal()}
-              className="rounded-full px-3 py-1.5 min-w-[120px] bg-[#B5FF03] text-black font-bold text-xs uppercase tracking-widest hover:bg-[#a5ef03] transition-colors"
-            >
-              CRIAR FATURA
-            </button>
-            <button
-              onClick={() => handleOpenExpenseModal()}
-              className="rounded-full px-3 py-1.5 min-w-[120px] bg-[#111111] text-white font-bold text-xs uppercase tracking-widest border border-[#222222] hover:border-[#B5FF03] transition-colors"
-            >
-              CRIAR DESPESA
-            </button>
+            {viewMode === 'receitas' ? (
+              <button
+                onClick={() => handleOpenInvoiceModal()}
+                className="rounded-full px-3 py-1.5 min-w-[120px] bg-[#B5FF03] text-black font-bold text-xs uppercase tracking-widest hover:bg-[#a5ef03] transition-colors"
+              >
+                CRIAR FATURA
+              </button>
+            ) : (
+              <button
+                onClick={() => handleOpenExpenseModal()}
+                className="rounded-full px-3 py-1.5 min-w-[120px] bg-[#B5FF03] text-black font-bold text-xs uppercase tracking-widest hover:bg-[#a5ef03] transition-colors"
+              >
+                CRIAR DESPESA
+              </button>
+            )}
             <button
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
               className="rounded-full px-3 py-1.5 min-w-[120px] bg-[#111111] text-white font-bold text-xs uppercase tracking-widest border border-[#222222] hover:border-[#B5FF03] transition-colors flex items-center justify-center gap-2"
@@ -805,9 +771,35 @@ const Financeiro = () => {
         </div>
       </div>
 
-      {/* KPI Cards */}
-      <div className="p-6 grid grid-cols-1 md:grid-cols-4 gap-4">
-        {[cardData.card1, cardData.card2, cardData.card3, cardData.card4].map((card, idx) => {
+      {/* View Toggle */}
+      <div className="px-6 pt-6 pb-2">
+        <div className="flex gap-3">
+          <button
+            onClick={() => setViewMode('receitas')}
+            className={`rounded-full px-5 py-2 font-bold text-xs uppercase tracking-widest transition-colors ${
+              viewMode === 'receitas'
+                ? 'bg-[#B5FF03] text-black'
+                : 'bg-[#111111] text-white border border-[#222222] hover:border-[#B5FF03]'
+            }`}
+          >
+            RECEITAS
+          </button>
+          <button
+            onClick={() => setViewMode('despesas')}
+            className={`rounded-full px-5 py-2 font-bold text-xs uppercase tracking-widest transition-colors ${
+              viewMode === 'despesas'
+                ? 'bg-[#B5FF03] text-black'
+                : 'bg-[#111111] text-white border border-[#222222] hover:border-[#B5FF03]'
+            }`}
+          >
+            DESPESAS
+          </button>
+        </div>
+      </div>
+
+      {/* KPI Cards (2 per view) */}
+      <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+        {[cardsData.card1, cardsData.card2].map((card, idx) => {
           const Icon = card.icon;
           return (
             <div key={idx} className="bg-[#111111] border border-[#222222] rounded-lg p-4">
@@ -821,46 +813,82 @@ const Financeiro = () => {
         })}
       </div>
 
-      {/* Tabs */}
+      {/* Sub-tabs */}
       <div className="px-6 border-b border-[#222222]">
-        <div className="flex gap-6">
-          <button
-            onClick={() => setActiveTab('receitas')}
-            className={`py-3 px-1 border-b-2 font-bold text-xs uppercase tracking-widest transition-colors ${
-              activeTab === 'receitas'
-                ? 'border-[#B5FF03] text-[#B5FF03]'
-                : 'border-transparent text-[#aaaaaa] hover:text-white'
-            }`}
-          >
-            Receitas ({filteredInvoices.length})
-          </button>
-          <button
-            onClick={() => setActiveTab('fluxo')}
-            className={`py-3 px-1 border-b-2 font-bold text-xs uppercase tracking-widest transition-colors ${
-              activeTab === 'fluxo'
-                ? 'border-[#B5FF03] text-[#B5FF03]'
-                : 'border-transparent text-[#aaaaaa] hover:text-white'
-            }`}
-          >
-            Fluxo de Caixa ({filteredExpenses.length})
-          </button>
-          <button
-            onClick={() => setActiveTab('projecao')}
-            className={`py-3 px-1 border-b-2 font-bold text-xs uppercase tracking-widest transition-colors ${
-              activeTab === 'projecao'
-                ? 'border-[#B5FF03] text-[#B5FF03]'
-                : 'border-transparent text-[#aaaaaa] hover:text-white'
-            }`}
-          >
-            Projeção (Parcelas)
-          </button>
-        </div>
+        {viewMode === 'receitas' ? (
+          <div className="flex gap-6">
+            <button
+              onClick={() => setActiveTab('receitas')}
+              className={`py-3 px-1 border-b-2 font-bold text-xs uppercase tracking-widest transition-colors ${
+                activeTab === 'receitas'
+                  ? 'border-[#B5FF03] text-[#B5FF03]'
+                  : 'border-transparent text-[#aaaaaa] hover:text-white'
+              }`}
+            >
+              Receitas ({filteredInvoices.length})
+            </button>
+            <button
+              onClick={() => setActiveTab('fluxo')}
+              className={`py-3 px-1 border-b-2 font-bold text-xs uppercase tracking-widest transition-colors ${
+                activeTab === 'fluxo'
+                  ? 'border-[#B5FF03] text-[#B5FF03]'
+                  : 'border-transparent text-[#aaaaaa] hover:text-white'
+              }`}
+            >
+              Fluxo de Caixa ({filteredExpenses.length + filteredInvoices.length})
+            </button>
+            <button
+              onClick={() => setActiveTab('projecao')}
+              className={`py-3 px-1 border-b-2 font-bold text-xs uppercase tracking-widest transition-colors ${
+                activeTab === 'projecao'
+                  ? 'border-[#B5FF03] text-[#B5FF03]'
+                  : 'border-transparent text-[#aaaaaa] hover:text-white'
+              }`}
+            >
+              Projeção (Parcelas)
+            </button>
+          </div>
+        ) : (
+          <div className="flex gap-6">
+            <button
+              onClick={() => setActiveTab('despesas')}
+              className={`py-3 px-1 border-b-2 font-bold text-xs uppercase tracking-widest transition-colors ${
+                activeTab === 'despesas'
+                  ? 'border-[#B5FF03] text-[#B5FF03]'
+                  : 'border-transparent text-[#aaaaaa] hover:text-white'
+              }`}
+            >
+              Despesas ({filteredExpenses.length})
+            </button>
+            <button
+              onClick={() => setActiveTab('fluxo')}
+              className={`py-3 px-1 border-b-2 font-bold text-xs uppercase tracking-widest transition-colors ${
+                activeTab === 'fluxo'
+                  ? 'border-[#B5FF03] text-[#B5FF03]'
+                  : 'border-transparent text-[#aaaaaa] hover:text-white'
+              }`}
+            >
+              Fluxo de Saídas ({filteredExpenses.length})
+            </button>
+            <button
+              onClick={() => setActiveTab('projecao')}
+              className={`py-3 px-1 border-b-2 font-bold text-xs uppercase tracking-widest transition-colors ${
+                activeTab === 'projecao'
+                  ? 'border-[#B5FF03] text-[#B5FF03]'
+                  : 'border-transparent text-[#aaaaaa] hover:text-white'
+              }`}
+            >
+              Projeção (Parcelas)
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Main Content */}
       <div className="flex relative">
         <div className="flex-1 p-6">
-          {activeTab === 'receitas' && (
+          {/* Receitas View - RECEITAS tab */}
+          {viewMode === 'receitas' && activeTab === 'receitas' && (
             <>
             <div className="bg-[#111111] border border-[#222222] rounded-lg overflow-x-auto">
               <table className="w-full">
@@ -935,84 +963,89 @@ const Financeiro = () => {
             </div>
             </>
           )}
-          {activeTab === 'fluxo' && (
+
+          {/* Receitas View - FLUXO DE CAIXA tab */}
+          {viewMode === 'receitas' && activeTab === 'fluxo' && (
             <>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+              <div className="bg-[#111111] border border-[#222222] rounded-lg p-4">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-xs font-black uppercase tracking-widest text-[#aaaaaa]">Entradas Realizadas</span>
+                  <TrendingUp size={16} className="text-[#B5FF03]" />
+                </div>
+                <p className="text-2xl font-black text-[#B5FF03]">{formatCurrency(fluxoData.entradaRealizada)}</p>
+              </div>
+              <div className="bg-[#111111] border border-[#222222] rounded-lg p-4">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-xs font-black uppercase tracking-widest text-[#aaaaaa]">Entradas Pendentes</span>
+                  <Clock size={16} className="text-[#aaaaaa]" />
+                </div>
+                <p className="text-2xl font-black text-white">{formatCurrency(fluxoData.entradaPendente)}</p>
+              </div>
+              <div className="bg-[#111111] border border-[#222222] rounded-lg p-4">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-xs font-black uppercase tracking-widest text-[#aaaaaa]">Saídas Realizadas</span>
+                  <TrendingDown size={16} className="text-[#ff4444]" />
+                </div>
+                <p className="text-2xl font-black text-[#ff4444]">{formatCurrency(fluxoData.saidaRealizada)}</p>
+              </div>
+              <div className="bg-[#111111] border border-[#222222] rounded-lg p-4">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-xs font-black uppercase tracking-widest text-[#aaaaaa]">Saídas Pendentes</span>
+                  <AlertTriangle size={16} className="text-[#ff4444]" />
+                </div>
+                <p className="text-2xl font-black text-[#ff4444]">{formatCurrency(fluxoData.saidaPendente)}</p>
+              </div>
+            </div>
             <div className="bg-[#111111] border border-[#222222] rounded-lg overflow-x-auto">
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-[#222222]">
-                    <th className="text-left p-4 text-xs font-black uppercase tracking-widest text-[#B5FF03]">Categoria</th>
+                    <th className="text-left p-4 text-xs font-black uppercase tracking-widest text-[#B5FF03]">Tipo</th>
                     <th className="text-left p-4 text-xs font-black uppercase tracking-widest text-[#B5FF03]">Descrição</th>
                     <th className="text-left p-4 text-xs font-black uppercase tracking-widest text-[#B5FF03]">Valor</th>
                     <th className="text-left p-4 text-xs font-black uppercase tracking-widest text-[#B5FF03]">Data</th>
                     <th className="text-left p-4 text-xs font-black uppercase tracking-widest text-[#B5FF03]">Status</th>
-                    <th className="text-right p-4 text-xs font-black uppercase tracking-widest text-[#B5FF03]">Ações</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredExpenses.map(expense => (
-                    <tr key={expense.id} className="border-b border-[#222222] hover:bg-[#1a1a1a] transition-colors">
-                      <td className="p-4 text-sm text-[#aaaaaa]">{categoryLabel(expense.category)}</td>
-                      <td className="p-4 text-sm text-white">{expense.description}</td>
-                      <td className="p-4 text-sm text-white">{expense.amount}</td>
-                      <td className="p-4 text-sm text-[#aaaaaa]">{expense.date}</td>
-                      <td className="p-4">
-                        <span className={`px-2 py-1 rounded-full text-xs ${statusStyle[expense.status]}`}>
-                          {expense.status}
-                        </span>
-                      </td>
-                      <td className="p-4 text-right">
-                        <button
-                          onClick={() => handleOpenExpenseModal(expense)}
-                          className="text-[#B5FF03] hover:text-white transition-colors mr-3"
-                        >
-                          <Pencil size={16} />
-                        </button>
-                        <button
-                          onClick={() => handleDeleteExpense(expense.id)}
-                          className="text-[#ff4444] hover:text-white transition-colors"
-                        >
-                          <X size={16} />
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                  {filteredExpenses.length === 0 && (
+                  {[...filteredInvoices, ...filteredExpenses]
+                    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+                    .map(item => {
+                      const isInvoice = 'client' in item;
+                      return (
+                        <tr key={item.id} className="border-b border-[#222222] hover:bg-[#1a1a1a] transition-colors">
+                          <td className="p-4 text-sm">
+                            <span className={isInvoice ? 'text-[#B5FF03]' : 'text-[#ff4444]'}>
+                              {isInvoice ? 'Receita' : 'Despesa'}
+                            </span>
+                          </td>
+                          <td className="p-4 text-sm text-white">{isInvoice ? (item as Invoice).client : (item as Expense).description}</td>
+                          <td className="p-4 text-sm text-white">{item.amount}</td>
+                          <td className="p-4 text-sm text-[#aaaaaa]">{item.date}</td>
+                          <td className="p-4">
+                            <span className={`px-2 py-1 rounded-full text-xs ${statusStyle[item.status]}`}>
+                              {item.status}
+                            </span>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  {filteredInvoices.length === 0 && filteredExpenses.length === 0 && (
                     <tr>
-                      <td colSpan={6} className="p-8 text-center text-sm text-[#aaaaaa]">
-                        Nenhuma despesa encontrada
+                      <td colSpan={5} className="p-8 text-center text-sm text-[#aaaaaa]">
+                        Nenhum registro encontrado
                       </td>
                     </tr>
                   )}
                 </tbody>
               </table>
             </div>
-            {/* Mobile card view - Fluxo */}
-            <div className="md:hidden space-y-3">
-              {filteredExpenses.map(expense => (
-                <div key={expense.id} className="bg-[#111] border border-[#333] rounded-lg p-4 space-y-2">
-                  <div className="flex justify-between items-start">
-                    <span className="text-white font-bold text-sm">{expense.description}</span>
-                    <span className={`px-2 py-0.5 rounded-full text-[10px] ${statusStyle[expense.status]}`}>{expense.status}</span>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2 text-xs">
-                    <div><span className="text-neutral-500">Categoria:</span> <span className="text-white">{categoryLabel(expense.category)}</span></div>
-                    <div><span className="text-neutral-500">Valor:</span> <span className="text-white">{expense.amount}</span></div>
-                    <div><span className="text-neutral-500">Data:</span> <span className="text-white">{expense.date}</span></div>
-                  </div>
-                  <div className="flex justify-end gap-2 pt-2 border-t border-[#222]">
-                    <button onClick={() => handleOpenExpenseModal(expense)} className="text-[#B5FF03] p-2 min-h-[44px]"><Pencil size={18} /></button>
-                    <button onClick={() => handleDeleteExpense(expense.id)} className="text-[#ff4444] p-2 min-h-[44px]"><X size={18} /></button>
-                  </div>
-                </div>
-              ))}
-              {filteredExpenses.length === 0 && (
-                <p className="text-center text-sm text-[#aaaaaa] py-8">Nenhuma despesa encontrada</p>
-              )}
-            </div>
             </>
           )}
-          {activeTab === 'projecao' && (
+
+          {/* Receitas View - PROJEÇÃO tab */}
+          {viewMode === 'receitas' && activeTab === 'projecao' && (
             <>
             <div className="mb-4">
               <h2 className="text-lg font-black text-white mb-1">Projeção de Receitas</h2>
@@ -1038,6 +1071,211 @@ const Financeiro = () => {
                       </div>
                       <div className="text-lg font-black text-[#B5FF03]">{formatCurrency(total)}</div>
                       <div className="text-[10px] text-neutral-500">{projectedInvoices.filter(inv => inv.date?.startsWith(month)).length} parcela(s)</div>
+                    </div>
+                  );
+                });
+              })()}
+            </div>
+            <div className="bg-[#111111] border border-[#222222] rounded-lg overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-[#222222]">
+                    <th className="text-left p-4 text-xs font-black uppercase tracking-widest text-[#B5FF03]">Cliente</th>
+                    <th className="text-left p-4 text-xs font-black uppercase tracking-widest text-[#B5FF03]">Valor</th>
+                    <th className="text-left p-4 text-xs font-black uppercase tracking-widest text-[#B5FF03]">Data Prevista</th>
+                    <th className="text-left p-4 text-xs font-black uppercase tracking-widest text-[#B5FF03]">Parcela</th>
+                    <th className="text-left p-4 text-xs font-black uppercase tracking-widest text-[#B5FF03]">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {allInvoices.filter(inv => inv.paymentMethod === 'parcelado').sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()).map(inv => (
+                    <tr key={inv.id} className="border-b border-[#222222] hover:bg-[#1a1a1a]">
+                      <td className="p-4 text-sm text-white">{inv.client}</td>
+                      <td className="p-4 text-sm text-white">{inv.amount}</td>
+                      <td className="p-4 text-sm text-[#aaaaaa]">{inv.date}</td>
+                      <td className="p-4 text-sm text-[#aaaaaa]">{inv.installments ? `${inv.installments}x` : '—'}</td>
+                      <td className="p-4">
+                        <span className={`px-2 py-1 rounded-full text-xs ${statusStyle[inv.status] || statusStyle.Pendente}`}>
+                          {inv.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                  {allInvoices.filter(inv => inv.paymentMethod === 'parcelado').length === 0 && (
+                    <tr><td colSpan={5} className="p-8 text-center text-sm text-[#aaaaaa]">Nenhuma projeção disponível.</td></tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+            </>
+          )}
+
+          {/* Despesas View - DESPESAS tab */}
+          {viewMode === 'despesas' && activeTab === 'despesas' && (
+            <>
+            <div className="bg-[#111111] border border-[#222222] rounded-lg overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-[#222222]">
+                    <th className="text-left p-4 text-xs font-black uppercase tracking-widest text-[#B5FF03]">Descrição</th>
+                    <th className="text-left p-4 text-xs font-black uppercase tracking-widest text-[#B5FF03]">Categoria</th>
+                    <th className="text-left p-4 text-xs font-black uppercase tracking-widest text-[#B5FF03]">Valor</th>
+                    <th className="text-left p-4 text-xs font-black uppercase tracking-widest text-[#B5FF03]">Data de Vencimento</th>
+                    <th className="text-left p-4 text-xs font-black uppercase tracking-widest text-[#B5FF03]">Status</th>
+                    <th className="text-left p-4 text-xs font-black uppercase tracking-widest text-[#B5FF03]">Forma de Pagamento</th>
+                    <th className="text-right p-4 text-xs font-black uppercase tracking-widest text-[#B5FF03]">Ações</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredExpenses.map(expense => (
+                    <tr key={expense.id} className="border-b border-[#222222] hover:bg-[#1a1a1a] transition-colors">
+                      <td className="p-4 text-sm text-white">{expense.description}</td>
+                      <td className="p-4 text-sm text-[#aaaaaa]">{categoryLabel(expense.category)}</td>
+                      <td className="p-4 text-sm text-white">{expense.amount}</td>
+                      <td className="p-4 text-sm text-[#aaaaaa]">{expense.date}</td>
+                      <td className="p-4">
+                        <span className={`px-2 py-1 rounded-full text-xs ${statusStyle[expense.status]}`}>
+                          {expense.status}
+                        </span>
+                      </td>
+                      <td className="p-4 text-sm text-[#aaaaaa]">{paymentMethodLabel(expense.paymentMethod)}</td>
+                      <td className="p-4 text-right">
+                        <button
+                          onClick={() => handleOpenExpenseModal(expense)}
+                          className="text-[#B5FF03] hover:text-white transition-colors mr-3"
+                        >
+                          <Pencil size={16} />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteExpense(expense.id)}
+                          className="text-[#ff4444] hover:text-white transition-colors"
+                        >
+                          <X size={16} />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                  {filteredExpenses.length === 0 && (
+                    <tr>
+                      <td colSpan={7} className="p-8 text-center text-sm text-[#aaaaaa]">
+                        Nenhuma despesa encontrada
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+            {/* Mobile card view - Despesas */}
+            <div className="md:hidden space-y-3">
+              {filteredExpenses.map(expense => (
+                <div key={expense.id} className="bg-[#111] border border-[#333] rounded-lg p-4 space-y-2">
+                  <div className="flex justify-between items-start">
+                    <span className="text-white font-bold text-sm">{expense.description}</span>
+                    <span className={`px-2 py-0.5 rounded-full text-[10px] ${statusStyle[expense.status]}`}>{expense.status}</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div><span className="text-neutral-500">Categoria:</span> <span className="text-white">{categoryLabel(expense.category)}</span></div>
+                    <div><span className="text-neutral-500">Valor:</span> <span className="text-white">{expense.amount}</span></div>
+                    <div><span className="text-neutral-500">Data:</span> <span className="text-white">{expense.date}</span></div>
+                    <div><span className="text-neutral-500">Pagamento:</span> <span className="text-white">{paymentMethodLabel(expense.paymentMethod)}</span></div>
+                  </div>
+                  <div className="flex justify-end gap-2 pt-2 border-t border-[#222]">
+                    <button onClick={() => handleOpenExpenseModal(expense)} className="text-[#B5FF03] p-2 min-h-[44px]"><Pencil size={18} /></button>
+                    <button onClick={() => handleDeleteExpense(expense.id)} className="text-[#ff4444] p-2 min-h-[44px]"><X size={18} /></button>
+                  </div>
+                </div>
+              ))}
+              {filteredExpenses.length === 0 && (
+                <p className="text-center text-sm text-[#aaaaaa] py-8">Nenhuma despesa encontrada</p>
+              )}
+            </div>
+            </>
+          )}
+
+          {/* Despesas View - FLUXO DE SAÍDAS tab */}
+          {viewMode === 'despesas' && activeTab === 'fluxo' && (
+            <>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+              <div className="bg-[#111111] border border-[#222222] rounded-lg p-4">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-xs font-black uppercase tracking-widest text-[#aaaaaa]">Total Pago</span>
+                  <TrendingDown size={16} className="text-[#ff4444]" />
+                </div>
+                <p className="text-2xl font-black text-[#ff4444]">{formatCurrency(fluxoData.saidaRealizada)}</p>
+              </div>
+              <div className="bg-[#111111] border border-[#222222] rounded-lg p-4">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-xs font-black uppercase tracking-widest text-[#aaaaaa]">Saídas Pendentes</span>
+                  <AlertTriangle size={16} className="text-[#ff4444]" />
+                </div>
+                <p className="text-2xl font-black text-[#ff4444]">{formatCurrency(fluxoData.saidaPendente)}</p>
+              </div>
+            </div>
+            <div className="bg-[#111111] border border-[#222222] rounded-lg overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-[#222222]">
+                    <th className="text-left p-4 text-xs font-black uppercase tracking-widest text-[#B5FF03]">Descrição</th>
+                    <th className="text-left p-4 text-xs font-black uppercase tracking-widest text-[#B5FF03]">Categoria</th>
+                    <th className="text-left p-4 text-xs font-black uppercase tracking-widest text-[#B5FF03]">Valor</th>
+                    <th className="text-left p-4 text-xs font-black uppercase tracking-widest text-[#B5FF03]">Data</th>
+                    <th className="text-left p-4 text-xs font-black uppercase tracking-widest text-[#B5FF03]">Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredExpenses.map(expense => (
+                    <tr key={expense.id} className="border-b border-[#222222] hover:bg-[#1a1a1a] transition-colors">
+                      <td className="p-4 text-sm text-white">{expense.description}</td>
+                      <td className="p-4 text-sm text-[#aaaaaa]">{categoryLabel(expense.category)}</td>
+                      <td className="p-4 text-sm text-white">{expense.amount}</td>
+                      <td className="p-4 text-sm text-[#aaaaaa]">{expense.date}</td>
+                      <td className="p-4">
+                        <span className={`px-2 py-1 rounded-full text-xs ${statusStyle[expense.status]}`}>
+                          {expense.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                  {filteredExpenses.length === 0 && (
+                    <tr>
+                      <td colSpan={5} className="p-8 text-center text-sm text-[#aaaaaa]">
+                        Nenhuma despesa encontrada
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+            </>
+          )}
+
+          {/* Despesas View - PROJEÇÃO tab */}
+          {viewMode === 'despesas' && activeTab === 'projecao' && (
+            <>
+            <div className="mb-4">
+              <h2 className="text-lg font-black text-white mb-1">Projeção de Despesas</h2>
+              <p className="text-xs text-neutral-400">Despesas futuras projetadas.</p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+              {(() => {
+                const projected = allInvoices.filter(inv => inv.paymentMethod === 'parcelado' && inv.status !== 'Cancelado');
+                const projectionByMonth: Record<string, number> = {};
+                projected.forEach(inv => {
+                  if (!inv.date || inv.date === '—') return;
+                  const monthKey = inv.date.substring(0, 7);
+                  projectionByMonth[monthKey] = (projectionByMonth[monthKey] || 0) + parseBRL(inv.amount);
+                });
+                const sortedMonths = Object.entries(projectionByMonth).sort(([a], [b]) => a.localeCompare(b));
+                return sortedMonths.slice(0, 12).map(([month, total]) => {
+                  const monthNames = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+                  const [y, m] = month.split('-');
+                  return (
+                    <div key={month} className="bg-[#111111] border border-[#222222] rounded-lg p-4">
+                      <div className="text-xs text-neutral-500 font-bold uppercase tracking-widest mb-1">
+                        {monthNames[parseInt(m) - 1]} {y}
+                      </div>
+                      <div className="text-lg font-black text-[#ff4444]">{formatCurrency(total)}</div>
+                      <div className="text-[10px] text-neutral-500">{projected.filter(inv => inv.date?.startsWith(month)).length} parcela(s)</div>
                     </div>
                   );
                 });
@@ -1252,6 +1490,19 @@ const Financeiro = () => {
                   className="w-full bg-[#111111] border border-[#222222] rounded px-3 py-2 text-sm text-white focus:border-[#B5FF03] outline-none transition-colors"
                   required
                 />
+              </div>
+              <div>
+                <label className="block text-xs font-black uppercase tracking-widest text-[#aaaaaa] mb-2">Forma de Pagamento</label>
+                <select
+                  value={editingExpense.paymentMethod || ''}
+                  onChange={(e) => setEditingExpense({ ...editingExpense, paymentMethod: e.target.value })}
+                  className="w-full bg-[#111111] border border-[#222222] rounded px-3 py-2 text-sm text-white focus:border-[#B5FF03] outline-none transition-colors"
+                >
+                  <option value="">Selecionar</option>
+                  {PAYMENT_METHODS.map(pm => (
+                    <option key={pm.value} value={pm.value}>{pm.label}</option>
+                  ))}
+                </select>
               </div>
               <div>
                 <label className="block text-xs font-black uppercase tracking-widest text-[#aaaaaa] mb-2">Status</label>
