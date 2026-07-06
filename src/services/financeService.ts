@@ -17,6 +17,10 @@ export interface FinanceRecord {
   category?: string;
   origemEventoId?: string;
   lastModifiedBy?: string;
+  expenseType?: 'fixa' | 'variavel';
+  recurrence?: 'mensal' | 'trimestral' | 'anual';
+  dueDay?: number;
+  parentId?: string;
   createdAt?: Timestamp;
   updatedAt?: Timestamp;
 }
