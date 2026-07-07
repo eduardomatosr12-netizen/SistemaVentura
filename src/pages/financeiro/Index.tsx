@@ -56,6 +56,7 @@ const PAYMENT_METHODS = [
   { value: 'credito', label: 'Cartão de Crédito' },
   { value: 'boleto', label: 'Boleto' },
   { value: 'parcelado', label: 'Parcelado' },
+  { value: 'dinheiro', label: 'Dinheiro' },
 ];
 
 const RECURRENCE_OPTIONS = [
