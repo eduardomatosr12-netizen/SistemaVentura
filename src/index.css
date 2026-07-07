@@ -117,6 +117,37 @@ body {
   }
 }
 
+/* PWA standalone mode - hide browser chrome hints */
+@media (display-mode: standalone) {
+  .pwa-hide-standalone {
+    display: none !important;
+  }
+  body {
+    -webkit-touch-callout: none;
+  }
+}
+
+/* Touch behavior for app-like feel */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Prevent text selection on interactive elements */
+button, a, select, input, textarea {
+  -webkit-touch-callout: none;
+}
+
+/* Safe area for fixed overlays */
+.fixed.inset-0 {
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Smooth scroll for the app */
+html {
+  scroll-behavior: smooth;
+}
+
 @layer components {
   /* ---- Sidebar navigation items ---- */
   .sidebar-item {
