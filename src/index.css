@@ -310,8 +310,9 @@ body {
     box-shadow: 0 0 0 1px rgba(204,255,0,0.2);
   }
 
-  select option {
-    background-color: #1A1A1A;
-    color: #ffffff;
-  }
+}
+/* Global select/option dark mode override */
+select, select option {
+  background-color: #121212 !important;
+  color: #ffffff !important;
 }
