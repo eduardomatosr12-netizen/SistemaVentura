@@ -38,18 +38,14 @@ interface Expense {
   lastModifiedBy?: string;
 }
 
-const EXPENSE_CATEGORIES = [
+const FIXED_CATEGORIES = [
   { value: 'aluguel', label: 'Aluguel' },
-  { value: 'software', label: 'Software' },
-  { value: 'marketing', label: 'Marketing' },
   { value: 'salarios', label: 'Salários' },
-  { value: 'equipamentos', label: 'Equipamentos' },
   { value: 'luz', label: 'Luz' },
+  { value: 'agua', label: 'Água' },
   { value: 'internet', label: 'Internet' },
   { value: 'telefone', label: 'Telefone' },
-  { value: 'material', label: 'Material de Escritório' },
-  { value: 'manutencao', label: 'Manutenção' },
-  { value: 'outros', label: 'Outros' },
+  { value: 'equipamentos', label: 'Equipamentos' },
 ];
 
 const PAYMENT_METHODS = [
@@ -684,7 +680,7 @@ const Financeiro = () => {
   };
     
   const categoryLabel = (cat: string) => {
-    return EXPENSE_CATEGORIES.find(c => c.value === cat)?.label || cat;
+    return FIXED_CATEGORIES.find(c => c.value === cat)?.label || cat;
   };
 
   const handleFilterChange = (updater: (prev: typeof initialFilterState) => typeof initialFilterState) => {
@@ -1801,15 +1797,25 @@ const Financeiro = () => {
 
               <div>
                 <label className="section-label mb-2 block">Categoria</label>
-                <select
-                  value={editingExpense.category}
-                  onChange={(e) => setEditingExpense({ ...editingExpense, category: e.target.value })}
-                  className="input-field w-full"
-                >
-                  {EXPENSE_CATEGORIES.map(cat => (
-                    <option key={cat.value} value={cat.value}>{cat.label}</option>
-                  ))}
-                </select>
+                {editingExpense.expenseType === 'fixa' ? (
+                  <select
+                    value={editingExpense.category}
+                    onChange={(e) => setEditingExpense({ ...editingExpense, category: e.target.value })}
+                    className="input-field w-full"
+                  >
+                    {FIXED_CATEGORIES.map(cat => (
+                      <option key={cat.value} value={cat.value}>{cat.label}</option>
+                    ))}
+                  </select>
+                ) : (
+                  <input
+                    type="text"
+                    value={editingExpense.category}
+                    onChange={(e) => setEditingExpense({ ...editingExpense, category: e.target.value })}
+                    className="input-field w-full"
+                    placeholder="Digite a categoria da despesa..."
+                  />
+                )}
               </div>
               <div>
                 <label className="section-label mb-2 block">Descrição</label>
