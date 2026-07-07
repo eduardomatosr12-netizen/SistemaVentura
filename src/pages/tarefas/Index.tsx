@@ -810,6 +810,7 @@ const Tarefas = () => {
   const [activeTab, setActiveTab] = useState<'inventario' | 'aluguel'>('inventario');
   const [estoqueZeroFilter, setEstoqueZeroFilter] = useState(false);
   const [dateFilterEstoque, setDateFilterEstoque] = useState('');
+  const [rentalMonthFilter, setRentalMonthFilter] = useState('');
 
   const [rentalRecords, setRentalRecords] = useState<RentalRecord[]>([]);
 
@@ -865,6 +866,11 @@ const Tarefas = () => {
     const manual = rentalRecords.map(r => ({ ...r, eventId: '' }));
     return [...eventRentalRecords, ...manual].sort((a, b) => a.dataSaida.localeCompare(b.dataSaida));
   }, [rentalRecords, eventRentalRecords]);
+
+  const filteredRentalRecords = useMemo(() => {
+    if (!rentalMonthFilter) return allRentalRecords;
+    return allRentalRecords.filter(r => r.dataSaida.startsWith(rentalMonthFilter));
+  }, [allRentalRecords, rentalMonthFilter]);
 
   const reservedByDate = useMemo(() => {
     if (!dateFilterEstoque) return new Map<string, number>();
@@ -1229,7 +1235,24 @@ const Tarefas = () => {
 
       {activeTab === 'aluguel' && (
         <div>
-          <div className="flex justify-end mb-4">
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+            <div className="flex items-center gap-2">
+              <Calendar size={14} className="text-neutral-500" />
+              <input
+                type="month"
+                value={rentalMonthFilter}
+                onChange={(e) => setRentalMonthFilter(e.target.value)}
+                className="bg-[#1a1a1a] border border-[#333] rounded-md px-2 py-1.5 text-[10px] font-bold text-white focus:outline-none focus:border-[#B5FF03] [color-scheme:dark]"
+              />
+              {rentalMonthFilter && (
+                <button
+                  onClick={() => setRentalMonthFilter('')}
+                  className="text-[10px] text-neutral-500 hover:text-white transition-colors font-bold uppercase tracking-widest"
+                >
+                  Limpar
+                </button>
+              )}
+            </div>
             <button
               onClick={() => handleOpenRentalModal()}
               className="flex items-center gap-2 px-6 py-3 bg-[#B5FF03] text-black font-black rounded-lg hover:bg-[#a1e600] transition-colors"
@@ -1250,7 +1273,7 @@ const Tarefas = () => {
                 </tr>
               </thead>
               <tbody>
-                {allRentalRecords.map(record => (
+                {filteredRentalRecords.map(record => (
                   <tr key={record.id} className="border-b border-[#222222] hover:bg-[#1a1a1a] transition-colors">
                     <td className="p-4 text-sm text-white">{record.client}</td>
                     <td className="p-4 text-sm text-[#aaaaaa]">
@@ -1287,7 +1310,7 @@ const Tarefas = () => {
                     </td>
                   </tr>
                 ))}
-                {allRentalRecords.length === 0 && (
+                {filteredRentalRecords.length === 0 && (
                   <tr>
                     <td colSpan={5} className="p-8 text-center text-sm text-[#aaaaaa]">
                       Nenhum aluguel registrado
@@ -1299,7 +1322,7 @@ const Tarefas = () => {
           </div>
           {/* Mobile rental cards */}
           <div className="md:hidden space-y-3">
-            {allRentalRecords.map(record => (
+            {filteredRentalRecords.map(record => (
               <div key={record.id} className="bg-[#111] border border-[#333] rounded-lg p-4 space-y-3">
                 <div className="flex justify-between items-start">
                   <span className="text-white font-bold text-sm">{record.client}</span>
