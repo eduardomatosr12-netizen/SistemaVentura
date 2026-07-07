@@ -309,4 +309,9 @@ body {
     outline: none;
     box-shadow: 0 0 0 1px rgba(204,255,0,0.2);
   }
+
+  select option {
+    background-color: #1A1A1A;
+    color: #ffffff;
+  }
 }
