@@ -1496,12 +1496,12 @@ const Financeiro = () => {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
               {(() => {
-                const projected = displayData.allInvoices.filter(inv => (inv.paymentMethod === 'parcelado' || inv.paymentMethod === 'credito') && inv.status !== 'Cancelado');
+                const projected = displayData.allExpenses.filter(exp => (exp.paymentMethod === 'parcelado' || exp.paymentMethod === 'credito') && exp.status !== 'Pago');
                 const projectionByMonth: Record<string, number> = {};
-                projected.forEach(inv => {
-                  if (!inv.date || inv.date === '—') return;
-                  const monthKey = inv.date.substring(0, 7);
-                  projectionByMonth[monthKey] = (projectionByMonth[monthKey] || 0) + parseBRL(inv.amount);
+                projected.forEach(exp => {
+                  if (!exp.date || exp.date === '—') return;
+                  const monthKey = exp.date.substring(0, 7);
+                  projectionByMonth[monthKey] = (projectionByMonth[monthKey] || 0) + parseBRL(exp.amount);
                 });
                 const sortedMonths = Object.entries(projectionByMonth).sort(([a], [b]) => a.localeCompare(b));
                 return sortedMonths.slice(0, 12).map(([month, total]) => {
@@ -1513,7 +1513,7 @@ const Financeiro = () => {
                         {monthNames[parseInt(m) - 1]} {y}
                       </div>
                       <div className="card-value text-[#FF4444]">{formatCurrency(total)}</div>
-                      <div className="text-[11px] text-[#606060] mt-1">{projected.filter(inv => inv.date?.startsWith(month)).length} parcela(s)</div>
+                      <div className="text-[11px] text-[#606060] mt-1">{projected.filter(exp => exp.date?.startsWith(month)).length} parcela(s)</div>
                     </div>
                   );
                 });
@@ -1523,7 +1523,7 @@ const Financeiro = () => {
               <table className="w-full">
                 <thead>
                   <tr>
-                    <th className="table-header">Cliente</th>
+                    <th className="table-header">Descrição</th>
                     <th className="table-header">Valor</th>
                     <th className="table-header">Data Prevista</th>
                     <th className="table-header">Parcela</th>
@@ -1531,20 +1531,20 @@ const Financeiro = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {displayData.allInvoices.filter(inv => inv.paymentMethod === 'parcelado' || inv.paymentMethod === 'credito').sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()).map(inv => (
-                    <tr key={inv.id} className="table-row">
-                      <td className="table-cell text-white">{inv.client}</td>
-                      <td className="table-cell text-white">{inv.amount}</td>
-                      <td className="table-cell text-[#A0A0A0]">{inv.date}</td>
-                      <td className="table-cell text-[#A0A0A0]">{inv.installments ? `${inv.installments}x` : '—'}</td>
+                  {displayData.allExpenses.filter(exp => exp.paymentMethod === 'parcelado' || exp.paymentMethod === 'credito').sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()).map(exp => (
+                    <tr key={exp.id} className="table-row">
+                      <td className="table-cell text-white">{exp.description}</td>
+                      <td className="table-cell text-white">{exp.amount}</td>
+                      <td className="table-cell text-[#A0A0A0]">{exp.date}</td>
+                      <td className="table-cell text-[#A0A0A0]">{exp.installments ? `${exp.installments}x` : '—'}</td>
                       <td className="table-cell">
-                        <span className={statusStyle[inv.status] || statusStyle.Pendente}>
-                          {inv.status}
+                        <span className={statusStyle[exp.status] || statusStyle.Pendente}>
+                          {exp.status}
                         </span>
                       </td>
                     </tr>
                   ))}
-                  {displayData.allInvoices.filter(inv => inv.paymentMethod === 'parcelado' || inv.paymentMethod === 'credito').length === 0 && (
+                  {displayData.allExpenses.filter(exp => exp.paymentMethod === 'parcelado' || exp.paymentMethod === 'credito').length === 0 && (
                     <tr><td colSpan={5} className="table-cell text-center text-[#606060] py-8">Nenhuma projeção disponível.</td></tr>
                   )}
                 </tbody>
