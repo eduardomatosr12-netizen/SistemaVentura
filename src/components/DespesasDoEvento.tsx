@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Plus, Trash2, Lock, Check } from 'lucide-react';
-import { generateUUID } from '../lib/uuid';
 import { addTransaction, updateTransaction, deleteTransaction } from '../services/financeService';
+import {
+  subscribeEventExpenses, addEventExpense,
+  updateEventExpense, deleteEventExpense, setExpenseFinanceiroId,
+} from '../services/eventExpenseService';
 import type { EventExpense } from '../types/crm';
-
-const STORAGE_KEY = 'despesas_evento';
 
 const CATEGORIES: EventExpense['category'][] = ['Transporte', 'Alimentação', 'Hospedagem', 'Material', 'Equipe', 'Outros'];
 const PAYMENT_METHODS: { value: EventExpense['paymentMethod']; label: string }[] = [
@@ -13,18 +14,6 @@ const PAYMENT_METHODS: { value: EventExpense['paymentMethod']; label: string }[]
   { value: 'Cartão', label: 'Cartão' },
   { value: 'Boleto', label: 'Boleto' },
 ];
-
-function loadExpenses(eventId: string): EventExpense[] {
-  try {
-    const raw = localStorage.getItem(`${STORAGE_KEY}_${eventId}`);
-    if (raw) return JSON.parse(raw) as EventExpense[];
-  } catch { /* ignore */ }
-  return [];
-}
-
-function saveExpenses(eventId: string, expenses: EventExpense[]) {
-  localStorage.setItem(`${STORAGE_KEY}_${eventId}`, JSON.stringify(expenses));
-}
 
 function notifyFinanceiro() {
   window.dispatchEvent(new CustomEvent('despesas-atualizadas'));
@@ -45,24 +34,20 @@ export default function DespesasDoEvento({ eventId }: Props) {
   const [formPayment, setFormPayment] = useState<EventExpense['paymentMethod'] | ''>('');
 
   useEffect(() => {
-    if (eventId) {
-      const local = loadExpenses(eventId);
-      setExpenses(local);
-      local.forEach(exp => {
+    if (!eventId) return;
+    const unsub = subscribeEventExpenses(eventId, (list) => {
+      setExpenses(list);
+      list.forEach(exp => {
         if (!exp.financeiroId) {
           syncExpenseToFirestore(eventId, exp).then(financeiroId => {
-            if (financeiroId) {
-              const updated = loadExpenses(eventId).map(e =>
-                e.id === exp.id ? { ...e, financeiroId } : e
-              );
-              saveExpenses(eventId, updated);
-              setExpenses(updated);
-              notifyFinanceiro();
+            if (financeiroId && exp.id) {
+              setExpenseFinanceiroId(exp.id, financeiroId);
             }
           });
         }
       });
-    }
+    });
+    return () => unsub();
   }, [eventId]);
 
   if (!eventId) {
@@ -106,49 +91,44 @@ export default function DespesasDoEvento({ eventId }: Props) {
   };
 
   const handleAdd = async () => {
-    if (!formDesc.trim() || !formValor) return;
-    const nova: EventExpense = {
-      id: generateUUID(),
+    if (!formDesc.trim() || !formValor || !eventId) return;
+    const valor = parseFloat(formValor.replace(',', '.')) || 0;
+    const expenseData = {
       description: formDesc.trim(),
       category: formCat,
-      valor: parseFloat(formValor.replace(',', '.')) || 0,
+      valor,
       status: formStatus,
       paymentMethod: formPayment ? (formPayment as EventExpense['paymentMethod']) : undefined,
-      tipo: 'variavel',
-      interno: true,
+      tipo: 'variavel' as const,
+      interno: true as const,
     };
 
-    const financeiroId = await syncExpenseToFirestore(eventId, nova);
-    console.log('[DEBUG] syncExpenseToFirestore result:', financeiroId);
+    const expenseId = await addEventExpense(eventId, expenseData);
+    const financeiroId = await syncExpenseToFirestore(eventId, { id: expenseId, ...expenseData, financeiroId: undefined });
     if (financeiroId) {
-      nova.financeiroId = financeiroId;
+      await setExpenseFinanceiroId(expenseId, financeiroId);
     }
-
-    const updated = [...expenses, nova];
-    setExpenses(updated);
-    saveExpenses(eventId, updated);
     notifyFinanceiro();
     resetForm();
   };
 
-  const handleRemove = async (expId: string) => {
-    const exp = expenses.find(e => e.id === expId);
-    if (exp?.financeiroId) {
+  const handleRemove = async (exp: EventExpense) => {
+    if (!eventId) return;
+    if (exp.financeiroId) {
       try {
         await deleteTransaction(exp.financeiroId);
       } catch (err) {
         console.error('[DespesasDoEvento] Erro ao excluir transação:', err);
       }
     }
-    const updated = expenses.filter(e => e.id !== expId);
-    setExpenses(updated);
-    saveExpenses(eventId, updated);
+    if (exp.id) {
+      await deleteEventExpense(exp.id);
+    }
     notifyFinanceiro();
   };
 
-  const toggleStatus = async (expId: string) => {
-    const exp = expenses.find(e => e.id === expId);
-    if (!exp) return;
+  const toggleStatus = async (exp: EventExpense) => {
+    if (!exp.id) return;
     const novoStatus = exp.status === 'Pago' ? 'Pendente' as const : 'Pago' as const;
     if (exp.financeiroId) {
       try {
@@ -157,11 +137,7 @@ export default function DespesasDoEvento({ eventId }: Props) {
         console.error('[DespesasDoEvento] Erro ao atualizar transação:', err);
       }
     }
-    const updated = expenses.map(e =>
-      e.id === expId ? { ...e, status: novoStatus } : e
-    );
-    setExpenses(updated);
-    saveExpenses(eventId, updated);
+    await updateEventExpense(exp.id, { status: novoStatus });
     notifyFinanceiro();
   };
 
@@ -174,13 +150,11 @@ export default function DespesasDoEvento({ eventId }: Props) {
 
   return (
     <div className="space-y-4">
-      {/* Header interno */}
       <div className="flex items-center gap-2 section-label">
         <Lock size={12} />
         Despesas internas — não aparecem em exportações
       </div>
 
-      {/* Lista */}
       <div className="space-y-2">
         {expenses.length === 0 && (
           <div className="text-center py-6 text-[#606060] text-xs italic">
@@ -191,7 +165,7 @@ export default function DespesasDoEvento({ eventId }: Props) {
           <div key={exp.id} className="card p-3 flex items-start gap-3">
             <button
               type="button"
-              onClick={() => toggleStatus(exp.id)}
+              onClick={() => toggleStatus(exp)}
               className={`mt-0.5 w-4 h-4 rounded border flex items-center justify-center shrink-0 transition-colors ${
                 exp.status === 'Pago'
                   ? 'bg-[#CCFF00] border-[#CCFF00] text-black'
@@ -219,7 +193,7 @@ export default function DespesasDoEvento({ eventId }: Props) {
             </div>
             <button
               type="button"
-              onClick={() => handleRemove(exp.id)}
+              onClick={() => handleRemove(exp)}
               className="p-1 rounded-md text-[#606060] hover:text-[#FF4444] hover:bg-[rgba(255,68,68,0.1)] transition-colors shrink-0"
             >
               <Trash2 size={12} />
@@ -228,7 +202,6 @@ export default function DespesasDoEvento({ eventId }: Props) {
         ))}
       </div>
 
-      {/* Formulário inline */}
       {showForm && (
         <div className="card p-4 space-y-4">
           <div>
@@ -323,7 +296,6 @@ export default function DespesasDoEvento({ eventId }: Props) {
         </button>
       )}
 
-      {/* Totais */}
       {expenses.length > 0 && (
         <div className="border-t border-[rgba(255,255,255,0.08)] pt-3 space-y-1.5">
           <div className="flex justify-between text-xs">

@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback, useEffect, useRef } from 'react';
+import { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import * as financeService from '../services/financeService';
 import type { FinanceRecord } from '../services/financeService';
@@ -16,8 +16,6 @@ const FinanceContext = createContext<FinanceContextType | undefined>(undefined);
 export const FinanceProvider = ({ children }: { children: ReactNode }) => {
   const [transactions, setTransactions] = useState<FinanceRecord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const migrationDone = useRef(false);
-
   useEffect(() => {
     const unsubscribe = financeService.subscribeTransactions(records => {
       setTransactions(records);
@@ -25,19 +23,6 @@ export const FinanceProvider = ({ children }: { children: ReactNode }) => {
     });
     return unsubscribe;
   }, []);
-
-  useEffect(() => {
-    if (!isLoading && !migrationDone.current && transactions.length === 0) {
-      migrationDone.current = true;
-      financeService.migrateLocalStorageToFirestore().then(result => {
-        if (result.invoices > 0 || result.expenses > 0) {
-          console.log(`[Finance] Migrados ${result.invoices} faturas e ${result.expenses} despesas para o Firestore`);
-        }
-      }).catch(err => {
-        console.error('[Finance] Erro na migração:', err);
-      });
-    }
-  }, [isLoading, transactions]);
 
   const addTransaction = useCallback(async (record: Omit<FinanceRecord, 'id' | 'createdAt'>) => {
     const id = await financeService.addTransaction(record);
