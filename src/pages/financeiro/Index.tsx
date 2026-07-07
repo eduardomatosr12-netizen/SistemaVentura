@@ -29,6 +29,7 @@ interface Expense {
   date: string;
   status: 'Pago' | 'Pendente' | 'Cancelado';
   paymentMethod?: string;
+  installments?: string;
   expenseType?: 'fixa' | 'variavel';
   recurrence?: 'mensal' | 'trimestral' | 'anual';
   dueDay?: number;
@@ -67,6 +68,7 @@ const RECURRENCE_OPTIONS = [
 
 const paymentMethodLabel = (value?: string, installments?: string) => {
   if (value === 'parcelado' && installments) return `Parcelado ${installments}x`;
+  if (value === 'credito' && installments) return `Cartão de Crédito ${installments}x`;
   return PAYMENT_METHODS.find(pm => pm.value === value)?.label || value || '—';
 };
 
@@ -583,6 +585,7 @@ const Financeiro = () => {
               status: 'Pendente',
               source: 'manual',
               paymentMethod: editingExpense.paymentMethod || 'pix',
+              installments: editingExpense.installments || null,
               expenseType: 'fixa',
               recurrence: editingExpense.recurrence,
               dueDay: editingExpense.dueDay,
@@ -600,6 +603,7 @@ const Financeiro = () => {
             status: editingExpense.status,
             source: 'manual',
             paymentMethod: editingExpense.paymentMethod || 'pix',
+            installments: editingExpense.installments || null,
             expenseType: 'variavel',
             origemEventoId: editingExpense.origemEventoId,
             lastModifiedBy: employeeName || (role === 'admin' ? 'Administrador' : 'Funcionário'),
@@ -617,6 +621,7 @@ const Financeiro = () => {
           date: editingExpense.date,
           status: editingExpense.status,
           paymentMethod: editingExpense.paymentMethod,
+          installments: editingExpense.installments || null,
           expenseType: editingExpense.expenseType,
           recurrence: isFixa ? editingExpense.recurrence : null,
           dueDay: isFixa ? editingExpense.dueDay : null,
@@ -1659,7 +1664,7 @@ const Financeiro = () => {
                   onChange={(e) => setEditingInvoice({
                     ...editingInvoice,
                     paymentMethod: e.target.value,
-                    installments: e.target.value !== 'parcelado' ? '' : editingInvoice.installments
+                    installments: e.target.value !== 'parcelado' && e.target.value !== 'credito' ? '' : editingInvoice.installments
                   })}
                   className="input-field w-full"
                 >
@@ -1669,7 +1674,7 @@ const Financeiro = () => {
                   ))}
                 </select>
               </div>
-              <div style={{ display: editingInvoice.paymentMethod === 'parcelado' ? 'block' : 'none' }}>
+              <div style={{ display: editingInvoice.paymentMethod === 'parcelado' || editingInvoice.paymentMethod === 'credito' ? 'block' : 'none' }}>
                 <label className="section-label mb-2 block">Qtd. Parcelas</label>
                 <select
                   value={editingInvoice.installments || '1'}
@@ -1848,6 +1853,18 @@ const Financeiro = () => {
                   <option value="">Selecionar</option>
                   {PAYMENT_METHODS.map(pm => (
                     <option key={pm.value} value={pm.value}>{pm.label}</option>
+                  ))}
+                </select>
+              </div>
+              <div style={{ display: editingExpense.paymentMethod === 'credito' ? 'block' : 'none' }}>
+                <label className="section-label mb-2 block">Qtd. Parcelas</label>
+                <select
+                  value={editingExpense.installments || '1'}
+                  onChange={(e) => setEditingExpense({ ...editingExpense, installments: e.target.value })}
+                  className="input-field w-full"
+                >
+                  {Array.from({ length: 12 }, (_, i) => i + 1).map(n => (
+                    <option key={n} value={String(n)}>{n}x</option>
                   ))}
                 </select>
               </div>
