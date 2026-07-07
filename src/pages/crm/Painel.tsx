@@ -1062,7 +1062,7 @@ const CRMDashboard = () => {
                       </div>
                     )}
                     {event.clientPhone && (
-                      <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                         <span className="text-neutral-500">Telefone:</span>{' '}
                         <span className="text-white">{event.clientPhone}</span>
                         <button
@@ -1591,7 +1591,7 @@ const CRMDashboard = () => {
                   <p className="text-[11px] text-red-400 font-bold">{submitError}</p>
                 </div>
               )}
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 {editingEventId && (
                   <button type="button" onClick={handleDeleteEvent}
                     className="px-3 py-3 bg-transparent border border-[#EF4444]/40 text-[#EF4444] font-bold text-xs uppercase tracking-widest rounded-lg hover:bg-[#EF4444]/10 hover:border-[#EF4444] transition-all flex items-center justify-center gap-2 shrink-0">

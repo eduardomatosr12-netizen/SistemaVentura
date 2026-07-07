@@ -934,9 +934,9 @@ const Financeiro = () => {
       </div>
 
       {/* Sub-tabs */}
-      <div className="px-6 md:px-8 border-b border-[rgba(255,255,255,0.08)]">
+      <div className="px-6 md:px-8 border-b border-[rgba(255,255,255,0.08)] overflow-x-auto">
         {viewMode === 'receitas' ? (
-          <div className="flex gap-6">
+          <div className="flex gap-6 whitespace-nowrap">
             <button
               onClick={() => setActiveTab('receitas')}
               className={`py-3.5 px-1 border-b-2 font-bold text-xs uppercase tracking-widest transition-colors ${
@@ -969,7 +969,7 @@ const Financeiro = () => {
             </button>
           </div>
         ) : (
-          <div className="flex gap-6">
+          <div className="flex gap-6 whitespace-nowrap">
             <button
               onClick={() => setActiveTab('fixas')}
               className={`py-3.5 px-1 border-b-2 font-bold text-xs uppercase tracking-widest transition-colors ${

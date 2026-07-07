@@ -698,7 +698,7 @@ const Board = ({
         <h2 className="text-xl font-black text-white">{board.title}</h2>
       </div>
         <div className="border rounded-2xl border-[#333] bg-[#111] overflow-hidden flex flex-col">
-        <div className="overflow-x-auto overflow-y-auto max-h-[600px]">
+        <div className="overflow-x-auto overflow-y-auto max-h-[400px] md:max-h-[600px]">
           <table className="w-full border-collapse">
             <thead className="sticky top-0 z-10">
               <tr className="border-b border-[#333] bg-[#0a0a0a]">

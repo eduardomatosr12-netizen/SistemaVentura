@@ -474,8 +474,33 @@ const CRMOrçamentos = () => {
     <div className="relative min-h-screen">
       {isSidebarOpen && (
         <>
-          <div className="fixed inset-0 bg-black/20 z-40" onClick={() => setIsSidebarOpen(false)} />
-          <div className="absolute top-14 left-4 w-[280px] max-h-[80vh] bg-[#111] border border-[#333] rounded-xl shadow-xl overflow-y-auto z-50">
+          <div className="fixed inset-0 bg-black/60 z-40 md:hidden" onClick={() => setIsSidebarOpen(false)} />
+          <div className="fixed inset-x-0 bottom-0 z-[100] bg-[#111] border-t border-[#333] rounded-t-2xl p-4 max-h-[70vh] overflow-y-auto md:hidden shadow-xl">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-lg font-black text-[#B5FF03]">Filtrar Contatos</h2>
+              <button onClick={() => setIsSidebarOpen(false)} className="p-1 hover:bg-[#222] rounded-md transition-colors">
+                <X size={14} className="text-[#B5FF03]" />
+              </button>
+            </div>
+            {hasActiveFilters && (
+              <button onClick={handleClearFilters}
+                className="text-[10px] font-bold text-[#B5FF03] hover:text-red-500 transition-colors flex items-center gap-1 mb-3">
+                <X size={12} /> LIMPAR TODOS OS FILTROS
+              </button>
+            )}
+            <div className="space-y-3">
+              {renderFilterField('name', 'Nome', 'text')}
+              {renderFilterField('whatsapp', 'WhatsApp', 'text')}
+              {renderFilterField('email', 'E-mail', 'text')}
+              {renderFilterField('cpf', 'CPF/CNPJ', 'text')}
+              {renderFilterField('eventType', 'Tipo de Evento', 'text')}
+              {renderFilterField('date', 'Data', 'date')}
+              {renderFilterField('time', 'Horário', 'text')}
+              {renderFilterField('city', 'Cidade', 'text')}
+              {renderFilterField('status', 'Status', 'text')}
+            </div>
+          </div>
+          <div className="hidden md:block absolute top-14 left-4 w-[280px] max-h-[80vh] bg-[#111] border border-[#333] rounded-xl shadow-xl overflow-y-auto z-50">
             <div className="p-3 sticky top-0 bg-[#111] border-b border-[#333] flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <div>

@@ -326,7 +326,7 @@ const Configuracoes = () => {
                     <X size={24} />
                   </button>
                 </div>
-                <div className="p-4 md:p-12 space-y-4 md:space-y-10 max-h-[60vh] overflow-y-auto custom-scrollbar">
+                <div className="p-4 md:p-12 space-y-4 md:space-y-10 max-h-[70vh] md:max-h-[60vh] overflow-y-auto custom-scrollbar">
                   {profileError && (
                     <div className="p-4 bg-[#111111] border border-red-500/30 rounded-2xl flex items-center gap-3 text-red-400 text-sm font-medium">
                       <AlertCircle size={20} />
@@ -387,7 +387,7 @@ const Configuracoes = () => {
                     <X size={24} />
                   </button>
                 </div>
-                <div className="p-4 md:p-12 space-y-4 md:space-y-10 max-h-[60vh] overflow-y-auto custom-scrollbar">
+                <div className="p-4 md:p-12 space-y-4 md:space-y-10 max-h-[70vh] md:max-h-[60vh] overflow-y-auto custom-scrollbar">
                   {inviteError && (
                     <div className="p-4 bg-[#111111] border border-red-500/30 rounded-2xl flex items-center gap-3 text-red-400 text-sm font-medium">
                       <AlertCircle size={20} />
