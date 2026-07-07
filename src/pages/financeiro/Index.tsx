@@ -804,7 +804,7 @@ const Financeiro = () => {
 
       {viewMode === 'despesas' && (
         <FilterSection title="Categorias">
-          {EXPENSE_CATEGORIES.map(cat => (
+          {FIXED_CATEGORIES.map(cat => (
             <CheckboxFilter
               key={cat.value}
               label={cat.label}
