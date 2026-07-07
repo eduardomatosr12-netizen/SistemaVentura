@@ -1183,7 +1183,7 @@ const Financeiro = () => {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
               {(() => {
-                const projectedInvoices = displayData.allInvoices.filter(inv => inv.paymentMethod === 'parcelado' && inv.status !== 'Cancelado');
+                const projectedInvoices = displayData.allInvoices.filter(inv => (inv.paymentMethod === 'parcelado' || inv.paymentMethod === 'credito') && inv.status !== 'Cancelado');
                 const projectionByMonth: Record<string, number> = {};
                 projectedInvoices.forEach(inv => {
                   if (!inv.date || inv.date === '—') return;
@@ -1218,7 +1218,7 @@ const Financeiro = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {displayData.allInvoices.filter(inv => inv.paymentMethod === 'parcelado').sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()).map(inv => (
+                  {displayData.allInvoices.filter(inv => inv.paymentMethod === 'parcelado' || inv.paymentMethod === 'credito').sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()).map(inv => (
                     <tr key={inv.id} className="table-row">
                       <td className="table-cell text-white">{inv.client}</td>
                       <td className="table-cell text-white">{inv.amount}</td>
@@ -1231,7 +1231,7 @@ const Financeiro = () => {
                       </td>
                     </tr>
                   ))}
-                  {displayData.allInvoices.filter(inv => inv.paymentMethod === 'parcelado').length === 0 && (
+                  {displayData.allInvoices.filter(inv => inv.paymentMethod === 'parcelado' || inv.paymentMethod === 'credito').length === 0 && (
                     <tr><td colSpan={5} className="table-cell text-center text-[#606060] py-8">Nenhuma projeção disponível.</td></tr>
                   )}
                 </tbody>
@@ -1496,7 +1496,7 @@ const Financeiro = () => {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
               {(() => {
-                const projected = displayData.allInvoices.filter(inv => inv.paymentMethod === 'parcelado' && inv.status !== 'Cancelado');
+                const projected = displayData.allInvoices.filter(inv => (inv.paymentMethod === 'parcelado' || inv.paymentMethod === 'credito') && inv.status !== 'Cancelado');
                 const projectionByMonth: Record<string, number> = {};
                 projected.forEach(inv => {
                   if (!inv.date || inv.date === '—') return;
@@ -1531,7 +1531,7 @@ const Financeiro = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {displayData.allInvoices.filter(inv => inv.paymentMethod === 'parcelado').sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()).map(inv => (
+                  {displayData.allInvoices.filter(inv => inv.paymentMethod === 'parcelado' || inv.paymentMethod === 'credito').sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()).map(inv => (
                     <tr key={inv.id} className="table-row">
                       <td className="table-cell text-white">{inv.client}</td>
                       <td className="table-cell text-white">{inv.amount}</td>
@@ -1544,7 +1544,7 @@ const Financeiro = () => {
                       </td>
                     </tr>
                   ))}
-                  {displayData.allInvoices.filter(inv => inv.paymentMethod === 'parcelado').length === 0 && (
+                  {displayData.allInvoices.filter(inv => inv.paymentMethod === 'parcelado' || inv.paymentMethod === 'credito').length === 0 && (
                     <tr><td colSpan={5} className="table-cell text-center text-[#606060] py-8">Nenhuma projeção disponível.</td></tr>
                   )}
                 </tbody>
