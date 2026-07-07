@@ -51,6 +51,7 @@ interface RentalRecord {
   dataSaida: string;
   dataDevolucao: string;
   items: RentalItem[];
+  eventId?: string;
 }
 
 const RENTAL_STATUSES = ['Em Trânsito', 'Montado', 'Devolvido'] as const;
@@ -834,6 +835,37 @@ const Tarefas = () => {
 
   const clientNames = (Orçamentos || []).map(o => o.name).filter(Boolean);
 
+  const eventRentalRecords = useMemo(() => {
+    const result: (RentalRecord & { eventId: string })[] = [];
+    (events || []).forEach(ev => {
+      if (ev.status !== 'confirmado' && ev.status !== 'realizado') return;
+      if (!ev.client) return;
+      const lead = (Orçamentos || []).find(o => o.name.toLowerCase() === ev.client!.toLowerCase());
+      if (!lead || !lead.items || lead.items.length === 0) return;
+      const itemStatus = ev.status === 'realizado' ? 'Devolvido' as const : 'Em Trânsito' as const;
+      result.push({
+        id: `event-${ev.id}`,
+        eventId: ev.id,
+        client: ev.client,
+        dataSaida: ev.dataMontagem || ev.date,
+        dataDevolucao: ev.dataDesmontagem || '',
+        items: lead.items.map(invItem => ({
+          id: `event-item-${invItem.id}`,
+          item: invItem.item,
+          status: itemStatus,
+          quantidade: invItem.qtdAtual,
+        })),
+      });
+    });
+    result.sort((a, b) => a.dataSaida.localeCompare(b.dataSaida));
+    return result;
+  }, [events, Orçamentos]);
+
+  const allRentalRecords = useMemo(() => {
+    const manual = rentalRecords.map(r => ({ ...r, eventId: '' }));
+    return [...eventRentalRecords, ...manual].sort((a, b) => a.dataSaida.localeCompare(b.dataSaida));
+  }, [rentalRecords, eventRentalRecords]);
+
   const reservedByDate = useMemo(() => {
     if (!dateFilterEstoque) return new Map<string, number>();
 
@@ -1218,7 +1250,7 @@ const Tarefas = () => {
                 </tr>
               </thead>
               <tbody>
-                {rentalRecords.map(record => (
+                {allRentalRecords.map(record => (
                   <tr key={record.id} className="border-b border-[#222222] hover:bg-[#1a1a1a] transition-colors">
                     <td className="p-4 text-sm text-white">{record.client}</td>
                     <td className="p-4 text-sm text-[#aaaaaa]">
@@ -1234,22 +1266,28 @@ const Tarefas = () => {
                     <td className="p-4 text-sm text-[#aaaaaa]">{record.dataSaida}</td>
                     <td className="p-4 text-sm text-[#aaaaaa]">{record.dataDevolucao || '—'}</td>
                     <td className="p-4 text-right">
-                      <button
-                        onClick={() => handleOpenRentalModal(record)}
-                        className="text-[#B5FF03] hover:text-white transition-colors mr-3"
-                      >
-                        <Edit3 size={16} />
-                      </button>
-                      <button
-                        onClick={() => handleDeleteRental(record.id)}
-                        className="text-[#ff4444] hover:text-white transition-colors"
-                      >
-                        <X size={16} />
-                      </button>
+                      {record.eventId ? (
+                        <span className="text-[10px] text-neutral-500 uppercase tracking-widest font-bold">Automático</span>
+                      ) : (
+                        <>
+                          <button
+                            onClick={() => handleOpenRentalModal(record)}
+                            className="text-[#B5FF03] hover:text-white transition-colors mr-3"
+                          >
+                            <Edit3 size={16} />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteRental(record.id)}
+                            className="text-[#ff4444] hover:text-white transition-colors"
+                          >
+                            <X size={16} />
+                          </button>
+                        </>
+                      )}
                     </td>
                   </tr>
                 ))}
-                {rentalRecords.length === 0 && (
+                {allRentalRecords.length === 0 && (
                   <tr>
                     <td colSpan={5} className="p-8 text-center text-sm text-[#aaaaaa]">
                       Nenhum aluguel registrado
@@ -1261,13 +1299,19 @@ const Tarefas = () => {
           </div>
           {/* Mobile rental cards */}
           <div className="md:hidden space-y-3">
-            {rentalRecords.map(record => (
+            {allRentalRecords.map(record => (
               <div key={record.id} className="bg-[#111] border border-[#333] rounded-lg p-4 space-y-3">
                 <div className="flex justify-between items-start">
                   <span className="text-white font-bold text-sm">{record.client}</span>
                   <div className="flex gap-2">
-                    <button onClick={() => handleOpenRentalModal(record)} className="text-[#B5FF03] p-2 min-h-[44px]"><Edit3 size={18} /></button>
-                    <button onClick={() => handleDeleteRental(record.id)} className="text-[#ff4444] p-2 min-h-[44px]"><Trash2 size={18} /></button>
+                    {record.eventId ? (
+                      <span className="text-[10px] text-neutral-500 uppercase tracking-widest font-bold">Automático</span>
+                    ) : (
+                      <>
+                        <button onClick={() => handleOpenRentalModal(record)} className="text-[#B5FF03] p-2 min-h-[44px]"><Edit3 size={18} /></button>
+                        <button onClick={() => handleDeleteRental(record.id)} className="text-[#ff4444] p-2 min-h-[44px]"><Trash2 size={18} /></button>
+                      </>
+                    )}
                   </div>
                 </div>
                 <div className="space-y-2">
