@@ -41,6 +41,8 @@ interface Expense {
   eventType?: string;
   city?: string;
   client?: string;
+  receivedAmount?: string;
+  eventProfit?: string;
 }
 
 const FIXED_CATEGORIES = [
@@ -279,6 +281,14 @@ const Financeiro = () => {
         expensesByEventId.set(t.origemEventoId!, current + (t.amount || 0));
       });
 
+    const revenueByEventId = new Map<string, number>();
+    (transactions || [])
+      .filter(t => t.type === 'receita' && t.origemEventoId)
+      .forEach(t => {
+        const current = revenueByEventId.get(t.origemEventoId!) || 0;
+        revenueByEventId.set(t.origemEventoId!, current + (t.amount || 0));
+      });
+
     const rawInvoices: Invoice[] = (transactions || [])
       .filter(t => t.type === 'receita' && t.source !== 'lead')
       .map(t => {
@@ -350,12 +360,15 @@ const Financeiro = () => {
       .filter(t => t.type === 'despesa')
       .map(t => {
         const event = t.origemEventoId ? eventsById.get(t.origemEventoId) : undefined;
+        const eventRevenue = t.origemEventoId ? (revenueByEventId.get(t.origemEventoId) || 0) : 0;
+        const expenseAmount = t.amount || 0;
+        const totalEventExpenses = t.origemEventoId ? (expensesByEventId.get(t.origemEventoId) || 0) : 0;
         return {
           id: t.id!,
           category: t.category || 'outros',
           description: t.description,
-          amount: formatCurrency(t.amount),
-          date: t.date,
+          amount: formatCurrency(expenseAmount),
+          date: formatDate(t.date),
           status: t.status as Expense['status'],
           paymentMethod: t.paymentMethod,
           expenseType: (t.expenseType as Expense['expenseType']) || 'variavel',
@@ -367,6 +380,8 @@ const Financeiro = () => {
           client: event?.client || t.client || '',
           eventType: event?.eventType,
           city: event?.city,
+          receivedAmount: t.origemEventoId ? formatCurrency(eventRevenue) : '—',
+          eventProfit: t.origemEventoId ? formatCurrency(eventRevenue - totalEventExpenses) : '—',
         };
       });
 
@@ -1285,22 +1300,24 @@ const Financeiro = () => {
               <table className="w-full">
                 <thead>
                   <tr>
-                    <th className="table-header">Tipo de Evento</th>
                     <th className="table-header">Cliente</th>
-                    <th className="table-header">Valor</th>
+                    <th className="table-header">Cidade</th>
+                    <th className="table-header">Tipo de Evento</th>
                     <th className="table-header">Data</th>
                     <th className="table-header">Status</th>
                     <th className="table-header">Pagamento</th>
-                    <th className="table-header">Cidade</th>
+                    <th className="table-header">Valor</th>
+                    <th className="table-header">Valor Recebido</th>
+                    <th className="table-header">Lucro do Evento</th>
                     <th className="table-header text-right">Ações</th>
                   </tr>
                 </thead>
                 <tbody>
                   {displayData.filteredExpenses.map(expense => (
                     <tr key={expense.id} className="table-row">
-                      <td className="table-cell text-[#A0A0A0]">{expense.eventType || expense.category ? categoryLabel(expense.category) : '—'}</td>
                       <td className="table-cell text-white">{expense.client || '—'}</td>
-                      <td className="table-cell text-white">{expense.amount}</td>
+                      <td className="table-cell text-[#A0A0A0]">{expense.city || '—'}</td>
+                      <td className="table-cell text-[#A0A0A0]">{expense.eventType || expense.category ? categoryLabel(expense.category) : '—'}</td>
                       <td className="table-cell text-[#A0A0A0]">{expense.date}</td>
                       <td className="table-cell">
                         <span className={statusStyle[expense.status]}>
@@ -1308,7 +1325,9 @@ const Financeiro = () => {
                         </span>
                       </td>
                       <td className="table-cell text-[#A0A0A0]">{paymentMethodLabel(expense.paymentMethod)}</td>
-                      <td className="table-cell text-[#A0A0A0]">{expense.city || '—'}</td>
+                      <td className="table-cell text-white">{expense.amount}</td>
+                      <td className="table-cell text-[#A0A0A0]">{expense.receivedAmount || '—'}</td>
+                      <td className={`table-cell ${(parseBRL(expense.eventProfit || '0') || 0) >= 0 ? 'text-[#CCFF00]' : 'text-red-400'}`}>{expense.eventProfit || '—'}</td>
                       <td className="table-cell text-right">
                         <button
                           onClick={() => handleOpenExpenseModal(expense)}
@@ -1327,7 +1346,7 @@ const Financeiro = () => {
                   ))}
                   {displayData.filteredExpenses.length === 0 && (
                     <tr>
-                      <td colSpan={8} className="table-cell text-center text-[#606060] py-8">
+                      <td colSpan={10} className="table-cell text-center text-[#606060] py-8">
                         Nenhuma despesa fixa encontrada
                       </td>
                     </tr>
@@ -1343,10 +1362,12 @@ const Financeiro = () => {
                     <span className={statusStyle[expense.status]}>{expense.status}</span>
                   </div>
                   <div className="grid grid-cols-2 gap-2 text-xs">
-                    <div><span className="text-[#606060]">Evento:</span> <span className="text-white">{expense.eventType || '—'}</span></div>
-                    <div><span className="text-[#606060]">Valor:</span> <span className="text-white">{expense.amount}</span></div>
-                    <div><span className="text-[#606060]">Data:</span> <span className="text-white">{expense.date}</span></div>
                     <div><span className="text-[#606060]">Cidade:</span> <span className="text-white">{expense.city || '—'}</span></div>
+                    <div><span className="text-[#606060]">Evento:</span> <span className="text-white">{expense.eventType || '—'}</span></div>
+                    <div><span className="text-[#606060]">Data:</span> <span className="text-white">{expense.date}</span></div>
+                    <div><span className="text-[#606060]">Valor:</span> <span className="text-white">{expense.amount}</span></div>
+                    <div><span className="text-[#606060]">Recebido:</span> <span className="text-white">{expense.receivedAmount || '—'}</span></div>
+                    <div><span className="text-[#606060]">Lucro:</span> <span className="text-white">{expense.eventProfit || '—'}</span></div>
                     <div><span className="text-[#606060]">Pagamento:</span> <span className="text-white">{paymentMethodLabel(expense.paymentMethod)}</span></div>
                   </div>
                   <div className="flex justify-end gap-2 pt-2 border-t border-[rgba(255,255,255,0.05)]">
@@ -1369,22 +1390,24 @@ const Financeiro = () => {
               <table className="w-full">
                 <thead>
                   <tr>
-                    <th className="table-header">Tipo de Evento</th>
                     <th className="table-header">Cliente</th>
-                    <th className="table-header">Valor</th>
+                    <th className="table-header">Cidade</th>
+                    <th className="table-header">Tipo de Evento</th>
                     <th className="table-header">Data</th>
                     <th className="table-header">Status</th>
                     <th className="table-header">Pagamento</th>
-                    <th className="table-header">Cidade</th>
+                    <th className="table-header">Valor</th>
+                    <th className="table-header">Valor Recebido</th>
+                    <th className="table-header">Lucro do Evento</th>
                     <th className="table-header text-right">Ações</th>
                   </tr>
                 </thead>
                 <tbody>
                   {displayData.filteredExpenses.map(expense => (
                     <tr key={expense.id} className="table-row">
-                      <td className="table-cell text-[#A0A0A0]">{expense.eventType || expense.category ? categoryLabel(expense.category) : '—'}</td>
                       <td className="table-cell text-white">{expense.client || '—'}</td>
-                      <td className="table-cell text-white">{expense.amount}</td>
+                      <td className="table-cell text-[#A0A0A0]">{expense.city || '—'}</td>
+                      <td className="table-cell text-[#A0A0A0]">{expense.eventType || expense.category ? categoryLabel(expense.category) : '—'}</td>
                       <td className="table-cell text-[#A0A0A0]">{expense.date}</td>
                       <td className="table-cell">
                         <span className={statusStyle[expense.status]}>
@@ -1392,7 +1415,9 @@ const Financeiro = () => {
                         </span>
                       </td>
                       <td className="table-cell text-[#A0A0A0]">{paymentMethodLabel(expense.paymentMethod)}</td>
-                      <td className="table-cell text-[#A0A0A0]">{expense.city || '—'}</td>
+                      <td className="table-cell text-white">{expense.amount}</td>
+                      <td className="table-cell text-[#A0A0A0]">{expense.receivedAmount || '—'}</td>
+                      <td className={`table-cell ${(parseBRL(expense.eventProfit || '0') || 0) >= 0 ? 'text-[#CCFF00]' : 'text-red-400'}`}>{expense.eventProfit || '—'}</td>
                       <td className="table-cell text-right">
                         <button
                           onClick={() => handleOpenExpenseModal(expense)}
@@ -1411,7 +1436,7 @@ const Financeiro = () => {
                   ))}
                   {displayData.filteredExpenses.length === 0 && (
                     <tr>
-                      <td colSpan={8} className="table-cell text-center text-[#606060] py-8">
+                      <td colSpan={10} className="table-cell text-center text-[#606060] py-8">
                         Nenhuma despesa variável encontrada
                       </td>
                     </tr>
@@ -1427,10 +1452,12 @@ const Financeiro = () => {
                     <span className={statusStyle[expense.status]}>{expense.status}</span>
                   </div>
                   <div className="grid grid-cols-2 gap-2 text-xs">
-                    <div><span className="text-[#606060]">Evento:</span> <span className="text-white">{expense.eventType || '—'}</span></div>
-                    <div><span className="text-[#606060]">Valor:</span> <span className="text-white">{expense.amount}</span></div>
-                    <div><span className="text-[#606060]">Data:</span> <span className="text-white">{expense.date}</span></div>
                     <div><span className="text-[#606060]">Cidade:</span> <span className="text-white">{expense.city || '—'}</span></div>
+                    <div><span className="text-[#606060]">Evento:</span> <span className="text-white">{expense.eventType || '—'}</span></div>
+                    <div><span className="text-[#606060]">Data:</span> <span className="text-white">{expense.date}</span></div>
+                    <div><span className="text-[#606060]">Valor:</span> <span className="text-white">{expense.amount}</span></div>
+                    <div><span className="text-[#606060]">Recebido:</span> <span className="text-white">{expense.receivedAmount || '—'}</span></div>
+                    <div><span className="text-[#606060]">Lucro:</span> <span className="text-white">{expense.eventProfit || '—'}</span></div>
                     <div><span className="text-[#606060]">Pagamento:</span> <span className="text-white">{paymentMethodLabel(expense.paymentMethod)}</span></div>
                   </div>
                   <div className="flex justify-end gap-2 pt-2 border-t border-[rgba(255,255,255,0.05)]">
