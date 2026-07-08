@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useFinance } from '../../contexts/FinanceContext';
 import {
@@ -7,10 +7,8 @@ import {
   ResponsiveContainer, Legend,
 } from 'recharts';
 import {
-  ArrowLeft, TrendingUp, TrendingDown, Clock, DollarSign,
+  ArrowLeft, ChevronLeft, ChevronRight, TrendingUp, TrendingDown, Clock, DollarSign,
 } from 'lucide-react';
-import { migrateExpenseDates } from '../../scripts/migrateExpenseDates';
-
 const C_GREEN = '#B5FF03';
 const C_GREEN_DARK = '#77AA00';
 const C_RED = '#FF4444';
@@ -19,50 +17,10 @@ const C_BLUE = '#4488FF';
 const C_ORANGE = '#FF8C00';
 
 const MONTHS_SHORT = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+const MONTHS_PT = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
 
 const formatCurrency = (val: number) =>
   new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
-
-type Period = 'thisMonth' | 'last3Months' | 'thisYear' | 'custom';
-
-interface DateRange { start: Date; end: Date }
-
-function getDateRange(period: Period, customStart: string, customEnd: string): DateRange {
-  const now = new Date();
-  switch (period) {
-    case 'thisMonth': {
-      const s = new Date(now.getFullYear(), now.getMonth(), 1);
-      const e = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
-      return { start: s, end: e };
-    }
-    case 'last3Months': {
-      const s = new Date(now.getFullYear(), now.getMonth() - 2, 1);
-      const e = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
-      return { start: s, end: e };
-    }
-    case 'thisYear': {
-      const s = new Date(now.getFullYear(), 0, 1);
-      const e = new Date(now.getFullYear(), 11, 31, 23, 59, 59);
-      return { start: s, end: e };
-    }
-    case 'custom':
-      return {
-        start: customStart ? new Date(customStart + 'T00:00:00') : new Date(0),
-        end: customEnd ? new Date(customEnd + 'T23:59:59') : new Date(8640000000000000),
-      };
-    default:
-      return { start: new Date(0), end: new Date(8640000000000000) };
-  }
-}
-
-function isInRange(dateStr: string, start: Date, end: Date) {
-  try {
-    const d = new Date(dateStr + 'T00:00:00');
-    return d >= start && d <= end;
-  } catch {
-    return false;
-  }
-}
 
 function DonutCenter({ top, bottom }: { top: string; bottom: string }) {
   return (
@@ -177,20 +135,22 @@ export default function DashboardFinanceiro() {
   const navigate = useNavigate();
   const { transactions } = useFinance();
 
-  const [period, setPeriod] = useState<Period>('thisMonth');
-  const [customStart, setCustomStart] = useState('');
-  const [customEnd, setCustomEnd] = useState('');
+  const [selectedDate, setSelectedDate] = useState(() => new Date());
 
-  useEffect(() => {
-    migrateExpenseDates().then(r =>
-      console.log(`[Migração] ${r.updated} despesas corrigidas, ${r.skipped} ignoradas`)
-    );
-  }, []);
+  const isInRange = (dateStr: string, start: Date, end: Date) => {
+    try {
+      const d = new Date(dateStr + 'T00:00:00');
+      return d >= start && d <= end;
+    } catch { return false; }
+  };
 
-  const dateRange = useMemo(
-    () => getDateRange(period, customStart, customEnd),
-    [period, customStart, customEnd]
-  );
+  const dateRange = useMemo(() => ({
+    start: new Date(selectedDate.getFullYear(), selectedDate.getMonth(), 1),
+    end: new Date(selectedDate.getFullYear(), selectedDate.getMonth() + 1, 0, 23, 59, 59),
+  }), [selectedDate]);
+
+  const goPrevMonth = () => setSelectedDate(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1));
+  const goNextMonth = () => setSelectedDate(prev => new Date(prev.getFullYear(), prev.getMonth() + 1, 1));
 
   const periodTransactions = useMemo(
     () => (transactions || []).filter(
@@ -263,10 +223,9 @@ export default function DashboardFinanceiro() {
   ].filter(d => d.value > 0), [metrics]);
 
   const monthlyData = useMemo(() => {
-    const now = new Date();
     const result: { name: string; Receitas: number; Despesas: number }[] = [];
     for (let i = 5; i >= 0; i--) {
-      const m = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const m = new Date(selectedDate.getFullYear(), selectedDate.getMonth() - i, 1);
       const monthStr = `${m.getFullYear()}-${String(m.getMonth() + 1).padStart(2, '0')}`;
       const label = MONTHS_SHORT[m.getMonth()];
       const filtered = (transactions || []).filter(
@@ -283,7 +242,7 @@ export default function DashboardFinanceiro() {
       });
     }
     return result;
-  }, [transactions]);
+  }, [transactions, selectedDate]);
 
   const hasChartData = chart1Data.length > 0 || chart2Data.length > 0 || chart3Data.length > 0;
   const pendenciaTotal = metrics.receitasPendentes + metrics.despesasPendentes;
@@ -304,37 +263,24 @@ export default function DashboardFinanceiro() {
         </div>
       </div>
 
-      <div className="flex flex-wrap items-center gap-2">
-        {([['thisMonth', 'Este mês'], ['last3Months', 'Últimos 3 meses'], ['thisYear', 'Este ano'], ['custom', 'Personalizado']] as [Period, string][]).map(([key, label]) => (
+      <div className="flex justify-center">
+        <div className="inline-flex items-center gap-4 bg-[#111] border border-[#222] rounded-full px-5 py-2">
           <button
-            key={key}
-            onClick={() => setPeriod(key)}
-            className={`px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest transition-colors ${
-              period === key
-                ? 'bg-[#B5FF03] text-black'
-                : 'bg-[#111] border border-[#222] text-neutral-400 hover:text-white hover:border-[#B5FF03]'
-            }`}
+            onClick={goPrevMonth}
+            className="p-1 rounded-full text-neutral-400 hover:text-white hover:bg-[#222] transition-colors"
           >
-            {label}
+            <ChevronLeft size={18} />
           </button>
-        ))}
-        {period === 'custom' && (
-          <div className="flex items-center gap-2 flex-wrap">
-            <input
-              type="date"
-              value={customStart}
-              onChange={e => setCustomStart(e.target.value)}
-              className="bg-[#111] border border-[#222] rounded-lg px-3 py-2 text-sm text-white focus:border-[#B5FF03] outline-none"
-            />
-            <span className="text-neutral-500 text-xs">até</span>
-            <input
-              type="date"
-              value={customEnd}
-              onChange={e => setCustomEnd(e.target.value)}
-              className="bg-[#111] border border-[#222] rounded-lg px-3 py-2 text-sm text-white focus:border-[#B5FF03] outline-none"
-            />
-          </div>
-        )}
+          <span className="text-sm font-black text-white tracking-wide min-w-[140px] text-center">
+            {MONTHS_PT[selectedDate.getMonth()]} {selectedDate.getFullYear()}
+          </span>
+          <button
+            onClick={goNextMonth}
+            className="p-1 rounded-full text-neutral-400 hover:text-white hover:bg-[#222] transition-colors"
+          >
+            <ChevronRight size={18} />
+          </button>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
