@@ -1049,14 +1049,14 @@ const Financeiro = () => {
               <table className="w-full">
                 <thead>
                   <tr>
-                    <th className="table-header">Tipo de Evento</th>
                     <th className="table-header">Cliente</th>
-                    <th className="table-header">Valor</th>
+                    <th className="table-header">Cidade</th>
+                    <th className="table-header">Tipo de Evento</th>
                     <th className="table-header">Data</th>
                     <th className="table-header">Status</th>
                     <th className="table-header">Pagamento</th>
-                    <th className="table-header">Cidade</th>
-                    <th className="table-header">Despesa do Evento</th>
+                    <th className="table-header">Valor do Evento</th>
+                    <th className="table-header">Despesas do Evento</th>
                     <th className="table-header">Lucro do Evento</th>
                     <th className="table-header text-right">Ações</th>
                   </tr>
@@ -1064,9 +1064,9 @@ const Financeiro = () => {
                 <tbody>
                   {displayData.filteredInvoices.map(invoice => (
                     <tr key={invoice.id} className="table-row">
-                      <td className="table-cell text-[#A0A0A0]">{invoice.eventType || '—'}</td>
                       <td className="table-cell text-white">{invoice.client}</td>
-                      <td className="table-cell text-white">{invoice.amount}</td>
+                      <td className="table-cell text-[#A0A0A0]">{invoice.city || '—'}</td>
+                      <td className="table-cell text-[#A0A0A0]">{invoice.eventType || '—'}</td>
                       <td className="table-cell text-[#A0A0A0]">{invoice.date}</td>
                       <td className="table-cell">
                         <span className={statusStyle[invoice.status]}>
@@ -1074,7 +1074,7 @@ const Financeiro = () => {
                         </span>
                       </td>
                       <td className="table-cell text-[#A0A0A0]">{paymentMethodLabel(invoice.paymentMethod, invoice.installments)}</td>
-                      <td className="table-cell text-[#A0A0A0]">{invoice.city || '—'}</td>
+                      <td className="table-cell text-white">{invoice.amount}</td>
                       <td className="table-cell text-[#A0A0A0]">{invoice.totalExpenses || '—'}</td>
                       <td className={`table-cell ${(parseBRL(invoice.profit || '0') || 0) >= 0 ? 'text-[#CCFF00]' : 'text-red-400'}`}>{invoice.profit || '—'}</td>
                       <td className="table-cell text-right">
@@ -1105,10 +1105,10 @@ const Financeiro = () => {
                     <span className={statusStyle[invoice.status]}>{invoice.status}</span>
                   </div>
                   <div className="grid grid-cols-2 gap-2 text-xs">
-                    <div><span className="text-[#606060]">Tipo:</span> <span className="text-white">{invoice.eventType || '—'}</span></div>
-                    <div><span className="text-[#606060]">Valor:</span> <span className="text-white">{invoice.amount}</span></div>
-                    <div><span className="text-[#606060]">Data:</span> <span className="text-white">{invoice.date}</span></div>
                     <div><span className="text-[#606060]">Cidade:</span> <span className="text-white">{invoice.city || '—'}</span></div>
+                    <div><span className="text-[#606060]">Tipo:</span> <span className="text-white">{invoice.eventType || '—'}</span></div>
+                    <div><span className="text-[#606060]">Data:</span> <span className="text-white">{invoice.date}</span></div>
+                    <div><span className="text-[#606060]">Valor:</span> <span className="text-white">{invoice.amount}</span></div>
                     <div><span className="text-[#606060]">Despesas:</span> <span className="text-white">{invoice.totalExpenses || '—'}</span></div>
                     <div><span className="text-[#606060]">Lucro:</span> <span className="text-white">{invoice.profit || '—'}</span></div>
                     <div><span className="text-[#606060]">Pagamento:</span> <span className="text-white">{paymentMethodLabel(invoice.paymentMethod, invoice.installments)}</span></div>
