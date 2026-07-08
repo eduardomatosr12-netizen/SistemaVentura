@@ -19,6 +19,8 @@ interface Invoice {
   lastModifiedBy?: string;
   eventType?: string;
   city?: string;
+  totalExpenses?: string;
+  profit?: string;
 }
 
 interface Expense {
@@ -262,14 +264,24 @@ const Financeiro = () => {
     const eventsByClientId = new Map<string, CalendarEvent>();
     (events || []).forEach(e => { if (e.clientId) eventsByClientId.set(e.clientId, e); });
 
+    const expensesByEventId = new Map<string, number>();
+    (transactions || [])
+      .filter(t => t.type === 'despesa' && t.origemEventoId)
+      .forEach(t => {
+        const current = expensesByEventId.get(t.origemEventoId!) || 0;
+        expensesByEventId.set(t.origemEventoId!, current + (t.amount || 0));
+      });
+
     const rawInvoices: Invoice[] = (transactions || [])
       .filter(t => t.type === 'receita' && t.source !== 'lead')
       .map(t => {
         const event = t.origemEventoId ? eventsById.get(t.origemEventoId) : undefined;
+        const totalExpenses = t.origemEventoId ? (expensesByEventId.get(t.origemEventoId) || 0) : 0;
+        const invoiceAmount = t.amount || 0;
         return {
           id: t.id!,
           client: t.client || '',
-          amount: formatCurrency(t.amount),
+          amount: formatCurrency(invoiceAmount),
           date: t.date,
           status: t.status,
           source: (t.source as Invoice['source']) || 'manual',
@@ -278,6 +290,8 @@ const Financeiro = () => {
           lastModifiedBy: t.lastModifiedBy,
           eventType: event?.eventType,
           city: event?.city,
+          totalExpenses: formatCurrency(totalExpenses),
+          profit: formatCurrency(invoiceAmount - totalExpenses),
         };
       });
 
@@ -295,6 +309,8 @@ const Financeiro = () => {
           paymentMethod: 'pix',
           eventType: event?.eventType,
           city: event?.city,
+          totalExpenses: '—',
+          profit: '—',
         };
       });
 
@@ -1040,6 +1056,8 @@ const Financeiro = () => {
                     <th className="table-header">Status</th>
                     <th className="table-header">Pagamento</th>
                     <th className="table-header">Cidade</th>
+                    <th className="table-header">Despesas</th>
+                    <th className="table-header">Lucro</th>
                     <th className="table-header text-right">Ações</th>
                   </tr>
                 </thead>
@@ -1057,6 +1075,8 @@ const Financeiro = () => {
                       </td>
                       <td className="table-cell text-[#A0A0A0]">{paymentMethodLabel(invoice.paymentMethod, invoice.installments)}</td>
                       <td className="table-cell text-[#A0A0A0]">{invoice.city || '—'}</td>
+                      <td className="table-cell text-[#A0A0A0]">{invoice.totalExpenses || '—'}</td>
+                      <td className={`table-cell ${(parseBRL(invoice.profit || '0') || 0) >= 0 ? 'text-[#CCFF00]' : 'text-red-400'}`}>{invoice.profit || '—'}</td>
                       <td className="table-cell text-right">
                         <button
                           onClick={() => handleOpenInvoiceModal(invoice)}
@@ -1069,7 +1089,7 @@ const Financeiro = () => {
                   ))}
                   {displayData.filteredInvoices.length === 0 && (
                     <tr>
-                      <td colSpan={8} className="table-cell text-center text-[#606060] py-8">
+                      <td colSpan={10} className="table-cell text-center text-[#606060] py-8">
                         Nenhuma fatura encontrada
                       </td>
                     </tr>
@@ -1089,6 +1109,8 @@ const Financeiro = () => {
                     <div><span className="text-[#606060]">Valor:</span> <span className="text-white">{invoice.amount}</span></div>
                     <div><span className="text-[#606060]">Data:</span> <span className="text-white">{invoice.date}</span></div>
                     <div><span className="text-[#606060]">Cidade:</span> <span className="text-white">{invoice.city || '—'}</span></div>
+                    <div><span className="text-[#606060]">Despesas:</span> <span className="text-white">{invoice.totalExpenses || '—'}</span></div>
+                    <div><span className="text-[#606060]">Lucro:</span> <span className="text-white">{invoice.profit || '—'}</span></div>
                     <div><span className="text-[#606060]">Pagamento:</span> <span className="text-white">{paymentMethodLabel(invoice.paymentMethod, invoice.installments)}</span></div>
                   </div>
                   <div className="flex justify-end gap-2 pt-2 border-t border-[rgba(255,255,255,0.05)]">
