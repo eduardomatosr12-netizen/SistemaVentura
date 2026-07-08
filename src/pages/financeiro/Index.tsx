@@ -1056,8 +1056,8 @@ const Financeiro = () => {
                     <th className="table-header">Status</th>
                     <th className="table-header">Pagamento</th>
                     <th className="table-header">Cidade</th>
-                    <th className="table-header">Despesas</th>
-                    <th className="table-header">Lucro</th>
+                    <th className="table-header">Despesa do Evento</th>
+                    <th className="table-header">Lucro do Evento</th>
                     <th className="table-header text-right">Ações</th>
                   </tr>
                 </thead>
