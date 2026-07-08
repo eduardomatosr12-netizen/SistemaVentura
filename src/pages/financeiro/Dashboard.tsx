@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useFinance } from '../../contexts/FinanceContext';
 import {
@@ -9,6 +9,7 @@ import {
 import {
   ArrowLeft, TrendingUp, TrendingDown, Clock, DollarSign,
 } from 'lucide-react';
+import { migrateExpenseDates } from '../../scripts/migrateExpenseDates';
 
 const C_GREEN = '#B5FF03';
 const C_GREEN_DARK = '#77AA00';
@@ -179,6 +180,12 @@ export default function DashboardFinanceiro() {
   const [period, setPeriod] = useState<Period>('thisMonth');
   const [customStart, setCustomStart] = useState('');
   const [customEnd, setCustomEnd] = useState('');
+
+  useEffect(() => {
+    migrateExpenseDates().then(r =>
+      console.log(`[Migração] ${r.updated} despesas corrigidas, ${r.skipped} ignoradas`)
+    );
+  }, []);
 
   const dateRange = useMemo(
     () => getDateRange(period, customStart, customEnd),
