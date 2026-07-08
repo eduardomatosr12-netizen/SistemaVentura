@@ -160,6 +160,15 @@ const Financeiro = () => {
     if (!y || !m || !d) return dateStr;
     return `${d}/${m}/${y}`;
   };
+
+  const parseDateSafe = (dateStr: string): Date => {
+    if (!dateStr) return new Date(NaN);
+    const match = dateStr.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+    if (match) {
+      return new Date(parseInt(match[3]), parseInt(match[2]) - 1, parseInt(match[1]));
+    }
+    return new Date(dateStr);
+  };
     
   const getDateRange = useCallback(() => {
     const now = new Date();
@@ -204,7 +213,7 @@ const Financeiro = () => {
     if (!dateStr || dateStr === '—') return true;
     const range = getDateRange();
     if (!range) return true;
-    const date = new Date(dateStr);
+    const date = parseDateSafe(dateStr);
     return date >= range.start && date <= range.end;
   }, [getDateRange]);
     
@@ -332,7 +341,7 @@ const Financeiro = () => {
       });
 
     const allInvoices: Invoice[] = [...rawInvoices, ...leadInvoices].sort((a, b) =>
-      new Date(b.date).getTime() - new Date(a.date).getTime()
+      parseDateSafe(b.date).getTime() - parseDateSafe(a.date).getTime()
     );
 
     const filteredInvoices = allInvoices.filter(inv => {
@@ -1193,7 +1202,7 @@ const Financeiro = () => {
                 </thead>
                 <tbody>
                   {[...displayData.filteredInvoices, ...displayData.filteredExpenses]
-                    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+                    .sort((a, b) => parseDateSafe(b.date).getTime() - parseDateSafe(a.date).getTime())
                     .map(item => {
                       const isInvoice = 'client' in item;
                       return (
@@ -1271,7 +1280,7 @@ const Financeiro = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {displayData.allInvoices.filter(inv => inv.paymentMethod === 'parcelado' || inv.paymentMethod === 'credito').sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()).map(inv => (
+                  {displayData.allInvoices.filter(inv => inv.paymentMethod === 'parcelado' || inv.paymentMethod === 'credito').sort((a, b) => parseDateSafe(a.date).getTime() - parseDateSafe(b.date).getTime()).map(inv => (
                     <tr key={inv.id} className="table-row">
                       <td className="table-cell text-white">{inv.client}</td>
                       <td className="table-cell text-white">{inv.amount}</td>
@@ -1580,7 +1589,7 @@ const Financeiro = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {displayData.allExpenses.filter(exp => exp.paymentMethod === 'parcelado' || exp.paymentMethod === 'credito').sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()).map(exp => (
+                  {displayData.allExpenses.filter(exp => exp.paymentMethod === 'parcelado' || exp.paymentMethod === 'credito').sort((a, b) => parseDateSafe(a.date).getTime() - parseDateSafe(b.date).getTime()).map(exp => (
                     <tr key={exp.id} className="table-row">
                       <td className="table-cell text-white">{exp.description}</td>
                       <td className="table-cell text-white">{exp.amount}</td>
