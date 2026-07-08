@@ -151,6 +151,13 @@ const Financeiro = () => {
   const formatCurrency = (val: number) => {
     return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val);
   };
+
+  const formatDate = (dateStr: string) => {
+    if (!dateStr || dateStr === '—') return dateStr;
+    const [y, m, d] = dateStr.split('-');
+    if (!y || !m || !d) return dateStr;
+    return `${d}/${m}/${y}`;
+  };
     
   const getDateRange = useCallback(() => {
     const now = new Date();
@@ -282,7 +289,7 @@ const Financeiro = () => {
           id: t.id!,
           client: t.client || '',
           amount: formatCurrency(invoiceAmount),
-          date: t.date,
+          date: formatDate(t.date),
           status: t.status,
           source: (t.source as Invoice['source']) || 'manual',
           paymentMethod: t.paymentMethod,
@@ -303,7 +310,7 @@ const Financeiro = () => {
           id: `lead-${l.id}`,
           client: l.name,
           amount: l.value || 'R$ 0,00',
-          date: l.closingDate || '—',
+          date: formatDate(l.closingDate) || '—',
           status: 'Pago',
           source: 'lead',
           paymentMethod: 'pix',
