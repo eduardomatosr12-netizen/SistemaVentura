@@ -1306,7 +1306,7 @@ const Financeiro = () => {
                     <th className="table-header">Data</th>
                     <th className="table-header">Status</th>
                     <th className="table-header">Pagamento</th>
-                    <th className="table-header">Valor</th>
+                    <th className="table-header">Valor da Despesa</th>
                     <th className="table-header">Valor Recebido</th>
                     <th className="table-header">Lucro do Evento</th>
                     <th className="table-header text-right">Ações</th>
@@ -1396,7 +1396,7 @@ const Financeiro = () => {
                     <th className="table-header">Data</th>
                     <th className="table-header">Status</th>
                     <th className="table-header">Pagamento</th>
-                    <th className="table-header">Valor</th>
+                    <th className="table-header">Valor da Despesa</th>
                     <th className="table-header">Valor Recebido</th>
                     <th className="table-header">Lucro do Evento</th>
                     <th className="table-header text-right">Ações</th>
