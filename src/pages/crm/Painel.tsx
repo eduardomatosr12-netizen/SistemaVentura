@@ -342,6 +342,41 @@ const CRMDashboard = () => {
           status: (formData.status as CalendarEvent['status']) || 'pendente',
           valorTotal: total,
         };
+
+        if (abaAtiva === 'cliente' && !selectedClientId) {
+          const leadInput: Partial<Omit<Lead, 'id'>> = {
+            name: formData.name,
+            niche: formData.eventType || 'Evento',
+            whatsapp: formData.whatsapp,
+            email: formData.email,
+            instagram: '',
+            stage: 'Novos Orçamentos',
+            origin: 'evento',
+            firstContact: formData.date || new Date().toISOString().split('T')[0],
+            closingDate: '',
+            followUpReminder: '',
+            address: formData.city || '',
+            notes: formData.observacao || '',
+          };
+          if (formData.orcamentoItems.length > 0) {
+            leadInput.value = total.toString();
+            leadInput.items = formData.orcamentoItems;
+          }
+          const newLeadId = await addLead(leadInput as Omit<Lead, 'id'>);
+          if (newLeadId) {
+            eventFields.clientId = newLeadId;
+          }
+          await addTransaction({
+            client: formData.name,
+            description: `Evento: ${formData.eventType || 'Evento'} - ${formData.name}${formData.observacao ? ' • ' + formData.observacao : ''}`,
+            amount: total,
+            date: formData.date || new Date().toISOString().split('T')[0],
+            status: 'Pendente',
+            type: 'receita',
+            source: 'evento',
+          });
+        }
+
         await updateEvent(editingEventId, eventFields);
         if (selectedClientId) {
           const leadUpdate: Partial<Lead> = {
@@ -1161,16 +1196,48 @@ const CRMDashboard = () => {
                 Novo Evento
               </button>
               <button
-                onClick={() => setAbaAtiva('despesas')}
+                onClick={async () => {
+                  if (!editingEventId) {
+                    const draftData = {
+                      title: formData.eventType ? `${formData.eventType} - ${(formData.name || 'Novo Evento')}` : (formData.name || 'Novo Evento'),
+                      client: formData.name || '',
+                      clientPhone: formData.whatsapp || '',
+                      clientEmail: formData.email || '',
+                      clientCpf: formData.cpf || '',
+                      eventType: formData.eventType || '',
+                      date: formData.date || '',
+                      time: formData.time || '',
+                      city: formData.city || '',
+                      dataMontagem: formData.dataMontagem || '',
+                      dataDesmontagem: formData.dataDesmontagem || '',
+                      description: formData.observacao || '',
+                      status: 'pendente' as const,
+                    };
+                    try {
+                      const newId = await addEvent(draftData);
+                      if (newId) {
+                        setEditingEventId(newId);
+                        setAbaAtiva('despesas');
+                      } else {
+                        setSubmitError('Erro ao criar rascunho do evento.');
+                      }
+                    } catch (err) {
+                      console.error('[Painel] Erro ao criar rascunho:', err);
+                      setSubmitError('Erro ao criar rascunho. Tente novamente.');
+                    }
+                  } else {
+                    setAbaAtiva('despesas');
+                  }
+                }}
                 className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest transition-colors flex items-center justify-center gap-1.5 ${abaAtiva === 'despesas' ? 'text-[#B5FF03] border-b-2 border-[#B5FF03]' : 'text-neutral-500 hover:text-white'}`}
               >
-                <Lock size={10} />
+                {!editingEventId && <Lock size={10} />}
                 Despesas do Evento
               </button>
             </div>
             {abaAtiva === 'despesas' ? (
               <div className="p-4 overflow-y-auto [&::-webkit-scrollbar]:w-[6px] [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-[#333] [&::-webkit-scrollbar-thumb]:rounded-[10px] [&::-webkit-scrollbar-thumb:hover]:bg-[#555]">
-                <DespesasDoEvento eventId={editingEventId} />
+                <DespesasDoEvento eventId={editingEventId} eventDate={formData.date} />
               </div>
             ) : (
             <form onSubmit={handleCreateSubmit} className="p-4 space-y-4 overflow-y-auto [&::-webkit-scrollbar]:w-[6px] [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-[#333] [&::-webkit-scrollbar-thumb]:rounded-[10px] [&::-webkit-scrollbar-thumb:hover]:bg-[#555]">

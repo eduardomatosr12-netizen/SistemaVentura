@@ -21,9 +21,10 @@ function notifyFinanceiro() {
 
 interface Props {
   eventId: string | null;
+  eventDate?: string;
 }
 
-export default function DespesasDoEvento({ eventId }: Props) {
+export default function DespesasDoEvento({ eventId, eventDate }: Props) {
   const [expenses, setExpenses] = useState<EventExpense[]>([]);
   const [showForm, setShowForm] = useState(false);
 
@@ -67,7 +68,7 @@ export default function DespesasDoEvento({ eventId }: Props) {
         description: exp.description,
         category: exp.category,
         amount: exp.valor,
-        date: new Date().toISOString().split('T')[0],
+        date: eventDate || new Date().toISOString().split('T')[0],
         status: exp.status === 'Pago' ? 'Pago' : 'Pendente',
         paymentMethod: exp.paymentMethod,
         expenseType: 'variavel',
