@@ -188,6 +188,9 @@ export default function DashboardFinanceiro() {
     const pagoPercent = totalPago + totalPendente > 0
       ? Math.round((totalPago / (totalPago + totalPendente)) * 100)
       : 0;
+    const totalReceitas = receitasPagas + receitasPendentes;
+    const totalDespesas = despesasPagas + despesasPendentes;
+    const saldoProjetado = totalReceitas - totalDespesas;
 
     const topDespesas = [...despesas]
       .filter(t => t.status === 'Pago')
@@ -199,6 +202,7 @@ export default function DashboardFinanceiro() {
       despesasPagas, despesasPendentes,
       despesasFixasPagas, despesasVariaveisPagas,
       saldo, totalPago, totalPendente, pagoPercent,
+      totalReceitas, totalDespesas, saldoProjetado,
       topDespesas,
     };
   }, [periodTransactions]);
@@ -218,8 +222,8 @@ export default function DashboardFinanceiro() {
   ].filter(d => d.value > 0), [metrics]);
 
   const chart3Data = useMemo(() => [
-    { name: 'Total Pago', value: metrics.totalPago, color: C_GREEN_DARK },
-    { name: 'Total Pendente', value: metrics.totalPendente, color: C_YELLOW },
+    { name: 'Total Receitas', value: metrics.totalReceitas, color: C_GREEN_DARK },
+    { name: 'Total Despesas', value: metrics.totalDespesas, color: C_RED },
   ].filter(d => d.value > 0), [metrics]);
 
   const monthlyData = useMemo(() => {
@@ -380,12 +384,12 @@ export default function DashboardFinanceiro() {
                 <>
                   <DonutChart
                     data={chart3Data}
-                    centerTop={`${metrics.pagoPercent}%`}
-                    centerBottom="Pago"
+                    centerTop={formatCurrency(metrics.saldoProjetado)}
+                    centerBottom="Saldo Projetado"
                   />
                   <div className="space-y-1.5 mt-2">
                     {chart3Data.map(d => (
-                      <LegendRow key={d.name} color={d.color} name={d.name} value={d.value} total={metrics.totalPago + metrics.totalPendente} />
+                      <LegendRow key={d.name} color={d.color} name={d.name} value={d.value} total={metrics.totalReceitas + metrics.totalDespesas} />
                     ))}
                   </div>
                 </>
