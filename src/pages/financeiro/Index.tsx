@@ -29,6 +29,7 @@ interface Expense {
   description: string;
   amount: string;
   date: string;
+  paidDate?: string;
   status: 'Pago' | 'Pendente' | 'Cancelado';
   paymentMethod?: string;
   installments?: string;
@@ -378,6 +379,7 @@ const Financeiro = () => {
           description: t.description,
           amount: formatCurrency(expenseAmount),
           date: formatDate(t.date),
+          paidDate: t.paidDate ? formatDate(t.paidDate) : undefined,
           status: t.status as Expense['status'],
           paymentMethod: t.paymentMethod,
           expenseType: (t.expenseType as Expense['expenseType']) || 'variavel',
@@ -590,6 +592,7 @@ const Financeiro = () => {
         description: '',
         amount: '0,00',
         date: new Date().toISOString().split('T')[0],
+        paidDate: '',
         status: 'Pendente',
         expenseType: 'variavel',
       });
@@ -642,6 +645,7 @@ const Financeiro = () => {
               recurrence: editingExpense.recurrence,
               dueDay: editingExpense.dueDay,
               parentId,
+              paidDate: editingExpense.paidDate || null,
               lastModifiedBy: employeeName || (role === 'admin' ? 'Administrador' : 'Funcionário'),
             });
           }
@@ -657,6 +661,7 @@ const Financeiro = () => {
             paymentMethod: editingExpense.paymentMethod || 'pix',
             installments: editingExpense.installments || null,
             expenseType: 'variavel',
+            paidDate: editingExpense.paidDate || null,
             origemEventoId: editingExpense.origemEventoId,
             lastModifiedBy: employeeName || (role === 'admin' ? 'Administrador' : 'Funcionário'),
           });
@@ -677,6 +682,7 @@ const Financeiro = () => {
           expenseType: editingExpense.expenseType,
           recurrence: isFixa ? editingExpense.recurrence : null,
           dueDay: isFixa ? editingExpense.dueDay : null,
+          paidDate: editingExpense.paidDate || null,
           origemEventoId: editingExpense.origemEventoId,
           lastModifiedBy: employeeName || (role === 'admin' ? 'Administrador' : 'Funcionário'),
         });
@@ -1312,9 +1318,10 @@ const Financeiro = () => {
                     <th className="table-header">Cliente</th>
                     <th className="table-header">Cidade</th>
                     <th className="table-header">Tipo de Evento</th>
-                    <th className="table-header">Data</th>
-                    <th className="table-header">Status</th>
+                    <th className="table-header">Vencimento</th>
                     <th className="table-header">Pagamento</th>
+                    <th className="table-header">Status</th>
+                    <th className="table-header">Forma Pagto.</th>
                     <th className="table-header">Valor da Despesa</th>
                     <th className="table-header">Valor Recebido</th>
                     <th className="table-header">Lucro do Evento</th>
@@ -1328,6 +1335,7 @@ const Financeiro = () => {
                       <td className="table-cell text-[#A0A0A0]">{expense.city || '—'}</td>
                       <td className="table-cell text-[#A0A0A0]">{expense.eventType || expense.category ? categoryLabel(expense.category) : '—'}</td>
                       <td className="table-cell text-[#A0A0A0]">{expense.date}</td>
+                      <td className="table-cell text-[#A0A0A0]">{expense.paidDate || '—'}</td>
                       <td className="table-cell">
                         <span className={statusStyle[expense.status]}>
                           {expense.status}
@@ -1355,7 +1363,7 @@ const Financeiro = () => {
                   ))}
                   {displayData.filteredExpenses.length === 0 && (
                     <tr>
-                      <td colSpan={10} className="table-cell text-center text-[#606060] py-8">
+                      <td colSpan={11} className="table-cell text-center text-[#606060] py-8">
                         Nenhuma despesa fixa encontrada
                       </td>
                     </tr>
@@ -1373,11 +1381,12 @@ const Financeiro = () => {
                   <div className="grid grid-cols-2 gap-2 text-xs">
                     <div><span className="text-[#606060]">Cidade:</span> <span className="text-white">{expense.city || '—'}</span></div>
                     <div><span className="text-[#606060]">Evento:</span> <span className="text-white">{expense.eventType || '—'}</span></div>
-                    <div><span className="text-[#606060]">Data:</span> <span className="text-white">{expense.date}</span></div>
+                    <div><span className="text-[#606060]">Vencimento:</span> <span className="text-white">{expense.date}</span></div>
+                    <div><span className="text-[#606060]">Pagamento:</span> <span className="text-white">{expense.paidDate || '—'}</span></div>
                     <div><span className="text-[#606060]">Valor:</span> <span className="text-white">{expense.amount}</span></div>
                     <div><span className="text-[#606060]">Recebido:</span> <span className="text-white">{expense.receivedAmount || '—'}</span></div>
                     <div><span className="text-[#606060]">Lucro:</span> <span className="text-white">{expense.eventProfit || '—'}</span></div>
-                    <div><span className="text-[#606060]">Pagamento:</span> <span className="text-white">{paymentMethodLabel(expense.paymentMethod)}</span></div>
+                    <div><span className="text-[#606060]">Forma Pagto.:</span> <span className="text-white">{paymentMethodLabel(expense.paymentMethod)}</span></div>
                   </div>
                   <div className="flex justify-end gap-2 pt-2 border-t border-[rgba(255,255,255,0.05)]">
                     <button onClick={() => handleOpenExpenseModal(expense)} className="text-[#CCFF00] p-2 min-h-[44px]"><Pencil size={18} /></button>
@@ -1905,6 +1914,15 @@ const Financeiro = () => {
                   onChange={(e) => setEditingExpense({ ...editingExpense, date: e.target.value })}
                   className="input-field w-full"
                   required
+                />
+              </div>
+              <div>
+                <label className="section-label mb-2 block">Data de Pagamento</label>
+                <input
+                  type="date"
+                  value={editingExpense.paidDate || ''}
+                  onChange={(e) => setEditingExpense({ ...editingExpense, paidDate: e.target.value })}
+                  className="input-field w-full"
                 />
               </div>
               <div>

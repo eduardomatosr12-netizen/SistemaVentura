@@ -10,6 +10,7 @@ export interface FinanceRecord {
   description: string;
   amount: number;
   date: string;
+  paidDate?: string;
   status: 'Pago' | 'Pendente' | 'Vencida' | 'Cancelado';
   source?: 'manual' | 'lead' | 'evento' | 'asaas';
   paymentMethod?: string;
