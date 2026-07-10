@@ -3,6 +3,7 @@ import { useCRM } from '../../contexts/CRMContext';
 import type { CalendarEvent } from '../../types/crm';
 import { generateUUID } from '../../lib/uuid';
 import { generateWhatsAppLink } from '../../lib/whatsapp';
+import { eventTypeLabel } from '../../lib/eventTypeLabel';
 import { subscribeInventoryChanges, getAllInventoryItems } from '../../lib/inventory';
 import { X, ExternalLink, Clock, User, Users, MessageSquare, Plus, Trash2, Calendar as CalendarIcon, Link as LinkIcon, FileText, ChevronLeft, ChevronRight, Search, MapPin, Mail, Phone, CreditCard, Flag, MessageCircle, Package } from 'lucide-react';
 
@@ -542,7 +543,7 @@ const CRMCalendario = () => {
                               style={{ color: getPhaseColor(occ) }}
                             >
                               {occ.phase === 'evento'
-                                ? (occ.event.eventType || 'Evento')
+                                ? eventTypeLabel(occ.event.eventType)
                                 : PHASE_CONFIG[occ.phase].label}
                             </span>
                           </div>
@@ -586,7 +587,7 @@ const CRMCalendario = () => {
                       <p className="text-[13px] font-black text-white group-hover:underline leading-tight">{occ.event?.title || 'Sem título'}</p>
                       <div className="flex flex-wrap items-center gap-x-2 mt-1.5">
                         <span className="text-[9px] font-black bg-[#111] text-neutral-400 px-1.5 py-0.5 rounded uppercase tracking-tighter">
-                          {occ.event?.eventType || 'Evento'}
+                          {eventTypeLabel(occ.event?.eventType)}
                         </span>
                         <span
                           className="text-[8px] font-black px-1 py-0.5 rounded-sm uppercase leading-none"
@@ -642,7 +643,7 @@ const CRMCalendario = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="text-[9px] font-black text-[#B5FF03] uppercase tracking-widest block mb-1">TIPO DE EVENTO</label>
-                  <p className="text-sm font-bold text-white">{viewEvent.eventType || '—'}</p>
+                  <p className="text-sm font-bold text-white">{eventTypeLabel(viewEvent.eventType)}</p>
                 </div>
                 <div>
                   <label className="text-[9px] font-black text-[#B5FF03] uppercase tracking-widest block mb-1">HORÁRIO</label>

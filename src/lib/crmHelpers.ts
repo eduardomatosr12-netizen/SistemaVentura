@@ -1,5 +1,6 @@
 import type { Lead } from '../types/crm';
 import { cleanPhoneNumber, generateWhatsAppLink } from './whatsapp';
+import { eventTypeLabel } from './eventTypeLabel';
 
 export const STAGES = [
   'Novos Orçamentos',
@@ -386,7 +387,7 @@ export function generatePDF(lead: Lead, discountData?: { type: 'percent' | 'fixe
           </div>
           <div class="col" style="text-align: right;">
             <h3>Evento</h3>
-            <p><strong>${lead.niche || '—'}</strong></p>
+            <p><strong>${eventTypeLabel(lead.niche)}</strong></p>
             <p>Data: ${lead.firstContact ? new Date(lead.firstContact).toLocaleDateString('pt-BR') : '—'}</p>
             ${lead.address ? `<p>Local: ${lead.address}</p>` : ''}
             <p style="margin-top: 6px;"><span class="badge">${lead.stage}</span></p>

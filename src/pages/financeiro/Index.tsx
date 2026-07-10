@@ -5,6 +5,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useFinance } from '../../contexts/FinanceContext';
 import { generateUUID } from '../../lib/uuid';
 import { parseMonetaryValue } from '../../lib/crmHelpers';
+import { eventTypeLabel } from '../../lib/eventTypeLabel';
 import { Pencil, X, TrendingUp, TrendingDown, Clock, AlertTriangle, XCircle, ChevronDown, ChevronUp, SlidersHorizontal, Trash2, BarChart3 } from 'lucide-react';
 
 interface Invoice {
@@ -743,12 +744,6 @@ const Financeiro = () => {
     
   const categoryLabel = (cat: string) => {
     return FIXED_CATEGORIES.find(c => c.value === cat)?.label || cat;
-  };
-
-  const eventTypeLabel = (val?: string) => {
-    if (!val) return '—';
-    const map: Record<string, string> = { Aniver: 'Aniversário', Casam: 'Casamento' };
-    return map[val] || val;
   };
 
   const handleFilterChange = (updater: (prev: typeof initialFilterState) => typeof initialFilterState) => {

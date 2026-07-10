@@ -5,6 +5,7 @@ import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell, LabelList } fro
 import { useCRM } from '../../contexts/CRMContext';
 import type { CalendarEvent, Lead, OrcamentoItem } from '../../types/crm';
 import { parseMonetaryValue, formatCurrency, generatePDF } from '../../lib/crmHelpers';
+import { eventTypeLabel } from '../../lib/eventTypeLabel';
 import { useActivityLogs } from '../../contexts/ActivityContext';
 import { generateUUID } from '../../lib/uuid';
 import { getAllInventoryItems, getAvailableQuantity, subscribeInventoryChanges } from '../../lib/inventory';
@@ -749,7 +750,7 @@ const CRMDashboard = () => {
                               className="text-[8px] leading-tight px-1 py-0.5 rounded truncate font-medium text-white"
                               style={{ backgroundColor: color + '25', borderLeft: `2px solid ${color}` }}
                             >
-                              {label}{occ.event.title || occ.event.client || occ.event.eventType || 'Evento'}
+                              {label}{occ.event.title || occ.event.client || eventTypeLabel(occ.event.eventType)}
                             </div>
                           );
                         })}
@@ -798,7 +799,7 @@ const CRMDashboard = () => {
                             <span className={`px-1.5 py-0.5 rounded-full text-[8px] font-bold ${event.status ? statusBg[event.status] : 'bg-[#333]'} ${event.status === 'confirmado' ? 'text-black' : 'text-white'}`}>
                               {event.status ? statusLabel[event.status] : '—'}
                             </span>
-                            {event.eventType && <span>{event.eventType}</span>}
+                            {event.eventType && <span>{eventTypeLabel(event.eventType)}</span>}
                             {event.time && <><span>•</span><span>{event.time}</span></>}
                           </div>
                           {daysUntil !== null && (
@@ -901,7 +902,7 @@ const CRMDashboard = () => {
                   paginatedEvents.map(event => (
                     <tr key={event.id} className="border-b border-[#222] hover:bg-[#0a0a0a] transition-colors">
                       <td className="px-4 py-3 text-sm text-white">{event.client || event.title || '—'}</td>
-                      <td className="px-4 py-3 text-sm text-neutral-300">{event.eventType || '—'}</td>
+                      <td className="px-4 py-3 text-sm text-neutral-300">{eventTypeLabel(event.eventType)}</td>
                       <td className="px-4 py-3 text-sm text-neutral-300">{formatDate(event.date)}</td>
                       <td className="px-4 py-3 text-sm text-neutral-300">{event.city || '—'}</td>
                       <td className="px-4 py-3">
@@ -1125,7 +1126,7 @@ const CRMDashboard = () => {
                     {event.eventType && (
                       <div>
                         <span className="text-neutral-500">Tipo:</span>{' '}
-                        <span className="text-[#B5FF03] font-bold">{event.eventType}</span>
+                        <span className="text-[#B5FF03] font-bold">{eventTypeLabel(event.eventType)}</span>
                       </div>
                     )}
                     <div>

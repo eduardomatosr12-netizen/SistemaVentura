@@ -9,6 +9,7 @@ import {
 import {
   ArrowLeft, ChevronLeft, ChevronRight, TrendingUp, TrendingDown, Clock, DollarSign,
 } from 'lucide-react';
+import { eventTypeLabel } from '../../lib/eventTypeLabel';
 const C_GREEN = '#B5FF03';
 const C_GREEN_DARK = '#77AA00';
 const C_RED = '#FF4444';
@@ -28,11 +29,6 @@ const CATEGORY_COLORS = [
   '#10B981',
   '#8B5CF6',
 ];
-
-const EVENT_TYPE_LABELS: Record<string, string> = {
-  Aniver: 'Aniversário',
-  Casam: 'Casamento',
-};
 
 const MONTHS_SHORT = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
 const MONTHS_PT = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
@@ -246,7 +242,7 @@ export default function DashboardFinanceiro() {
     const grouped: Record<string, number> = {};
     receitas.forEach(t => {
       const raw = t.eventType || t.category || 'Outros';
-      const key = EVENT_TYPE_LABELS[raw] || raw;
+      const key = eventTypeLabel(raw);
       grouped[key] = (grouped[key] || 0) + (t.amount || 0);
     });
     return Object.entries(grouped)
