@@ -167,13 +167,13 @@ export default function DespesasDoEvento({ eventId, eventDate }: Props) {
             <button
               type="button"
               onClick={() => toggleStatus(exp)}
-              className={`mt-0.5 w-4 h-4 rounded border flex items-center justify-center shrink-0 transition-colors ${
+              className={`mt-0.5 w-11 h-11 min-w-[44px] min-h-[44px] rounded border flex items-center justify-center shrink-0 transition-colors ${
                 exp.status === 'Pago'
                   ? 'bg-[#CCFF00] border-[#CCFF00] text-black'
                   : 'border-[rgba(255,255,255,0.2)] hover:border-[#CCFF00]'
               }`}
             >
-              {exp.status === 'Pago' && <Check size={10} strokeWidth={3} />}
+              {exp.status === 'Pago' && <Check size={14} strokeWidth={3} />}
             </button>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
@@ -195,9 +195,9 @@ export default function DespesasDoEvento({ eventId, eventDate }: Props) {
             <button
               type="button"
               onClick={() => handleRemove(exp)}
-              className="p-1 rounded-md text-[#606060] hover:text-[#FF4444] hover:bg-[rgba(255,68,68,0.1)] transition-colors shrink-0"
+              className="p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-md text-[#606060] hover:text-[#FF4444] hover:bg-[rgba(255,68,68,0.1)] transition-colors shrink-0"
             >
-              <Trash2 size={12} />
+              <Trash2 size={14} />
             </button>
           </div>
         ))}
@@ -215,7 +215,7 @@ export default function DespesasDoEvento({ eventId, eventDate }: Props) {
               placeholder="Ex: Combustível"
             />
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="section-label mb-1 block">Categoria</label>
               <select
@@ -240,7 +240,7 @@ export default function DespesasDoEvento({ eventId, eventDate }: Props) {
               />
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="section-label mb-1 block">Status</label>
               <select
@@ -271,14 +271,14 @@ export default function DespesasDoEvento({ eventId, eventDate }: Props) {
               type="button"
               onClick={handleAdd}
               disabled={!formDesc.trim() || !formValor}
-              className="btn-primary px-4 py-2 text-[10px] disabled:opacity-40 disabled:cursor-not-allowed"
+              className="btn-primary px-4 py-3 min-h-[44px] text-[10px] disabled:opacity-40 disabled:cursor-not-allowed"
             >
               Adicionar
             </button>
             <button
               type="button"
               onClick={resetForm}
-              className="px-4 py-2 text-[#A0A0A0] font-bold text-[10px] uppercase tracking-widest rounded-lg hover:text-white transition-colors"
+              className="px-4 py-3 min-h-[44px] text-[#A0A0A0] font-bold text-[10px] uppercase tracking-widest rounded-lg hover:text-white transition-colors"
             >
               Cancelar
             </button>
@@ -290,7 +290,7 @@ export default function DespesasDoEvento({ eventId, eventDate }: Props) {
         <button
           type="button"
           onClick={() => setShowForm(true)}
-          className="flex items-center gap-1.5 text-[10px] font-bold text-[#CCFF00] hover:text-white transition-colors"
+          className="flex items-center gap-1.5 text-[10px] font-bold text-[#CCFF00] hover:text-white transition-colors py-2 min-h-[44px]"
         >
           <Plus size={12} />
           Adicionar Despesa

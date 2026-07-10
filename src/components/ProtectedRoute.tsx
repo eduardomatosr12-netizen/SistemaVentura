@@ -12,7 +12,7 @@ const ProtectedRoute = ({ children, allowedRoles }: ProtectedRouteProps) => {
 
   if (isLoading) {
     return (
-      <div className="h-dvh w-screen flex items-center justify-center bg-white">
+      <div className="h-dvh w-full flex items-center justify-center bg-white" role="status" aria-live="polite">
         <div className="w-8 h-8 border-4 border-black/10 border-t-black rounded-full animate-spin" />
       </div>
     );

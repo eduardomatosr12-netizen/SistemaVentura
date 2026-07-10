@@ -16,6 +16,7 @@ export interface FinanceRecord {
   paymentMethod?: string;
   installments?: string;
   category?: string;
+  eventType?: string;
   origemEventoId?: string;
   lastModifiedBy?: string;
   expenseType?: 'fixa' | 'variavel';

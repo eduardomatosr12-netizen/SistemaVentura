@@ -8,6 +8,8 @@ import { ActivityLogsProvider } from './contexts/ActivityContext';
 import { FilterProvider } from './contexts/FilterContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import ErrorBoundary from './components/ErrorBoundary';
+import PWAInstallBanner from './components/PWAInstallBanner';
+import PWAUpdateNotification from './components/PWAUpdateNotification';
 import Login from './pages/Login';
 import MainLayout from './layouts/MainLayout';
 import CRMPainel from './pages/crm/Painel';
@@ -190,6 +192,8 @@ function App() {
               <FinanceProvider>
               <FilterProvider>
                 <AppRoutes />
+                <PWAInstallBanner />
+                <PWAUpdateNotification />
               </FilterProvider>
               </FinanceProvider>
             </CRMProvider>

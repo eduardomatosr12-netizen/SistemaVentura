@@ -8,7 +8,7 @@ const Login = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
   
-  const [email, setEmail] = useState('joseleonardomcc@gmail.com');
+  const [email, setEmail] = useState(import.meta.env.VITE_AUTH_EMAIL || '');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -23,7 +23,7 @@ const Login = () => {
       const result = await login(email, password);
       
       if (result.success) {
-        navigate('/crm/painel');
+        navigate('/home');
       } else {
         setError(result.error || 'E-mail ou senha incorretos');
       }

@@ -219,14 +219,14 @@ const TemplatesWhatsApp = () => {
                         <button
                           onClick={() => handleMoveUp(tpl.id)}
                           disabled={idx === 0}
-                          className={`p-0.5 rounded transition-colors ${idx === 0 ? 'text-neutral-600 cursor-not-allowed' : 'text-neutral-400 hover:text-white hover:bg-[#222]'}`}
+                          className={`p-1.5 rounded transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center ${idx === 0 ? 'text-neutral-600 cursor-not-allowed' : 'text-neutral-400 hover:text-white hover:bg-[#222]'}`}
                         >
                           <ChevronUp size={14} />
                         </button>
                         <button
                           onClick={() => handleMoveDown(tpl.id)}
                           disabled={idx === templates.length - 1}
-                          className={`p-0.5 rounded transition-colors ${idx === templates.length - 1 ? 'text-neutral-600 cursor-not-allowed' : 'text-neutral-400 hover:text-white hover:bg-[#222]'}`}
+                          className={`p-1.5 rounded transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center ${idx === templates.length - 1 ? 'text-neutral-600 cursor-not-allowed' : 'text-neutral-400 hover:text-white hover:bg-[#222]'}`}
                         >
                           <ChevronDown size={14} />
                         </button>

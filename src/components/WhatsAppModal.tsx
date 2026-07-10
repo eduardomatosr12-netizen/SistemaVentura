@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef, useEffect } from 'react';
+import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import { X, MessageCircle, Edit3, Send, ChevronDown, ChevronUp, AlertCircle, ExternalLink } from 'lucide-react';
 import { cleanPhoneNumber, generateWhatsAppLink } from '../lib/whatsapp';
 import { subscribeTemplates } from '../services/whatsappTemplateService';
@@ -39,6 +39,7 @@ const WhatsAppModal = ({
   const [editedMessage, setEditedMessage] = useState('');
   const [expandedTemplates, setExpandedTemplates] = useState(true);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const modalRef = useRef<HTMLDivElement>(null);
 
   const [allTemplates, setAllTemplates] = useState<WhatsAppTemplate[]>([]);
 
@@ -83,6 +84,22 @@ const WhatsAppModal = ({
     }
   }, [isEditing]);
 
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    if (e.key === 'Escape') onClose();
+  }, [onClose]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, handleKeyDown]);
+
+  useEffect(() => {
+    if (isOpen && modalRef.current) {
+      modalRef.current.focus();
+    }
+  }, [isOpen]);
+
   const handleSelectTemplate = (tpl: WhatsAppTemplate) => {
     setSelectedTemplate(tpl);
     setEditedMessage(tpl.message);
@@ -108,9 +125,17 @@ const WhatsAppModal = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 md:p-4 bg-black/60 backdrop-blur-sm" onClick={onClose}>
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center p-3 md:p-4 bg-black/60 backdrop-blur-sm"
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="whatsapp-modal-title"
+    >
       <div
-        className="bg-[#111] border border-[#333] rounded-2xl w-full max-w-lg shadow-2xl max-h-[90vh] flex flex-col"
+        ref={modalRef}
+        tabIndex={-1}
+        className="bg-[#111] border border-[#333] rounded-2xl w-full max-w-lg shadow-2xl max-h-[90vh] flex flex-col outline-none"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between px-6 py-4 border-b border-[#333] shrink-0">
@@ -119,11 +144,11 @@ const WhatsAppModal = ({
               <MessageCircle size={18} className="text-[#25D366]" />
             </div>
             <div>
-              <h3 className="text-sm font-black text-white">Enviar via WhatsApp</h3>
+              <h3 id="whatsapp-modal-title" className="text-sm font-black text-white">Enviar via WhatsApp</h3>
               <p className="text-[10px] text-neutral-400 font-medium">{leadName}</p>
             </div>
           </div>
-          <button onClick={onClose} className="p-1.5 hover:bg-[#222] rounded-lg transition-colors">
+          <button onClick={onClose} className="p-2.5 min-w-[44px] min-h-[44px] flex items-center justify-center hover:bg-[#222] rounded-lg transition-colors">
             <X size={16} className="text-neutral-400" />
           </button>
         </div>
@@ -142,7 +167,7 @@ const WhatsAppModal = ({
             {onEditLead && (
               <button
                 onClick={() => { onClose(); onEditLead(); }}
-                className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#B5FF03] text-black font-bold text-xs uppercase tracking-widest rounded-lg hover:bg-[#a1e600] transition-colors"
+                className="inline-flex items-center gap-2 px-5 py-3 min-h-[44px] bg-[#B5FF03] text-black font-bold text-xs uppercase tracking-widest rounded-lg hover:bg-[#a1e600] transition-colors"
               >
                 <Edit3 size={14} /> Editar Cadastro
               </button>
@@ -160,7 +185,7 @@ const WhatsAppModal = ({
             <div className="px-6 py-4 border-b border-[#333]">
               <button
                 onClick={() => setExpandedTemplates(!expandedTemplates)}
-                className="flex items-center justify-between w-full text-left"
+                className="flex items-center justify-between w-full text-left min-h-[44px]"
               >
                 <span className="text-[10px] font-black text-white uppercase tracking-widest">
                   Templates de Mensagem
@@ -174,7 +199,7 @@ const WhatsAppModal = ({
                     <button
                       key={tpl.id}
                       onClick={() => handleSelectTemplate(tpl)}
-                      className={`w-full text-left p-3 rounded-xl border transition-all ${
+                      className={`w-full text-left p-3 rounded-xl border transition-all min-h-[44px] ${
                         selectedTemplate?.id === tpl.id
                           ? 'border-[#B5FF03] bg-[#B5FF03]/5'
                           : 'border-[#333] hover:border-[#555] bg-[#0a0a0a]'
@@ -200,7 +225,7 @@ const WhatsAppModal = ({
                   </span>
                   <button
                     onClick={() => setIsEditing(!isEditing)}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all ${
+                    className={`flex items-center gap-1.5 px-3 py-2.5 min-h-[44px] rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all ${
                       isEditing
                         ? 'bg-[#B5FF03] text-black'
                         : 'bg-[#222] text-neutral-300 hover:bg-[#333]'
@@ -241,21 +266,21 @@ const WhatsAppModal = ({
         <div className="px-6 py-4 border-t border-[#333] shrink-0 flex items-center gap-3">
           <button
             onClick={onClose}
-            className="px-4 py-2.5 text-xs font-bold text-neutral-400 hover:text-white transition-colors"
+            className="px-4 py-3 min-h-[44px] text-xs font-bold text-neutral-400 hover:text-white transition-colors"
           >
             Cancelar
           </button>
           <div className="flex-1" />
           <button
             onClick={handleSendWithoutMessage}
-            className="px-4 py-2.5 text-[10px] font-bold text-neutral-500 hover:text-white border border-[#333] hover:border-[#555] rounded-lg transition-all uppercase tracking-widest"
+            className="px-4 py-3 min-h-[44px] text-[10px] font-bold text-neutral-500 hover:text-white border border-[#333] hover:border-[#555] rounded-lg transition-all uppercase tracking-widest"
           >
             Sem Mensagem
           </button>
           {selectedTemplate && hasPhone && (
             <button
               onClick={handleSendNow}
-              className="flex items-center gap-2 px-5 py-2.5 bg-[#25D366] text-white font-bold text-xs rounded-lg hover:bg-[#20bd5a] transition-colors"
+              className="flex items-center gap-2 px-5 py-3 min-h-[44px] bg-[#25D366] text-white font-bold text-xs rounded-lg hover:bg-[#20bd5a] transition-colors"
             >
               <ExternalLink size={14} />
               Abrir no WhatsApp

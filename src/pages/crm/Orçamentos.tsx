@@ -471,14 +471,14 @@ const CRMOrçamentos = () => {
 
   return (
     <>
-    <div className="relative min-h-screen">
+    <div className="relative min-h-screen pb-20">
       {isSidebarOpen && (
         <>
           <div className="fixed inset-0 bg-black/60 z-40 md:hidden" onClick={() => setIsSidebarOpen(false)} />
           <div className="fixed inset-x-0 bottom-0 z-[100] bg-[#111] border-t border-[#333] rounded-t-2xl p-4 max-h-[70vh] overflow-y-auto md:hidden shadow-xl">
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-lg font-black text-[#B5FF03]">Filtrar Contatos</h2>
-              <button onClick={() => setIsSidebarOpen(false)} className="p-1 hover:bg-[#222] rounded-md transition-colors">
+              <button onClick={() => setIsSidebarOpen(false)} className="p-2 hover:bg-[#222] rounded-md transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center">
                 <X size={14} className="text-[#B5FF03]" />
               </button>
             </div>
@@ -644,10 +644,10 @@ const CRMOrçamentos = () => {
                     </td>
                     <td className="px-3 md:px-5 py-2 md:py-4">
                       <div className="flex items-center justify-center gap-0.5 md:gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
-                        <button onClick={() => openEdit(lead)} className="p-1 md:p-1.5 text-neutral-400 hover:text-white hover:bg-[#111] rounded-md transition-all">
+                        <button onClick={() => openEdit(lead)} className="p-2 md:p-1.5 text-neutral-400 hover:text-white hover:bg-[#111] rounded-md transition-all min-w-[44px] min-h-[44px] flex items-center justify-center">
                           <Pencil size={12} className="md:w-3.5 md:h-3.5" />
                         </button>
-                        <button onClick={() => handleDelete(lead?.id)} className="p-1 md:p-1.5 text-neutral-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-all">
+                        <button onClick={() => handleDelete(lead?.id)} className="p-2 md:p-1.5 text-neutral-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-all min-w-[44px] min-h-[44px] flex items-center justify-center">
                           <Trash2 size={12} className="md:w-3.5 md:h-3.5" />
                         </button>
                       </div>
@@ -702,10 +702,10 @@ const CRMOrçamentos = () => {
                     </span>
                   </div>
                   <div className="flex items-center justify-end gap-2 pt-2 border-t border-[#222]">
-                    <button onClick={() => openEdit(lead)} className="p-1.5 text-neutral-400 hover:text-white hover:bg-[#1a1a1a] rounded-md transition-all">
+                    <button onClick={() => openEdit(lead)} className="p-2 text-neutral-400 hover:text-white hover:bg-[#1a1a1a] rounded-md transition-all min-w-[44px] min-h-[44px] flex items-center justify-center">
                       <Pencil size={14} />
                     </button>
-                    <button onClick={() => handleDelete(lead?.id)} className="p-1.5 text-neutral-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-all">
+                    <button onClick={() => handleDelete(lead?.id)} className="p-2 text-neutral-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-all min-w-[44px] min-h-[44px] flex items-center justify-center">
                       <Trash2 size={14} />
                     </button>
                   </div>
@@ -831,7 +831,7 @@ const CRMOrçamentos = () => {
                           <span className="text-white text-xs font-bold whitespace-nowrap">
                             {formatCurrency(item.valorUnit)}
                           </span>
-                          <button type="button" onClick={() => removeItem(item.id)} className="text-neutral-500 hover:text-red-500 transition-colors p-1">
+                          <button type="button" onClick={() => removeItem(item.id)} className="text-neutral-500 hover:text-red-500 transition-colors p-2 min-w-[44px] min-h-[44px] flex items-center justify-center">
                             <X size={14} />
                           </button>
                         </div>

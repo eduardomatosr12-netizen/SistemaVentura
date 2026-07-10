@@ -18,8 +18,45 @@ export default defineConfig({
         orientation: 'portrait',
         start_url: '/',
         scope: '/',
+        id: '/ventura-luz-efeitos',
         categories: ['business', 'productivity'],
+        shortcuts: [
+          {
+            name: 'Painel',
+            short_name: 'Painel',
+            url: '/home',
+            description: 'Visão geral das oportunidades',
+          },
+          {
+            name: 'Contatos',
+            short_name: 'Contatos',
+            url: '/contatos',
+            description: 'Gestão de contatos e funil',
+          },
+          {
+            name: 'Financeiro',
+            short_name: 'Financeiro',
+            url: '/financeiro',
+            description: 'Receitas, despesas e fluxo de caixa',
+          },
+        ],
         icons: [
+          {
+            src: 'icon-192.png',
+            sizes: '192x192',
+            type: 'image/png',
+          },
+          {
+            src: 'icon-512.png',
+            sizes: '512x512',
+            type: 'image/png',
+          },
+          {
+            src: 'icon-512-maskable.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'maskable',
+          },
           {
             src: 'icon-192.svg',
             sizes: '192x192',
@@ -29,12 +66,6 @@ export default defineConfig({
             src: 'icon-512.svg',
             sizes: '512x512',
             type: 'image/svg+xml',
-          },
-          {
-            src: 'icon-512.svg',
-            sizes: '512x512',
-            type: 'image/svg+xml',
-            purpose: 'maskable',
           },
         ],
       },

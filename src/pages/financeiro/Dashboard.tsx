@@ -16,6 +16,19 @@ const C_YELLOW = '#FFB800';
 const C_BLUE = '#4488FF';
 const C_ORANGE = '#FF8C00';
 
+const CATEGORY_COLORS = [
+  '#B5FF03',
+  '#4488FF',
+  '#FF8C00',
+  '#FF4444',
+  '#A855F7',
+  '#06B6D4',
+  '#F59E0B',
+  '#EC4899',
+  '#10B981',
+  '#8B5CF6',
+];
+
 const MONTHS_SHORT = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
 const MONTHS_PT = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
 
@@ -221,10 +234,28 @@ export default function DashboardFinanceiro() {
     { name: 'Despesas Variáveis', value: metrics.despesasVariaveisPagas, color: C_ORANGE },
   ].filter(d => d.value > 0), [metrics]);
 
-  const chart3Data = useMemo(() => [
-    { name: 'Total Receitas', value: metrics.totalReceitas, color: C_GREEN_DARK },
-    { name: 'Total Despesas', value: metrics.totalDespesas, color: C_RED },
-  ].filter(d => d.value > 0), [metrics]);
+  const chart3Data = useMemo(() => {
+    const receitas = periodTransactions.filter(
+      t => t.type === 'receita' && (t.status === 'Pago' || t.status === 'Pendente')
+    );
+    const grouped: Record<string, number> = {};
+    receitas.forEach(t => {
+      const key = t.eventType || t.category || 'Outros';
+      grouped[key] = (grouped[key] || 0) + (t.amount || 0);
+    });
+    return Object.entries(grouped)
+      .map(([name, value], i) => ({
+        name,
+        value,
+        color: CATEGORY_COLORS[i % CATEGORY_COLORS.length],
+      }))
+      .sort((a, b) => b.value - a.value);
+  }, [periodTransactions]);
+
+  const totalFaturado = useMemo(
+    () => chart3Data.reduce((s, d) => s + d.value, 0),
+    [chart3Data]
+  );
 
   const monthlyData = useMemo(() => {
     const result: { name: string; Receitas: number; Despesas: number }[] = [];
@@ -252,7 +283,7 @@ export default function DashboardFinanceiro() {
   const pendenciaTotal = metrics.receitasPendentes + metrics.despesasPendentes;
 
   return (
-    <div className="min-h-screen bg-black p-4 md:p-6 space-y-6">
+    <div className="min-h-screen bg-black p-4 md:p-6 pb-20 space-y-6">
       <div className="flex items-center gap-4">
         <button
           onClick={() => navigate('/financeiro')}
@@ -271,7 +302,7 @@ export default function DashboardFinanceiro() {
         <div className="inline-flex items-center gap-4 bg-[#111] border border-[#222] rounded-full px-5 py-2">
           <button
             onClick={goPrevMonth}
-            className="p-1 rounded-full text-neutral-400 hover:text-white hover:bg-[#222] transition-colors"
+            className="p-2 rounded-full text-neutral-400 hover:text-white hover:bg-[#222] transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
           >
             <ChevronLeft size={18} />
           </button>
@@ -280,7 +311,7 @@ export default function DashboardFinanceiro() {
           </span>
           <button
             onClick={goNextMonth}
-            className="p-1 rounded-full text-neutral-400 hover:text-white hover:bg-[#222] transition-colors"
+            className="p-2 rounded-full text-neutral-400 hover:text-white hover:bg-[#222] transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
           >
             <ChevronRight size={18} />
           </button>
@@ -377,19 +408,19 @@ export default function DashboardFinanceiro() {
             </div>
 
             <div className="bg-[#111] border border-[#222] rounded-xl p-4">
-              <h3 className="text-xs font-black uppercase tracking-widest text-neutral-400 mb-2">Status Geral</h3>
+              <h3 className="text-xs font-black uppercase tracking-widest text-neutral-400 mb-2">Top Categorias de Receitas</h3>
               {chart3Data.length === 0 ? (
                 <EmptyChart />
               ) : (
                 <>
                   <DonutChart
                     data={chart3Data}
-                    centerTop={formatCurrency(metrics.saldoProjetado)}
-                    centerBottom="Saldo Projetado"
+                    centerTop={formatCurrency(totalFaturado)}
+                    centerBottom="Total Faturado"
                   />
                   <div className="space-y-1.5 mt-2">
                     {chart3Data.map(d => (
-                      <LegendRow key={d.name} color={d.color} name={d.name} value={d.value} total={metrics.totalReceitas + metrics.totalDespesas} />
+                      <LegendRow key={d.name} color={d.color} name={d.name} value={d.value} total={totalFaturado} />
                     ))}
                   </div>
                 </>

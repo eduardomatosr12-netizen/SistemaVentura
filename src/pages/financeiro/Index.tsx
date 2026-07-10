@@ -97,7 +97,7 @@ const FilterSection = ({ title, children, defaultOpen = true }: { title: string;
 };
 
 const CheckboxFilter = ({ label, checked, onChange }: { label: string; checked: boolean; onChange: (checked: boolean) => void }) => (
-  <label className="flex items-center gap-2.5 cursor-pointer group pl-1">
+  <label className="flex items-center gap-2.5 cursor-pointer group pl-1 min-h-[36px]">
     <div className={`w-4 h-4 border rounded flex items-center justify-center transition-all ${checked ? 'bg-[#CCFF00] border-[#CCFF00]' : 'border-[rgba(255,255,255,0.2)] group-hover:border-[#CCFF00]'}`}>
       {checked && <svg className="w-3 h-3 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
@@ -109,7 +109,7 @@ const CheckboxFilter = ({ label, checked, onChange }: { label: string; checked: 
 );
 
 const RadioFilter = ({ label, checked, onChange }: { label: string; checked: boolean; onChange: () => void }) => (
-  <label className="flex items-center gap-2.5 cursor-pointer group pl-1">
+  <label className="flex items-center gap-2.5 cursor-pointer group pl-1 min-h-[36px]">
     <div className={`w-4 h-4 border rounded-full flex items-center justify-center transition-all ${checked ? 'bg-[#CCFF00] border-[#CCFF00]' : 'border-[rgba(255,255,255,0.2)] group-hover:border-[#CCFF00]'}`}>
       {checked && <div className="w-2 h-2 bg-black rounded-full" />}
     </div>
@@ -909,7 +909,7 @@ const Financeiro = () => {
   );
 
   return (
-    <div className="min-h-screen bg-[#000000] text-white">
+    <div className="min-h-screen bg-[#000000] text-white pb-20">
       {/* Header */}
       <div className="p-6 md:p-8 border-b border-[rgba(255,255,255,0.08)]">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -1083,7 +1083,7 @@ const Financeiro = () => {
           {viewMode === 'receitas' && activeTab === 'receitas' && (
             <>
             <div className="card overflow-x-auto">
-              <table className="w-full">
+              <table className="w-full min-w-[800px]">
                 <thead>
                   <tr>
                     <th className="table-header">Cliente</th>
@@ -1196,7 +1196,7 @@ const Financeiro = () => {
               </div>
             </div>
             <div className="card overflow-x-auto">
-              <table className="w-full">
+              <table className="w-full min-w-[800px]">
                 <thead>
                   <tr>
                     <th className="table-header">Tipo</th>
@@ -1275,7 +1275,7 @@ const Financeiro = () => {
               })()}
             </div>
             <div className="card overflow-x-auto">
-              <table className="w-full">
+              <table className="w-full min-w-[800px]">
                 <thead>
                   <tr>
                     <th className="table-header">Cliente</th>
@@ -1312,7 +1312,7 @@ const Financeiro = () => {
           {viewMode === 'despesas' && activeTab === 'fixas' && (
             <>
             <div className="card overflow-x-auto">
-              <table className="w-full">
+              <table className="w-full min-w-[800px]">
                 <thead>
                   <tr>
                     <th className="table-header">Categoria</th>
@@ -1396,7 +1396,7 @@ const Financeiro = () => {
           {viewMode === 'despesas' && activeTab === 'variaveis' && (
             <>
             <div className="card overflow-x-auto">
-              <table className="w-full">
+              <table className="w-full min-w-[800px]">
                 <thead>
                   <tr>
                     <th className="table-header">Cliente</th>
@@ -1502,7 +1502,7 @@ const Financeiro = () => {
               </div>
             </div>
             <div className="card overflow-x-auto">
-              <table className="w-full">
+              <table className="w-full min-w-[800px]">
                 <thead>
                   <tr>
                     <th className="table-header">Descrição</th>
@@ -1578,7 +1578,7 @@ const Financeiro = () => {
               })()}
             </div>
             <div className="card overflow-x-auto">
-              <table className="w-full">
+              <table className="w-full min-w-[800px]">
                 <thead>
                   <tr>
                     <th className="table-header">Descrição</th>
@@ -1659,16 +1659,16 @@ const Financeiro = () => {
       {/* Invoice Modal */}
       {isInvoiceModalOpen && editingInvoice && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[100] p-4">
-          <div className="card w-full max-w-full md:max-w-md p-8">
+          <div className="card w-full max-w-full md:max-w-md p-8 max-h-[90vh] flex flex-col">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-lg font-extrabold text-white">
                 {isNewInvoice ? 'Nova Fatura' : 'Editar Fatura'}
               </h3>
-              <button onClick={() => setIsInvoiceModalOpen(false)} className="text-[#A0A0A0] hover:text-white transition-colors">
+              <button onClick={() => setIsInvoiceModalOpen(false)} className="text-[#A0A0A0] hover:text-white transition-colors p-2 min-w-[44px] min-h-[44px] flex items-center justify-center">
                 <X size={20} />
               </button>
             </div>
-            <form onSubmit={handleSaveInvoice} className="space-y-5">
+            <form onSubmit={handleSaveInvoice} className="space-y-5 overflow-y-auto flex-1">
               <div>
                 <label className="section-label mb-2 block">Cliente</label>
                 <input
@@ -1770,7 +1770,7 @@ const Financeiro = () => {
               <h3 className="text-lg font-extrabold text-white">
                 {isNewExpense ? 'Nova Despesa' : 'Editar Despesa'}
               </h3>
-              <button onClick={() => setIsExpenseModalOpen(false)} className="text-[#A0A0A0] hover:text-white transition-colors">
+              <button onClick={() => setIsExpenseModalOpen(false)} className="text-[#A0A0A0] hover:text-white transition-colors p-2 min-w-[44px] min-h-[44px] flex items-center justify-center">
                 <X size={20} />
               </button>
             </div>

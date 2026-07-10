@@ -428,7 +428,7 @@ const CRMCalendario = () => {
   }, [safeEvents]);
 
   return (
-    <div className="min-h-screen p-2 md:p-8 bg-[#000000]">
+    <div className="min-h-screen p-2 md:p-8 pb-20 bg-[#000000]">
       <div className="mb-4 md:mb-8 flex flex-col md:flex-row justify-between items-start md:items-end gap-3 md:gap-0">
         <div className="flex items-center gap-4">
           <div>
@@ -439,7 +439,7 @@ const CRMCalendario = () => {
         <div className="flex items-center gap-2">
           <button
             onClick={handlePrevMonth}
-            className="p-2 hover:bg-[#111] rounded-md transition-colors"
+            className="p-2 hover:bg-[#111] rounded-md transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
           >
             <ChevronLeft size={20} className="text-white" />
           </button>
@@ -448,7 +448,7 @@ const CRMCalendario = () => {
           </span>
           <button
             onClick={handleNextMonth}
-            className="p-2 hover:bg-[#111] rounded-md transition-colors"
+            className="p-2 hover:bg-[#111] rounded-md transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
           >
             <ChevronRight size={20} className="text-white" />
           </button>
@@ -521,13 +521,13 @@ const CRMCalendario = () => {
                         <button
                           key={`${occ.event.id}-${occ.phase}`}
                           onClick={() => handleOpenView(occ.event)}
-                          className="w-full text-left p-1.5 rounded-md transition-all group overflow-hidden"
+                          className="w-full text-left p-2 rounded-md transition-all group overflow-hidden min-h-[44px] flex items-center"
                           style={{
                             backgroundColor: getPhaseBg(occ),
                             borderLeft: `3px solid ${getPhaseColor(occ)}`,
                           }}
                         >
-                          <div className="flex items-center gap-1.5 mb-1">
+                          <div className="flex items-center gap-1.5 flex-wrap">
                             <span
                               className="text-[7px] font-black px-1 py-0.5 rounded-sm uppercase leading-none"
                               style={{
@@ -619,8 +619,8 @@ const CRMCalendario = () => {
       {/* Event View Modal */}
       {showViewModal && viewEvent && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-[#111] border border-[#333] rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden transform animate-in slide-in-from-bottom-4 duration-300">
-            <div className="px-8 py-7 border-b border-[#333] flex justify-between items-start bg-[#111]">
+          <div className="bg-[#111] border border-[#333] rounded-2xl shadow-2xl w-full max-w-lg transform animate-in slide-in-from-bottom-4 duration-300 max-h-[85vh] flex flex-col">
+            <div className="px-8 py-7 border-b border-[#333] flex justify-between items-start bg-[#111] shrink-0">
               <div>
                 <span className="text-[9px] font-black uppercase tracking-[2px] mb-2 block"
                   style={{ color: getEventStatusColor(viewEvent.status) }}>
@@ -631,15 +631,15 @@ const CRMCalendario = () => {
               <button
                 type="button"
                 onClick={() => setShowViewModal(false)}
-                className="p-2 hover:bg-[#222] rounded-full transition-colors text-neutral-400 hover:text-white mt-1"
+                className="p-2 hover:bg-[#222] rounded-full transition-colors text-neutral-400 hover:text-white mt-1 min-w-[44px] min-h-[44px] flex items-center justify-center"
               >
                 <X size={20} />
               </button>
             </div>
 
-            <div className="p-8 space-y-5">
+            <div className="p-8 space-y-5 overflow-y-auto flex-1">
               {/* Tipo e Horário */}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="text-[9px] font-black text-[#B5FF03] uppercase tracking-widest block mb-1">TIPO DE EVENTO</label>
                   <p className="text-sm font-bold text-white">{viewEvent.eventType || '—'}</p>
@@ -1225,7 +1225,7 @@ const CRMCalendario = () => {
                 </div>
               )}
 
-              <div className="px-8 py-5 bg-[#0a0a0a] flex justify-between items-center border-t border-[#333]">
+            <div className="px-8 py-5 bg-[#0a0a0a] flex justify-between items-center border-t border-[#333] shrink-0">
                 <div className="flex items-center gap-2">
                   {modalMode === 'edit' && (
                     <button

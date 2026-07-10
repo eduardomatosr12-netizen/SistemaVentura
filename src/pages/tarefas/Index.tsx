@@ -422,7 +422,7 @@ const Board = ({
                               <button
                                 type="button"
                                 onClick={(e) => { e.stopPropagation(); setEditingCatId(opt.id); setEditingCatLabel(opt.label); setAddingCategory(false); }}
-                                className="p-1 text-neutral-400 hover:text-[#B5FF03] transition-colors"
+                                className="p-2 text-neutral-400 hover:text-[#B5FF03] transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
                                 title="Editar"
                               >
                                 ✎
@@ -430,7 +430,7 @@ const Board = ({
                               <button
                                 type="button"
                                 onClick={(e) => { e.stopPropagation(); handleDeleteCategory(opt); }}
-                                className="p-1 text-neutral-400 hover:text-red-400 transition-colors"
+                                className="p-2 text-neutral-400 hover:text-red-400 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
                                 title="Excluir"
                               >
                                 ✕
@@ -699,7 +699,7 @@ const Board = ({
       </div>
         <div className="border rounded-2xl border-[#333] bg-[#111] overflow-hidden flex flex-col">
         <div className="overflow-x-auto overflow-y-auto max-h-[400px] md:max-h-[600px]">
-          <table className="w-full border-collapse">
+          <table className="w-full min-w-[700px] border-collapse">
             <thead className="sticky top-0 z-10">
               <tr className="border-b border-[#333] bg-[#0a0a0a]">
                 <th className="w-10 p-3 border-r border-[#333] text-white font-bold">#</th>
@@ -718,7 +718,7 @@ const Board = ({
               {board.rows.map(row => (
                 <tr key={row.id} className="border-b border-[#1a1a1a] hover:bg-[#111]">
                   <td className="p-3 border-r border-[#333] text-center">
-                    <button onClick={() => handleDeleteRow(row.id)} className="text-neutral-400 hover:text-red-400"><Trash2 size={14} /></button>
+                    <button onClick={() => handleDeleteRow(row.id)} className="p-2 text-neutral-400 hover:text-red-400 min-w-[44px] min-h-[44px] flex items-center justify-center"><Trash2 size={14} /></button>
                   </td>
                   {board.columns.map(col => (
                     <td key={col.id} className="p-0 border-l border-[#333]">
@@ -1117,7 +1117,7 @@ const Tarefas = () => {
   };
 
   return (
-    <div className="p-4 md:p-6 space-y-4 md:space-y-8 min-h-screen bg-black">
+    <div className="p-4 md:p-6 pb-20 space-y-4 md:space-y-8 min-h-screen bg-black">
       <div>
         <h1 className="text-3xl font-black text-white tracking-tight mb-1">Controle de Estoque</h1>
         <p className="text-neutral-400 text-sm font-medium mb-6">Gerencie seus itens, categorias e fornecedores.</p>
@@ -1262,7 +1262,7 @@ const Tarefas = () => {
           </div>
 
           <div className="hidden md:block bg-[#111111] border border-[#222222] rounded-lg overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full min-w-[700px]">
               <thead>
                 <tr className="border-b border-[#222222]">
                   <th className="text-left p-4 text-xs font-black uppercase tracking-widest text-[#B5FF03]">Cliente</th>

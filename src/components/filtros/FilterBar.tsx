@@ -19,20 +19,35 @@ function FilterDropdown({ label, options, value, onChange }: FilterDropdownProps
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
+    function handlePointerOutside(event: MouseEvent | TouchEvent) {
       if (ref.current && !ref.current.contains(event.target as Node)) {
         setIsOpen(false);
       }
     }
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener('mousedown', handlePointerOutside);
+    document.addEventListener('touchstart', handlePointerOutside, { passive: true });
+    return () => {
+      document.removeEventListener('mousedown', handlePointerOutside);
+      document.removeEventListener('touchstart', handlePointerOutside);
+    };
   }, []);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === 'Escape') setIsOpen(false);
+    }
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen]);
 
   return (
     <div ref={ref} className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg border transition-all ${
+        aria-expanded={isOpen}
+        aria-haspopup="listbox"
+        className={`flex items-center gap-1.5 px-3 py-2.5 min-h-[44px] text-xs font-semibold rounded-lg border transition-all ${
           value
             ? 'bg-black text-white border-black'
             : 'bg-white text-neutral-600 border-neutral-200 hover:border-neutral-400'
@@ -46,11 +61,12 @@ function FilterDropdown({ label, options, value, onChange }: FilterDropdownProps
         )}
       </button>
       {isOpen && (
-        <div className="absolute top-full left-0 right-auto mt-1 min-w-48 w-max max-w-[80vw] bg-white border border-neutral-200 rounded-xl shadow-xl z-[999] overflow-hidden">
+        <div role="listbox" className="absolute top-full left-0 right-auto mt-1 min-w-48 w-max max-w-[80vw] bg-white border border-neutral-200 rounded-xl shadow-xl z-[999] overflow-hidden">
           {value && (
             <button
+              role="option"
               onClick={() => { onChange(null); setIsOpen(false); }}
-              className="w-full px-3 py-2 text-left text-xs font-medium text-neutral-500 hover:bg-neutral-50 border-b border-neutral-100"
+              className="w-full px-3 py-3 min-h-[44px] text-left text-xs font-medium text-neutral-500 hover:bg-neutral-50 border-b border-neutral-100 flex items-center"
             >
               Limpar filtro
             </button>
@@ -58,8 +74,10 @@ function FilterDropdown({ label, options, value, onChange }: FilterDropdownProps
           {options.map(opt => (
             <button
               key={opt.id}
+              role="option"
+              aria-selected={value === opt.id}
               onClick={() => { onChange(opt.id); setIsOpen(false); }}
-              className={`w-full px-3 py-2 text-left text-xs font-medium hover:bg-neutral-50 transition-colors ${
+              className={`w-full px-3 py-3 min-h-[44px] text-left text-xs font-medium hover:bg-neutral-50 transition-colors flex items-center ${
                 value === opt.id ? 'bg-black text-white' : 'text-neutral-700'
               }`}
             >
@@ -104,7 +122,7 @@ function FilterBar() {
       {hasActiveFilters && (
         <button
           onClick={clearFilters}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-neutral-500 hover:text-red-600 hover:bg-red-50 rounded-lg border border-neutral-200 hover:border-red-200 transition-all"
+          className="flex items-center gap-1.5 px-3 py-2.5 min-h-[44px] text-xs font-semibold text-neutral-500 hover:text-red-600 hover:bg-red-50 rounded-lg border border-neutral-200 hover:border-red-200 transition-all"
         >
           <X size={12} />
           Limpar Filtros

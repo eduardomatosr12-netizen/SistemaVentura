@@ -607,7 +607,7 @@ const CRMDashboard = () => {
   };
 
   return (
-    <div className="relative min-h-screen bg-black">
+    <div className="relative min-h-screen bg-black pb-20">
       {/* Header section */}
       <div className="mb-6">
         <h1 className="text-2xl md:text-4xl font-black text-white tracking-tight mb-2 flex items-center gap-3">
@@ -663,13 +663,13 @@ const CRMDashboard = () => {
             </div>
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-2 bg-[#0a0a0a] border border-[#333] rounded-lg px-3 py-1.5">
-                <button onClick={prevMonth} className="p-1 hover:bg-[#222] rounded-md transition-colors">
+                <button onClick={prevMonth} className="p-2 hover:bg-[#222] rounded-md transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center">
                   <ChevronLeft size={16} className="text-neutral-400" />
                 </button>
                 <span className="text-sm font-bold text-white min-w-[140px] text-center select-none">
                   {monthNames[viewMonth]} {viewYear}
                 </span>
-                <button onClick={nextMonth} className="p-1 hover:bg-[#222] rounded-md transition-colors">
+                <button onClick={nextMonth} className="p-2 hover:bg-[#222] rounded-md transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center">
                   <ChevronRight size={16} className="text-neutral-400" />
                 </button>
               </div>
@@ -881,7 +881,7 @@ const CRMDashboard = () => {
       {activeTab === 'eventos' && (
         <div className="bg-[#111] border border-[#333] rounded-2xl shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full text-left">
+            <table className="w-full min-w-[800px] text-left">
               <thead>
                 <tr className="border-b border-[#222]">
                   <th className="text-[10px] font-black uppercase tracking-widest text-neutral-500 px-4 py-3">Cliente</th>
@@ -927,7 +927,7 @@ const CRMDashboard = () => {
                               deleteEvent(event.id);
                             }
                           }}
-                          className="p-1.5 rounded-md text-neutral-500 hover:text-red-400 hover:bg-red-400/10 transition-colors"
+                           className="p-2 rounded-md text-neutral-500 hover:text-red-400 hover:bg-red-400/10 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
                           title="Excluir evento"
                         >
                           <Trash2 size={14} />
@@ -976,7 +976,7 @@ const CRMDashboard = () => {
       {activeTab === 'orcamentos' && (
         <div className="bg-[#111] border border-[#333] rounded-2xl shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full text-left">
+            <table className="w-full min-w-[800px] text-left">
               <thead>
                 <tr className="border-b border-[#222]">
                   <th className="text-[10px] font-black uppercase tracking-widest text-neutral-500 px-4 py-3">Cliente</th>
@@ -1011,7 +1011,7 @@ const CRMDashboard = () => {
                               deleteLead(lead.id);
                             }
                           }}
-                          className="p-1.5 rounded-md text-neutral-500 hover:text-red-400 hover:bg-red-400/10 transition-colors"
+                           className="p-2 rounded-md text-neutral-500 hover:text-red-400 hover:bg-red-400/10 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
                           title="Excluir orçamento"
                         >
                           <Trash2 size={14} />
@@ -1064,7 +1064,7 @@ const CRMDashboard = () => {
               <h3 className="text-sm font-black uppercase tracking-widest text-[#B5FF03]">
                 Eventos — {selectedDate}
               </h3>
-              <button onClick={closeModal} className="p-1 hover:bg-[#222] rounded-md transition-colors">
+              <button onClick={closeModal} className="p-2 hover:bg-[#222] rounded-md transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center">
                 <X size={16} className="text-neutral-400" />
               </button>
             </div>
@@ -1077,7 +1077,7 @@ const CRMDashboard = () => {
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => handleEditEvent(event)}
-                        className="flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold text-[#B5FF03] border border-[#B5FF03]/30 hover:bg-[#B5FF03]/10 transition-colors"
+                        className="flex items-center gap-1 px-3 py-1.5 rounded-md text-[10px] font-bold text-[#B5FF03] border border-[#B5FF03]/30 hover:bg-[#B5FF03]/10 transition-colors min-h-[44px]"
                       >
                         <Pencil size={11} />
                         Editar
@@ -1089,9 +1089,9 @@ const CRMDashboard = () => {
                   </div>
 
                   {/* Client info */}
-                  <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
                     {event.client && (
-                      <div className="col-span-2">
+                      <div className="col-span-1 sm:col-span-2">
                         <span className="text-neutral-500">Cliente:</span>{' '}
                         <span className="text-white font-medium">{event.client}</span>
                       </div>
@@ -1250,7 +1250,7 @@ const CRMDashboard = () => {
                     <input type="text" value={formData.name} onChange={e => setFormData(prev => ({ ...prev, name: e.target.value }))}
                       className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-sm text-white focus:border-[#B5FF03] outline-none" required />
                   </div>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                       <label className="block text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-1.5 flex items-center gap-1.5">
                         <Phone size={12} /> WhatsApp
@@ -1379,7 +1379,7 @@ const CRMDashboard = () => {
                       placeholder="Ex: São Paulo, SP"
                       className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-sm text-white placeholder-neutral-600 focus:border-[#B5FF03] outline-none" />
                   </div>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                       <label className="block text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-1.5 flex items-center gap-1.5">
                         <CalendarDays size={12} /> Data do Evento
@@ -1396,7 +1396,7 @@ const CRMDashboard = () => {
                     </div>
                   </div>
                   {/* Data de Montagem e Desmontagem */}
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                       <label className="block text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-1.5 flex items-center gap-1.5">
                         <CalendarDays size={12} /> Data de Montagem
@@ -1579,7 +1579,7 @@ const CRMDashboard = () => {
                                 </div>
                               )}
                             </div>
-                            <div className="grid grid-cols-2 gap-2">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                               <div>
                                 <label className="block text-[8px] font-black uppercase tracking-widest text-neutral-500 mb-1">Qtd (máx: {maxQty})</label>
                                 <input type="number" min="1" max={maxQty} value={item.qtdAtual} onChange={e => handleItemChange(item.id, 'qtdAtual', e.target.value)}

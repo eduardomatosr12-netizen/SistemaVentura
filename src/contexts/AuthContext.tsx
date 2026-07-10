@@ -35,13 +35,20 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const EMPLOYEES = ['Maria', 'João', 'Pedro', 'Ana'];
 
-const CREDENTIALS: Record<string, { password: string; role: UserRole; name: string }> = {
-  'joseleonardomcc@gmail.com': {
-    password: 'Brasil2016v',
-    role: 'admin',
-    name: 'Administrador'
-  }
-};
+const CREDENTIALS: Record<string, { password: string; role: UserRole; name: string }> = {};
+
+const authEmail = import.meta.env.VITE_AUTH_EMAIL;
+const authPassword = import.meta.env.VITE_AUTH_PASSWORD;
+const authRole = (import.meta.env.VITE_AUTH_ROLE || 'admin') as UserRole;
+const authName = import.meta.env.VITE_AUTH_NAME || 'Administrador';
+
+if (authEmail && authPassword) {
+  CREDENTIALS[authEmail.toLowerCase()] = {
+    password: authPassword,
+    role: authRole,
+    name: authName,
+  };
+}
 
 function getOrCreateSessionId(): string {
   const key = 'ventura_session_id';

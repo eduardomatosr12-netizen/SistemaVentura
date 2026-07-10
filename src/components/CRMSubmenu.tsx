@@ -21,7 +21,7 @@ const CRMSubmenu = () => {
         px-2 md:px-8
       "
     >
-      <div className="flex items-center gap-1 overflow-x-auto scroll-smooth scrollbar-hide">
+      <div className="flex items-center gap-1 overflow-x-auto scroll-smooth scrollbar-hide" style={{ touchAction: 'pan-x' }}>
         {crmSubItems.map((item) => {
           const Icon = item.icon;
           const active = isActive(item.path);
@@ -31,16 +31,15 @@ const CRMSubmenu = () => {
               to={item.path}
               className={`
                 relative whitespace-nowrap flex items-center gap-1 md:gap-2
-                px-2 md:px-3 py-2 md:py-3.5 text-xs md:text-sm font-medium transition-colors duration-150
+                px-3 md:px-3 py-3 md:py-3.5 min-h-[44px] text-xs md:text-sm font-medium transition-colors duration-150
                 ${active
                   ? 'text-[#B5FF03] font-semibold'
                   : 'text-neutral-400 hover:text-white'
                 }
               `}
             >
-              <Icon className="w-3.5 h-3.5 shrink-0" strokeWidth={active ? 2.5 : 2} />
+              <Icon className="w-4 h-4 shrink-0" strokeWidth={active ? 2.5 : 2} />
               <span>{item.label}</span>
-              {/* Active underline */}
               {active && (
                 <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#B5FF03] rounded-t-full" />
               )}
