@@ -745,6 +745,12 @@ const Financeiro = () => {
     return FIXED_CATEGORIES.find(c => c.value === cat)?.label || cat;
   };
 
+  const eventTypeLabel = (val?: string) => {
+    if (!val) return '—';
+    const map: Record<string, string> = { Aniver: 'Aniversário', Casam: 'Casamento' };
+    return map[val] || val;
+  };
+
   const handleFilterChange = (updater: (prev: typeof initialFilterState) => typeof initialFilterState) => {
     if (viewMode === 'receitas') {
       setFiltersReceitas(updater);
@@ -1103,7 +1109,7 @@ const Financeiro = () => {
                     <tr key={invoice.id} className="table-row">
                       <td className="table-cell text-white">{invoice.client}</td>
                       <td className="table-cell text-[#A0A0A0]">{invoice.city || '—'}</td>
-                      <td className="table-cell text-[#A0A0A0]">{invoice.eventType || '—'}</td>
+                      <td className="table-cell text-[#A0A0A0]">{eventTypeLabel(invoice.eventType)}</td>
                       <td className="table-cell text-[#A0A0A0]">{invoice.date}</td>
                       <td className="table-cell">
                         <span className={statusStyle[invoice.status]}>
@@ -1143,7 +1149,7 @@ const Financeiro = () => {
                   </div>
                   <div className="grid grid-cols-2 gap-2 text-xs">
                     <div><span className="text-[#606060]">Cidade:</span> <span className="text-white">{invoice.city || '—'}</span></div>
-                    <div><span className="text-[#606060]">Tipo:</span> <span className="text-white">{invoice.eventType || '—'}</span></div>
+                    <div><span className="text-[#606060]">Tipo:</span> <span className="text-white">{eventTypeLabel(invoice.eventType)}</span></div>
                     <div><span className="text-[#606060]">Data:</span> <span className="text-white">{invoice.date}</span></div>
                     <div><span className="text-[#606060]">Valor:</span> <span className="text-white">{invoice.amount}</span></div>
                     <div><span className="text-[#606060]">Despesas:</span> <span className="text-white">{invoice.totalExpenses || '—'}</span></div>
@@ -1416,7 +1422,7 @@ const Financeiro = () => {
                     <tr key={expense.id} className="table-row">
                       <td className="table-cell text-white">{expense.client || '—'}</td>
                       <td className="table-cell text-[#A0A0A0]">{expense.city || '—'}</td>
-                      <td className="table-cell text-[#A0A0A0]">{expense.eventType || expense.category ? categoryLabel(expense.category) : '—'}</td>
+                      <td className="table-cell text-[#A0A0A0]">{expense.eventType ? eventTypeLabel(expense.eventType) : expense.category ? categoryLabel(expense.category) : '—'}</td>
                       <td className="table-cell text-[#A0A0A0]">{expense.date}</td>
                       <td className="table-cell">
                         <span className={statusStyle[expense.status]}>
@@ -1462,7 +1468,7 @@ const Financeiro = () => {
                   </div>
                   <div className="grid grid-cols-2 gap-2 text-xs">
                     <div><span className="text-[#606060]">Cidade:</span> <span className="text-white">{expense.city || '—'}</span></div>
-                    <div><span className="text-[#606060]">Evento:</span> <span className="text-white">{expense.eventType || '—'}</span></div>
+                    <div><span className="text-[#606060]">Evento:</span> <span className="text-white">{eventTypeLabel(expense.eventType)}</span></div>
                     <div><span className="text-[#606060]">Data:</span> <span className="text-white">{expense.date}</span></div>
                     <div><span className="text-[#606060]">Valor:</span> <span className="text-white">{expense.amount}</span></div>
                     <div><span className="text-[#606060]">Recebido:</span> <span className="text-white">{expense.receivedAmount || '—'}</span></div>
