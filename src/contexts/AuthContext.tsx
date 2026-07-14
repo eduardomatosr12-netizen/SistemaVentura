@@ -37,17 +37,20 @@ const EMPLOYEES = ['Maria', 'João', 'Pedro', 'Ana'];
 
 const CREDENTIALS: Record<string, { password: string; role: UserRole; name: string }> = {};
 
-const authEmail = import.meta.env.VITE_AUTH_EMAIL;
-const authPassword = import.meta.env.VITE_AUTH_PASSWORD;
-const authRole = (import.meta.env.VITE_AUTH_ROLE || 'admin') as UserRole;
-const authName = import.meta.env.VITE_AUTH_NAME || 'Administrador';
+const authEmail = import.meta.env.VITE_AUTH_EMAIL?.trim().toLowerCase();
+const authPassword = import.meta.env.VITE_AUTH_PASSWORD?.trim();
+const authRole = (import.meta.env.VITE_AUTH_ROLE?.trim() || 'admin') as UserRole;
+const authName = import.meta.env.VITE_AUTH_NAME?.trim() || 'Administrador';
 
 if (authEmail && authPassword) {
-  CREDENTIALS[authEmail.toLowerCase()] = {
+  CREDENTIALS[authEmail] = {
     password: authPassword,
     role: authRole,
     name: authName,
   };
+  console.log('[AUTH] Credenciais carregadas para:', authEmail);
+} else {
+  console.warn('[AUTH] Variáveis VITE_AUTH_EMAIL/VITE_AUTH_PASSWORD não configuradas no .env');
 }
 
 function getOrCreateSessionId(): string {
