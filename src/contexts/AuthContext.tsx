@@ -136,15 +136,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setEmployeeName(credential.name);
       setIsAuthenticated(true);
 
-      setDoc(doc(db, 'sessions', sessionId), {
-        userId: authUser.id,
-        email: authUser.email,
-        name: authUser.name,
-        role: authUser.role,
-        employeeName: authUser.name,
-        createdAt: authUser.createdAt,
-        lastActiveAt: Timestamp.now(),
-      }).catch(err => console.error('[AUTH] Erro ao salvar sessão:', err));
+      try {
+        await setDoc(doc(db, 'sessions', sessionId), {
+          userId: authUser.id,
+          email: authUser.email,
+          name: authUser.name,
+          role: authUser.role,
+          employeeName: authUser.name,
+          createdAt: authUser.createdAt,
+          lastActiveAt: Timestamp.now(),
+        });
+      } catch (firestoreErr) {
+        console.error('[AUTH] Erro ao salvar sessão (login continua):', firestoreErr);
+      }
 
       return { success: true };
     } catch (err) {

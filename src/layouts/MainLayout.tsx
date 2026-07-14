@@ -6,8 +6,6 @@ import TopHeader from '../components/TopHeader';
 import { useAuth } from '../contexts/AuthContext';
 import { LayoutDashboard, Users, DollarSign } from 'lucide-react';
 
-type UserRole = 'admin' | 'employee';
-
 interface MainLayoutProps {
   children: ReactNode;
   hideSubmenu?: boolean;
@@ -18,40 +16,13 @@ const MainLayout = ({ children, hideSubmenu }: MainLayoutProps) => {
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   
-  const { 
-    isAuthenticated, 
-    isLoading, 
-    role, 
-    employeeName, 
-    availableEmployees,
-    login, 
-    selectEmployee 
-  } = useAuth();
-
-  const [loginRole, setLoginRole] = useState<UserRole>('admin');
-  const [loginPassword, setLoginPassword] = useState('');
-  const [loginError, setLoginError] = useState('');
-  const [isLoggingIn, setIsLoggingIn] = useState(false);
+  const { isAuthenticated, isLoading } = useAuth();
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
-      navigate('/');
+      navigate('/login');
     }
   }, [isLoading, isAuthenticated, navigate]);
-
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setLoginError('');
-    setIsLoggingIn(true);
-    
-    try {
-      await login(loginRole, loginPassword);
-    } catch (err: any) {
-      setLoginError(err.message || 'Erro ao fazer login');
-    } finally {
-      setIsLoggingIn(false);
-    }
-  };
 
   if (isLoading) {
     return (
@@ -63,93 +34,8 @@ const MainLayout = ({ children, hideSubmenu }: MainLayoutProps) => {
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-dvh flex items-center justify-center bg-black p-4">
-        <div className="w-full max-w-md">
-          <div className="bg-[#111] rounded-3xl shadow-xl p-8 md:p-12 border border-[#333]">
-            <div className="text-center mb-8">
-              <img
-                src="/logo.png"
-                alt="Universo Axium"
-                className="h-12 w-auto object-contain mx-auto mb-6"
-              />
-              <h1 className="text-2xl md:text-3xl font-black text-white tracking-tighter">Acesso Sistema</h1>
-              <p className="text-neutral-400 text-sm font-medium mt-2">Selecione seu tipo de acesso</p>
-            </div>
-
-            <form onSubmit={handleLogin} className="space-y-6">
-              <div className="grid grid-cols-2 gap-4">
-                <button
-                  type="button"
-                  onClick={() => setLoginRole('admin')}
-                  className={`p-4 rounded-2xl border-2 transition-all flex flex-col items-center gap-2 ${
-                    loginRole === 'admin' 
-                      ? 'border-[#B5FF03] bg-black text-[#B5FF03]' 
-                      : 'border-[#333] hover:border-[#555]'
-                  }`}
-                >
-                  <LayoutDashboard className={`w-6 h-6 ${loginRole === 'admin' ? 'text-[#B5FF03]' : 'text-neutral-400'}`} />
-                  <span className={`text-xs font-bold uppercase tracking-wider ${loginRole === 'admin' ? 'text-[#B5FF03]' : 'text-neutral-400'}`}>Admin</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setLoginRole('employee')}
-                  className={`p-4 rounded-2xl border-2 transition-all flex flex-col items-center gap-2 ${
-                    loginRole === 'employee' 
-                      ? 'border-[#B5FF03] bg-black text-[#B5FF03]' 
-                      : 'border-[#333] hover:border-[#555]'
-                  }`}
-                >
-                  <Users className={`w-6 h-6 ${loginRole === 'employee' ? 'text-[#B5FF03]' : 'text-neutral-400'}`} />
-                  <span className={`text-xs font-bold uppercase tracking-wider ${loginRole === 'employee' ? 'text-[#B5FF03]' : 'text-neutral-400'}`}>Funcionário</span>
-                </button>
-              </div>
-
-              {loginRole === 'employee' ? (
-                <div className="space-y-3">
-                  <label className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest ml-1">Selecione seu nome</label>
-                  <select
-                    value={employeeName || ''}
-                    onChange={(e) => selectEmployee(e.target.value)}
-                    className="w-full bg-[#111] border-2 border-[#333] rounded-xl px-4 py-3 font-bold text-white focus:border-[#B5FF03] outline-none"
-                  >
-                    {availableEmployees.map(emp => (
-                      <option key={emp} value={emp}>{emp}</option>
-                    ))}
-                  </select>
-                </div>
-              ) : null}
-
-              <div className="space-y-3">
-                <label className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest ml-1 flex items-center gap-2">
-                  <Users className="w-3 h-3" /> Senha
-                </label>
-                <input
-                  type="password"
-                  value={loginPassword}
-                  onChange={(e) => setLoginPassword(e.target.value)}
-                  placeholder="Digite sua senha"
-                  className="w-full bg-[#111] border-2 border-[#333] rounded-xl px-4 py-3 font-bold text-white focus:border-[#B5FF03] outline-none"
-                />
-              </div>
-
-              {loginError && (
-                <div className="p-3 bg-red-50 border border-red-100 rounded-xl text-red-600 text-sm font-medium">
-                  {loginError}
-                </div>
-              )}
-
-              <button
-                type="submit"
-                disabled={isLoggingIn}
-                className="w-full py-4 bg-[#B5FF03] text-black rounded-xl font-black text-sm uppercase tracking-widest hover:bg-[#a1e600] transition-all disabled:opacity-50"
-              >
-                {isLoggingIn ? 'Entrando...' : 'Entrar'}
-              </button>
-            </form>
-
-
-          </div>
-        </div>
+      <div className="min-h-dvh flex items-center justify-center bg-black">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#B5FF03]"></div>
       </div>
     );
   }
