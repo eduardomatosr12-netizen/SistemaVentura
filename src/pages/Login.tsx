@@ -78,7 +78,7 @@ const Login = () => {
                   id="email"
                   type="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => { setEmail(e.target.value); setError(''); }}
                   placeholder="seu@email.com"
                    className="w-full border border-neutral-200 rounded-md py-2 md:py-3 pl-10 md:pl-11 pr-4 text-black text-xs md:text-sm placeholder-neutral-400 focus:outline-none focus:border-[#B5FF03] focus:ring-1 focus:ring-[#B5FF03] transition-colors bg-white"
                   disabled={isLoading}
@@ -96,7 +96,7 @@ const Login = () => {
                   id="password"
                   type={showPassword ? 'text' : 'password'}
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => { setPassword(e.target.value); setError(''); }}
                   placeholder="Sua senha secreta"
                    className="w-full border border-neutral-200 rounded-md py-3 pl-11 pr-12 text-black text-sm placeholder-neutral-400 focus:outline-none focus:border-[#B5FF03] focus:ring-1 focus:ring-[#B5FF03] transition-colors bg-white"
                   disabled={isLoading}

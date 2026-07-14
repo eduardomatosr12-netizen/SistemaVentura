@@ -115,11 +115,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const normalizedEmail = email.trim().toLowerCase();
       const normalizedPassword = password.trim();
 
+      console.log('[AUTH] Tentativa de login:', { email: normalizedEmail, credentialsAvailable: Object.keys(CREDENTIALS).length });
+
       const credential = CREDENTIALS[normalizedEmail];
 
-      if (!credential || credential.password !== normalizedPassword) {
+      if (!credential) {
+        console.warn('[AUTH] Credencial não encontrada para:', normalizedEmail);
         return { success: false, error: 'E-mail ou senha incorretos' };
       }
+
+      if (credential.password !== normalizedPassword) {
+        console.warn('[AUTH] Senha incorreta para:', normalizedEmail);
+        return { success: false, error: 'E-mail ou senha incorretos' };
+      }
+
+      console.log('[AUTH] Login autorizado para:', normalizedEmail);
 
       const authUser: AuthUser = {
         id: generateUUID(),
