@@ -35,7 +35,7 @@ const MainLayout = ({ children, hideSubmenu }: MainLayoutProps) => {
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
-      navigate('/');
+      navigate('/login');
     }
   }, [isLoading, isAuthenticated, navigate]);
 

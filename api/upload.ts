@@ -1,6 +1,6 @@
 import { type VercelRequest, type VercelResponse } from '@vercel/node';
 import { S3Client, PutObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
-import { vercelOIDCCredentialsProvider } from '@vercel/oidc-aws-credentials-provider';
+import { awsCredentialsProvider } from '@vercel/oidc-aws-credentials-provider';
 
 const AWS_REGION = process.env.AWS_REGION;
 const AWS_ROLE_ARN = process.env.AWS_ROLE_ARN;
@@ -19,7 +19,7 @@ if (!AWS_S3_BUCKET) {
 const s3Client = new S3Client({
   region: AWS_REGION || 'us-east-1',
   credentials: AWS_ROLE_ARN
-    ? vercelOIDCCredentialsProvider({
+    ? awsCredentialsProvider({
         RoleArn: AWS_ROLE_ARN,
         RoleSessionName: 'vercel-oidc-session',
       })

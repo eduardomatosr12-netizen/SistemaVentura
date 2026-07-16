@@ -37,17 +37,20 @@ const EMPLOYEES = ['Maria', 'João', 'Pedro', 'Ana'];
 
 const CREDENTIALS: Record<string, { password: string; role: UserRole; name: string }> = {};
 
-const authEmail = import.meta.env.VITE_AUTH_EMAIL;
-const authPassword = import.meta.env.VITE_AUTH_PASSWORD;
-const authRole = (import.meta.env.VITE_AUTH_ROLE || 'admin') as UserRole;
-const authName = import.meta.env.VITE_AUTH_NAME || 'Administrador';
+const authEmail = import.meta.env.VITE_AUTH_EMAIL?.trim().toLowerCase();
+const authPassword = import.meta.env.VITE_AUTH_PASSWORD?.trim();
+const authRole = (import.meta.env.VITE_AUTH_ROLE?.trim() || 'admin') as UserRole;
+const authName = import.meta.env.VITE_AUTH_NAME?.trim() || 'Administrador';
 
 if (authEmail && authPassword) {
-  CREDENTIALS[authEmail.toLowerCase()] = {
+  CREDENTIALS[authEmail] = {
     password: authPassword,
     role: authRole,
     name: authName,
   };
+  console.log('[AUTH] Credenciais carregadas para:', authEmail);
+} else {
+  console.warn('[AUTH] Variáveis VITE_AUTH_EMAIL/VITE_AUTH_PASSWORD não configuradas no .env');
 }
 
 function getOrCreateSessionId(): string {
@@ -115,11 +118,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       const normalizedEmail = email.trim().toLowerCase();
       const normalizedPassword = password.trim();
 
+      console.log('[AUTH] Tentativa de login:', { email: normalizedEmail, credentialsAvailable: Object.keys(CREDENTIALS).length });
+
       const credential = CREDENTIALS[normalizedEmail];
 
-      if (!credential || credential.password !== normalizedPassword) {
+      if (!credential) {
+        console.warn('[AUTH] Credencial não encontrada para:', normalizedEmail);
         return { success: false, error: 'E-mail ou senha incorretos' };
       }
+
+      if (credential.password !== normalizedPassword) {
+        console.warn('[AUTH] Senha incorreta para:', normalizedEmail);
+        return { success: false, error: 'E-mail ou senha incorretos' };
+      }
+
+      console.log('[AUTH] Login autorizado para:', normalizedEmail);
 
       const authUser: AuthUser = {
         id: generateUUID(),
@@ -136,15 +149,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setEmployeeName(credential.name);
       setIsAuthenticated(true);
 
-      setDoc(doc(db, 'sessions', sessionId), {
-        userId: authUser.id,
-        email: authUser.email,
-        name: authUser.name,
-        role: authUser.role,
-        employeeName: authUser.name,
-        createdAt: authUser.createdAt,
-        lastActiveAt: Timestamp.now(),
-      }).catch(err => console.error('[AUTH] Erro ao salvar sessão:', err));
+      try {
+        await setDoc(doc(db, 'sessions', sessionId), {
+          userId: authUser.id,
+          email: authUser.email,
+          name: authUser.name,
+          role: authUser.role,
+          employeeName: authUser.name,
+          createdAt: authUser.createdAt,
+          lastActiveAt: Timestamp.now(),
+        });
+      } catch (firestoreErr) {
+        console.error('[AUTH] Erro ao salvar sessão (login continua):', firestoreErr);
+      }
 
       return { success: true };
     } catch (err) {
