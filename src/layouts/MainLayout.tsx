@@ -6,7 +6,7 @@ import TopHeader from '../components/TopHeader';
 import { useAuth } from '../contexts/AuthContext';
 import { LayoutDashboard, Users, DollarSign } from 'lucide-react';
 
-type UserRole = 'admin' | 'employee';
+type LoginRole = 'admin' | 'user';
 
 interface MainLayoutProps {
   children: ReactNode;
@@ -28,7 +28,7 @@ const MainLayout = ({ children, hideSubmenu }: MainLayoutProps) => {
     selectEmployee 
   } = useAuth();
 
-  const [loginRole, setLoginRole] = useState<UserRole>('admin');
+  const [loginRole, setLoginRole] = useState<LoginRole>('admin');
   const [loginPassword, setLoginPassword] = useState('');
   const [loginError, setLoginError] = useState('');
   const [isLoggingIn, setIsLoggingIn] = useState(false);
@@ -45,7 +45,11 @@ const MainLayout = ({ children, hideSubmenu }: MainLayoutProps) => {
     setIsLoggingIn(true);
     
     try {
-      await login(loginRole, loginPassword);
+      const authEmail = import.meta.env.VITE_AUTH_EMAIL || '';
+      const result = await login(authEmail, loginPassword);
+      if (!result.success) {
+        setLoginError(result.error || 'Erro ao fazer login');
+      }
     } catch (err: any) {
       setLoginError(err.message || 'Erro ao fazer login');
     } finally {
@@ -92,19 +96,19 @@ const MainLayout = ({ children, hideSubmenu }: MainLayoutProps) => {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setLoginRole('employee')}
+                  onClick={() => setLoginRole('user')}
                   className={`p-4 rounded-2xl border-2 transition-all flex flex-col items-center gap-2 ${
-                    loginRole === 'employee' 
+                    loginRole === 'user' 
                       ? 'border-[#B5FF03] bg-black text-[#B5FF03]' 
                       : 'border-[#333] hover:border-[#555]'
                   }`}
                 >
-                  <Users className={`w-6 h-6 ${loginRole === 'employee' ? 'text-[#B5FF03]' : 'text-neutral-400'}`} />
-                  <span className={`text-xs font-bold uppercase tracking-wider ${loginRole === 'employee' ? 'text-[#B5FF03]' : 'text-neutral-400'}`}>Funcionário</span>
+                  <Users className={`w-6 h-6 ${loginRole === 'user' ? 'text-[#B5FF03]' : 'text-neutral-400'}`} />
+                  <span className={`text-xs font-bold uppercase tracking-wider ${loginRole === 'user' ? 'text-[#B5FF03]' : 'text-neutral-400'}`}>Funcionário</span>
                 </button>
               </div>
 
-              {loginRole === 'employee' ? (
+              {loginRole === 'user' ? (
                 <div className="space-y-3">
                   <label className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest ml-1">Selecione seu nome</label>
                   <select
