@@ -1,8 +1,5 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import type { ReactNode } from 'react';
-import { doc, onSnapshot, setDoc, deleteDoc, Timestamp } from 'firebase/firestore';
-import { db } from '../services/firebase';
-import { generateUUID, isValidUUID } from '../lib/uuid';
 
 type UserRole = 'admin' | 'manager' | 'user';
 export type { UserRole };
@@ -35,31 +32,18 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const EMPLOYEES = ['Maria', 'João', 'Pedro', 'Ana'];
 
-const CREDENTIALS: Record<string, { password: string; role: UserRole; name: string }> = {};
+const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
-const authEmail = import.meta.env.VITE_AUTH_EMAIL?.trim().toLowerCase();
-const authPassword = import.meta.env.VITE_AUTH_PASSWORD?.trim();
-const authRole = (import.meta.env.VITE_AUTH_ROLE?.trim() || 'admin') as UserRole;
-const authName = import.meta.env.VITE_AUTH_NAME?.trim() || 'Administrador';
-
-if (authEmail && authPassword) {
-  CREDENTIALS[authEmail] = {
-    password: authPassword,
-    role: authRole,
-    name: authName,
-  };
-  console.log('[AUTH] Credenciais carregadas para:', authEmail);
-} else {
-  console.warn('[AUTH] Variáveis VITE_AUTH_EMAIL/VITE_AUTH_PASSWORD não configuradas no .env');
+function getToken(): string | null {
+  return localStorage.getItem('ventura_token');
 }
 
-function getOrCreateSessionId(): string {
-  const key = 'ventura_session_id';
-  const existing = sessionStorage.getItem(key);
-  if (existing && isValidUUID(existing)) return existing;
-  const id = generateUUID();
-  sessionStorage.setItem(key, id);
-  return id;
+function setToken(token: string) {
+  localStorage.setItem('ventura_token', token);
+}
+
+function removeToken() {
+  localStorage.removeItem('ventura_token');
 }
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
@@ -75,146 +59,100 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, [isAuthenticated, user]);
 
   useEffect(() => {
-    const key = 'ventura_session_id';
-    const storedId = sessionStorage.getItem(key);
-    if (!storedId || !isValidUUID(storedId)) {
+    const token = getToken();
+    if (!token) {
       setIsLoading(false);
       return;
     }
 
-    const unsub = onSnapshot(doc(db, 'sessions', storedId), snap => {
-      if (snap.exists()) {
-        const data = snap.data();
-        if (data?.email && data?.userId) {
-          const userRole: UserRole = data.role || 'user';
-          setUser({
-            id: data.userId,
-            email: data.email,
-            name: data.name || 'Usuário',
-            role: userRole,
-            createdAt: data.createdAt
-          });
-          setRole(userRole);
-          setEmployeeName(data.employeeName || data.name || 'Usuário');
-          setIsAuthenticated(true);
-        }
-      } else {
-        setIsAuthenticated(false);
-        setUser(null);
-        setRole(null);
-        setEmployeeName(null);
-      }
-      setIsLoading(false);
-    }, err => {
-      console.error('[AUTH] Erro ao monitorar sessão:', err);
-      setIsLoading(false);
-    });
-
-    return () => unsub();
+    fetch(`${API_BASE}/auth/me`, {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error('Token inválido');
+        return res.json();
+      })
+      .then((data) => {
+        const userRole: UserRole = data.perfil || 'user';
+        setUser({
+          id: data.id,
+          email: data.email,
+          name: data.nome || 'Usuário',
+          role: userRole,
+          createdAt: data.createdAt,
+        });
+        setRole(userRole);
+        setEmployeeName(data.nome || 'Usuário');
+        setIsAuthenticated(true);
+      })
+      .catch(() => {
+        removeToken();
+      })
+      .finally(() => setIsLoading(false));
   }, []);
 
   const login = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
     try {
-      const normalizedEmail = email.trim().toLowerCase();
-      const normalizedPassword = password.trim();
+      const res = await fetch(`${API_BASE}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
 
-      console.log('[AUTH] Tentativa de login:', { email: normalizedEmail, credentialsAvailable: Object.keys(CREDENTIALS).length });
+      const data = await res.json();
 
-      const credential = CREDENTIALS[normalizedEmail];
-
-      if (!credential) {
-        console.warn('[AUTH] Credencial não encontrada para:', normalizedEmail);
-        return { success: false, error: 'E-mail ou senha incorretos' };
+      if (!res.ok) {
+        return { success: false, error: data.error || 'E-mail ou senha incorretos' };
       }
 
-      if (credential.password !== normalizedPassword) {
-        console.warn('[AUTH] Senha incorreta para:', normalizedEmail);
-        return { success: false, error: 'E-mail ou senha incorretos' };
-      }
+      setToken(data.token);
 
-      console.log('[AUTH] Login autorizado para:', normalizedEmail);
-
-      const authUser: AuthUser = {
-        id: generateUUID(),
-        email: normalizedEmail,
-        name: credential.name,
-        role: credential.role,
-        createdAt: new Date().toISOString()
-      };
-
-      const sessionId = getOrCreateSessionId();
-
-      setUser(authUser);
-      setRole(credential.role);
-      setEmployeeName(credential.name);
+      const userRole: UserRole = data.user.perfil || 'user';
+      setUser({
+        id: data.user.id,
+        email: data.user.email,
+        name: data.user.nome || 'Usuário',
+        role: userRole,
+      });
+      setRole(userRole);
+      setEmployeeName(data.user.nome || 'Usuário');
       setIsAuthenticated(true);
 
-      try {
-        await setDoc(doc(db, 'sessions', sessionId), {
-          userId: authUser.id,
-          email: authUser.email,
-          name: authUser.name,
-          role: authUser.role,
-          employeeName: authUser.name,
-          createdAt: authUser.createdAt,
-          lastActiveAt: Timestamp.now(),
-        });
-      } catch (firestoreErr) {
-        console.error('[AUTH] Erro ao salvar sessão (login continua):', firestoreErr);
-      }
-
       return { success: true };
-    } catch (err) {
-      console.error('[AUTH] Login error:', err);
-      return { success: false, error: 'Erro ao fazer login' };
+    } catch {
+      return { success: false, error: 'Erro ao conectar com o servidor' };
     }
   };
 
   const selectEmployee = (name: string) => {
     if (!EMPLOYEES.includes(name)) return;
-
     setEmployeeName(name);
-    setUser(prev => prev ? { ...prev, name: name } : null);
-
-    const sessionId = getOrCreateSessionId();
-    const currentRole = role;
-    if (currentRole) {
-      setDoc(doc(db, 'sessions', sessionId), {
-        name,
-        employeeName: name,
-        role: currentRole,
-        lastActiveAt: Timestamp.now(),
-      }, { merge: true }).catch(err => console.error('[AUTH] Erro ao atualizar sessão:', err));
-    }
+    setUser((prev) => (prev ? { ...prev, name } : null));
   };
 
   const logout = async () => {
-    try {
-      const sessionId = getOrCreateSessionId();
-      await deleteDoc(doc(db, 'sessions', sessionId)).catch(() => {});
-      sessionStorage.removeItem('ventura_session_id');
-      setUser(null);
-      setRole(null);
-      setEmployeeName(null);
-      setIsAuthenticated(false);
-    } catch (err) {
-      console.error('[AUTH] Logout error:', err);
-    }
+    removeToken();
+    setUser(null);
+    setRole(null);
+    setEmployeeName(null);
+    setIsAuthenticated(false);
   };
 
   return (
-    <AuthContext.Provider value={{
-      isAuthenticated,
-      isLoading,
-      user,
-      role,
-      employeeName,
-      availableEmployees: EMPLOYEES,
-      hasPermission,
-      login,
-      selectEmployee,
-      logout
-    }}>
+    <AuthContext.Provider
+      value={{
+        isAuthenticated,
+        isLoading,
+        user,
+        role,
+        employeeName,
+        availableEmployees: EMPLOYEES,
+        hasPermission,
+        login,
+        selectEmployee,
+        logout,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
