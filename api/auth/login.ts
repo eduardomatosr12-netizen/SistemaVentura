@@ -1,68 +1,60 @@
-import type { VercelRequest, VercelResponse } from '@vercel/node';
-import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
-import { prisma } from '../../lib/prisma';
+import type { VercelRequest, VercelResponse } from '@vercel/node'
+import { PrismaClient } from '@prisma/client'
+import bcrypt from 'bcryptjs'
+import jwt from 'jsonwebtoken'
 
-const JWT_SECRET = process.env.JWT_SECRET || 'ventura-jwt-secret-2026';
+const prisma = new PrismaClient()
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Origin', '*')
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS')
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization')
 
   if (req.method === 'OPTIONS') {
-    return res.status(200).end();
+    return res.status(200).end()
   }
 
   if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Método não permitido' });
+    return res.status(405).json({ error: 'Method not allowed' })
   }
 
   try {
-    const { email, password } = req.body;
+    const { email, password } = req.body
 
     if (!email || !password) {
-      return res.status(400).json({ error: 'Email e senha são obrigatórios' });
+      return res.status(400).json({ error: 'Email e senha obrigatorios' })
     }
 
-    const normalizedEmail = String(email).trim().toLowerCase();
-
-    const user = await prisma.user.findUnique({
-      where: { email: normalizedEmail },
-    });
+    const user = await prisma.user.findUnique({ where: { email } })
 
     if (!user) {
-      return res.status(404).json({ error: 'Usuário não encontrado' });
+      return res.status(401).json({ error: 'Credenciais invalidas' })
     }
 
     if (!user.ativo) {
-      return res.status(403).json({ error: 'Usuário desativado' });
+      return res.status(403).json({ error: 'Usuario desativado' })
     }
 
-    const validPassword = await bcrypt.compare(String(password), user.senhaHash);
+    const senhaCorreta = await bcrypt.compare(String(password), user.senhaHash)
 
-    if (!validPassword) {
-      return res.status(401).json({ error: 'Senha incorreta' });
+    if (!senhaCorreta) {
+      return res.status(401).json({ error: 'Credenciais invalidas' })
     }
 
     const token = jwt.sign(
-      { id: user.id, email: user.email, perfil: user.perfil },
-      JWT_SECRET,
-      { expiresIn: '24h' }
-    );
+      { userId: user.id, email: user.email },
+      process.env.JWT_SECRET!,
+      { expiresIn: '7d' }
+    )
 
     return res.status(200).json({
       token,
-      user: {
-        id: user.id,
-        nome: user.nome,
-        email: user.email,
-        perfil: user.perfil,
-      },
-    });
+      user: { id: user.id, email: user.email, nome: user.nome },
+    })
   } catch (error: any) {
-    console.error('[AUTH] Erro no login:', error?.message || error);
-    if (error?.code) console.error('[AUTH] Error code:', error.code);
-    return res.status(500).json({ error: 'Erro interno do servidor' });
+    console.error('[LOGIN ERROR]', error.message, error.code)
+    return res.status(500).json({ error: 'Erro interno', details: error.message })
+  } finally {
+    await prisma.$disconnect()
   }
 }

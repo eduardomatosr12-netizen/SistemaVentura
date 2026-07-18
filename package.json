@@ -25,7 +25,7 @@
     "@dnd-kit/utilities": "^3.2.2",
     "@prisma/client": "^6.12.0",
     "@vercel/oidc-aws-credentials-provider": "^3.1.0",
-    "bcrypt": "^5.1.1",
+    "bcryptjs": "^3.0.3",
     "cors": "^2.8.5",
     "express": "^4.21.2",
     "firebase": "^12.13.0",
@@ -40,7 +40,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.4",
-    "@types/bcrypt": "^5.0.2",
+    "@types/bcryptjs": "^2.4.6",
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.2",
     "@types/jsonwebtoken": "^9.0.9",
