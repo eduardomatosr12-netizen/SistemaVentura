@@ -1,4 +1,15 @@
 {
+  "functions": {
+    "api/auth/login.ts": {
+      "includeFiles": "api/lib/**"
+    },
+    "api/auth/me.ts": {
+      "includeFiles": "api/lib/**"
+    },
+    "api/upload.ts": {
+      "includeFiles": "api/lib/**"
+    }
+  },
   "headers": [
     {
       "source": "/sw.js",

@@ -8,7 +8,7 @@
     "dev": "concurrently \"vite\" \"tsx watch server/index.ts\"",
     "dev:frontend": "vite",
     "dev:backend": "tsx watch server/index.ts",
-    "build": "vite build",
+    "build": "prisma generate && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
     "server": "tsx server/index.ts",
