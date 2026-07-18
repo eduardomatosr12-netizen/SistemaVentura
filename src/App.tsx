@@ -117,11 +117,11 @@ function AppRoutes() {
       <Route path="/crm/importar" element={<Navigate to="/home" replace />} />
       <Route path="/crm" element={<Navigate to="/home" replace />} />
 
-      {/* Protected Routes - Financeiro - Only admin/manager */}
+      {/* Protected Routes - Financeiro */}
       <Route
         path="/financeiro"
         element={
-          <ProtectedRoute allowedRoles={['admin', 'manager']}>
+          <ProtectedRoute allowedRoles={['admin', 'manager', 'user']}>
             <MainLayout hideSubmenu>
               <Financeiro />
             </MainLayout>
@@ -131,7 +131,7 @@ function AppRoutes() {
       <Route
         path="/financeiro/dashboard"
         element={
-          <ProtectedRoute allowedRoles={['admin', 'manager']}>
+          <ProtectedRoute allowedRoles={['admin', 'manager', 'user']}>
             <MainLayout hideSubmenu>
               <DashboardFinanceiro />
             </MainLayout>
@@ -151,11 +151,11 @@ function AppRoutes() {
         }
       />
 
-      {/* Protected Routes - Configurações - Only admin */}
+      {/* Protected Routes - Configurações */}
       <Route
         path="/configuracoes"
         element={
-          <ProtectedRoute allowedRoles={['admin']}>
+          <ProtectedRoute allowedRoles={['admin', 'manager', 'user']}>
             <MainLayout hideSubmenu>
               <Configuracoes />
             </MainLayout>
@@ -165,7 +165,7 @@ function AppRoutes() {
       <Route
         path="/configuracoes/templates-whatsapp"
         element={
-          <ProtectedRoute allowedRoles={['admin']}>
+          <ProtectedRoute allowedRoles={['admin', 'manager', 'user']}>
             <MainLayout hideSubmenu>
               <TemplatesWhatsApp />
             </MainLayout>
