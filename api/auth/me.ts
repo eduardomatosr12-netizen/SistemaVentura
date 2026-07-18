@@ -1,8 +1,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { PrismaClient } from '@prisma/client';
 import jwt from 'jsonwebtoken';
+import { prisma } from '../lib/prisma';
 
-const prisma = new PrismaClient();
 const JWT_SECRET = process.env.JWT_SECRET || 'ventura-jwt-secret-2026';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {

@@ -1,9 +1,8 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import { prisma } from '../lib/prisma';
 
-const prisma = new PrismaClient();
 const JWT_SECRET = process.env.JWT_SECRET || 'ventura-jwt-secret-2026';
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -61,8 +60,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         perfil: user.perfil,
       },
     });
-  } catch (error) {
-    console.error('[AUTH] Erro no login:', error);
+  } catch (error: any) {
+    console.error('[AUTH] Erro no login:', error?.message || error);
+    if (error?.code) console.error('[AUTH] Error code:', error.code);
     return res.status(500).json({ error: 'Erro interno do servidor' });
   }
 }
