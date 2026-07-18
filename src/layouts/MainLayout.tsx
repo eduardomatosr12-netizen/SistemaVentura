@@ -46,11 +46,29 @@ const MainLayout = ({ children, hideSubmenu }: MainLayoutProps) => {
     
     try {
       const authEmail = import.meta.env.VITE_AUTH_EMAIL || '';
+      
+      if (!authEmail) {
+        console.error('[AUTH] Variável VITE_AUTH_EMAIL não configurada no .env');
+        setLoginError('Variáveis de autenticação não configuradas. Contate o administrador.');
+        setIsLoggingIn(false);
+        return;
+      }
+
+      if (!loginPassword) {
+        setLoginError('Digite sua senha.');
+        setIsLoggingIn(false);
+        return;
+      }
+
       const result = await login(authEmail, loginPassword);
       if (!result.success) {
+        if (result.error?.includes('não encontrado')) {
+          console.error('[AUTH] Credencial não encontrada para:', authEmail);
+        }
         setLoginError(result.error || 'Erro ao fazer login');
       }
     } catch (err: any) {
+      console.error('[AUTH] Erro inesperado:', err.message);
       setLoginError(err.message || 'Erro ao fazer login');
     } finally {
       setIsLoggingIn(false);
