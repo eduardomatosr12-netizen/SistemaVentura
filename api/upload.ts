@@ -20,8 +20,8 @@ const s3Client = new S3Client({
   region: AWS_REGION || 'us-east-1',
   credentials: AWS_ROLE_ARN
     ? awsCredentialsProvider({
-        RoleArn: AWS_ROLE_ARN,
-        RoleSessionName: 'vercel-oidc-session',
+        roleArn: AWS_ROLE_ARN,
+        roleSessionName: 'vercel-oidc-session',
       })
     : undefined,
 });
