@@ -104,13 +104,17 @@ export default function DespesasDoEvento({ eventId, eventDate }: Props) {
       interno: true as const,
     };
 
-    const expenseId = await addEventExpense(eventId, expenseData);
-    const financeiroId = await syncExpenseToFirestore(eventId, { id: expenseId, ...expenseData, financeiroId: undefined });
-    if (financeiroId) {
-      await setExpenseFinanceiroId(expenseId, financeiroId);
+    try {
+      const expenseId = await addEventExpense(eventId, expenseData);
+      const financeiroId = await syncExpenseToFirestore(eventId, { id: expenseId, ...expenseData, financeiroId: undefined });
+      if (financeiroId) {
+        await setExpenseFinanceiroId(expenseId, financeiroId);
+      }
+      notifyFinanceiro();
+      resetForm();
+    } catch (err) {
+      console.error('[DespesasDoEvento] Erro ao adicionar despesa:', err);
     }
-    notifyFinanceiro();
-    resetForm();
   };
 
   const handleRemove = async (exp: EventExpense) => {
@@ -120,12 +124,17 @@ export default function DespesasDoEvento({ eventId, eventDate }: Props) {
         await deleteTransaction(exp.financeiroId);
       } catch (err) {
         console.error('[DespesasDoEvento] Erro ao excluir transação:', err);
+        return;
       }
     }
-    if (exp.id) {
-      await deleteEventExpense(exp.id);
+    try {
+      if (exp.id) {
+        await deleteEventExpense(exp.id);
+      }
+      notifyFinanceiro();
+    } catch (err) {
+      console.error('[DespesasDoEvento] Erro ao excluir despesa:', err);
     }
-    notifyFinanceiro();
   };
 
   const toggleStatus = async (exp: EventExpense) => {
@@ -136,10 +145,15 @@ export default function DespesasDoEvento({ eventId, eventDate }: Props) {
         await updateTransaction(exp.financeiroId, { status: novoStatus });
       } catch (err) {
         console.error('[DespesasDoEvento] Erro ao atualizar transação:', err);
+        return;
       }
     }
-    await updateEventExpense(exp.id, { status: novoStatus });
-    notifyFinanceiro();
+    try {
+      await updateEventExpense(exp.id, { status: novoStatus });
+      notifyFinanceiro();
+    } catch (err) {
+      console.error('[DespesasDoEvento] Erro ao atualizar despesa:', err);
+    }
   };
 
   const totalGeral = expenses.reduce((s, e) => s + e.valor, 0);

@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Bell, User, Calendar as CalendarIcon, Clock, Menu, LogOut, UserPlus, FileText, CheckCircle, Package, DollarSign, X } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
@@ -28,6 +28,7 @@ const notificationIcon = (type: AppNotification['type']) => {
     case 'fechamento': return CheckCircle;
     case 'equipamento': return Package;
     case 'financeiro': return DollarSign;
+    default: return Bell;
   }
 };
 
@@ -61,33 +62,52 @@ const TopHeader = ({ onMenuClick }: TopHeaderProps) => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const handleLogout = async () => {
-    await logout();
-    navigate('/login');
-  };
+  const timeoutRefs = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
 
-  const handleNotificationClick = (n: AppNotification) => {
+  useEffect(() => {
+    return () => {
+      timeoutRefs.current.forEach(id => clearTimeout(id));
+      timeoutRefs.current.clear();
+    };
+  }, []);
+
+  const handleLogout = useCallback(async () => {
+    try {
+      await logout();
+    } catch {
+      // ignore
+    }
+    navigate('/login');
+  }, [logout, navigate]);
+
+  const handleNotificationClick = useCallback((n: AppNotification) => {
     markAsRead(n.id);
     setIsNotificationsOpen(false);
     navigate(n.link);
-  };
+  }, [markAsRead, navigate]);
 
-  const handleDismiss = (id: string) => {
+  const handleDismiss = useCallback((id: string) => {
     setLeavingIds(prev => new Set(prev).add(id));
-    setTimeout(() => {
+    const timeoutId = setTimeout(() => {
       dismissNotification(id);
       setLeavingIds(prev => { const next = new Set(prev); next.delete(id); return next; });
+      timeoutRefs.current.delete(id);
     }, 300);
-  };
+    timeoutRefs.current.set(id, timeoutId);
+  }, [dismissNotification]);
 
-  const handleClearAll = () => {
+  const handleClearAll = useCallback(() => {
     const ids = notifications.map(n => n.id);
     setLeavingIds(new Set(ids));
-    setTimeout(() => {
+    const timeoutId = setTimeout(() => {
       dismissAll();
       setLeavingIds(new Set());
+      timeoutRefs.current.clear();
     }, 300);
-  };
+    timeoutRefs.current.forEach(id => clearTimeout(id));
+    timeoutRefs.current.clear();
+    timeoutRefs.current.set('clear-all', timeoutId);
+  }, [notifications, dismissAll]);
 
   return (
     <header className="sticky top-0 z-40 bg-black/70 backdrop-blur-md border-b border-[#1a1a1a] px-3 md:px-8 py-2 md:py-4 flex items-center justify-between transition-all duration-300">

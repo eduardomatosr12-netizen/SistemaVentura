@@ -5,19 +5,30 @@ export default function PWAUpdateNotification() {
   const [showUpdate, setShowUpdate] = useState(false);
 
   useEffect(() => {
-    if ('serviceWorker' in navigator) {
+    if (!('serviceWorker' in navigator)) return;
+
+    const updateHandler = () => {
       navigator.serviceWorker.ready.then((registration) => {
-        registration.addEventListener('updatefound', () => {
-          const newWorker = registration.installing;
-          if (!newWorker) return;
-          newWorker.addEventListener('statechange', () => {
-            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-              setShowUpdate(true);
-            }
-          });
-        });
+        const newWorker = registration.installing;
+        if (!newWorker) return;
+        const stateHandler = () => {
+          if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+            setShowUpdate(true);
+          }
+        };
+        newWorker.addEventListener('statechange', stateHandler);
       });
-    }
+    };
+
+    navigator.serviceWorker.ready.then((registration) => {
+      registration.addEventListener('updatefound', updateHandler);
+    });
+
+    return () => {
+      navigator.serviceWorker.ready.then((registration) => {
+        registration.removeEventListener('updatefound', updateHandler);
+      });
+    };
   }, []);
 
   if (!showUpdate) return null;

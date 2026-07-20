@@ -97,12 +97,11 @@ const Configuracoes = () => {
     }
 
     try {
-      const docRef = await addDoc(collection(db, 'employees'), {
+      await addDoc(collection(db, 'employees'), {
         name: newEmployee.name.trim(),
         role: newEmployee.role,
         createdAt: Timestamp.now(),
       });
-      setEmployees(prev => [...prev, { id: docRef.id, name: newEmployee.name.trim(), role: newEmployee.role, createdAt: new Date().toISOString() }]);
     } catch (err) {
       console.error('[CONFIG] Erro ao adicionar funcionário:', err);
       setInviteError('Erro ao adicionar funcionário');

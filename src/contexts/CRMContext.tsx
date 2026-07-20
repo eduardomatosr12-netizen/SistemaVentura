@@ -74,8 +74,17 @@ export const CRMProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const deleteLead = useCallback(async (id: string) => {
+    const lead = Orçamentos.find(o => o.id === id);
+    if (lead?.items && lead.items.length > 0) {
+      const linkedEvents = events.filter(e => e.clientId === id && e.status === 'confirmado');
+      for (const event of linkedEvents) {
+        if (lead.items && lead.items.length > 0) {
+          await Promise.all(lead.items.map(item => restoreInventory(item.item, item.qtdAtual)));
+        }
+      }
+    }
     await leadService.deleteLead(id);
-  }, []);
+  }, [Orçamentos, events]);
 
   const addEvent = useCallback(async (event: Omit<CalendarEvent, 'id'>) => {
     const id = await eventService.addEvent(event);

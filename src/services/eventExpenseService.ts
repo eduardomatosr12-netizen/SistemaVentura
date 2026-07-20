@@ -28,6 +28,8 @@ export const subscribeEventExpenses = (
       id: doc.id,
     }));
     callback(list);
+  }, (err) => {
+    console.error('[EventExpenses] Erro no listener:', err);
   });
 };
 

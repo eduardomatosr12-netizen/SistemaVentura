@@ -1,5 +1,5 @@
 import {
-  collection, getDocs, addDoc, updateDoc, doc, query, orderBy, onSnapshot, Timestamp, writeBatch,
+  collection, getDocs, addDoc, updateDoc, doc, query, orderBy, onSnapshot, Timestamp, writeBatch, runTransaction,
 } from 'firebase/firestore';
 import { db } from '../services/firebase';
 import { generateUUID } from './uuid';
@@ -134,16 +134,21 @@ export const deductInventory = async (itemName: string, quantity: number): Promi
       for (let i = 0; i < rows.length; i++) {
         const name = String(rows[i].values['col-1'] || '');
         if (name.toLowerCase() === itemName.toLowerCase()) {
-          const current = Number(rows[i].values['col-3']) || 0;
-          rows[i] = {
-            ...rows[i],
-            values: { ...rows[i].values, 'col-3': Math.max(0, current - quantity) },
-          };
-          await updateDoc(doc(db, COLLECTION, boardDoc.id), {
-            rows,
-            updatedAt: Timestamp.now(),
+          await runTransaction(db, async (transaction) => {
+            const freshDoc = await transaction.get(doc(db, COLLECTION, boardDoc.id));
+            if (!freshDoc.exists()) return;
+            const freshRows: InventoryRow[] = freshDoc.data().rows || [];
+            const current = Number(freshRows[i]?.values?.['col-3']) || 0;
+            freshRows[i] = {
+              ...freshRows[i],
+              values: { ...freshRows[i].values, 'col-3': Math.max(0, current - quantity) },
+            };
+            transaction.update(doc(db, COLLECTION, boardDoc.id), {
+              rows: freshRows,
+              updatedAt: Timestamp.now(),
+            });
+            console.log(`[Inventory] Deduzido ${quantity} de "${itemName}". Novo saldo: ${Math.max(0, current - quantity)}`);
           });
-          console.log(`[Inventory] Deduzido ${quantity} de "${itemName}". Novo saldo: ${Math.max(0, current - quantity)}`);
           return;
         }
       }
@@ -165,16 +170,21 @@ export const restoreInventory = async (itemName: string, quantity: number): Prom
       for (let i = 0; i < rows.length; i++) {
         const name = String(rows[i].values['col-1'] || '');
         if (name.toLowerCase() === itemName.toLowerCase()) {
-          const current = Number(rows[i].values['col-3']) || 0;
-          rows[i] = {
-            ...rows[i],
-            values: { ...rows[i].values, 'col-3': current + quantity },
-          };
-          await updateDoc(doc(db, COLLECTION, boardDoc.id), {
-            rows,
-            updatedAt: Timestamp.now(),
+          await runTransaction(db, async (transaction) => {
+            const freshDoc = await transaction.get(doc(db, COLLECTION, boardDoc.id));
+            if (!freshDoc.exists()) return;
+            const freshRows: InventoryRow[] = freshDoc.data().rows || [];
+            const current = Number(freshRows[i]?.values?.['col-3']) || 0;
+            freshRows[i] = {
+              ...freshRows[i],
+              values: { ...freshRows[i].values, 'col-3': current + quantity },
+            };
+            transaction.update(doc(db, COLLECTION, boardDoc.id), {
+              rows: freshRows,
+              updatedAt: Timestamp.now(),
+            });
+            console.log(`[Inventory] Restaurado ${quantity} de "${itemName}". Novo saldo: ${current + quantity}`);
           });
-          console.log(`[Inventory] Restaurado ${quantity} de "${itemName}". Novo saldo: ${current + quantity}`);
           return;
         }
       }

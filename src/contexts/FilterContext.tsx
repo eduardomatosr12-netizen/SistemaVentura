@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from 'react';
+import { createContext, useContext, useState, useCallback, useEffect, useMemo, type ReactNode } from 'react';
 
 interface FilterState {
   responsible: string | null;
@@ -68,15 +68,22 @@ function FilterProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const clearFilters = useCallback(() => {
-    setFilters(defaultFilters);
+    setFilters({ ...defaultFilters });
   }, []);
 
-  const hasActiveFilters = 
+  const hasActiveFilters = useMemo(() =>
     (filters.stages?.length ?? 0) > 0 || 
     (filters.niches?.length ?? 0) > 0 ||
     (filters.origins?.length ?? 0) > 0 || 
     filters.dateFilter !== '' ||
-    Object.values(filters).some(v => v !== null && (Array.isArray(v) ? v.length > 0 : true));
+    filters.responsible !== null ||
+    filters.status !== null ||
+    filters.origin !== null ||
+    filters.priority !== null ||
+    filters.dateFrom !== null ||
+    filters.dateTo !== null,
+    [filters]
+  );
 
   return (
     <FilterContext.Provider value={{ filters, setFilter, setStagesFilter, setNichesFilter, setOriginsFilter, setDateFilter, clearFilters, hasActiveFilters }}>

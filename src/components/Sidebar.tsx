@@ -21,14 +21,18 @@ const Sidebar = ({ isOpen = false, onClose }: SidebarProps) => {
     { id: 'templates-whatsapp', label: 'Templates WhatsApp', icon: MessageCircle, path: '/configuracoes/templates-whatsapp', allowedRoles: ['admin', 'manager', 'user'] as const },
   ];
 
-  const visibleMenuItems = mainMenuItems.filter(item => 
-    hasPermission && item.allowedRoles.includes(user?.role as any)
+  const visibleMenuItems = !hasPermission ? mainMenuItems : mainMenuItems.filter(item => 
+    item.allowedRoles.includes(user?.role as any)
   );
 
   const isActive = (path: string) => location.pathname === path || location.pathname.startsWith(path + '/');
 
   const handleLogout = async () => {
-    await logout();
+    try {
+      await logout();
+    } catch {
+      // ignore
+    }
     navigate('/login');
   };
 

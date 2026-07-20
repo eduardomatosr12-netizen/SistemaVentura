@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Search, X, ChevronDown } from 'lucide-react';
+import { X, ChevronDown } from 'lucide-react';
 import { useFilters, RESPONSIBLES, STATUSES, ORIGINS, PRIORITIES } from '../../contexts/FilterContext';
 
 interface FilterOption {
@@ -19,6 +19,7 @@ function FilterDropdown({ label, options, value, onChange }: FilterDropdownProps
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    if (!isOpen) return;
     function handlePointerOutside(event: MouseEvent | TouchEvent) {
       if (ref.current && !ref.current.contains(event.target as Node)) {
         setIsOpen(false);
@@ -30,7 +31,7 @@ function FilterDropdown({ label, options, value, onChange }: FilterDropdownProps
       document.removeEventListener('mousedown', handlePointerOutside);
       document.removeEventListener('touchstart', handlePointerOutside);
     };
-  }, []);
+  }, [isOpen]);
 
   useEffect(() => {
     if (!isOpen) return;

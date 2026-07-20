@@ -30,7 +30,7 @@ const COLLECTION = 'activity_logs';
 
 export const ActivityLogsProvider = ({ children }: { children: ReactNode }) => {
   const [activityLogs, setActivityLogs] = useState<ActivityLog[]>([]);
-  const [isLoadingLogs, setIsLoadingLogs] = useState(false);
+  const [isLoadingLogs, setIsLoadingLogs] = useState(true);
   const [fetchActivityLogsError, setFetchActivityLogsError] = useState<string | null>(null);
 
   useEffect(() => {

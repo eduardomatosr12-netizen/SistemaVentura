@@ -48,13 +48,13 @@ export function useS3Upload(): UseS3UploadReturn {
         return { key: data.key, url: data.url };
       } catch (err: unknown) {
         const message = err instanceof Error ? err.message : 'Erro ao fazer upload';
-        if (!error) setError(message);
+        setError(message);
         throw err;
       } finally {
         setIsUploading(false);
       }
     },
-    [error]
+    []
   );
 
   const upload = useCallback(

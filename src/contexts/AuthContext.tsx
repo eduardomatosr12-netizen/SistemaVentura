@@ -124,11 +124,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const selectEmployee = (name: string) => {
+  const selectEmployee = useCallback((name: string) => {
     if (!EMPLOYEES.includes(name)) return;
     setEmployeeName(name);
     setUser((prev) => (prev ? { ...prev, name } : null));
-  };
+  }, []);
 
   const logout = async () => {
     removeToken();

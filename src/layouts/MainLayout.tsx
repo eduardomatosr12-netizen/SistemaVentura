@@ -91,7 +91,7 @@ const MainLayout = ({ children, hideSubmenu }: MainLayoutProps) => {
             <div className="text-center mb-8">
               <img
                 src="/logo.png"
-                alt="Universo Axium"
+                alt="Ventura Luz e Efeitos"
                 className="h-12 w-auto object-contain mx-auto mb-6"
               />
               <h1 className="text-2xl md:text-3xl font-black text-white tracking-tighter">Acesso Sistema</h1>

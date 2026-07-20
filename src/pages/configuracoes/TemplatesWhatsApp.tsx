@@ -148,10 +148,11 @@ const TemplatesWhatsApp = () => {
     try {
       await updateTemplate(tpl.id, { active: !tpl.active });
       await refreshTemplates();
+      showToast('success', `Template ${tpl.active ? 'desativado' : 'ativado'} com sucesso!`);
     } catch (err) {
       console.error('[Templates] Erro ao alterar status:', err);
+      showToast('error', 'Erro ao alterar status no Firestore');
     }
-    showToast('success', `Template ${tpl.active ? 'desativado' : 'ativado'} com sucesso!`);
   };
 
   const handleMoveUp = async (id: string) => {

@@ -1,6 +1,16 @@
 import type { Lead } from '../types/crm';
-import { cleanPhoneNumber, generateWhatsAppLink } from './whatsapp';
+import { generateWhatsAppLink } from './whatsapp';
 import { eventTypeLabel } from './eventTypeLabel';
+
+function escapeHtml(str: string): string {
+  if (!str) return '';
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
 
 export const STAGES = [
   'Novos Orçamentos',
@@ -29,7 +39,7 @@ export const STAGE_CONFIG: Record<Stage, StageConfig> = {
   'Follow Up': { id: 'Follow Up', label: 'Follow Up', isClosed: false },
   'Proposta Enviada': { id: 'Proposta Enviada', label: 'Proposta Enviada', isClosed: false },
   'Contrato Fechado': { id: 'Contrato Fechado', label: 'Contrato Fechado', isClosed: true },
-  'Perdido': { id: 'Perdido', label: 'Perdido', isClosed: false },
+  'Perdido': { id: 'Perdido', label: 'Perdido', isClosed: true },
 };
 
 export interface DroppableColumnProps {
@@ -66,10 +76,11 @@ export function parseMonetaryValue(value: string): number {
 }
 
 export function formatCurrency(value: number): string {
+  if (!Number.isFinite(value)) return 'R$ 0,00';
   return new Intl.NumberFormat('pt-BR', {
     style: 'currency',
     currency: 'BRL',
-  }).format(value || 0);
+  }).format(value);
 }
 
 export function calculateTotalValue(Orçamentos: Lead[]): number {
@@ -130,12 +141,20 @@ export function generatePDF(lead: Lead, discountData?: { type: 'percent' | 'fixe
   const now = new Date();
   const dateStr = now.toLocaleDateString('pt-BR');
 
+  const safeName = escapeHtml(lead.name);
+  const safeWhatsapp = escapeHtml(lead.whatsapp);
+  const safeEmail = escapeHtml(lead.email);
+  const safeInstagram = escapeHtml(lead.instagram);
+  const safeAddress = escapeHtml(lead.address);
+  const safeNotes = escapeHtml(lead.notes);
+  const safeStage = escapeHtml(lead.stage);
+
   win.document.write(`
     <!DOCTYPE html>
     <html>
     <head>
       <meta charset="UTF-8">
-      <title>Orçamento - ${lead.name}</title>
+      <title>Orçamento - ${safeName}</title>
       <style>
         @page { margin: 15mm 12mm; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -380,17 +399,17 @@ export function generatePDF(lead: Lead, discountData?: { type: 'percent' | 'fixe
         <div class="client-section">
           <div class="col">
             <h3>Cliente</h3>
-            <p><strong>${lead.name}</strong></p>
-            ${lead.whatsapp ? `<p>WhatsApp: <a href="${generateWhatsAppLink(lead.whatsapp)}" target="_blank" style="color: #25D366; text-decoration: underline;">${lead.whatsapp}</a></p>` : ''}
-            ${lead.email ? `<p>Email: ${lead.email}</p>` : ''}
-            ${lead.instagram ? `<p>Instagram: ${lead.instagram}</p>` : ''}
+            <p><strong>${safeName}</strong></p>
+            ${lead.whatsapp ? `<p>WhatsApp: <a href="${generateWhatsAppLink(lead.whatsapp)}" target="_blank" style="color: #25D366; text-decoration: underline;">${safeWhatsapp}</a></p>` : ''}
+            ${lead.email ? `<p>Email: ${safeEmail}</p>` : ''}
+            ${lead.instagram ? `<p>Instagram: ${safeInstagram}</p>` : ''}
           </div>
           <div class="col" style="text-align: right;">
             <h3>Evento</h3>
             <p><strong>${eventTypeLabel(lead.niche)}</strong></p>
             <p>Data: ${lead.firstContact ? new Date(lead.firstContact).toLocaleDateString('pt-BR') : '—'}</p>
-            ${lead.address ? `<p>Local: ${lead.address}</p>` : ''}
-            <p style="margin-top: 6px;"><span class="badge">${lead.stage}</span></p>
+            ${lead.address ? `<p>Local: ${safeAddress}</p>` : ''}
+            <p style="margin-top: 6px;"><span class="badge">${safeStage}</span></p>
           </div>
         </div>
 
@@ -406,7 +425,7 @@ export function generatePDF(lead: Lead, discountData?: { type: 'percent' | 'fixe
           <tbody>
             ${items.map((item, i) => `
               <tr${i === 0 ? '' : ''}>
-                <td>${item.item}</td>
+                <td>${escapeHtml(item.item)}</td>
                 <td>${item.qtdAtual}</td>
                 <td>${formatCurrency(item.valorUnit)}</td>
                 <td>${formatCurrency(item.qtdAtual * item.valorUnit)}</td>
@@ -435,7 +454,7 @@ export function generatePDF(lead: Lead, discountData?: { type: 'percent' | 'fixe
         ${lead.notes ? `
         <div class="notes-section">
           <h4>Observações</h4>
-          <p>${lead.notes}</p>
+          <p>${safeNotes}</p>
         </div>` : ''}
       </div>
 

@@ -17,10 +17,6 @@ export function cleanPhoneNumber(phone: string): string {
   
   // If it doesn't start with 55 (Brazil country code), add it
   if (cleaned.length > 0 && !cleaned.startsWith('55')) {
-    // If it starts with 0, remove it
-    if (cleaned.startsWith('0')) {
-      cleaned = cleaned.substring(1);
-    }
     // Add Brazil country code
     cleaned = '55' + cleaned;
   }
@@ -52,7 +48,7 @@ export const WHATSAPP_MESSAGE_TEMPLATES = [
     id: 'greeting',
     label: 'Saudação',
     template: (leadName: string, userName: string) => 
-      `Olá ${leadName}! Tudo bem? Aqui é o ${userName} da Axium. Como posso ajudar?`,
+      `Olá ${leadName}! Tudo bem? Aqui é o ${userName} da Ventura. Como posso ajudar?`,
   },
   {
     id: 'followup',
