@@ -587,6 +587,7 @@ const Financeiro = () => {
       setEditingExpense(expense);
       setIsNewExpense(false);
     } else {
+      const defaultType: 'fixa' | 'variavel' = activeTab === 'fixas' ? 'fixa' : 'variavel';
       setEditingExpense({
         id: generateUUID(),
         category: 'outros',
@@ -595,7 +596,8 @@ const Financeiro = () => {
         date: new Date().toISOString().split('T')[0],
         paidDate: '',
         status: 'Pendente',
-        expenseType: 'variavel',
+        expenseType: defaultType,
+        ...(defaultType === 'fixa' ? { recurrence: 'mensal' as const, dueDay: 1 } : {}),
       });
       setIsNewExpense(true);
     }
@@ -692,6 +694,9 @@ const Financeiro = () => {
       }
     }
     setIsExpenseModalOpen(false);
+    if (editingExpense) {
+      setActiveTab(editingExpense.expenseType === 'fixa' ? 'fixas' : 'variaveis');
+    }
   };
 
   const handleDeleteSingleExpense = async (id: string) => {
