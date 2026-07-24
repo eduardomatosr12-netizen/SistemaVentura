@@ -627,6 +627,7 @@ const Financeiro = () => {
 
     const amountValue = parseBRL(editingExpense.amount);
     const isFixa = editingExpense.expenseType === 'fixa';
+    const expenseTypeToSet = isFixa ? 'fixa' : 'variavel';
       
     if (isNewExpense) {
       try {
@@ -643,17 +644,15 @@ const Financeiro = () => {
               status: 'Pendente',
               source: 'manual',
               paymentMethod: editingExpense.paymentMethod || 'pix',
-              installments: editingExpense.installments || null,
               expenseType: 'fixa',
               recurrence: editingExpense.recurrence,
               dueDay: editingExpense.dueDay,
               parentId,
-              paidDate: editingExpense.paidDate || null,
               lastModifiedBy: employeeName || (role === 'admin' ? 'Administrador' : 'Funcionário'),
             });
           }
         } else {
-          await addTransaction({
+          const payload: Record<string, unknown> = {
             type: 'despesa',
             description: editingExpense.description,
             category: editingExpense.category,
@@ -662,41 +661,46 @@ const Financeiro = () => {
             status: editingExpense.status,
             source: 'manual',
             paymentMethod: editingExpense.paymentMethod || 'pix',
-            installments: editingExpense.installments || null,
             expenseType: 'variavel',
-            paidDate: editingExpense.paidDate || null,
-            origemEventoId: editingExpense.origemEventoId,
             lastModifiedBy: employeeName || (role === 'admin' ? 'Administrador' : 'Funcionário'),
-          });
+          };
+          if (editingExpense.origemEventoId) payload.origemEventoId = editingExpense.origemEventoId;
+          if (editingExpense.paidDate) payload.paidDate = editingExpense.paidDate;
+          await addTransaction(payload as any);
         }
       } catch (err) {
         console.error('[Finance] Erro ao salvar despesa:', err);
+        alert('Erro ao salvar despesa. Verifique o console para detalhes.');
+        return;
       }
     } else {
       try {
-        await updateTransaction(editingExpense.id, {
+        const updatePayload: Record<string, unknown> = {
           description: editingExpense.description,
           category: editingExpense.category,
           amount: amountValue,
           date: editingExpense.date,
           status: editingExpense.status,
           paymentMethod: editingExpense.paymentMethod,
-          installments: editingExpense.installments || null,
           expenseType: editingExpense.expenseType,
-          recurrence: isFixa ? editingExpense.recurrence : null,
-          dueDay: isFixa ? editingExpense.dueDay : null,
-          paidDate: editingExpense.paidDate || null,
-          origemEventoId: editingExpense.origemEventoId,
           lastModifiedBy: employeeName || (role === 'admin' ? 'Administrador' : 'Funcionário'),
-        });
+        };
+        if (isFixa) {
+          updatePayload.recurrence = editingExpense.recurrence;
+          updatePayload.dueDay = editingExpense.dueDay;
+        }
+        if (editingExpense.origemEventoId) updatePayload.origemEventoId = editingExpense.origemEventoId;
+        if (editingExpense.paidDate) updatePayload.paidDate = editingExpense.paidDate;
+        if (editingExpense.installments) updatePayload.installments = editingExpense.installments;
+        await updateTransaction(editingExpense.id, updatePayload as any);
       } catch (err) {
         console.error('[Finance] Erro ao atualizar despesa:', err);
+        alert('Erro ao atualizar despesa. Verifique o console para detalhes.');
+        return;
       }
     }
     setIsExpenseModalOpen(false);
-    if (editingExpense) {
-      setActiveTab(editingExpense.expenseType === 'fixa' ? 'fixas' : 'variaveis');
-    }
+    setActiveTab(expenseTypeToSet === 'fixa' ? 'fixas' : 'variaveis');
   };
 
   const handleDeleteSingleExpense = async (id: string) => {
@@ -734,7 +738,7 @@ const Financeiro = () => {
       }
     }
   };
-    
+
   const statusStyle: Record<string, string> = {
     Pago: 'badge badge-pago',
     Pendente: 'badge badge-pendente',
