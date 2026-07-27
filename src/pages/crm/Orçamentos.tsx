@@ -600,7 +600,9 @@ const CRMOrçamentos = () => {
             </button>
           </div>
 
-          <div className="bg-[#0a0a0a] border border-[#333] rounded-md overflow-x-auto shadow-sm">
+          <div className="bg-[#0a0a0a] border border-[#333] rounded-md overflow-hidden shadow-sm">
+            {/* Desktop Table */}
+            <div className="overflow-x-auto hidden md:block">
             <table className="w-full text-xs md:text-sm">
               <thead>
                 <tr className="border-b border-[#1a1a1a] bg-[#111]">
@@ -662,9 +664,10 @@ const CRMOrçamentos = () => {
                 )}
               </tbody>
             </table>
+            </div>
 
             {/* Mobile Card View */}
-            <div className="md:hidden space-y-3 mt-3">
+            <div className="md:hidden p-3 space-y-3">
               {Array.isArray(filteredOrçamentos) && filteredOrçamentos.length > 0 ? filteredOrçamentos.map(lead => (
                 <div key={lead?.id} className="bg-[#111] border border-[#333] rounded-lg p-4 space-y-2.5">
                   <div>
@@ -721,8 +724,8 @@ const CRMOrçamentos = () => {
       </main>
 
       {isOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 md:p-4 bg-black/30 backdrop-blur-sm">
-          <div className="bg-[#111] border border-[#333] w-full max-w-sm md:max-w-2xl rounded-2xl shadow-xl overflow-hidden max-h-[90vh] flex flex-col">
+        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-3 md:p-4 bg-black/30 backdrop-blur-sm" onClick={() => setIsOpen(false)}>
+          <div className="bg-[#111] border border-[#333] w-full max-w-sm md:max-w-2xl rounded-t-2xl sm:rounded-2xl shadow-xl overflow-hidden max-h-[92vh] sm:max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}>
             <div className="flex justify-between items-start md:items-center gap-3 px-4 md:px-7 py-3 md:py-5 border-b border-slate-100 shrink-0">
               <div>
                 <h2 className="text-lg md:text-xl font-black text-white tracking-tight">

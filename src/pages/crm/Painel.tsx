@@ -619,7 +619,7 @@ const CRMDashboard = () => {
       </div>
 
       {/* 3-tab navigation */}
-      <div className="flex gap-6 mb-6">
+      <div className="flex gap-4 sm:gap-6 mb-6 overflow-x-auto scrollbar-hide pb-1 -mx-1 px-1">
         <button
           onClick={() => handleTabChange('calendario')}
           className={`pb-2 border-b-2 font-bold text-xs uppercase tracking-widest transition-colors whitespace-nowrap ${
@@ -657,17 +657,17 @@ const CRMDashboard = () => {
         <>
         <div className="bg-[#111] border border-[#333] rounded-2xl shadow-sm overflow-hidden">
           {/* Top bar */}
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 p-4 md:p-6 border-b border-[#222]">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 p-4 md:p-6 border-b border-[#222]">
             <div>
               <h2 className="text-lg font-black text-white tracking-tight">Calendário de Eventos</h2>
               <p className="text-[11px] text-neutral-400 mt-0.5">Visualize e acompanhe seus compromissos agendados.</p>
             </div>
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2 bg-[#0a0a0a] border border-[#333] rounded-lg px-3 py-1.5">
+            <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
+              <div className="flex items-center gap-1 sm:gap-2 bg-[#0a0a0a] border border-[#333] rounded-lg px-2 sm:px-3 py-1.5 flex-1 sm:flex-none justify-center">
                 <button onClick={prevMonth} className="p-2 hover:bg-[#222] rounded-md transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center">
                   <ChevronLeft size={16} className="text-neutral-400" />
                 </button>
-                <span className="text-sm font-bold text-white min-w-[140px] text-center select-none">
+                <span className="text-xs sm:text-sm font-bold text-white min-w-[100px] sm:min-w-[140px] text-center select-none">
                   {monthNames[viewMonth]} {viewYear}
                 </span>
                 <button onClick={nextMonth} className="p-2 hover:bg-[#222] rounded-md transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center">
@@ -676,7 +676,7 @@ const CRMDashboard = () => {
               </div>
               <button
                 onClick={() => openCreateModal(new Date().toISOString().split('T')[0])}
-                className="rounded-full px-4 py-2 bg-[#B5FF03] text-black font-bold text-xs uppercase tracking-widest hover:bg-[#a1e600] transition-colors min-h-[44px]"
+                className="rounded-full px-3 sm:px-4 py-2 bg-[#B5FF03] text-black font-bold text-[10px] sm:text-xs uppercase tracking-widest hover:bg-[#a1e600] transition-colors min-h-[44px] shrink-0"
               >
                 + CRIAR
               </button>
@@ -684,19 +684,19 @@ const CRMDashboard = () => {
           </div>
 
           {/* Legend bar */}
-          <div className="flex flex-wrap items-center gap-4 px-4 md:px-6 py-3 border-b border-[#222] bg-[#0a0a0a]">
-            <span className="text-[9px] font-black uppercase tracking-widest text-neutral-400">Status:</span>
+          <div className="flex items-center gap-3 sm:gap-4 px-4 md:px-6 py-3 border-b border-[#222] bg-[#0a0a0a] overflow-x-auto scrollbar-hide">
+            <span className="text-[9px] font-black uppercase tracking-widest text-neutral-400 shrink-0">Status:</span>
             {Object.entries(statusLabel).map(([key, label]) => (
-              <div key={key} className="flex items-center gap-1.5">
+              <div key={key} className="flex items-center gap-1.5 shrink-0">
                 <div className={`w-2.5 h-2.5 rounded-full ${statusBg[key]}`} />
                 <span className="text-[10px] text-neutral-500 font-medium">{label}</span>
               </div>
             ))}
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1.5 shrink-0">
               <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: '#8B5CF6' }} />
               <span className="text-[10px] text-neutral-500 font-medium">Montagem</span>
             </div>
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1.5 shrink-0">
               <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: '#06B6D4' }} />
               <span className="text-[10px] text-neutral-500 font-medium">Desmontagem</span>
             </div>
@@ -881,7 +881,8 @@ const CRMDashboard = () => {
       {/* HISTÓRICO DE EVENTOS */}
       {activeTab === 'eventos' && (
         <div className="bg-[#111] border border-[#333] rounded-2xl shadow-sm overflow-hidden">
-          <div className="overflow-x-auto">
+          {/* Desktop Table */}
+          <div className="overflow-x-auto hidden md:block">
             <table className="w-full min-w-[800px] text-left">
               <thead>
                 <tr className="border-b border-[#222]">
@@ -940,6 +941,53 @@ const CRMDashboard = () => {
               </tbody>
             </table>
           </div>
+
+          {/* Mobile Card View */}
+          <div className="md:hidden">
+            {paginatedEvents.length === 0 ? (
+              <div className="text-center py-8 text-neutral-500 text-xs italic">Nenhum evento encontrado.</div>
+            ) : (
+              <div className="divide-y divide-[#222]">
+                {paginatedEvents.map(event => (
+                  <div key={event.id} className="p-4 space-y-2">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm text-white font-bold truncate">{event.client || event.title || '—'}</p>
+                        <p className="text-[11px] text-neutral-400">{eventTypeLabel(event.eventType)} {event.city ? `· ${event.city}` : ''}</p>
+                      </div>
+                      {event.status ? (
+                        <span className={`shrink-0 px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                          event.status === 'confirmado' ? 'bg-[#B5FF03] text-black' :
+                          event.status === 'pendente' ? 'bg-[#f59e0b] text-white' :
+                          event.status === 'cancelado' ? 'bg-[#ef4444] text-white' :
+                          event.status === 'realizado' ? 'bg-[#3b82f6] text-white' :
+                          'bg-[#333] text-white'
+                        }`}>
+                          {statusLabel[event.status] || event.status}
+                        </span>
+                      ) : null}
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-neutral-300">{formatDate(event.date)}</span>
+                      <button
+                        onClick={() => {
+                          const name = event.client || event.title || 'este evento';
+                          if (confirm(`Tem certeza que deseja excluir "${name}"?`)) {
+                            deleteEvent(event.id);
+                          }
+                        }}
+                        className="p-2 rounded-md text-neutral-500 hover:text-red-400 hover:bg-red-400/10 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
+                        title="Excluir evento"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
           {/* Pagination footer */}
           <div className="flex items-center justify-between px-4 py-3 border-t border-[#222] bg-[#0a0a0a]">
             <span className="text-[11px] text-neutral-500">
@@ -949,7 +997,7 @@ const CRMDashboard = () => {
               <button
                 disabled={eventPage === 0}
                 onClick={() => setEventPage(p => Math.max(0, p - 1))}
-                className={`px-3 py-1 text-[10px] font-bold uppercase tracking-widest rounded-md transition-colors ${
+                className={`px-3 py-2 text-[10px] font-bold uppercase tracking-widest rounded-md transition-colors min-h-[36px] ${
                   eventPage === 0
                     ? 'text-neutral-600 cursor-not-allowed'
                     : 'text-white hover:bg-[#222]'
@@ -960,7 +1008,7 @@ const CRMDashboard = () => {
               <button
                 disabled={eventPage >= totalEventPages - 1}
                 onClick={() => setEventPage(p => Math.min(totalEventPages - 1, p + 1))}
-                className={`px-3 py-1 text-[10px] font-bold uppercase tracking-widest rounded-md transition-colors ${
+                className={`px-3 py-2 text-[10px] font-bold uppercase tracking-widest rounded-md transition-colors min-h-[36px] ${
                   eventPage >= totalEventPages - 1
                     ? 'text-neutral-600 cursor-not-allowed'
                     : 'text-white hover:bg-[#222]'
@@ -976,7 +1024,8 @@ const CRMDashboard = () => {
       {/* HISTÓRICO DE ORÇAMENTOS */}
       {activeTab === 'orcamentos' && (
         <div className="bg-[#111] border border-[#333] rounded-2xl shadow-sm overflow-hidden">
-          <div className="overflow-x-auto">
+          {/* Desktop Table */}
+          <div className="overflow-x-auto hidden md:block">
             <table className="w-full min-w-[800px] text-left">
               <thead>
                 <tr className="border-b border-[#222]">
@@ -1024,6 +1073,46 @@ const CRMDashboard = () => {
               </tbody>
             </table>
           </div>
+
+          {/* Mobile Card View */}
+          <div className="md:hidden">
+            {paginatedOrcamentos.length === 0 ? (
+              <div className="text-center py-8 text-neutral-500 text-xs italic">Nenhum orçamento encontrado.</div>
+            ) : (
+              <div className="divide-y divide-[#222]">
+                {paginatedOrcamentos.map(lead => (
+                  <div key={lead.id} className="p-4 space-y-2">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm text-white font-bold truncate">{lead.name || '—'}</p>
+                        <p className="text-[11px] text-neutral-400">{formatDate(lead.firstContact)}</p>
+                      </div>
+                      <span className="shrink-0 px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#333] text-white">
+                        {lead.stage || '—'}
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-[#B5FF03] font-bold">
+                        {lead.value ? formatCurrency(parseMonetaryValue(lead.value)) : 'R$ 0,00'}
+                      </span>
+                      <button
+                        onClick={() => {
+                          if (confirm(`Tem certeza que deseja excluir o orçamento de "${lead.name || '—'}"?`)) {
+                            deleteLead(lead.id);
+                          }
+                        }}
+                        className="p-2 rounded-md text-neutral-500 hover:text-red-400 hover:bg-red-400/10 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
+                        title="Excluir orçamento"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
           {/* Pagination footer */}
           <div className="flex items-center justify-between px-4 py-3 border-t border-[#222] bg-[#0a0a0a]">
             <span className="text-[11px] text-neutral-500">
@@ -1033,7 +1122,7 @@ const CRMDashboard = () => {
               <button
                 disabled={orcPage === 0}
                 onClick={() => setOrcPage(p => Math.max(0, p - 1))}
-                className={`px-3 py-1 text-[10px] font-bold uppercase tracking-widest rounded-md transition-colors ${
+                className={`px-3 py-2 text-[10px] font-bold uppercase tracking-widest rounded-md transition-colors min-h-[36px] ${
                   orcPage === 0
                     ? 'text-neutral-600 cursor-not-allowed'
                     : 'text-white hover:bg-[#222]'
@@ -1044,7 +1133,7 @@ const CRMDashboard = () => {
               <button
                 disabled={orcPage >= totalOrcPages - 1}
                 onClick={() => setOrcPage(p => Math.min(totalOrcPages - 1, p + 1))}
-                className={`px-3 py-1 text-[10px] font-bold uppercase tracking-widest rounded-md transition-colors ${
+                className={`px-3 py-2 text-[10px] font-bold uppercase tracking-widest rounded-md transition-colors min-h-[36px] ${
                   orcPage >= totalOrcPages - 1
                     ? 'text-neutral-600 cursor-not-allowed'
                     : 'text-white hover:bg-[#222]'
@@ -1059,8 +1148,8 @@ const CRMDashboard = () => {
 
       {/* Event Detail Modal */}
       {selectedDayEvents && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[100] p-4" onClick={closeModal}>
-          <div className="bg-[#0a0a0a] border border-[#222222] rounded-lg w-full max-w-lg max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-black/80 flex items-end sm:items-center justify-center z-[100] p-0 sm:p-4" onClick={closeModal}>
+          <div className="bg-[#0a0a0a] border border-[#222222] rounded-t-2xl sm:rounded-lg w-full max-w-lg max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between p-4 border-b border-[#222]">
               <h3 className="text-sm font-black uppercase tracking-widest text-[#B5FF03]">
                 Eventos — {selectedDate}
@@ -1174,8 +1263,8 @@ const CRMDashboard = () => {
 
       {/* Create Event/Client Modal */}
       {isCreateOpen && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[100] p-4" onClick={() => { setEditingEventId(null); setIsCreateOpen(false); }}>
-          <div className="bg-[#0a0a0a] border border-[#222222] rounded-lg w-full max-w-md max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-black/80 flex items-end sm:items-center justify-center z-[100] p-0 sm:p-4" onClick={() => { setEditingEventId(null); setIsCreateOpen(false); }}>
+          <div className="bg-[#0a0a0a] border border-[#222222] rounded-t-2xl sm:rounded-lg w-full max-w-md max-h-[95vh] sm:max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between p-4 border-b border-[#222] shrink-0">
               <h3 className="text-sm font-black uppercase tracking-widest text-[#B5FF03]">{editingEventId ? 'Editar Evento' : 'Novo Evento'}</h3>
               <button onClick={() => { setEditingEventId(null); setIsCreateOpen(false); }} className="p-1 hover:bg-[#222] rounded-md transition-colors">

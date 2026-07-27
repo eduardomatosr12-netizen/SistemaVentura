@@ -148,6 +148,25 @@ html {
   scroll-behavior: smooth;
 }
 
+/* Mobile-first touch optimizations */
+@supports (-webkit-touch-callout: none) {
+  /* iOS specific fixes */
+  input, textarea, select {
+    -webkit-appearance: none;
+    appearance: none;
+  }
+}
+
+/* Prevent overscroll bounce effect on iOS */
+@supports (height: 100dvh) {
+  .h-dvh {
+    height: 100dvh;
+  }
+  .min-h-dvh {
+    min-height: 100dvh;
+  }
+}
+
 @layer components {
   /* ---- Sidebar navigation items ---- */
   .sidebar-item {

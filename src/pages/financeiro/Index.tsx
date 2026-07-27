@@ -1092,7 +1092,7 @@ const Financeiro = () => {
           {/* Receitas View - RECEITAS tab */}
           {viewMode === 'receitas' && activeTab === 'receitas' && (
             <>
-            <div className="card overflow-x-auto">
+            <div className="card overflow-x-auto hidden md:block">
               <table className="w-full min-w-[800px]">
                 <thead>
                   <tr>
@@ -1205,7 +1205,7 @@ const Financeiro = () => {
                 <p className="card-value text-[#FF4444]">{formatCurrency(displayData.fluxo.saidaPendente)}</p>
               </div>
             </div>
-            <div className="card overflow-x-auto">
+            <div className="card overflow-x-auto hidden md:block">
               <table className="w-full min-w-[800px]">
                 <thead>
                   <tr>
@@ -1249,6 +1249,32 @@ const Financeiro = () => {
                 </tbody>
               </table>
             </div>
+            {/* Mobile Card View */}
+            <div className="md:hidden space-y-3">
+              {[...displayData.filteredInvoices, ...displayData.filteredExpenses]
+                .sort((a, b) => parseDateSafe(b.date).getTime() - parseDateSafe(a.date).getTime())
+                .map(item => {
+                  const isInvoice = 'client' in item;
+                  return (
+                    <div key={item.id} className="card p-4 space-y-2">
+                      <div className="flex justify-between items-start">
+                        <span className={`font-bold text-sm ${isInvoice ? 'text-[#CCFF00]' : 'text-[#FF4444]'}`}>
+                          {isInvoice ? 'Receita' : 'Despesa'}
+                        </span>
+                        <span className={statusStyle[item.status]}>{item.status}</span>
+                      </div>
+                      <div className="text-sm text-white">{isInvoice ? (item as Invoice).client : (item as Expense).description}</div>
+                      <div className="grid grid-cols-2 gap-2 text-xs">
+                        <div><span className="text-[#606060]">Valor:</span> <span className="text-white">{item.amount}</span></div>
+                        <div><span className="text-[#606060]">Data:</span> <span className="text-white">{item.date}</span></div>
+                      </div>
+                    </div>
+                  );
+                })}
+              {displayData.filteredInvoices.length === 0 && displayData.filteredExpenses.length === 0 && (
+                <p className="text-center text-sm text-[#606060] py-8">Nenhum registro encontrado</p>
+              )}
+            </div>
             </>
           )}
 
@@ -1284,7 +1310,7 @@ const Financeiro = () => {
                 });
               })()}
             </div>
-            <div className="card overflow-x-auto">
+            <div className="card overflow-x-auto hidden md:block">
               <table className="w-full min-w-[800px]">
                 <thead>
                   <tr>
@@ -1315,13 +1341,32 @@ const Financeiro = () => {
                 </tbody>
               </table>
             </div>
+            {/* Mobile Card View */}
+            <div className="md:hidden space-y-3">
+              {displayData.allInvoices.filter(inv => inv.paymentMethod === 'parcelado' || inv.paymentMethod === 'credito').sort((a, b) => parseDateSafe(a.date).getTime() - parseDateSafe(b.date).getTime()).map(inv => (
+                <div key={inv.id} className="card p-4 space-y-2">
+                  <div className="flex justify-between items-start">
+                    <span className="text-white font-bold text-sm">{inv.client}</span>
+                    <span className={statusStyle[inv.status] || statusStyle.Pendente}>{inv.status}</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div><span className="text-[#606060]">Valor:</span> <span className="text-white">{inv.amount}</span></div>
+                    <div><span className="text-[#606060]">Data:</span> <span className="text-white">{inv.date}</span></div>
+                    <div><span className="text-[#606060]">Parcela:</span> <span className="text-white">{inv.installments ? `${inv.installments}x` : '—'}</span></div>
+                  </div>
+                </div>
+              ))}
+              {displayData.allInvoices.filter(inv => inv.paymentMethod === 'parcelado' || inv.paymentMethod === 'credito').length === 0 && (
+                <p className="text-center text-sm text-[#606060] py-8">Nenhuma projeção disponível.</p>
+              )}
+            </div>
             </>
           )}
 
           {/* Despesas View - FIXAS tab */}
           {viewMode === 'despesas' && activeTab === 'fixas' && (
             <>
-            <div className="card overflow-x-auto">
+            <div className="card overflow-x-auto hidden md:block">
               <table className="w-full min-w-[800px]">
                 <thead>
                   <tr>
@@ -1405,7 +1450,7 @@ const Financeiro = () => {
           {/* Despesas View - VARIÁVEIS tab */}
           {viewMode === 'despesas' && activeTab === 'variaveis' && (
             <>
-            <div className="card overflow-x-auto">
+            <div className="card overflow-x-auto hidden md:block">
               <table className="w-full min-w-[800px]">
                 <thead>
                   <tr>
@@ -1511,7 +1556,7 @@ const Financeiro = () => {
                 <p className="card-value text-[#FF4444]">{formatCurrency(displayData.fluxo.saidaPendente)}</p>
               </div>
             </div>
-            <div className="card overflow-x-auto">
+            <div className="card overflow-x-auto hidden md:block">
               <table className="w-full min-w-[800px]">
                 <thead>
                   <tr>
@@ -1552,6 +1597,26 @@ const Financeiro = () => {
                 </tbody>
               </table>
             </div>
+            {/* Mobile Card View */}
+            <div className="md:hidden space-y-3">
+              {displayData.filteredExpenses.map(expense => (
+                <div key={expense.id} className="card p-4 space-y-2">
+                  <div className="flex justify-between items-start">
+                    <span className="text-white font-bold text-sm">{expense.description}</span>
+                    <span className={statusStyle[expense.status]}>{expense.status}</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div><span className="text-[#606060]">Tipo:</span> <span className={expenseTypeBadge(expense.expenseType)}>{expense.expenseType === 'fixa' ? 'FIXA' : 'VARIÁVEL'}</span></div>
+                    <div><span className="text-[#606060]">Categoria:</span> <span className="text-white">{categoryLabel(expense.category)}</span></div>
+                    <div><span className="text-[#606060]">Valor:</span> <span className="text-white">{expense.amount}</span></div>
+                    <div><span className="text-[#606060]">Data:</span> <span className="text-white">{expense.date}</span></div>
+                  </div>
+                </div>
+              ))}
+              {displayData.filteredExpenses.length === 0 && (
+                <p className="text-center text-sm text-[#606060] py-8">Nenhuma despesa encontrada</p>
+              )}
+            </div>
             </>
           )}
 
@@ -1587,7 +1652,7 @@ const Financeiro = () => {
                 });
               })()}
             </div>
-            <div className="card overflow-x-auto">
+            <div className="card overflow-x-auto hidden md:block">
               <table className="w-full min-w-[800px]">
                 <thead>
                   <tr>
@@ -1617,6 +1682,25 @@ const Financeiro = () => {
                   )}
                 </tbody>
               </table>
+            </div>
+            {/* Mobile Card View */}
+            <div className="md:hidden space-y-3">
+              {displayData.allExpenses.filter(exp => exp.paymentMethod === 'parcelado' || exp.paymentMethod === 'credito').sort((a, b) => parseDateSafe(a.date).getTime() - parseDateSafe(b.date).getTime()).map(exp => (
+                <div key={exp.id} className="card p-4 space-y-2">
+                  <div className="flex justify-between items-start">
+                    <span className="text-white font-bold text-sm">{exp.description}</span>
+                    <span className={statusStyle[exp.status] || statusStyle.Pendente}>{exp.status}</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div><span className="text-[#606060]">Valor:</span> <span className="text-white">{exp.amount}</span></div>
+                    <div><span className="text-[#606060]">Data:</span> <span className="text-white">{exp.date}</span></div>
+                    <div><span className="text-[#606060]">Parcela:</span> <span className="text-white">{exp.installments ? `${exp.installments}x` : '—'}</span></div>
+                  </div>
+                </div>
+              ))}
+              {displayData.allExpenses.filter(exp => exp.paymentMethod === 'parcelado' || exp.paymentMethod === 'credito').length === 0 && (
+                <p className="text-center text-sm text-[#606060] py-8">Nenhuma projeção disponível.</p>
+              )}
             </div>
             </>
           )}

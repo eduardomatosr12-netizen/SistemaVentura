@@ -110,14 +110,14 @@ const TopHeader = ({ onMenuClick }: TopHeaderProps) => {
   }, [notifications, dismissAll]);
 
   return (
-    <header className="sticky top-0 z-40 bg-black/70 backdrop-blur-md border-b border-[#1a1a1a] px-3 md:px-8 py-2 md:py-4 flex items-center justify-between transition-all duration-300">
+    <header className="sticky top-0 z-40 bg-black/80 backdrop-blur-lg border-b border-[#1a1a1a] px-3 md:px-8 py-3 md:py-4 flex items-center justify-between transition-all duration-300 min-h-[52px]">
       {/* Mobile Menu Button */}
       <button
         onClick={onMenuClick}
-        className="p-2 -ml-2 rounded-md hover:bg-[#222] md:hidden"
+        className="p-2.5 -ml-2 rounded-lg hover:bg-[#222] md:hidden min-w-[44px] min-h-[44px] flex items-center justify-center"
         aria-label="Abrir menu"
       >
-          <Menu className="w-5 h-5 text-neutral-400" />
+        <Menu className="w-5 h-5 text-neutral-400" />
       </button>
 
       <div>
@@ -127,16 +127,16 @@ const TopHeader = ({ onMenuClick }: TopHeaderProps) => {
         )}
       </div>
 
-      <div className="flex items-center gap-2 md:gap-3">
+      <div className="flex items-center gap-1 md:gap-3">
         {/* Notification bell */}
         <div className="relative" ref={notificationRef}>
           <button
             onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
-            className={`relative p-2 rounded-md transition-all ${isNotificationsOpen ? 'bg-[#222] text-[#B5FF03]' : 'text-neutral-400 hover:text-white hover:bg-[#222]'}`}
+            className={`relative p-2.5 rounded-lg transition-all min-w-[44px] min-h-[44px] flex items-center justify-center ${isNotificationsOpen ? 'bg-[#222] text-[#B5FF03]' : 'text-neutral-400 hover:text-white hover:bg-[#222]'}`}
           >
-            <Bell className="w-4 h-4" strokeWidth={2} />
+            <Bell className="w-5 h-5" strokeWidth={2} />
             {unreadCount > 0 && (
-              <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 bg-[#B5FF03] text-black text-[9px] font-black flex items-center justify-center rounded-full ring-2 ring-black">
+              <span className="absolute top-1 right-1 min-w-[18px] h-[18px] px-1 bg-[#B5FF03] text-black text-[9px] font-black flex items-center justify-center rounded-full ring-2 ring-black">
                 {unreadCount > 99 ? '99+' : unreadCount}
               </span>
             )}
@@ -144,7 +144,7 @@ const TopHeader = ({ onMenuClick }: TopHeaderProps) => {
 
           {/* Notifications Panel */}
           {isNotificationsOpen && (
-            <div className="absolute right-0 mt-3 w-80 max-w-[calc(100vw-16px)] bg-[#111] border border-[#333] rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 origin-top-right">
+            <div className="absolute right-0 mt-3 w-[calc(100vw-24px)] max-w-80 bg-[#111] border border-[#333] rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 origin-top-right">
                <div className="px-6 py-4 border-b border-[#333] flex justify-between items-center bg-[#111]">
                  <h3 className="text-[10px] font-black text-white uppercase tracking-widest">Notificações</h3>
                  <span className="text-[9px] font-black bg-[#222] text-neutral-400 px-2 py-0.5 rounded uppercase">{unreadCount} nova{unreadCount !== 1 ? 's' : ''}</span>
@@ -201,14 +201,14 @@ const TopHeader = ({ onMenuClick }: TopHeaderProps) => {
         <div className="relative" ref={userMenuRef}>
           <button
             onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-            className="w-8 h-8 rounded-full bg-[#B5FF03] text-black flex items-center justify-center text-xs font-bold hover:bg-[#a1e600] transition-colors shrink-0 shadow-sm"
+            className="w-9 h-9 rounded-full bg-[#B5FF03] text-black flex items-center justify-center text-xs font-bold hover:bg-[#a1e600] transition-colors shrink-0 shadow-sm min-w-[44px] min-h-[44px]"
             title={user?.email}
           >
             {initials}
           </button>
 
           {isUserMenuOpen && (
-            <div className="absolute right-0 mt-3 w-56 bg-[#111] border border-[#333] rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 origin-top-right">
+            <div className="absolute right-0 mt-3 w-56 bg-[#111] border border-[#333] rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 origin-top-right z-50">
                <div className="px-4 py-3 border-b border-[#333]">
                  <p className="text-xs font-black text-white truncate">{userDisplayName}</p>
                  <p className="text-[10px] text-neutral-400 truncate">{user?.email}</p>
@@ -216,14 +216,14 @@ const TopHeader = ({ onMenuClick }: TopHeaderProps) => {
                <div className="py-1">
                  <button
                    onClick={() => { setIsUserMenuOpen(false); navigate('/configuracoes'); }}
-                   className="w-full px-4 py-2.5 text-left text-xs font-medium text-neutral-300 hover:bg-[#222] flex items-center gap-3 transition-colors"
+                   className="w-full px-4 py-3 text-left text-xs font-medium text-neutral-300 hover:bg-[#222] flex items-center gap-3 transition-colors min-h-[44px]"
                  >
                    <User className="w-4 h-4" />
                    Perfil
                  </button>
                  <button
                    onClick={handleLogout}
-                   className="w-full px-4 py-2.5 text-left text-xs font-medium text-red-400 hover:bg-[#222] flex items-center gap-3 transition-colors"
+                   className="w-full px-4 py-3 text-left text-xs font-medium text-red-400 hover:bg-[#222] flex items-center gap-3 transition-colors min-h-[44px]"
                  >
                    <LogOut className="w-4 h-4" />
                    Sair

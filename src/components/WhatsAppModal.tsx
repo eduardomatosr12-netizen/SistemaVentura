@@ -126,7 +126,7 @@ const WhatsAppModal = ({
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center p-3 md:p-4 bg-black/60 backdrop-blur-sm"
+      className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-3 md:p-4 bg-black/60 backdrop-blur-sm"
       onClick={onClose}
       role="dialog"
       aria-modal="true"
@@ -135,7 +135,7 @@ const WhatsAppModal = ({
       <div
         ref={modalRef}
         tabIndex={-1}
-        className="bg-[#111] border border-[#333] rounded-2xl w-full max-w-lg shadow-2xl max-h-[90vh] flex flex-col outline-none"
+        className="bg-[#111] border border-[#333] rounded-t-2xl sm:rounded-2xl w-full max-w-lg shadow-2xl max-h-[92vh] sm:max-h-[90vh] flex flex-col outline-none"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between px-6 py-4 border-b border-[#333] shrink-0">

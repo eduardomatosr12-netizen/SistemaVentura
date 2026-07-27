@@ -177,30 +177,30 @@ const MainLayout = ({ children, hideSubmenu }: MainLayoutProps) => {
   }
 
   return (
-    <div className="flex h-dvh bg-black overflow-hidden">
+    <div className="flex h-dvh bg-black overflow-x-hidden overflow-y-hidden">
 
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-      <main className="flex-1 ml-0 md:ml-64 flex flex-col overflow-y-auto w-full bg-black">
+      <main className="flex-1 ml-0 md:ml-64 flex flex-col overflow-y-auto overflow-x-hidden w-full bg-black">
         <TopHeader onMenuClick={() => setSidebarOpen(true)} />
 
-        <div className="flex-1 bg-black w-full">
-          <div className="px-4 p-4 md:p-8 w-full pb-20 md:pb-4">
+        <div className="flex-1 bg-black w-full min-w-0">
+          <div className="px-3 sm:px-4 p-4 md:p-8 w-full pb-24 md:pb-6">
             {children}
           </div>
         </div>
       </main>
 
-      <nav className="fixed bottom-0 left-0 right-0 z-50 bg-black border-t border-[#333] flex md:hidden justify-around items-center h-16 safe-area-bottom">
-        <Link to="/home" className={`flex flex-col items-center gap-0.5 px-3 py-2 ${location.pathname === '/home' ? 'text-[#B5FF03]' : 'text-neutral-400'}`}>
+      <nav className="fixed bottom-0 left-0 right-0 z-50 bg-black border-t border-[#333] flex md:hidden justify-around items-center h-16" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
+        <Link to="/home" className={`flex flex-col items-center gap-0.5 px-4 py-2 min-w-[64px] min-h-[48px] justify-center ${location.pathname === '/home' ? 'text-[#B5FF03]' : 'text-neutral-400'}`}>
           <LayoutDashboard size={20} />
           <span className="text-[10px] font-bold uppercase tracking-wider">Home</span>
         </Link>
-        <Link to="/contatos" className={`flex flex-col items-center gap-0.5 px-3 py-2 ${location.pathname === '/contatos' ? 'text-[#B5FF03]' : 'text-neutral-400'}`}>
+        <Link to="/contatos" className={`flex flex-col items-center gap-0.5 px-4 py-2 min-w-[64px] min-h-[48px] justify-center ${location.pathname === '/contatos' ? 'text-[#B5FF03]' : 'text-neutral-400'}`}>
           <Users size={20} />
           <span className="text-[10px] font-bold uppercase tracking-wider">Contatos</span>
         </Link>
-        <Link to="/financeiro" className={`flex flex-col items-center gap-0.5 px-3 py-2 ${location.pathname.startsWith('/financeiro') ? 'text-[#B5FF03]' : 'text-neutral-400'}`}>
+        <Link to="/financeiro" className={`flex flex-col items-center gap-0.5 px-4 py-2 min-w-[64px] min-h-[48px] justify-center ${location.pathname.startsWith('/financeiro') ? 'text-[#B5FF03]' : 'text-neutral-400'}`}>
           <DollarSign size={20} />
           <span className="text-[10px] font-bold uppercase tracking-wider">Financeiro</span>
         </Link>
