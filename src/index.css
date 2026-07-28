@@ -137,6 +137,30 @@ button, a, select, input, textarea {
   -webkit-touch-callout: none;
 }
 
+/* Bottom navigation bar height variable */
+:root {
+  --bottom-nav-height: 64px;
+  --bottom-nav-pb: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom, 0px));
+}
+
+/* Utility for bottom nav safe area */
+.pb-bottom-nav {
+  padding-bottom: var(--bottom-nav-pb);
+}
+
+/* PWA standalone: adjust bottom nav for no browser chrome */
+@media (display-mode: standalone) {
+  .bottom-nav {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    height: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom, 0px));
+  }
+
+  /* Extra bottom padding on standalone so content isn't hidden behind nav */
+  .pb-bottom-nav {
+    padding-bottom: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom, 16px));
+  }
+}
+
 /* Safe area for fixed overlays */
 .fixed.inset-0 {
   padding-top: env(safe-area-inset-top, 0px);

@@ -919,7 +919,7 @@ const Financeiro = () => {
   );
 
   return (
-    <div className="min-h-screen bg-[#000000] text-white pb-20">
+    <div className="min-h-screen bg-[#000000] text-white pb-bottom-nav md:pb-0">
       {/* Header */}
       <div className="p-6 md:p-8 border-b border-[rgba(255,255,255,0.08)]">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">

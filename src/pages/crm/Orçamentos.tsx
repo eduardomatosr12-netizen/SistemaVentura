@@ -471,7 +471,7 @@ const CRMOrçamentos = () => {
 
   return (
     <>
-    <div className="relative min-h-screen pb-20">
+    <div className="relative min-h-screen pb-bottom-nav md:pb-0">
       {isSidebarOpen && (
         <>
           <div className="fixed inset-0 bg-black/60 z-40 md:hidden" onClick={() => setIsSidebarOpen(false)} />

@@ -331,7 +331,7 @@ const Importar = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#000000] p-2 md:p-8 pb-20">
+    <div className="min-h-screen bg-[#000000] p-2 md:p-8 pb-bottom-nav md:pb-8">
       <div className="mb-4 md:mb-8">
         <h1 className="text-2xl md:text-3xl font-black text-white tracking-tight mb-1">Importar Dados</h1>
         <p className="text-neutral-400 text-xs md:text-sm">Selecione o tipo de importação e envie seu arquivo.</p>

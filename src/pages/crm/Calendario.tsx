@@ -429,7 +429,7 @@ const CRMCalendario = () => {
   }, [safeEvents]);
 
   return (
-    <div className="min-h-screen p-2 md:p-8 pb-20 bg-[#000000]">
+    <div className="min-h-screen p-2 md:p-8 pb-bottom-nav md:pb-8 bg-[#000000]">
       <div className="mb-4 md:mb-8 flex flex-col md:flex-row justify-between items-start md:items-end gap-3 md:gap-0">
         <div className="flex items-center gap-4">
           <div>
@@ -503,7 +503,7 @@ const CRMCalendario = () => {
                 return (
                   <div
                     key={idx}
-                    className={`min-h-[60px] md:min-h-[120px] p-1 md:p-2 border border-[#1a1a1a] rounded-md flex flex-col gap-1 transition-all ${
+                    className={`min-h-[72px] md:min-h-[120px] p-1 md:p-2 border border-[#1a1a1a] rounded-md flex flex-col gap-1 transition-all ${
                       isCurrentMonth ? 'bg-[#000000] hover:border-[#333]' : 'bg-[#000000]/50'
                     } ${isToday ? 'ring-2 ring-[#B5FF03] ring-inset' : ''}`}
                   >

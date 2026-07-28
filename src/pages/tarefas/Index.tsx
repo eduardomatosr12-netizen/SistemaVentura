@@ -1117,7 +1117,7 @@ const Tarefas = () => {
   };
 
   return (
-    <div className="p-4 md:p-6 pb-20 space-y-4 md:space-y-8 min-h-screen bg-black">
+    <div className="p-4 md:p-6 pb-bottom-nav md:pb-6 space-y-4 md:space-y-8 min-h-screen bg-black">
       <div>
         <h1 className="text-3xl font-black text-white tracking-tight mb-1">Controle de Estoque</h1>
         <p className="text-neutral-400 text-sm font-medium mb-6">Gerencie seus itens, categorias e fornecedores.</p>

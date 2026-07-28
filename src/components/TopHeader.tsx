@@ -144,7 +144,7 @@ const TopHeader = ({ onMenuClick }: TopHeaderProps) => {
 
           {/* Notifications Panel */}
           {isNotificationsOpen && (
-            <div className="absolute right-0 mt-3 w-[calc(100vw-24px)] max-w-80 bg-[#111] border border-[#333] rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 origin-top-right">
+            <div className="fixed md:absolute right-3 md:right-0 top-16 md:top-full md:mt-3 left-3 md:left-auto md:w-[calc(100vw-24px)] md:max-w-80 bg-[#111] border border-[#333] rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 origin-top-right z-[100]">
                <div className="px-6 py-4 border-b border-[#333] flex justify-between items-center bg-[#111]">
                  <h3 className="text-[10px] font-black text-white uppercase tracking-widest">Notificações</h3>
                  <span className="text-[9px] font-black bg-[#222] text-neutral-400 px-2 py-0.5 rounded uppercase">{unreadCount} nova{unreadCount !== 1 ? 's' : ''}</span>
@@ -208,7 +208,7 @@ const TopHeader = ({ onMenuClick }: TopHeaderProps) => {
           </button>
 
           {isUserMenuOpen && (
-            <div className="absolute right-0 mt-3 w-56 bg-[#111] border border-[#333] rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 origin-top-right z-50">
+            <div className="fixed md:absolute right-3 md:right-0 top-16 md:top-full md:mt-3 left-3 md:left-auto w-[calc(100vw-24px)] md:w-56 bg-[#111] border border-[#333] rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 origin-top-right z-[100]">
                <div className="px-4 py-3 border-b border-[#333]">
                  <p className="text-xs font-black text-white truncate">{userDisplayName}</p>
                  <p className="text-[10px] text-neutral-400 truncate">{user?.email}</p>

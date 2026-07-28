@@ -608,7 +608,7 @@ const CRMDashboard = () => {
   };
 
   return (
-    <div className="relative min-h-screen bg-black pb-20">
+    <div className="relative min-h-screen bg-black pb-bottom-nav md:pb-0">
       {/* Header section */}
       <div className="mb-6">
         <h1 className="text-2xl md:text-4xl font-black text-white tracking-tight mb-2 flex items-center gap-3">
@@ -712,8 +712,8 @@ const CRMDashboard = () => {
                     {d}
                   </div>
                 ))}
-                {Array.from({ length: startOffset }).map((_, i) => (
-                  <div key={`empty-${i}`} className="bg-[#111] min-h-[60px] md:min-h-[110px] border-r border-b border-[#222]" />
+                  {Array.from({ length: startOffset }).map((_, i) => (
+                  <div key={`empty-${i}`} className="bg-[#111] min-h-[72px] md:min-h-[110px] border-r border-b border-[#222]" />
                 ))}
                 {Array.from({ length: daysInMonth }).map((_, i) => {
                   const day = i + 1;
@@ -731,7 +731,7 @@ const CRMDashboard = () => {
                       tabIndex={0}
                       onClick={() => handleDayClick(day)}
                       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleDayClick(day); }}
-                      className={`min-h-[60px] md:min-h-[110px] p-1 md:p-1.5 text-left align-top border-r border-b border-[#222] select-none transition-colors
+                      className={`min-h-[72px] md:min-h-[110px] p-1 md:p-1.5 text-left align-top border-r border-b border-[#222] select-none transition-colors
                         ${isToday ? 'bg-[#1a1a1a] ring-1 ring-inset ring-[#B5FF03]' : 'bg-[#111]'}
                         hover:bg-[#1a1a1a]`}
                       style={{ cursor: 'pointer !important', pointerEvents: 'auto !important' } as React.CSSProperties}

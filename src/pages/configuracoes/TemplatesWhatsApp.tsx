@@ -166,7 +166,7 @@ const TemplatesWhatsApp = () => {
   };
 
   return (
-    <div className="min-h-screen pb-20 relative">
+    <div className="min-h-screen pb-bottom-nav md:pb-0 relative">
       {toast && (
         <div className={`fixed top-6 right-6 z-[200] flex items-center gap-3 px-5 py-3 rounded-2xl shadow-2xl border animate-in slide-in-from-top-4 duration-300 ${
           toast.type === 'success'
