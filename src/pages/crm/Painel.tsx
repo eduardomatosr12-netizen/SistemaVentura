@@ -1232,6 +1232,12 @@ const CRMDashboard = () => {
                         <span className="text-white">{event.time}</span>
                       </div>
                     )}
+                    {(event.valorTotal ?? 0) > 0 && (
+                      <div>
+                        <span className="text-neutral-500">Valor:</span>{' '}
+                        <span className="text-[#B5FF03] font-bold">{formatCurrency(event.valorTotal!)}</span>
+                      </div>
+                    )}
                     {event.local && (
                       <div className="col-span-2">
                         <span className="text-neutral-500">Local:</span>{' '}
