@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { Plus, Trash2, X, Edit3, MessageCircle, Package, Building2, Search, Calendar, Filter as FilterIcon, CheckCircle2, AlertCircle, AlertTriangle, Database } from 'lucide-react';
 import { collection, getDocs, deleteDoc, doc, writeBatch, Timestamp } from 'firebase/firestore';
 import { db } from '../../services/firebase';
@@ -156,6 +157,7 @@ const Board = ({
   const [editingCatLabel, setEditingCatLabel] = useState('');
   const [addingCategory, setAddingCategory] = useState(false);
   const [newCategoryLabel, setNewCategoryLabel] = useState('');
+  const [categoryMenuPos, setCategoryMenuPos] = useState<{ top: number; left: number; width: number } | null>(null);
 
   const catCol = board.columns.find(c => c.id === 'col-2');
 
@@ -196,6 +198,10 @@ const Board = ({
       }
     });
   };
+
+  useEffect(() => {
+    if (!activeCategoryRow) setCategoryMenuPos(null);
+  }, [activeCategoryRow]);
 
   const handleAddRow = () => {
     const newRow: Row = {
@@ -370,7 +376,18 @@ const Board = ({
             <div className="relative px-3 py-2">
               <button
                 type="button"
-                onClick={(e) => { e.stopPropagation(); setActiveCategoryRow(isOpen ? null : row.id); setAddingCategory(false); setEditingCatId(null); }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (isOpen) {
+                    setActiveCategoryRow(null);
+                  } else {
+                    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                    setCategoryMenuPos({ top: rect.bottom, left: rect.left, width: Math.max(rect.width, 200) });
+                    setActiveCategoryRow(row.id);
+                    setAddingCategory(false);
+                    setEditingCatId(null);
+                  }
+                }}
                 className="flex items-center gap-2 w-full text-left"
               >
                 {value && (
@@ -381,10 +398,13 @@ const Board = ({
                 </span>
               </button>
 
-              {isOpen && (
+              {isOpen && categoryMenuPos && createPortal(
                 <>
                   <div className="fixed inset-0 z-40" onClick={() => setActiveCategoryRow(null)} />
-                  <div className="absolute top-full left-0 right-0 mt-1 z-50 bg-[#1a1a1a] border border-[#333] rounded-lg shadow-xl overflow-hidden min-w-[200px]">
+                  <div
+                    className="z-50 bg-[#1a1a1a] border border-[#333] rounded-lg shadow-xl overflow-hidden"
+                    style={{ position: 'fixed', top: categoryMenuPos.top, left: categoryMenuPos.left, minWidth: categoryMenuPos.width }}
+                  >
                     <div className="max-h-[240px] overflow-y-auto">
                       {options.map(opt => {
                         const isEditing = editingCatId === opt.id;
@@ -479,7 +499,8 @@ const Board = ({
                       )}
                     </div>
                   </div>
-                </>
+                </>,
+                document.body
               )}
             </div>
           );
