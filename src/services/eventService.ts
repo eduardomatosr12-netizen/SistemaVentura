@@ -28,6 +28,7 @@ const mapEventDoc = (d: { id: string; data: () => Record<string, unknown> }): Ca
     dataMontagem: data.dataMontagem || '',
     dataDesmontagem: data.dataDesmontagem || '',
     valorTotal: data.valorTotal ?? 0,
+    desconto: data.desconto ?? 0,
   } as CalendarEvent;
 };
 

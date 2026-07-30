@@ -308,7 +308,7 @@ const CRMDashboard = () => {
       status: event.status || '',
       outroEventoType: '',
       orcamentoItems: (lead?.items as OrcamentoItem[]) || [],
-      desconto: 0,
+      desconto: event.desconto || 0,
     });
     setSelectedClientId(leadId);
     setClientSearch(event.client ? `${event.client} — ${event.clientPhone || ''}` : '');
@@ -342,6 +342,7 @@ const CRMDashboard = () => {
           description: formData.observacao,
           status: (formData.status as CalendarEvent['status']) || 'pendente',
           valorTotal: total,
+          desconto: formData.desconto,
         };
 
         if (abaAtiva === 'cliente' && !selectedClientId) {
@@ -431,6 +432,7 @@ const CRMDashboard = () => {
             description: formData.observacao,
             status: (formData.status as CalendarEvent['status']) || 'pendente',
             valorTotal: total,
+            desconto: formData.desconto,
           });
         }
         await addTransaction({
@@ -463,6 +465,8 @@ const CRMDashboard = () => {
           dataDesmontagem: formData.dataDesmontagem,
           description: formData.observacao,
           status: (formData.status as CalendarEvent['status']) || 'pendente',
+          valorTotal: total,
+          desconto: formData.desconto,
         });
       }
       setIsCreateOpen(false);

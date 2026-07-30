@@ -56,5 +56,6 @@ export interface CalendarEvent {
   dataMontagem?: string;
   dataDesmontagem?: string;
   valorTotal?: number;
+  desconto?: number;
   despesasInternas?: EventExpense[];
 }
