@@ -81,12 +81,14 @@ const TopHeader = ({ onMenuClick }: TopHeaderProps) => {
   }, [logout, navigate]);
 
   const handleNotificationClick = useCallback((n: AppNotification) => {
+    if (!n?.id || !n?.link) return;
     markAsRead(n.id);
     setIsNotificationsOpen(false);
     navigate(n.link);
   }, [markAsRead, navigate]);
 
   const handleDismiss = useCallback((id: string) => {
+    if (!id) return;
     setLeavingIds(prev => new Set(prev).add(id));
     const timeoutId = setTimeout(() => {
       dismissNotification(id);
@@ -103,6 +105,7 @@ const TopHeader = ({ onMenuClick }: TopHeaderProps) => {
       dismissAll();
       setLeavingIds(new Set());
       timeoutRefs.current.clear();
+      setIsNotificationsOpen(false);
     }, 300);
     timeoutRefs.current.forEach(id => clearTimeout(id));
     timeoutRefs.current.clear();
@@ -144,24 +147,24 @@ const TopHeader = ({ onMenuClick }: TopHeaderProps) => {
 
           {/* Notifications Panel */}
           {isNotificationsOpen && (
-            <div className="fixed md:absolute right-3 md:right-0 top-16 md:top-full md:mt-3 left-3 md:left-auto md:w-[calc(100vw-24px)] md:max-w-80 bg-[#111] border border-[#333] rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 origin-top-right z-[100]">
+            <div className="absolute right-0 mt-3 w-[calc(100vw-24px)] max-w-80 bg-[#111] border border-[#333] rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 origin-top-right z-[100]">
                <div className="px-6 py-4 border-b border-[#333] flex justify-between items-center bg-[#111]">
                  <h3 className="text-[10px] font-black text-white uppercase tracking-widest">Notificações</h3>
                  <span className="text-[9px] font-black bg-[#222] text-neutral-400 px-2 py-0.5 rounded uppercase">{unreadCount} nova{unreadCount !== 1 ? 's' : ''}</span>
                </div>
                <div className="max-h-[360px] overflow-y-auto divide-y divide-[#222222]">
-                 {notifications.length > 0 ? (
+                 {Array.isArray(notifications) && notifications.length > 0 ? (
                    notifications.map((n) => {
-                     const Icon = notificationIcon(n.type);
-                     const isLeaving = leavingIds.has(n.id);
+                     const Icon = notificationIcon(n?.type);
+                     const isLeaving = leavingIds.has(n?.id);
                      return (
                        <div
-                         key={n.id}
+                         key={n?.id || String(Math.random())}
                          onClick={() => !isLeaving && handleNotificationClick(n)}
-                         className={`relative p-5 hover:bg-[#222] transition-all duration-300 cursor-pointer group ${!n.isRead ? 'bg-[#222]/50' : ''} ${isLeaving ? 'opacity-0 -translate-x-4 scale-95 pointer-events-none' : 'opacity-100 translate-x-0 scale-100'}`}
+                         className={`relative p-5 hover:bg-[#222] transition-all duration-300 cursor-pointer group ${!n?.isRead ? 'bg-[#222]/50' : ''} ${isLeaving ? 'opacity-0 -translate-x-4 scale-95 pointer-events-none' : 'opacity-100 translate-x-0 scale-100'}`}
                        >
                           <button
-                            onClick={(e) => { e.stopPropagation(); handleDismiss(n.id); }}
+                            onClick={(e) => { e.stopPropagation(); handleDismiss(n?.id); }}
                             className="absolute top-2 right-2 w-5 h-5 flex items-center justify-center rounded-full bg-neutral-800 hover:bg-red-900/50 text-neutral-500 hover:text-red-400 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all duration-200 z-10"
                           >
                            <X size={10} strokeWidth={3} />
@@ -171,11 +174,11 @@ const TopHeader = ({ onMenuClick }: TopHeaderProps) => {
                              <Icon size={14} />
                            </div>
                            <div className="space-y-1 flex-1 min-w-0">
-                             <p className="text-xs font-black text-white leading-tight group-hover:underline pr-4">{n.title}</p>
-                             <p className="text-[11px] text-neutral-400 font-bold leading-relaxed">{n.description}</p>
+                             <p className="text-xs font-black text-white leading-tight group-hover:underline pr-4">{n?.title || ''}</p>
+                             <p className="text-[11px] text-neutral-400 font-bold leading-relaxed">{n?.description || ''}</p>
                              <div className="flex items-center gap-1.5 text-[9px] text-neutral-500 font-black uppercase tracking-tight mt-2">
                                <Clock size={10} strokeWidth={3} />
-                               {n.time}
+                               {n?.time || ''}
                              </div>
                            </div>
                          </div>
@@ -208,7 +211,7 @@ const TopHeader = ({ onMenuClick }: TopHeaderProps) => {
           </button>
 
           {isUserMenuOpen && (
-            <div className="fixed md:absolute right-3 md:right-0 top-16 md:top-full md:mt-3 left-3 md:left-auto w-[calc(100vw-24px)] md:w-56 bg-[#111] border border-[#333] rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 origin-top-right z-[100]">
+            <div className="absolute right-0 mt-3 w-56 bg-[#111] border border-[#333] rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 origin-top-right z-[100]">
                <div className="px-4 py-3 border-b border-[#333]">
                  <p className="text-xs font-black text-white truncate">{userDisplayName}</p>
                  <p className="text-[10px] text-neutral-400 truncate">{user?.email}</p>

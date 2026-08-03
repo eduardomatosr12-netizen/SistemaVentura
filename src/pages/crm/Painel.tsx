@@ -8,7 +8,7 @@ import { parseMonetaryValue, formatCurrency, generatePDF } from '../../lib/crmHe
 import { eventTypeLabel } from '../../lib/eventTypeLabel';
 import { useActivityLogs } from '../../contexts/ActivityContext';
 import { generateUUID } from '../../lib/uuid';
-import { getAllOrcamentoItems } from '../../lib/orcamentoItems';
+import { subscribeEventItems, addEventItem, type EventItem } from '../../services/eventItemService';
 import { addTransaction } from '../../services/financeService';
 import { generateWhatsAppLink } from '../../lib/whatsapp';
 import DespesasDoEvento from '../../components/DespesasDoEvento';
@@ -122,12 +122,16 @@ const CRMDashboard = () => {
   const clientSearchRef = useRef<HTMLDivElement>(null);
 
   // Orçamento items (catálogo dedicado, independente do estoque)
-  const [orcamentoItems] = useState<{ name: string; category: string; valorUnit: number }[]>(getAllOrcamentoItems);
+  const [orcamentoItems, setOrcamentoItems] = useState<EventItem[]>([]);
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
   const [orcSearch, setOrcSearch] = useState('');
   const [orcSearchOpen, setOrcSearchOpen] = useState(false);
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
   const [inlineItemSearch, setInlineItemSearch] = useState('');
+  const [showCreateItemForm, setShowCreateItemForm] = useState(false);
+  const [newItemName, setNewItemName] = useState('');
+  const [newItemCategory, setNewItemCategory] = useState('');
+  const [newItemValor, setNewItemValor] = useState('');
   const orcSearchRef = useRef<HTMLDivElement>(null);
 
   const clientList = useMemo(() => {
@@ -153,8 +157,8 @@ const CRMDashboard = () => {
     ).slice(0, 40);
   }, [orcamentoItems, orcSearch]);
 
-  const handleAdicionarItem = (prod: { id: string; item: string; valorUnit: number }) => {
-    const newItem: OrcamentoItem = { id: prod.id, item: prod.item, qtdAtual: 1, valorUnit: prod.valorUnit };
+  const handleAdicionarItem = (prod: EventItem) => {
+    const newItem: OrcamentoItem = { id: prod.id, item: prod.name, qtdAtual: 1, valorUnit: prod.valorUnit };
     setFormData(prev => ({
       ...prev,
       orcamentoItems: [...prev.orcamentoItems, newItem],
@@ -162,6 +166,29 @@ const CRMDashboard = () => {
     setExpandedItems(prev => new Set(prev).add(prod.id));
     setOrcSearch('');
     setOrcSearchOpen(false);
+  };
+
+  const handleCreateEventItem = async () => {
+    const name = newItemName.trim();
+    if (!name) return;
+    try {
+      const valorUnit = parseFloat(String(newItemValor).replace(',', '.')) || 0;
+      const newId = generateUUID();
+      await addEventItem({ name, category: newItemCategory.trim(), valorUnit });
+      setFormData(prev => ({
+        ...prev,
+        orcamentoItems: [...prev.orcamentoItems, { id: newId, item: name, qtdAtual: 1, valorUnit }],
+      }));
+      setExpandedItems(prev => { const next = new Set(prev); next.add(newId); return next; });
+      setNewItemName('');
+      setNewItemCategory('');
+      setNewItemValor('');
+      setShowCreateItemForm(false);
+      setOrcSearch('');
+      setOrcSearchOpen(false);
+    } catch (err) {
+      console.error('[Painel] Erro ao criar item de evento:', err);
+    }
   };
 
   const handleInlineItemSelect = (itemId: string, itemName: string, valorUnit: number) => {
@@ -239,6 +266,13 @@ const CRMDashboard = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  useEffect(() => {
+    const unsub = subscribeEventItems(items => {
+      setOrcamentoItems(items);
+    });
+    return unsub;
+  }, []);
+
   const filteredClients = useMemo(() => {
     if (!clientSearch.trim()) return clientList;
     const q = clientSearch.toLowerCase();
@@ -255,6 +289,7 @@ const CRMDashboard = () => {
     setClientSearch('');
     setOrcSearch('');
     setOrcSearchOpen(false);
+    setShowCreateItemForm(false);
     setAbaAtiva('cliente');
     setIsCreateOpen(true);
   };
@@ -318,6 +353,7 @@ const CRMDashboard = () => {
           status: (formData.status as CalendarEvent['status']) || 'pendente',
           valorTotal: total,
           desconto: formData.desconto,
+          items: formData.orcamentoItems,
         };
 
         if (abaAtiva === 'cliente' && !selectedClientId) {
@@ -408,6 +444,7 @@ const CRMDashboard = () => {
             status: (formData.status as CalendarEvent['status']) || 'pendente',
             valorTotal: total,
             desconto: formData.desconto,
+            items: formData.orcamentoItems,
           });
         }
         await addTransaction({
@@ -442,6 +479,7 @@ const CRMDashboard = () => {
           status: (formData.status as CalendarEvent['status']) || 'pendente',
           valorTotal: total,
           desconto: formData.desconto,
+          items: formData.orcamentoItems,
         });
       }
       setIsCreateOpen(false);
@@ -1531,32 +1569,85 @@ const CRMDashboard = () => {
                     {/* Orçamento search combobox */}
                     {orcSearchOpen && (
                       <div ref={orcSearchRef} className="mb-3">
-                        <div className="flex items-center bg-[#111] border border-[#333] rounded-lg overflow-hidden focus-within:border-[#B5FF03] transition-colors">
-                          <Search size={14} className="text-neutral-500 ml-3 shrink-0" />
-                          <input
-                            type="text"
-                            value={orcSearch}
-                            onChange={e => setOrcSearch(e.target.value)}
-                            onFocus={() => setOrcSearchOpen(true)}
-                            placeholder="Buscar item no orçamento..."
-                            className="w-full bg-transparent border-none px-2 py-2 text-sm text-white placeholder-neutral-600 outline-none"
-                            autoFocus
-                            autoComplete="off"
-                          />
-                          <button type="button" onClick={() => setOrcSearchOpen(false)}
-                            className="p-2 hover:bg-[#222] transition-colors">
-                            <X size={14} className="text-neutral-500" />
-                          </button>
-                        </div>
-                        <div className="mt-1 bg-[#1a1a1a] border border-[#333] rounded-lg max-h-44 overflow-y-auto shadow-xl">
-                          {filteredOrcItems.length === 0 ? (
-                            <div className="px-3 py-2 text-xs text-neutral-500 italic">Nenhum item encontrado no orçamento</div>
-                          ) : (
-                            filteredOrcItems.map(item => (
+                        {showCreateItemForm || orcamentoItems.length === 0 ? (
+                          <div className="bg-[#111] border border-[#333] rounded-lg p-3 space-y-2">
+                            <p className="text-[9px] font-black uppercase tracking-widest text-neutral-400">Criar item para eventos</p>
+                            <input
+                              type="text"
+                              value={newItemName}
+                              onChange={e => setNewItemName(e.target.value)}
+                              placeholder="Nome do item (obrigatório)"
+                              className="w-full bg-[#0a0a0a] border border-[#333] rounded-lg px-3 py-2 text-sm text-white placeholder-neutral-600 outline-none focus:border-[#B5FF03]"
+                              autoFocus
+                              autoComplete="off"
+                            />
+                            <div className="grid grid-cols-2 gap-2">
+                              <input
+                                type="text"
+                                value={newItemCategory}
+                                onChange={e => setNewItemCategory(e.target.value)}
+                                placeholder="Categoria"
+                                className="w-full bg-[#0a0a0a] border border-[#333] rounded-lg px-3 py-2 text-sm text-white placeholder-neutral-600 outline-none focus:border-[#B5FF03]"
+                              />
+                              <input
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                value={newItemValor}
+                                onChange={e => setNewItemValor(e.target.value)}
+                                placeholder="Valor unit. R$"
+                                className="w-full bg-[#0a0a0a] border border-[#333] rounded-lg px-3 py-2 text-sm text-white placeholder-neutral-600 outline-none focus:border-[#B5FF03]"
+                              />
+                            </div>
+                            <div className="flex items-center justify-end gap-2 pt-1">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setShowCreateItemForm(false);
+                                  if (orcamentoItems.length === 0) setOrcSearchOpen(false);
+                                }}
+                                className="px-3 py-2 text-[10px] font-black uppercase tracking-widest text-neutral-500 hover:text-white transition-all"
+                              >
+                                Cancelar
+                              </button>
+                              <button
+                                type="button"
+                                onClick={handleCreateEventItem}
+                                disabled={!newItemName.trim()}
+                                className="flex items-center gap-1.5 px-3 py-2 bg-[#B5FF03] text-black rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-[#a1e600] transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                              >
+                                <Plus size={12} /> Salvar e adicionar
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <>
+                            <div className="flex items-center bg-[#111] border border-[#333] rounded-lg overflow-hidden focus-within:border-[#B5FF03] transition-colors">
+                              <Search size={14} className="text-neutral-500 ml-3 shrink-0" />
+                              <input
+                                type="text"
+                                value={orcSearch}
+                                onChange={e => setOrcSearch(e.target.value)}
+                                onFocus={() => setOrcSearchOpen(true)}
+                                placeholder="Buscar item no orçamento..."
+                                className="w-full bg-transparent border-none px-2 py-2 text-sm text-white placeholder-neutral-600 outline-none"
+                                autoFocus
+                                autoComplete="off"
+                              />
+                              <button type="button" onClick={() => setOrcSearchOpen(false)}
+                                className="p-2 hover:bg-[#222] transition-colors">
+                                <X size={14} className="text-neutral-500" />
+                              </button>
+                            </div>
+                            <div className="mt-1 bg-[#1a1a1a] border border-[#333] rounded-lg max-h-44 overflow-y-auto shadow-xl">
+                              {filteredOrcItems.length === 0 ? (
+                                <div className="px-3 py-2 text-xs text-neutral-500 italic">Nenhum item encontrado no orçamento</div>
+                              ) : (
+                                filteredOrcItems.map(item => (
                                   <button
                                     type="button"
-                                    key={item.name}
-                                    onClick={() => handleAdicionarItem({ id: generateUUID(), item: item.name, valorUnit: item.valorUnit })}
+                                    key={item.id}
+                                    onClick={() => handleAdicionarItem(item)}
                                     className="w-full text-left px-3 py-2 text-sm text-white hover:bg-[#333] transition-colors flex items-center justify-between gap-2"
                                   >
                                     <div className="flex items-center gap-2 min-w-0">
@@ -1565,11 +1656,21 @@ const CRMDashboard = () => {
                                         <span className="text-[9px] text-neutral-500 uppercase shrink-0">{item.category}</span>
                                       )}
                                     </div>
+                                    <span className="text-[#B5FF03] font-bold shrink-0 text-[11px]">R$ {item.valorUnit?.toFixed(2) || '0,00'}</span>
                                   </button>
-                              ))
-                            )}
-                          </div>
-                        </div>
+                                ))
+                              )}
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => setShowCreateItemForm(true)}
+                              className="mt-1 w-full flex items-center justify-center gap-1 px-3 py-2 text-[10px] font-black uppercase tracking-widest text-[#B5FF03] hover:bg-[#222] transition-colors rounded-lg"
+                            >
+                              <Plus size={12} /> Criar novo item
+                            </button>
+                          </>
+                        )}
+                      </div>
                     )}
 
                     <div className="space-y-2">
@@ -1676,7 +1777,7 @@ const CRMDashboard = () => {
                       })}
                       {formData.orcamentoItems.length === 0 && !orcSearchOpen && (
                         <div className="text-center py-3 bg-[#111] border border-dashed border-[#333] rounded-lg">
-                          <p className="text-[10px] text-neutral-500 italic">Clique em "Adicionar Item" para buscar no catálogo de orçamento</p>
+                          <p className="text-[10px] text-neutral-500 italic">Clique em "Adicionar Item" para buscar ou criar itens no catálogo de eventos</p>
                         </div>
                       )}
                     </div>

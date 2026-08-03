@@ -16,8 +16,9 @@ const MAX_NOTIFICATIONS = 50;
 
 function formatRelativeTime(dateStr: string): string {
   if (!dateStr) return '—';
-  const now = new Date();
   const date = new Date(dateStr);
+  if (isNaN(date.getTime())) return '—';
+  const now = new Date();
   const diffMs = now.getTime() - date.getTime();
   const diffMin = Math.floor(diffMs / 60000);
   const diffHours = Math.floor(diffMs / 3600000);
@@ -44,11 +45,14 @@ export function useNotifications() {
     const nowISO = now.toISOString();
 
     for (const lead of Orçamentos) {
+      const leadName = lead.name || 'Cliente';
+      const leadValue = lead.value || '';
+
       if (lead.stage === 'Novos Orçamentos') {
         const id = `novo_cliente-${lead.id}`;
         list.push({
           id, title: 'Novo Cliente',
-          description: `Novo cliente ${lead.name} foi cadastrado`,
+          description: `Novo cliente ${leadName} foi cadastrado`,
           time: formatRelativeTime(lead.firstContact),
           timestamp: lead.firstContact || nowISO,
           isRead: readMap[id] || false,
@@ -60,7 +64,7 @@ export function useNotifications() {
         const id = `orcamento_pendente-${lead.id}`;
         list.push({
           id, title: 'Orçamento Pendente',
-          description: `Orçamento de ${lead.name} está pendente de aprovação`,
+          description: `Orçamento de ${leadName} está pendente de aprovação`,
           time: formatRelativeTime(lead.firstContact),
           timestamp: lead.firstContact || nowISO,
           isRead: readMap[id] || false,
@@ -72,7 +76,7 @@ export function useNotifications() {
         const id = `fechamento-${lead.id}`;
         list.push({
           id, title: 'Fechamento',
-          description: `Novo fechamento registrado: ${lead.name} - ${lead.value}`,
+          description: `Novo fechamento registrado: ${leadName} - ${leadValue}`,
           time: formatRelativeTime(lead.closingDate || lead.firstContact),
           timestamp: lead.closingDate || lead.firstContact || nowISO,
           isRead: readMap[id] || false,
@@ -83,12 +87,13 @@ export function useNotifications() {
 
     for (const event of events) {
       const eventDate = new Date(event.date);
+      if (isNaN(eventDate.getTime())) continue;
       if (eventDate < now || eventDate > sevenDaysFromNow) continue;
       const id = `evento_proximo-${event.id}`;
       const daysUntil = Math.ceil((eventDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
       list.push({
         id, title: 'Evento Próximo',
-        description: `Evento ${event.title} em ${daysUntil} ${daysUntil === 1 ? 'dia' : 'dias'}`,
+        description: `Evento ${event.title || ''} em ${daysUntil} ${daysUntil === 1 ? 'dia' : 'dias'}`,
         time: formatRelativeTime(event.date),
         timestamp: event.date,
         isRead: readMap[id] || false,
