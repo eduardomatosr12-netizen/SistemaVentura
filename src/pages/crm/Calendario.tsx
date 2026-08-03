@@ -4,8 +4,8 @@ import type { CalendarEvent } from '../../types/crm';
 import { generateUUID } from '../../lib/uuid';
 import { generateWhatsAppLink } from '../../lib/whatsapp';
 import { eventTypeLabel } from '../../lib/eventTypeLabel';
-import { subscribeInventoryChanges, getAllInventoryItems } from '../../lib/inventory';
-import { X, ExternalLink, Clock, User, Users, MessageSquare, Plus, Trash2, Calendar as CalendarIcon, Link as LinkIcon, FileText, ChevronLeft, ChevronRight, Search, MapPin, Mail, Phone, CreditCard, Flag, MessageCircle, Package } from 'lucide-react';
+import { subscribeEventItems, addEventItem, type EventItem } from '../../services/eventItemService';
+import { X, Clock, User, Users, MessageSquare, Plus, Trash2, Calendar as CalendarIcon, FileText, ChevronLeft, ChevronRight, Search, MapPin, Mail, Phone, CreditCard, Flag, MessageCircle, Package, Save } from 'lucide-react';
 
 const toBR = (iso: string): string => {
   if (!iso) return '';
@@ -124,18 +124,23 @@ const CRMCalendario = () => {
 
   const [dateDisplay, setDateDisplay] = useState('');
 
-  const [invStockItems, setInvStockItems] = useState<{ name: string; qty: number; category: string; valorUnit: number }[]>([]);
-  const [invSearch, setInvSearch] = useState('');
-  const [invSearchOpen, setInvSearchOpen] = useState(false);
+  const [eventItemOptions, setEventItemOptions] = useState<EventItem[]>([]);
+  const [itemSearch, setItemSearch] = useState('');
+  const [itemSearchOpen, setItemSearchOpen] = useState(false);
+  const [showCreateItemForm, setShowCreateItemForm] = useState(false);
+  const [newItemName, setNewItemName] = useState('');
+  const [newItemCategory, setNewItemCategory] = useState('');
+  const [newItemValor, setNewItemValor] = useState('');
+  const itemDropdownRef = useRef<HTMLDivElement>(null);
   const [eventItems, setEventItems] = useState<{ id: string; item: string; qtdAtual: number; valorUnit: number }[]>([]);
 
-  const filteredInvItems = useMemo(() => {
-    if (!invSearch.trim()) return invStockItems.slice(0, 40);
-    const q = invSearch.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-    return invStockItems.filter(i =>
+  const filteredEventItems = useMemo(() => {
+    if (!itemSearch.trim()) return eventItemOptions.slice(0, 40);
+    const q = itemSearch.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    return eventItemOptions.filter(i =>
       i.name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').includes(q)
     ).slice(0, 40);
-  }, [invStockItems, invSearch]);
+  }, [eventItemOptions, itemSearch]);
 
   const closedOrçamentos = useMemo(() => {
     const seen = new Set<string>();
@@ -173,11 +178,29 @@ const CRMCalendario = () => {
     return `Itens do Orçamento Fechado:\n${lines.join('\n')}`;
   };
 
-  const handleAdicionarItemEstoque = (prod: { name: string; qty: number; valorUnit: number }) => {
+  const handleAddEventItem = (prod: EventItem) => {
     const newItem = { id: generateUUID(), item: prod.name, qtdAtual: 1, valorUnit: prod.valorUnit || 0 };
     setEventItems(prev => [...prev, newItem]);
-    setInvSearch('');
-    setInvSearchOpen(false);
+    setItemSearch('');
+    setItemSearchOpen(false);
+  };
+
+  const handleCreateEventItem = async () => {
+    const name = newItemName.trim();
+    if (!name) return;
+    try {
+      const valorUnit = parseFloat(String(newItemValor).replace(',', '.')) || 0;
+      await addEventItem({ name, category: newItemCategory.trim(), valorUnit });
+      setEventItems(prev => [...prev, { id: generateUUID(), item: name, qtdAtual: 1, valorUnit }]);
+      setNewItemName('');
+      setNewItemCategory('');
+      setNewItemValor('');
+      setShowCreateItemForm(false);
+      setItemSearch('');
+      setItemSearchOpen(false);
+    } catch (err) {
+      console.error('[Calendario] Erro ao criar item de evento:', err);
+    }
   };
 
   const handleRemoverItemEstoque = (id: string) => {
@@ -192,15 +215,18 @@ const CRMCalendario = () => {
       if (equipeDropdownRef.current && !equipeDropdownRef.current.contains(e.target as Node)) {
         setShowEquipeDropdown(false);
       }
+      if (itemDropdownRef.current && !itemDropdownRef.current.contains(e.target as Node)) {
+        setItemSearchOpen(false);
+        setShowCreateItemForm(false);
+      }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
   useEffect(() => {
-    setInvStockItems(getAllInventoryItems());
-    const unsub = subscribeInventoryChanges(() => {
-      setInvStockItems(getAllInventoryItems());
+    const unsub = subscribeEventItems(items => {
+      setEventItemOptions(items);
     });
     return unsub;
   }, []);
@@ -314,6 +340,9 @@ const CRMCalendario = () => {
     setClientSearch('');
     setSelectedEvent(null);
     setEventItems([]);
+    setItemSearch('');
+    setItemSearchOpen(false);
+    setShowCreateItemForm(false);
     setIsModalOpen(true);
   };
 
@@ -344,6 +373,12 @@ const CRMCalendario = () => {
     });
     setDateDisplay(brDate);
     setClientSearch(event.client || '');
+    setEventItems((event.items || []).map(i => ({
+      id: generateUUID(),
+      item: i.item,
+      qtdAtual: i.qtdAtual,
+      valorUnit: i.valorUnit || 0,
+    })));
     setIsModalOpen(true);
   };
 
@@ -364,6 +399,7 @@ const CRMCalendario = () => {
     const payload = {
       ...formData,
       description: cleanDescription + itemsText,
+      items: eventItems,
     };
     try {
       if (modalMode === 'create') {
@@ -1148,17 +1184,18 @@ const CRMCalendario = () => {
                   )}
                 </div>
 
-                {/* Itens do Estoque */}
-                <div className="border border-[#1a1a1a] rounded-md p-4 space-y-3">
+                {/* Itens do Evento */}
+                <div className="border border-[#1a1a1a] rounded-md p-4 space-y-3" ref={itemDropdownRef}>
                   <label className="flex items-center gap-2 text-[9px] font-black text-[#B5FF03] uppercase tracking-widest">
                     <Package size={12} strokeWidth={3} className="text-[#B5FF03]" />
-                    ITENS DO ESTOQUE
+                    ITENS DO EVENTO
                   </label>
                   {eventItems.length > 0 && (
                     <div className="space-y-1.5">
                       {eventItems.map(item => (
                         <div key={item.id} className="flex items-center gap-2 bg-[#0a0a0a] border border-[#222] rounded-md px-3 py-2 overflow-hidden">
                           <span className="text-[10px] font-bold text-white flex-1 truncate">{item.qtdAtual}x {item.item}</span>
+                          <span className="text-[9px] text-[#B5FF03] font-bold shrink-0">R$ {(item.qtdAtual * item.valorUnit).toFixed(2)}</span>
                           <button
                             type="button"
                             onClick={() => handleRemoverItemEstoque(item.id)}
@@ -1170,39 +1207,103 @@ const CRMCalendario = () => {
                       ))}
                     </div>
                   )}
-                    <div className="flex gap-2">
+                  {!showCreateItemForm ? (
+                    <>
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={itemSearch}
+                          onChange={(e) => { setItemSearch(e.target.value); setItemSearchOpen(true); }}
+                          onFocus={() => setItemSearchOpen(true)}
+                          placeholder="Buscar item na lista de eventos..."
+                          className="flex-1 bg-[#0a0a0a] border border-[#333] rounded-md px-3 py-2 text-xs font-bold text-white focus:ring-1 focus:ring-[#B5FF03] outline-none transition-all"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => { setShowCreateItemForm(true); setItemSearchOpen(false); }}
+                          className="flex items-center gap-1.5 px-3 py-2 bg-[#1a1a1a] border border-[#B5FF03] rounded-md text-[10px] font-black uppercase tracking-widest text-[#B5FF03] hover:bg-[#B5FF03] hover:text-black transition-all"
+                        >
+                          <Plus size={12} strokeWidth={3} />
+                          <span className="hidden sm:inline">Criar</span>
+                        </button>
+                      </div>
+                      {itemSearchOpen && (
+                        <div className="mt-1 bg-[#1a1a1a] border border-[#333] rounded-md shadow-xl max-h-40 overflow-y-auto">
+                          {filteredEventItems.length > 0 ? filteredEventItems.map(prod => (
+                            <button
+                              key={prod.id}
+                              type="button"
+                              onClick={() => handleAddEventItem(prod)}
+                              className="w-full text-left px-3 py-2 text-xs text-white hover:bg-[#333] transition-colors border-b border-[#222] last:border-b-0 flex items-center gap-2"
+                            >
+                              <span className="font-bold flex-1 truncate">{prod.name}</span>
+                              {prod.category && (
+                                <span className="text-[9px] text-neutral-500 uppercase shrink-0">{prod.category}</span>
+                              )}
+                              <span className="text-[#B5FF03] font-bold shrink-0">R$ {prod.valorUnit?.toFixed(2) || '0,00'}</span>
+                            </button>
+                          )) : (
+                            <p className="px-3 py-3 text-xs text-neutral-500 text-center">
+                              Nenhum item encontrado
+                            </p>
+                          )}
+                        </div>
+                      )}
+                      {!itemSearchOpen && eventItems.length === 0 && (
+                        <p className="text-[10px] text-neutral-500 italic mt-1">
+                          Selecione um cliente com orçamento fechado, busque na lista de eventos ou crie um novo item
+                        </p>
+                      )}
+                    </>
+                  ) : (
+                    <div className="bg-[#0a0a0a] border border-[#333] rounded-md p-3 space-y-2">
+                      <p className="text-[9px] font-black text-white uppercase tracking-widest">NOVO ITEM PARA EVENTOS</p>
                       <input
                         type="text"
-                        value={invSearch}
-                        onChange={(e) => { setInvSearch(e.target.value); setInvSearchOpen(true); }}
-                        onFocus={() => setInvSearchOpen(true)}
-                        placeholder="Buscar item no estoque..."
-                        className="flex-1 bg-[#0a0a0a] border border-[#333] rounded-md px-3 py-2 text-xs font-bold text-white focus:ring-1 focus:ring-[#B5FF03] outline-none transition-all"
+                        value={newItemName}
+                        onChange={(e) => setNewItemName(e.target.value)}
+                        placeholder="Nome do item (obrigatório)"
+                        className="w-full bg-[#111] border border-[#333] rounded-md px-3 py-2 text-xs font-bold text-white focus:ring-1 focus:ring-[#B5FF03] outline-none transition-all"
+                        autoFocus
                       />
-                    </div>
-                    {invSearchOpen && (
-                      <div className="mt-1 bg-[#1a1a1a] border border-[#333] rounded-md shadow-xl max-h-40 overflow-y-auto">
-                        {filteredInvItems.length > 0 ? filteredInvItems.map(prod => (
-                          <button
-                            key={prod.name}
-                            type="button"
-                            onClick={() => handleAdicionarItemEstoque(prod)}
-                            className="w-full text-left px-3 py-2 text-xs text-white hover:bg-[#333] transition-colors border-b border-[#222] last:border-b-0 flex items-center gap-2"
-                          >
-                            <span className="font-bold flex-1 truncate">{prod.name}</span>
-                            <span className="text-neutral-400 shrink-0">disp: {prod.qty}</span>
-                            <span className="text-[#B5FF03] font-bold">R$ {prod.valorUnit?.toFixed(2) || '0,00'}</span>
-                          </button>
-                        )) : (
-                          <p className="px-3 py-3 text-xs text-neutral-500 text-center">Nenhum item encontrado</p>
-                        )}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <input
+                          type="text"
+                          value={newItemCategory}
+                          onChange={(e) => setNewItemCategory(e.target.value)}
+                          placeholder="Categoria (opcional)"
+                          className="w-full bg-[#111] border border-[#333] rounded-md px-3 py-2 text-xs font-bold text-white focus:ring-1 focus:ring-[#B5FF03] outline-none transition-all"
+                        />
+                        <input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          value={newItemValor}
+                          onChange={(e) => setNewItemValor(e.target.value)}
+                          placeholder="Valor unit. R$"
+                          className="w-full bg-[#111] border border-[#333] rounded-md px-3 py-2 text-xs font-bold text-white focus:ring-1 focus:ring-[#B5FF03] outline-none transition-all"
+                        />
                       </div>
-                    )}
-                    {!invSearchOpen && eventItems.length === 0 && (
-                      <p className="text-[10px] text-neutral-500 italic mt-1">
-                        Selecione um cliente com orçamento fechado ou busque itens manualmente
-                      </p>
-                    )}
+                      <div className="flex items-center justify-end gap-2 pt-1">
+                        <button
+                          type="button"
+                          onClick={() => { setShowCreateItemForm(false); setNewItemName(''); setNewItemCategory(''); setNewItemValor(''); }}
+                          className="px-3 py-2 text-[10px] font-black uppercase tracking-widest text-neutral-500 hover:text-white transition-all"
+                        >
+                          Cancelar
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleCreateEventItem}
+                          disabled={!newItemName.trim()}
+                          className="flex items-center gap-1.5 px-3 py-2 bg-[#B5FF03] text-black rounded-md text-[10px] font-black uppercase tracking-widest hover:bg-[#a1e600] transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                        >
+                          <Save size={12} strokeWidth={3} />
+                          Salvar e adicionar
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <div className="space-y-2">

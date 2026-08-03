@@ -58,4 +58,5 @@ export interface CalendarEvent {
   valorTotal?: number;
   desconto?: number;
   despesasInternas?: EventExpense[];
+  items?: OrcamentoItem[];
 }
