@@ -1207,7 +1207,24 @@ const CRMCalendario = () => {
                       ))}
                     </div>
                   )}
-                  {!showCreateItemForm ? (
+                  {!showCreateItemForm && eventItemOptions.length === 0 ? (
+                    <div className="bg-[#0a0a0a] border border-[#333] rounded-md p-4 space-y-3 text-center">
+                      <p className="text-[10px] text-neutral-500 font-bold uppercase tracking-widest">
+                        A lista de itens de eventos ainda está vazia
+                      </p>
+                      <p className="text-[10px] text-neutral-500 italic">
+                        Esta lista é exclusiva dos eventos e não usa o estoque. Crie os itens que ficarão disponíveis aqui.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => setShowCreateItemForm(true)}
+                        className="w-full flex items-center justify-center gap-2 px-3 py-2.5 bg-[#B5FF03] text-black rounded-md text-[10px] font-black uppercase tracking-widest hover:bg-[#a1e600] transition-all"
+                      >
+                        <Plus size={14} strokeWidth={3} />
+                        Criar novo item
+                      </button>
+                    </div>
+                  ) : !showCreateItemForm ? (
                     <>
                       <div className="flex gap-2">
                         <input
