@@ -4,7 +4,7 @@ import type { CalendarEvent } from '../../types/crm';
 import { generateUUID } from '../../lib/uuid';
 import { generateWhatsAppLink } from '../../lib/whatsapp';
 import { eventTypeLabel } from '../../lib/eventTypeLabel';
-import { subscribeEventItems, addEventItem, type EventItem } from '../../services/eventItemService';
+import { subscribeEventStock, addEventStockItem, EVENT_STOCK_CATEGORIES, EVENT_STOCK_UNITS, type EventStockItem } from '../../services/eventStockService';
 import { X, Clock, User, Users, MessageSquare, Plus, Trash2, Calendar as CalendarIcon, FileText, ChevronLeft, ChevronRight, Search, MapPin, Mail, Phone, CreditCard, Flag, MessageCircle, Package, Save } from 'lucide-react';
 
 const toBR = (iso: string): string => {
@@ -124,15 +124,20 @@ const CRMCalendario = () => {
 
   const [dateDisplay, setDateDisplay] = useState('');
 
-  const [eventItemOptions, setEventItemOptions] = useState<EventItem[]>([]);
+  const [eventItemOptions, setEventItemOptions] = useState<EventStockItem[]>([]);
   const [itemSearch, setItemSearch] = useState('');
   const [itemSearchOpen, setItemSearchOpen] = useState(false);
   const [showCreateItemForm, setShowCreateItemForm] = useState(false);
-  const [newItemName, setNewItemName] = useState('');
-  const [newItemCategory, setNewItemCategory] = useState('');
-  const [newItemValor, setNewItemValor] = useState('');
+  const [newItemForm, setNewItemForm] = useState({
+    name: '',
+    category: EVENT_STOCK_CATEGORIES[0],
+    quantity: '',
+    unit: 'unidade',
+    valorReferencia: '',
+    observacao: '',
+  });
   const itemDropdownRef = useRef<HTMLDivElement>(null);
-  const [eventItems, setEventItems] = useState<{ id: string; item: string; qtdAtual: number; valorUnit: number }[]>([]);
+  const [eventItems, setEventItems] = useState<{ id: string; item: string; qtdAtual: number; valorUnit: number; semPreco?: boolean }[]>([]);
 
   const filteredEventItems = useMemo(() => {
     if (!itemSearch.trim()) return eventItemOptions.slice(0, 40);
@@ -178,23 +183,29 @@ const CRMCalendario = () => {
     return `Itens do Orçamento Fechado:\n${lines.join('\n')}`;
   };
 
-  const handleAddEventItem = (prod: EventItem) => {
-    const newItem = { id: generateUUID(), item: prod.name, qtdAtual: 1, valorUnit: prod.valorUnit || 0 };
+  const handleAddEventItem = (prod: EventStockItem) => {
+    const newItem = { id: generateUUID(), item: `${prod.name} — 1 ${prod.unit}`, qtdAtual: 1, valorUnit: 0, semPreco: true };
     setEventItems(prev => [...prev, newItem]);
     setItemSearch('');
     setItemSearchOpen(false);
   };
 
   const handleCreateEventItem = async () => {
-    const name = newItemName.trim();
+    const name = newItemForm.name.trim();
     if (!name) return;
     try {
-      const valorUnit = parseFloat(String(newItemValor).replace(',', '.')) || 0;
-      await addEventItem({ name, category: newItemCategory.trim(), valorUnit });
-      setEventItems(prev => [...prev, { id: generateUUID(), item: name, qtdAtual: 1, valorUnit }]);
-      setNewItemName('');
-      setNewItemCategory('');
-      setNewItemValor('');
+      const quantity = Math.max(0, Number(newItemForm.quantity) || 0);
+      const valorReferencia = parseFloat(String(newItemForm.valorReferencia).replace(',', '.')) || 0;
+      await addEventStockItem({
+        name,
+        category: newItemForm.category,
+        quantity,
+        unit: newItemForm.unit,
+        valorReferencia,
+        observacao: newItemForm.observacao.trim(),
+      });
+      setEventItems(prev => [...prev, { id: generateUUID(), item: `${name} — 1 ${newItemForm.unit}`, qtdAtual: 1, valorUnit: 0, semPreco: true }]);
+      setNewItemForm({ name: '', category: EVENT_STOCK_CATEGORIES[0], quantity: '', unit: 'unidade', valorReferencia: '', observacao: '' });
       setShowCreateItemForm(false);
       setItemSearch('');
       setItemSearchOpen(false);
@@ -225,7 +236,7 @@ const CRMCalendario = () => {
   }, []);
 
   useEffect(() => {
-    const unsub = subscribeEventItems(items => {
+    const unsub = subscribeEventStock(items => {
       setEventItemOptions(items);
     });
     return unsub;
@@ -378,6 +389,7 @@ const CRMCalendario = () => {
       item: i.item,
       qtdAtual: i.qtdAtual,
       valorUnit: i.valorUnit || 0,
+      semPreco: i.semPreco,
     })));
     setIsModalOpen(true);
   };
@@ -394,7 +406,10 @@ const CRMCalendario = () => {
     setSaveError(null);
     const cleanDescription = formData.description.replace(/\n\nItens do Evento:\n[\s\S]*$/, '');
     const itemsText = eventItems.length > 0
-      ? `\n\nItens do Evento:\n${eventItems.map(i => `- ${i.qtdAtual}x ${i.item} (R$ ${(i.qtdAtual * i.valorUnit).toFixed(2)})`).join('\n')}`
+      ? `\n\nItens do Evento:\n${eventItems.map(i => i.semPreco
+          ? `- ${i.qtdAtual}x ${i.item}`
+          : `- ${i.qtdAtual}x ${i.item} (R$ ${(i.qtdAtual * i.valorUnit).toFixed(2)})`
+        ).join('\n')}`
       : '';
     const payload = {
       ...formData,
@@ -1031,6 +1046,7 @@ const CRMCalendario = () => {
                                 item: i.item,
                                 qtdAtual: i.qtdAtual,
                                 valorUnit: i.valorUnit || 0,
+                                semPreco: i.semPreco,
                               }));
                               setEventItems(itemsFromLead);
                               setFormData(prev => ({
@@ -1195,7 +1211,9 @@ const CRMCalendario = () => {
                       {eventItems.map(item => (
                         <div key={item.id} className="flex items-center gap-2 bg-[#0a0a0a] border border-[#222] rounded-md px-3 py-2 overflow-hidden">
                           <span className="text-[10px] font-bold text-white flex-1 truncate">{item.qtdAtual}x {item.item}</span>
-                          <span className="text-[9px] text-[#B5FF03] font-bold shrink-0">R$ {(item.qtdAtual * item.valorUnit).toFixed(2)}</span>
+                          {item.semPreco
+                            ? <span className="text-[9px] text-neutral-500 italic shrink-0">sem preço</span>
+                            : <span className="text-[9px] text-[#B5FF03] font-bold shrink-0">R$ {(item.qtdAtual * item.valorUnit).toFixed(2)}</span>}
                           <button
                             type="button"
                             onClick={() => handleRemoverItemEstoque(item.id)}
@@ -1213,7 +1231,7 @@ const CRMCalendario = () => {
                         A lista de itens de eventos ainda está vazia
                       </p>
                       <p className="text-[10px] text-neutral-500 italic">
-                        Esta lista é exclusiva dos eventos e não usa o estoque. Crie os itens que ficarão disponíveis aqui.
+                        Itens do estoque de eventos — não aparecem com preço no PDF.
                       </p>
                       <button
                         type="button"
@@ -1257,7 +1275,7 @@ const CRMCalendario = () => {
                               {prod.category && (
                                 <span className="text-[9px] text-neutral-500 uppercase shrink-0">{prod.category}</span>
                               )}
-                              <span className="text-[#B5FF03] font-bold shrink-0">R$ {prod.valorUnit?.toFixed(2) || '0,00'}</span>
+                              <span className="text-neutral-400 font-bold shrink-0 text-[10px]">{prod.quantity} {prod.unit}</span>
                             </button>
                           )) : (
                             <p className="px-3 py-3 text-xs text-neutral-500 text-center">
@@ -1277,34 +1295,60 @@ const CRMCalendario = () => {
                       <p className="text-[9px] font-black text-white uppercase tracking-widest">NOVO ITEM PARA EVENTOS</p>
                       <input
                         type="text"
-                        value={newItemName}
-                        onChange={(e) => setNewItemName(e.target.value)}
+                        value={newItemForm.name}
+                        onChange={(e) => setNewItemForm(f => ({ ...f, name: e.target.value }))}
                         placeholder="Nome do item (obrigatório)"
                         className="w-full bg-[#111] border border-[#333] rounded-md px-3 py-2 text-xs font-bold text-white focus:ring-1 focus:ring-[#B5FF03] outline-none transition-all"
                         autoFocus
                       />
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <select
+                          value={newItemForm.category}
+                          onChange={(e) => setNewItemForm(f => ({ ...f, category: e.target.value }))}
+                          className="w-full bg-[#111] border border-[#333] rounded-md px-3 py-2 text-xs font-bold text-white focus:ring-1 focus:ring-[#B5FF03] outline-none transition-all"
+                        >
+                          {EVENT_STOCK_CATEGORIES.map(cat => (
+                            <option key={cat} value={cat} className="bg-[#111]">{cat}</option>
+                          ))}
+                        </select>
+                        <select
+                          value={newItemForm.unit}
+                          onChange={(e) => setNewItemForm(f => ({ ...f, unit: e.target.value }))}
+                          className="w-full bg-[#111] border border-[#333] rounded-md px-3 py-2 text-xs font-bold text-white focus:ring-1 focus:ring-[#B5FF03] outline-none transition-all"
+                        >
+                          {EVENT_STOCK_UNITS.map(u => (
+                            <option key={u} value={u} className="bg-[#111]">{u}</option>
+                          ))}
+                        </select>
                         <input
-                          type="text"
-                          value={newItemCategory}
-                          onChange={(e) => setNewItemCategory(e.target.value)}
-                          placeholder="Categoria (opcional)"
+                          type="number"
+                          min="0"
+                          value={newItemForm.quantity}
+                          onChange={(e) => setNewItemForm(f => ({ ...f, quantity: e.target.value }))}
+                          placeholder="Quantidade em estoque"
                           className="w-full bg-[#111] border border-[#333] rounded-md px-3 py-2 text-xs font-bold text-white focus:ring-1 focus:ring-[#B5FF03] outline-none transition-all"
                         />
                         <input
                           type="number"
                           step="0.01"
                           min="0"
-                          value={newItemValor}
-                          onChange={(e) => setNewItemValor(e.target.value)}
-                          placeholder="Valor unit. R$"
+                          value={newItemForm.valorReferencia}
+                          onChange={(e) => setNewItemForm(f => ({ ...f, valorReferencia: e.target.value }))}
+                          placeholder="Valor de referência R$ (opcional)"
                           className="w-full bg-[#111] border border-[#333] rounded-md px-3 py-2 text-xs font-bold text-white focus:ring-1 focus:ring-[#B5FF03] outline-none transition-all"
+                        />
+                        <input
+                          type="text"
+                          value={newItemForm.observacao}
+                          onChange={(e) => setNewItemForm(f => ({ ...f, observacao: e.target.value }))}
+                          placeholder="Observação (opcional)"
+                          className="w-full bg-[#111] border border-[#333] rounded-md px-3 py-2 text-xs font-bold text-white focus:ring-1 focus:ring-[#B5FF03] outline-none transition-all sm:col-span-2"
                         />
                       </div>
                       <div className="flex items-center justify-end gap-2 pt-1">
                         <button
                           type="button"
-                          onClick={() => { setShowCreateItemForm(false); setNewItemName(''); setNewItemCategory(''); setNewItemValor(''); }}
+                          onClick={() => { setShowCreateItemForm(false); setNewItemForm({ name: '', category: EVENT_STOCK_CATEGORIES[0], quantity: '', unit: 'unidade', valorReferencia: '', observacao: '' }); }}
                           className="px-3 py-2 text-[10px] font-black uppercase tracking-widest text-neutral-500 hover:text-white transition-all"
                         >
                           Cancelar
@@ -1312,7 +1356,7 @@ const CRMCalendario = () => {
                         <button
                           type="button"
                           onClick={handleCreateEventItem}
-                          disabled={!newItemName.trim()}
+                          disabled={!newItemForm.name.trim()}
                           className="flex items-center gap-1.5 px-3 py-2 bg-[#B5FF03] text-black rounded-md text-[10px] font-black uppercase tracking-widest hover:bg-[#a1e600] transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                         >
                           <Save size={12} strokeWidth={3} />

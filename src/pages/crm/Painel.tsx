@@ -8,10 +8,11 @@ import { parseMonetaryValue, formatCurrency, generatePDF } from '../../lib/crmHe
 import { eventTypeLabel } from '../../lib/eventTypeLabel';
 import { useActivityLogs } from '../../contexts/ActivityContext';
 import { generateUUID } from '../../lib/uuid';
-import { subscribeEventItems, addEventItem, type EventItem } from '../../services/eventItemService';
+import { subscribeEventStock, addEventStockItem, EVENT_STOCK_CATEGORIES, EVENT_STOCK_UNITS, type EventStockItem } from '../../services/eventStockService';
 import { addTransaction } from '../../services/financeService';
 import { generateWhatsAppLink } from '../../lib/whatsapp';
 import DespesasDoEvento from '../../components/DespesasDoEvento';
+import EstoqueDeEventos from '../../components/EstoqueDeEventos';
 
 const ACTION_ICONS: Record<string, LucideIcon> = {
   lead_criado: UserPlus,
@@ -76,10 +77,16 @@ const CRMDashboard = () => {
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [viewYear, setViewYear] = useState(new Date().getFullYear());
   const [viewMonth, setViewMonth] = useState(new Date().getMonth());
-  const [activeTab, setActiveTab] = useState<'calendario' | 'eventos' | 'orcamentos'>('calendario');
+  const [activeTab, setActiveTab] = useState<'calendario' | 'eventos' | 'orcamentos' | 'estoque'>('calendario');
   const [eventPage, setEventPage] = useState(0);
   const [orcPage, setOrcPage] = useState(0);
   const ROWS_PER_PAGE = 15;
+  const [toast, setToast] = useState<string | null>(null);
+
+  const showToast = (msg: string) => {
+    setToast(msg);
+    window.setTimeout(() => setToast(null), 3000);
+  };
 
   // Create modal state
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -121,17 +128,22 @@ const CRMDashboard = () => {
   const statusRef = useRef<HTMLDivElement>(null);
   const clientSearchRef = useRef<HTMLDivElement>(null);
 
-  // Orçamento items (catálogo dedicado, independente do estoque)
-  const [orcamentoItems, setOrcamentoItems] = useState<EventItem[]>([]);
+  // Itens do orçamento (Estoque de Eventos — lista limpa para o cliente)
+  const [orcamentoItems, setOrcamentoItems] = useState<EventStockItem[]>([]);
   const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
   const [orcSearch, setOrcSearch] = useState('');
   const [orcSearchOpen, setOrcSearchOpen] = useState(false);
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
   const [inlineItemSearch, setInlineItemSearch] = useState('');
   const [showCreateItemForm, setShowCreateItemForm] = useState(false);
-  const [newItemName, setNewItemName] = useState('');
-  const [newItemCategory, setNewItemCategory] = useState('');
-  const [newItemValor, setNewItemValor] = useState('');
+  const [newItemForm, setNewItemForm] = useState({
+    name: '',
+    category: EVENT_STOCK_CATEGORIES[0],
+    quantity: '',
+    unit: 'unidade',
+    valorReferencia: '',
+    observacao: '',
+  });
   const orcSearchRef = useRef<HTMLDivElement>(null);
 
   const clientList = useMemo(() => {
@@ -157,32 +169,44 @@ const CRMDashboard = () => {
     ).slice(0, 40);
   }, [orcamentoItems, orcSearch]);
 
-  const handleAdicionarItem = (prod: EventItem) => {
-    const newItem: OrcamentoItem = { id: prod.id, item: prod.name, qtdAtual: 1, valorUnit: prod.valorUnit };
+  const handleAdicionarItem = (prod: EventStockItem) => {
+    const newItem: OrcamentoItem = {
+      id: generateUUID(),
+      item: `${prod.name} — 1 ${prod.unit}`,
+      qtdAtual: 1,
+      valorUnit: 0,
+      semPreco: true,
+    };
     setFormData(prev => ({
       ...prev,
       orcamentoItems: [...prev.orcamentoItems, newItem],
     }));
-    setExpandedItems(prev => new Set(prev).add(prod.id));
+    setExpandedItems(prev => new Set(prev).add(newItem.id));
     setOrcSearch('');
     setOrcSearchOpen(false);
   };
 
   const handleCreateEventItem = async () => {
-    const name = newItemName.trim();
+    const name = newItemForm.name.trim();
     if (!name) return;
     try {
-      const valorUnit = parseFloat(String(newItemValor).replace(',', '.')) || 0;
+      const quantity = Math.max(0, Number(newItemForm.quantity) || 0);
+      const valorReferencia = parseFloat(String(newItemForm.valorReferencia).replace(',', '.')) || 0;
       const newId = generateUUID();
-      await addEventItem({ name, category: newItemCategory.trim(), valorUnit });
+      await addEventStockItem({
+        name,
+        category: newItemForm.category,
+        quantity,
+        unit: newItemForm.unit,
+        valorReferencia,
+        observacao: newItemForm.observacao.trim(),
+      });
       setFormData(prev => ({
         ...prev,
-        orcamentoItems: [...prev.orcamentoItems, { id: newId, item: name, qtdAtual: 1, valorUnit }],
+        orcamentoItems: [...prev.orcamentoItems, { id: newId, item: `${name} — 1 ${newItemForm.unit}`, qtdAtual: 1, valorUnit: 0, semPreco: true }],
       }));
       setExpandedItems(prev => { const next = new Set(prev); next.add(newId); return next; });
-      setNewItemName('');
-      setNewItemCategory('');
-      setNewItemValor('');
+      setNewItemForm({ name: '', category: EVENT_STOCK_CATEGORIES[0], quantity: '', unit: 'unidade', valorReferencia: '', observacao: '' });
       setShowCreateItemForm(false);
       setOrcSearch('');
       setOrcSearchOpen(false);
@@ -191,11 +215,11 @@ const CRMDashboard = () => {
     }
   };
 
-  const handleInlineItemSelect = (itemId: string, itemName: string, valorUnit: number) => {
+  const handleInlineItemSelect = (itemId: string, opt: EventStockItem) => {
     setFormData(prev => ({
       ...prev,
       orcamentoItems: prev.orcamentoItems.map(i =>
-        i.id === itemId ? { ...i, item: itemName, valorUnit } : i
+        i.id === itemId ? { ...i, item: `${opt.name} — ${i.qtdAtual} ${opt.unit}`, valorUnit: 0, semPreco: true } : i
       ),
     }));
     setEditingItemId(null);
@@ -267,7 +291,7 @@ const CRMDashboard = () => {
   }, []);
 
   useEffect(() => {
-    const unsub = subscribeEventItems(items => {
+    const unsub = subscribeEventStock(items => {
       setOrcamentoItems(items);
     });
     return unsub;
@@ -618,7 +642,7 @@ const CRMDashboard = () => {
   const totalEventPages = Math.max(1, Math.ceil(safeEvents.length / ROWS_PER_PAGE));
   const totalOrcPages = Math.max(1, Math.ceil(Orçamentos.length / ROWS_PER_PAGE));
 
-  const handleTabChange = (tab: 'calendario' | 'eventos' | 'orcamentos') => {
+  const handleTabChange = (tab: 'calendario' | 'eventos' | 'orcamentos' | 'estoque') => {
     setActiveTab(tab);
     setEventPage(0);
     setOrcPage(0);
@@ -666,6 +690,16 @@ const CRMDashboard = () => {
           }`}
         >
           Histórico de Orçamentos
+        </button>
+        <button
+          onClick={() => handleTabChange('estoque')}
+          className={`pb-2 border-b-2 font-bold text-xs uppercase tracking-widest transition-colors whitespace-nowrap ${
+            activeTab === 'estoque'
+              ? 'border-[#B5FF03] text-[#B5FF03]'
+              : 'border-transparent text-[#aaaaaa] hover:text-white'
+          }`}
+        >
+          Estoque de Eventos
         </button>
       </div>
 
@@ -1163,6 +1197,11 @@ const CRMDashboard = () => {
         </div>
       )}
 
+      {/* ESTOQUE DE EVENTOS */}
+      {activeTab === 'estoque' && (
+        <EstoqueDeEventos onMessage={showToast} />
+      )}
+
       {/* Event Detail Modal */}
       {selectedDayEvents && (
         <div className="fixed inset-0 bg-black/80 flex items-end sm:items-center justify-center z-[100] p-0 sm:p-4" onClick={closeModal}>
@@ -1571,34 +1610,63 @@ const CRMDashboard = () => {
                       <div ref={orcSearchRef} className="mb-3">
                         {showCreateItemForm || orcamentoItems.length === 0 ? (
                           <div className="bg-[#111] border border-[#333] rounded-lg p-3 space-y-2">
-                            <p className="text-[9px] font-black uppercase tracking-widest text-neutral-400">Criar item para eventos</p>
+                            <p className="text-[9px] font-black uppercase tracking-widest text-neutral-400">Criar item no estoque de eventos</p>
                             <input
                               type="text"
-                              value={newItemName}
-                              onChange={e => setNewItemName(e.target.value)}
+                              value={newItemForm.name}
+                              onChange={e => setNewItemForm(prev => ({ ...prev, name: e.target.value }))}
                               placeholder="Nome do item (obrigatório)"
                               className="w-full bg-[#0a0a0a] border border-[#333] rounded-lg px-3 py-2 text-sm text-white placeholder-neutral-600 outline-none focus:border-[#B5FF03]"
                               autoFocus
                               autoComplete="off"
                             />
                             <div className="grid grid-cols-2 gap-2">
+                              <select
+                                value={newItemForm.category}
+                                onChange={e => setNewItemForm(prev => ({ ...prev, category: e.target.value }))}
+                                className="w-full bg-[#0a0a0a] border border-[#333] rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-[#B5FF03] [color-scheme:dark]"
+                              >
+                                {EVENT_STOCK_CATEGORIES.map(cat => (
+                                  <option key={cat} value={cat}>{cat}</option>
+                                ))}
+                              </select>
                               <input
-                                type="text"
-                                value={newItemCategory}
-                                onChange={e => setNewItemCategory(e.target.value)}
-                                placeholder="Categoria"
-                                className="w-full bg-[#0a0a0a] border border-[#333] rounded-lg px-3 py-2 text-sm text-white placeholder-neutral-600 outline-none focus:border-[#B5FF03]"
+                                type="number"
+                                min="0"
+                                step="1"
+                                value={newItemForm.quantity}
+                                onChange={e => setNewItemForm(prev => ({ ...prev, quantity: e.target.value }))}
+                                placeholder="Quantidade"
+                                className="w-full bg-[#0a0a0a] border border-[#333] rounded-lg px-3 py-2 text-sm text-white placeholder-neutral-600 outline-none focus:border-[#B5FF03] [color-scheme:dark]"
                               />
+                            </div>
+                            <div className="grid grid-cols-2 gap-2">
+                              <select
+                                value={newItemForm.unit}
+                                onChange={e => setNewItemForm(prev => ({ ...prev, unit: e.target.value }))}
+                                className="w-full bg-[#0a0a0a] border border-[#333] rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-[#B5FF03] [color-scheme:dark]"
+                              >
+                                {EVENT_STOCK_UNITS.map(u => (
+                                  <option key={u} value={u}>{u}</option>
+                                ))}
+                              </select>
                               <input
                                 type="number"
                                 step="0.01"
                                 min="0"
-                                value={newItemValor}
-                                onChange={e => setNewItemValor(e.target.value)}
-                                placeholder="Valor unit. R$"
-                                className="w-full bg-[#0a0a0a] border border-[#333] rounded-lg px-3 py-2 text-sm text-white placeholder-neutral-600 outline-none focus:border-[#B5FF03]"
+                                value={newItemForm.valorReferencia}
+                                onChange={e => setNewItemForm(prev => ({ ...prev, valorReferencia: e.target.value }))}
+                                placeholder="Valor ref. R$ (interno)"
+                                className="w-full bg-[#0a0a0a] border border-[#333] rounded-lg px-3 py-2 text-sm text-white placeholder-neutral-600 outline-none focus:border-[#B5FF03] [color-scheme:dark]"
                               />
                             </div>
+                            <textarea
+                              rows={2}
+                              value={newItemForm.observacao}
+                              onChange={e => setNewItemForm(prev => ({ ...prev, observacao: e.target.value }))}
+                              placeholder="Observação interna (não exportada)..."
+                              className="w-full bg-[#0a0a0a] border border-[#333] rounded-lg px-3 py-2 text-sm text-white placeholder-neutral-600 outline-none focus:border-[#B5FF03] resize-none"
+                            />
                             <div className="flex items-center justify-end gap-2 pt-1">
                               <button
                                 type="button"
@@ -1613,7 +1681,7 @@ const CRMDashboard = () => {
                               <button
                                 type="button"
                                 onClick={handleCreateEventItem}
-                                disabled={!newItemName.trim()}
+                                disabled={!newItemForm.name.trim()}
                                 className="flex items-center gap-1.5 px-3 py-2 bg-[#B5FF03] text-black rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-[#a1e600] transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                               >
                                 <Plus size={12} /> Salvar e adicionar
@@ -1641,7 +1709,7 @@ const CRMDashboard = () => {
                             </div>
                             <div className="mt-1 bg-[#1a1a1a] border border-[#333] rounded-lg max-h-44 overflow-y-auto shadow-xl">
                               {filteredOrcItems.length === 0 ? (
-                                <div className="px-3 py-2 text-xs text-neutral-500 italic">Nenhum item encontrado no orçamento</div>
+                                <div className="px-3 py-2 text-xs text-neutral-500 italic">Nenhum item no estoque de eventos</div>
                               ) : (
                                 filteredOrcItems.map(item => (
                                   <button
@@ -1656,7 +1724,7 @@ const CRMDashboard = () => {
                                         <span className="text-[9px] text-neutral-500 uppercase shrink-0">{item.category}</span>
                                       )}
                                     </div>
-                                    <span className="text-[#B5FF03] font-bold shrink-0 text-[11px]">R$ {item.valorUnit?.toFixed(2) || '0,00'}</span>
+                                    <span className="text-neutral-400 font-bold shrink-0 text-[11px]">{item.quantity} {item.unit}</span>
                                   </button>
                                 ))
                               )}
@@ -1727,11 +1795,12 @@ const CRMDashboard = () => {
                                     ).slice(0, 30).map(opt => (
                                         <button
                                           type="button"
-                                          key={opt.name}
-                                          onClick={() => handleInlineItemSelect(item.id, opt.name, opt.valorUnit)}
-                                          className={`w-full text-left px-3 py-2 text-xs text-white hover:bg-[#333] transition-colors flex items-center justify-between gap-2 ${item.item === opt.name ? 'bg-[#2a2a2a] border-l-2 border-[#B5FF03]' : ''}`}
+                                          key={opt.id}
+                                          onClick={() => handleInlineItemSelect(item.id, opt)}
+                                          className={`w-full text-left px-3 py-2 text-xs text-white hover:bg-[#333] transition-colors flex items-center justify-between gap-2 ${item.item === `${opt.name} — ${item.qtdAtual} ${opt.unit}` ? 'bg-[#2a2a2a] border-l-2 border-[#B5FF03]' : ''}`}
                                         >
                                           <span className="truncate">{opt.name}</span>
+                                          <span className="text-neutral-500 text-[9px] uppercase shrink-0">{opt.quantity} {opt.unit}</span>
                                         </button>
                                       ))}
                                   </div>
@@ -1744,11 +1813,20 @@ const CRMDashboard = () => {
                                 <input type="number" min="1" value={item.qtdAtual} onChange={e => handleItemChange(item.id, 'qtdAtual', e.target.value)}
                                   className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-1.5 text-sm text-white focus:border-[#B5FF03] outline-none" />
                               </div>
-                              <div>
-                                <label className="block text-[8px] font-black uppercase tracking-widest text-neutral-500 mb-1">Valor Unit.</label>
-                                <input type="number" min="0" step="0.01" value={item.valorUnit} onChange={e => handleItemChange(item.id, 'valorUnit', e.target.value)}
-                                  className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-1.5 text-sm text-white focus:border-[#B5FF03] outline-none" />
-                              </div>
+                              {item.semPreco ? (
+                                <div>
+                                  <label className="block text-[8px] font-black uppercase tracking-widest text-neutral-500 mb-1">Valor</label>
+                                  <div className="w-full bg-[#111] border border-[#222] rounded-lg px-3 py-1.5 text-sm text-neutral-500">
+                                    Sem preço (interno)
+                                  </div>
+                                </div>
+                              ) : (
+                                <div>
+                                  <label className="block text-[8px] font-black uppercase tracking-widest text-neutral-500 mb-1">Valor Unit.</label>
+                                  <input type="number" min="0" step="0.01" value={item.valorUnit} onChange={e => handleItemChange(item.id, 'valorUnit', e.target.value)}
+                                    className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-1.5 text-sm text-white focus:border-[#B5FF03] outline-none" />
+                                </div>
+                              )}
                             </div>
                             <div className="text-right">
                               <span className="text-[10px] text-neutral-400">Total: </span>
@@ -1760,7 +1838,9 @@ const CRMDashboard = () => {
                             <span className="text-sm text-white">
                               <span className="text-[#B5FF03] font-bold">{item.qtdAtual}x</span>
                               {' '}{item.item}
-                              <span className="text-neutral-400 ml-2">R$ {(item.qtdAtual * item.valorUnit).toFixed(2)}</span>
+                              {item.semPreco
+                                ? <span className="text-neutral-500 ml-2 text-[10px] italic">sem preço</span>
+                                : <span className="text-neutral-400 ml-2">R$ {(item.qtdAtual * item.valorUnit).toFixed(2)}</span>}
                             </span>
                             <div className="flex items-center gap-1">
                               <button type="button" onClick={() => setExpandedItems(prev => { const next = new Set(prev); next.add(item.id); return next; })}
@@ -1777,7 +1857,7 @@ const CRMDashboard = () => {
                       })}
                       {formData.orcamentoItems.length === 0 && !orcSearchOpen && (
                         <div className="text-center py-3 bg-[#111] border border-dashed border-[#333] rounded-lg">
-                          <p className="text-[10px] text-neutral-500 italic">Clique em "Adicionar Item" para buscar ou criar itens no catálogo de eventos</p>
+                          <p className="text-[10px] text-neutral-500 italic">Clique em "Adicionar Item" para buscar ou criar itens no estoque de eventos</p>
                         </div>
                       )}
                     </div>
@@ -1845,6 +1925,11 @@ const CRMDashboard = () => {
         </div>
       )}
 
+      {toast && (
+        <div className="fixed bottom-5 left-1/2 -translate-x-1/2 z-[200] bg-[#B5FF03] text-black text-xs font-black uppercase tracking-widest px-5 py-3 rounded-full shadow-lg">
+          {toast}
+        </div>
+      )}
     </div>
   );
 };

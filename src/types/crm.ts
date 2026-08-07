@@ -3,6 +3,7 @@ export interface OrcamentoItem {
   item: string;
   qtdAtual: number;
   valorUnit: number;
+  semPreco?: boolean;
 }
 
 export interface Lead {
