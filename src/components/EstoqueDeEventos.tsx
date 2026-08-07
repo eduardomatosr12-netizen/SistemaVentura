@@ -38,6 +38,30 @@ const CLOSED_STAGES = new Set(['Contrato Fechado', 'Perdido']);
 
 const CHART_COLORS = ['#B5FF03', '#22d3ee', '#a78bfa', '#fb7185', '#fbbf24', '#64748b'];
 
+const FALLBACK_TOP_ITEMS = [
+  { key: 'mock-jatos-co2', name: 'Jatos CO2', qty: 38 },
+  { key: 'mock-pirotecnia', name: 'Pirotecnia', qty: 27 },
+  { key: 'mock-spotlights', name: 'Spotlights', qty: 22 },
+  { key: 'mock-gerador', name: 'Gerador', qty: 15 },
+  { key: 'mock-painel-led', name: 'Painel LED', qty: 12 },
+  { key: 'mock-outros', name: 'Outros', qty: 9 },
+];
+
+const FALLBACK_MONTHLY = [
+  { monthIndex: 0, label: 'Jan', total: 12 },
+  { monthIndex: 1, label: 'Fev', total: 19 },
+  { monthIndex: 2, label: 'Mar', total: 14 },
+  { monthIndex: 3, label: 'Abr', total: 26 },
+  { monthIndex: 4, label: 'Mai', total: 21 },
+  { monthIndex: 5, label: 'Jun', total: 33 },
+  { monthIndex: 6, label: 'Jul', total: 28 },
+  { monthIndex: 7, label: 'Ago', total: 41 },
+  { monthIndex: 8, label: 'Set', total: 25 },
+  { monthIndex: 9, label: 'Out', total: 30 },
+  { monthIndex: 10, label: 'Nov', total: 18 },
+  { monthIndex: 11, label: 'Dez', total: 36 },
+];
+
 interface EstoqueDeEventosProps {
   onMessage: (msg: string) => void;
 }
@@ -220,6 +244,10 @@ const EstoqueDeEventos = ({ onMessage }: EstoqueDeEventosProps) => {
     color: '#fff',
   };
 
+  const hasReportData = (report?.totalSaidas ?? 0) > 0;
+  const topItemsData = hasReportData && report ? report.topItems : FALLBACK_TOP_ITEMS;
+  const monthlyData = hasReportData && report ? report.monthly : FALLBACK_MONTHLY;
+
   return (
     <div className="bg-[#111] border border-[#333] rounded-2xl shadow-sm overflow-hidden">
       {/* Header */}
@@ -328,80 +356,82 @@ const EstoqueDeEventos = ({ onMessage }: EstoqueDeEventosProps) => {
         </div>
 
         {/* Gráficos */}
-        {report && report.totalSaidas > 0 ? (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {/* Doughnut — Top itens */}
-            <div className="bg-[#0a0a0a] border border-[#333] rounded-xl p-4">
-              <p className="text-[10px] font-black uppercase tracking-widest text-white mb-1">Top Itens Mais Usados</p>
-              <p className="text-[10px] text-neutral-500 mb-2">{reportYear} — {report.eventsCount} eventos</p>
-              <ResponsiveContainer width="100%" height={260}>
-                <PieChart>
-                  <Pie
-                    data={report.topItems}
-                    dataKey="qty"
-                    nameKey="name"
-                    innerRadius={60}
-                    outerRadius={95}
-                    paddingAngle={3}
-                    stroke="#0a0a0a"
-                  >
-                    {report.topItems.map((entry, i) => (
-                      <Cell key={entry.key} fill={CHART_COLORS[i % CHART_COLORS.length]} />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    contentStyle={chartTooltipStyle}
-                    formatter={(value, _name, props) => [
-                      `${value} ${props.payload?.unit ? props.payload.unit : 'saídas'}`,
-                      props.payload?.name,
-                    ]}
-                  />
-                  <Legend
-                    verticalAlign="bottom"
-                    iconSize={8}
-                    wrapperStyle={{ fontSize: 10, color: '#a3a3a3' }}
-                  />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-
-            {/* Área — Saídas por mês */}
-            <div className="bg-[#0a0a0a] border border-[#333] rounded-xl p-4">
-              <p className="text-[10px] font-black uppercase tracking-widest text-white mb-1">Saídas por Mês</p>
-              <p className="text-[10px] text-neutral-500 mb-2">{reportYear} — {report.totalSaidas} itens no total</p>
-              <ResponsiveContainer width="100%" height={260}>
-                <AreaChart data={report.monthly} margin={{ top: 8, right: 8, bottom: 0, left: -16 }}>
-                  <defs>
-                    <linearGradient id="saidasGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#B5FF03" stopOpacity={0.45} />
-                      <stop offset="100%" stopColor="#B5FF03" stopOpacity={0} />
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#222" />
-                  <XAxis dataKey="label" stroke="#555" fontSize={10} tickLine={false} axisLine={{ stroke: '#333' }} />
-                  <YAxis stroke="#555" fontSize={10} tickLine={false} axisLine={{ stroke: '#333' }} allowDecimals={false} />
-                  <Tooltip contentStyle={chartTooltipStyle} formatter={value => [`${value} itens`, 'Saídas']} />
-                  <Area
-                    type="monotone"
-                    dataKey="total"
-                    stroke="#B5FF03"
-                    strokeWidth={2}
-                    fill="url(#saidasGrad)"
-                    dot={{ fill: '#B5FF03', r: 2.5, strokeWidth: 0 }}
-                    activeDot={{ r: 4 }}
-                  />
-                </AreaChart>
-              </ResponsiveContainer>
-            </div>
-          </div>
-        ) : (
-          <div className="bg-[#0a0a0a] border border-[#333] rounded-xl p-6 text-center">
-            <Package size={22} className="mx-auto text-neutral-600 mb-2" />
-            <p className="text-xs text-neutral-500 italic">
-              Sem saídas registradas em {reportYear}. Os itens vinculados a eventos confirmados e realizados aparecerão aqui.
+        {!hasReportData && (
+          <div className="flex items-start gap-2 bg-[#B5FF03]/5 border border-[#B5FF03]/20 rounded-lg px-3 py-2.5">
+            <Package size={13} className="text-[#B5FF03] shrink-0 mt-0.5" />
+            <p className="text-[10px] text-neutral-400 leading-relaxed">
+              Nenhuma saída real em <span className="text-white font-bold">{reportYear}</span>. Mostrando{' '}
+              <span className="text-[#B5FF03] font-bold">dados de exemplo</span> — vincule itens do estoque a eventos
+              confirmados e realizados para ver os dados reais.
             </p>
           </div>
         )}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {/* Doughnut — Top itens */}
+          <div className="bg-[#0a0a0a] border border-[#333] rounded-xl p-4">
+            <p className="text-[10px] font-black uppercase tracking-widest text-white mb-1">Top Itens Mais Usados</p>
+            <p className="text-[10px] text-neutral-500 mb-2">
+              {reportYear} — {hasReportData && report ? `${report.eventsCount} eventos` : 'dados de exemplo'}
+            </p>
+            <ResponsiveContainer width="100%" height={260}>
+              <PieChart>
+                <Pie
+                  data={topItemsData}
+                  dataKey="qty"
+                  nameKey="name"
+                  innerRadius={60}
+                  outerRadius={95}
+                  paddingAngle={3}
+                  stroke="#0a0a0a"
+                >
+                  {topItemsData.map((entry, i) => (
+                    <Cell key={entry.key} fill={CHART_COLORS[i % CHART_COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip
+                  contentStyle={chartTooltipStyle}
+                  formatter={(value, _name, props) => [`${value} saídas`, props.payload?.name]}
+                />
+                <Legend
+                  verticalAlign="bottom"
+                  iconSize={8}
+                  wrapperStyle={{ fontSize: 10, color: '#a3a3a3' }}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+
+          {/* Área — Saídas por mês */}
+          <div className="bg-[#0a0a0a] border border-[#333] rounded-xl p-4">
+            <p className="text-[10px] font-black uppercase tracking-widest text-white mb-1">Saídas por Mês</p>
+            <p className="text-[10px] text-neutral-500 mb-2">
+              {reportYear} — {hasReportData && report ? `${report.totalSaidas} itens no total` : 'dados de exemplo'}
+            </p>
+            <ResponsiveContainer width="100%" height={260}>
+              <AreaChart data={monthlyData} margin={{ top: 8, right: 8, bottom: 0, left: -16 }}>
+                <defs>
+                  <linearGradient id="saidasGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#B5FF03" stopOpacity={0.45} />
+                    <stop offset="100%" stopColor="#B5FF03" stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#222" />
+                <XAxis dataKey="label" stroke="#555" fontSize={10} tickLine={false} axisLine={{ stroke: '#333' }} />
+                <YAxis stroke="#555" fontSize={10} tickLine={false} axisLine={{ stroke: '#333' }} allowDecimals={false} />
+                <Tooltip contentStyle={chartTooltipStyle} formatter={value => [`${value} itens`, 'Saídas']} />
+                <Area
+                  type="monotone"
+                  dataKey="total"
+                  stroke="#B5FF03"
+                  strokeWidth={2}
+                  fill="url(#saidasGrad)"
+                  dot={{ fill: '#B5FF03', r: 2.5, strokeWidth: 0 }}
+                  activeDot={{ r: 4 }}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
       </div>
 
       {/* Desktop Table */}
