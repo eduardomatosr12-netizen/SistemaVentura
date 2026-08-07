@@ -36,8 +36,6 @@ export interface StockMetrics {
 
 export const MONTH_LABELS = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
 
-const MONTH_LABELS = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
-
 const baseItemName = (display: string): string => display.split(' — ')[0].trim() || display.trim();
 
 const itemKey = (item: OrcamentoItem): { key: string; name: string } => {
