@@ -4,6 +4,7 @@ export interface OrcamentoItem {
   qtdAtual: number;
   valorUnit: number;
   semPreco?: boolean;
+  eventStockId?: string;
 }
 
 export interface Lead {

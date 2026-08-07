@@ -1,7 +1,10 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import {
-  Plus, Search, Pencil, Trash2, Package, ShoppingBag, X, FileText, ChevronDown,
+  Plus, Search, Pencil, Trash2, Package, ShoppingBag, X, FileText, ChevronDown, BarChart3, TrendingUp, RefreshCw,
 } from 'lucide-react';
+import {
+  PieChart, Pie, Cell, Tooltip, ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Legend,
+} from 'recharts';
 import { useCRM } from '../contexts/CRMContext';
 import { generateUUID } from '../lib/uuid';
 import { formatCurrency } from '../lib/crmHelpers';
@@ -15,6 +18,12 @@ import {
   EVENT_STOCK_UNITS,
   type EventStockItem,
 } from '../services/eventStockService';
+import {
+  fetchEventUsageReport,
+  fetchStockMetrics,
+  type EventUsageReport,
+  type StockMetrics,
+} from '../services/eventReportsService';
 
 const CATEGORY_COLORS: Record<string, string> = {
   'Iluminação': '#6b7280',
@@ -26,6 +35,8 @@ const CATEGORY_COLORS: Record<string, string> = {
 };
 
 const CLOSED_STAGES = new Set(['Contrato Fechado', 'Perdido']);
+
+const CHART_COLORS = ['#B5FF03', '#22d3ee', '#a78bfa', '#fb7185', '#fbbf24', '#64748b'];
 
 interface EstoqueDeEventosProps {
   onMessage: (msg: string) => void;
@@ -149,6 +160,7 @@ const EstoqueDeEventos = ({ onMessage }: EstoqueDeEventosProps) => {
       qtdAtual: qty,
       valorUnit: 0,
       semPreco: true,
+      eventStockId: linkItem.id,
     };
     try {
       await updateLead(linkOrcamentoId, { items: [...(lead.items || []), newItem] });
@@ -164,6 +176,49 @@ const EstoqueDeEventos = ({ onMessage }: EstoqueDeEventosProps) => {
   };
 
   const categoryColor = (category: string) => CATEGORY_COLORS[category] || '#6b7280';
+
+  const currentYear = new Date().getFullYear();
+  const [reportYear, setReportYear] = useState(currentYear);
+  const [report, setReport] = useState<EventUsageReport | null>(null);
+  const [metrics, setMetrics] = useState<StockMetrics | null>(null);
+
+  const yearOptions = useMemo(
+    () => Array.from({ length: 5 }, (_, i) => currentYear - i),
+    [currentYear]
+  );
+
+  const loadReports = useCallback(async (year: number) => {
+    try {
+      const [r, m] = await Promise.all([fetchEventUsageReport(year), fetchStockMetrics()]);
+      setReport(r);
+      setMetrics(m);
+    } catch (err) {
+      console.error('[EstoqueDeEventos] Erro ao carregar relatórios:', err);
+    }
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const [r, m] = await Promise.all([fetchEventUsageReport(reportYear), fetchStockMetrics()]);
+        if (cancelled) return;
+        setReport(r);
+        setMetrics(m);
+      } catch (err) {
+        if (!cancelled) console.error('[EstoqueDeEventos] Erro ao carregar relatórios:', err);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [reportYear]);
+
+  const chartTooltipStyle = {
+    backgroundColor: '#111',
+    border: '1px solid #333',
+    borderRadius: 8,
+    fontSize: 12,
+    color: '#fff',
+  };
 
   return (
     <div className="bg-[#111] border border-[#333] rounded-2xl shadow-sm overflow-hidden">
@@ -192,6 +247,161 @@ const EstoqueDeEventos = ({ onMessage }: EstoqueDeEventosProps) => {
             <Plus size={14} /> Adicionar Item
           </button>
         </div>
+      </div>
+
+      {/* Relatórios Analíticos */}
+      <div className="p-4 md:p-6 space-y-4 border-b border-[#222]">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <div>
+            <h3 className="text-sm font-black uppercase tracking-widest text-[#B5FF03] flex items-center gap-2">
+              <BarChart3 size={14} strokeWidth={3} /> Relatórios Analíticos
+            </h3>
+            <p className="text-[10px] text-neutral-500 mt-0.5">
+              Saídas dos itens do estoque de eventos (eventos confirmados e realizados).
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="relative">
+              <select
+                value={reportYear}
+                onChange={e => setReportYear(Number(e.target.value))}
+                className="appearance-none bg-[#0a0a0a] border border-[#333] rounded-lg px-3 py-2 pr-9 text-xs font-bold text-white focus:border-[#B5FF03] outline-none [color-scheme:dark] transition-colors"
+              >
+                {yearOptions.map(y => (
+                  <option key={y} value={y}>{y}</option>
+                ))}
+              </select>
+              <ChevronDown size={13} className="text-neutral-500 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+            </div>
+            <button
+              onClick={() => loadReports(reportYear)}
+              className="p-2 rounded-lg text-neutral-400 hover:text-[#B5FF03] hover:bg-[#222] transition-colors flex items-center justify-center min-w-[38px] min-h-[38px]"
+              title="Atualizar relatórios"
+            >
+              <RefreshCw size={14} />
+            </button>
+          </div>
+        </div>
+
+        {/* Cards de métricas rápidas */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="bg-[#0a0a0a] border border-[#333] rounded-xl p-4 flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-[#B5FF03]/10 border border-[#B5FF03]/30 flex items-center justify-center shrink-0">
+              <Package size={17} className="text-[#B5FF03]" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-[9px] font-black uppercase tracking-widest text-neutral-500">Itens Cadastrados</p>
+              <p className="text-xl font-black text-white leading-tight">{items.length}</p>
+              <p className="text-[9px] text-neutral-500">no estoque de eventos</p>
+            </div>
+          </div>
+          <div className="bg-[#0a0a0a] border border-[#333] rounded-xl p-4 flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-[#22d3ee]/10 border border-[#22d3ee]/30 flex items-center justify-center shrink-0">
+              <ShoppingBag size={17} className="text-[#22d3ee]" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-[9px] font-black uppercase tracking-widest text-neutral-500">Alugados / Em Eventos</p>
+              <p className="text-xl font-black text-white leading-tight">{metrics?.itemsInEvents ?? 0}</p>
+              <p className="text-[9px] text-neutral-500">
+                {metrics && metrics.itemsInEventsCount > 0 ? `${metrics.itemsInEventsCount} vínculos em eventos ativos` : 'nenhum vínculo ativo'}
+              </p>
+            </div>
+          </div>
+          <div className="bg-[#0a0a0a] border border-[#333] rounded-xl p-4 flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-[#a78bfa]/10 border border-[#a78bfa]/30 flex items-center justify-center shrink-0">
+              <TrendingUp size={17} className="text-[#a78bfa]" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-[9px] font-black uppercase tracking-widest text-neutral-500">Item Mais Rentável</p>
+              {report?.mostProfitable ? (
+                <>
+                  <p className="text-sm font-black text-white leading-tight truncate">{report.mostProfitable.name}</p>
+                  <p className="text-[9px] text-[#B5FF03] font-bold">
+                    {formatCurrency(report.mostProfitable.valor)} em valor de referência
+                  </p>
+                </>
+              ) : (
+                <p className="text-xl font-black text-neutral-600 leading-tight">—</p>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Gráficos */}
+        {report && report.totalSaidas > 0 ? (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {/* Doughnut — Top itens */}
+            <div className="bg-[#0a0a0a] border border-[#333] rounded-xl p-4">
+              <p className="text-[10px] font-black uppercase tracking-widest text-white mb-1">Top Itens Mais Usados</p>
+              <p className="text-[10px] text-neutral-500 mb-2">{reportYear} — {report.eventsCount} eventos</p>
+              <ResponsiveContainer width="100%" height={260}>
+                <PieChart>
+                  <Pie
+                    data={report.topItems}
+                    dataKey="qty"
+                    nameKey="name"
+                    innerRadius={60}
+                    outerRadius={95}
+                    paddingAngle={3}
+                    stroke="#0a0a0a"
+                  >
+                    {report.topItems.map((entry, i) => (
+                      <Cell key={entry.key} fill={CHART_COLORS[i % CHART_COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    contentStyle={chartTooltipStyle}
+                    formatter={(value, _name, props) => [
+                      `${value} ${props.payload?.unit ? props.payload.unit : 'saídas'}`,
+                      props.payload?.name,
+                    ]}
+                  />
+                  <Legend
+                    verticalAlign="bottom"
+                    iconSize={8}
+                    wrapperStyle={{ fontSize: 10, color: '#a3a3a3' }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* Área — Saídas por mês */}
+            <div className="bg-[#0a0a0a] border border-[#333] rounded-xl p-4">
+              <p className="text-[10px] font-black uppercase tracking-widest text-white mb-1">Saídas por Mês</p>
+              <p className="text-[10px] text-neutral-500 mb-2">{reportYear} — {report.totalSaidas} itens no total</p>
+              <ResponsiveContainer width="100%" height={260}>
+                <AreaChart data={report.monthly} margin={{ top: 8, right: 8, bottom: 0, left: -16 }}>
+                  <defs>
+                    <linearGradient id="saidasGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="#B5FF03" stopOpacity={0.45} />
+                      <stop offset="100%" stopColor="#B5FF03" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#222" />
+                  <XAxis dataKey="label" stroke="#555" fontSize={10} tickLine={false} axisLine={{ stroke: '#333' }} />
+                  <YAxis stroke="#555" fontSize={10} tickLine={false} axisLine={{ stroke: '#333' }} allowDecimals={false} />
+                  <Tooltip contentStyle={chartTooltipStyle} formatter={value => [`${value} itens`, 'Saídas']} />
+                  <Area
+                    type="monotone"
+                    dataKey="total"
+                    stroke="#B5FF03"
+                    strokeWidth={2}
+                    fill="url(#saidasGrad)"
+                    dot={{ fill: '#B5FF03', r: 2.5, strokeWidth: 0 }}
+                    activeDot={{ r: 4 }}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        ) : (
+          <div className="bg-[#0a0a0a] border border-[#333] rounded-xl p-6 text-center">
+            <Package size={22} className="mx-auto text-neutral-600 mb-2" />
+            <p className="text-xs text-neutral-500 italic">
+              Sem saídas registradas em {reportYear}. Os itens vinculados a eventos confirmados e realizados aparecerão aqui.
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Desktop Table */}

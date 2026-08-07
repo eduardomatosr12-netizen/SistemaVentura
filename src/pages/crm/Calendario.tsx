@@ -184,7 +184,7 @@ const CRMCalendario = () => {
   };
 
   const handleAddEventItem = (prod: EventStockItem) => {
-    const newItem = { id: generateUUID(), item: `${prod.name} — 1 ${prod.unit}`, qtdAtual: 1, valorUnit: 0, semPreco: true };
+    const newItem = { id: generateUUID(), item: `${prod.name} — 1 ${prod.unit}`, qtdAtual: 1, valorUnit: 0, semPreco: true, eventStockId: prod.id };
     setEventItems(prev => [...prev, newItem]);
     setItemSearch('');
     setItemSearchOpen(false);

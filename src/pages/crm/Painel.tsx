@@ -176,6 +176,7 @@ const CRMDashboard = () => {
       qtdAtual: 1,
       valorUnit: 0,
       semPreco: true,
+      eventStockId: prod.id,
     };
     setFormData(prev => ({
       ...prev,
@@ -219,7 +220,7 @@ const CRMDashboard = () => {
     setFormData(prev => ({
       ...prev,
       orcamentoItems: prev.orcamentoItems.map(i =>
-        i.id === itemId ? { ...i, item: `${opt.name} — ${i.qtdAtual} ${opt.unit}`, valorUnit: 0, semPreco: true } : i
+        i.id === itemId ? { ...i, item: `${opt.name} — ${i.qtdAtual} ${opt.unit}`, valorUnit: 0, semPreco: true, eventStockId: opt.id } : i
       ),
     }));
     setEditingItemId(null);
