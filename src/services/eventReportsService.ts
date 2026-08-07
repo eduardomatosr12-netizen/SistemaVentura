@@ -19,6 +19,7 @@ export interface MonthlyUsage {
 
 export interface EventUsageReport {
   year: number;
+  month: number | null;
   totalSaidas: number;
   eventsCount: number;
   topItems: ReportItemUsage[];
@@ -32,6 +33,8 @@ export interface StockMetrics {
   itemsInEvents: number;
   itemsInEventsCount: number;
 }
+
+export const MONTH_LABELS = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
 
 const MONTH_LABELS = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
 
@@ -52,12 +55,14 @@ const dateToMonthIndex = (date: string): number | null => {
   return d.getMonth();
 };
 
-export const fetchEventUsageReport = async (year: number): Promise<EventUsageReport> => {
+export const fetchEventUsageReport = async (year: number, month?: number | null): Promise<EventUsageReport> => {
   const [events, stock] = await Promise.all([fetchEvents(), fetchEventStock()]);
   const stockById = new Map(stock.map(s => [s.id, s]));
 
   const yearStart = new Date(Date.UTC(year, 0, 1));
   const yearEnd = new Date(Date.UTC(year + 1, 0, 1));
+
+  const selectedMonth = month ?? null;
 
   const yearEvents = events.filter(e =>
     EVENT_ACTIVE_STATUS.includes((e.status || '') as (typeof EVENT_ACTIVE_STATUS)[number])
@@ -66,6 +71,8 @@ export const fetchEventUsageReport = async (year: number): Promise<EventUsageRep
       const t = new Date(`${e.date}T00:00:00`);
       return !Number.isNaN(t.getTime()) && t >= yearStart && t < yearEnd;
     })()
+    && (selectedMonth === null
+      || dateToMonthIndex(e.date) === selectedMonth)
   );
 
   const usage = new Map<string, ReportItemUsage>();
@@ -104,6 +111,7 @@ export const fetchEventUsageReport = async (year: number): Promise<EventUsageRep
 
   return {
     year,
+    month: selectedMonth,
     totalSaidas,
     eventsCount: yearEvents.length,
     topItems,

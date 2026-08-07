@@ -21,6 +21,7 @@ import {
 import {
   fetchEventUsageReport,
   fetchStockMetrics,
+  MONTH_LABELS,
   type EventUsageReport,
   type StockMetrics,
 } from '../services/eventReportsService';
@@ -203,6 +204,7 @@ const EstoqueDeEventos = ({ onMessage }: EstoqueDeEventosProps) => {
 
   const currentYear = new Date().getFullYear();
   const [reportYear, setReportYear] = useState(currentYear);
+  const [reportMonth, setReportMonth] = useState<number | null>(null);
   const [report, setReport] = useState<EventUsageReport | null>(null);
   const [metrics, setMetrics] = useState<StockMetrics | null>(null);
 
@@ -211,9 +213,11 @@ const EstoqueDeEventos = ({ onMessage }: EstoqueDeEventosProps) => {
     [currentYear]
   );
 
-  const loadReports = useCallback(async (year: number) => {
+  const periodLabel = reportMonth !== null && reportMonth !== undefined ? MONTH_LABELS[reportMonth] : '';
+
+  const loadReports = useCallback(async (year: number, month: number | null) => {
     try {
-      const [r, m] = await Promise.all([fetchEventUsageReport(year), fetchStockMetrics()]);
+      const [r, m] = await Promise.all([fetchEventUsageReport(year, month), fetchStockMetrics()]);
       setReport(r);
       setMetrics(m);
     } catch (err) {
@@ -225,7 +229,7 @@ const EstoqueDeEventos = ({ onMessage }: EstoqueDeEventosProps) => {
     let cancelled = false;
     (async () => {
       try {
-        const [r, m] = await Promise.all([fetchEventUsageReport(reportYear), fetchStockMetrics()]);
+        const [r, m] = await Promise.all([fetchEventUsageReport(reportYear, reportMonth), fetchStockMetrics()]);
         if (cancelled) return;
         setReport(r);
         setMetrics(m);
@@ -234,7 +238,7 @@ const EstoqueDeEventos = ({ onMessage }: EstoqueDeEventosProps) => {
       }
     })();
     return () => { cancelled = true; };
-  }, [reportYear]);
+  }, [reportYear, reportMonth]);
 
   const chartTooltipStyle = {
     backgroundColor: '#111',
@@ -246,7 +250,11 @@ const EstoqueDeEventos = ({ onMessage }: EstoqueDeEventosProps) => {
 
   const hasReportData = (report?.totalSaidas ?? 0) > 0;
   const topItemsData = hasReportData && report ? report.topItems : FALLBACK_TOP_ITEMS;
-  const monthlyData = hasReportData && report ? report.monthly : FALLBACK_MONTHLY;
+  const monthlyData = useMemo(() => {
+    const base = hasReportData && report ? report.monthly : FALLBACK_MONTHLY;
+    if (reportMonth === null || reportMonth === undefined) return base;
+    return base.map(m => (m.monthIndex === reportMonth ? m : { ...m, total: 0 }));
+  }, [hasReportData, report, reportMonth]);
 
   return (
     <div className="bg-[#111] border border-[#333] rounded-2xl shadow-sm overflow-hidden">
@@ -288,7 +296,20 @@ const EstoqueDeEventos = ({ onMessage }: EstoqueDeEventosProps) => {
               Saídas dos itens do estoque de eventos (eventos confirmados e realizados).
             </p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            <div className="relative">
+              <select
+                value={reportMonth ?? ''}
+                onChange={e => setReportMonth(e.target.value === '' ? null : Number(e.target.value))}
+                className="appearance-none bg-[#0a0a0a] border border-[#333] rounded-lg px-3 py-2 pr-9 text-xs font-bold text-white focus:border-[#B5FF03] outline-none [color-scheme:dark] transition-colors"
+              >
+                <option value="">Todos os meses</option>
+                {MONTH_LABELS.map((label, i) => (
+                  <option key={label} value={i}>{label}</option>
+                ))}
+              </select>
+              <ChevronDown size={13} className="text-neutral-500 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+            </div>
             <div className="relative">
               <select
                 value={reportYear}
@@ -302,7 +323,7 @@ const EstoqueDeEventos = ({ onMessage }: EstoqueDeEventosProps) => {
               <ChevronDown size={13} className="text-neutral-500 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
             </div>
             <button
-              onClick={() => loadReports(reportYear)}
+              onClick={() => loadReports(reportYear, reportMonth)}
               className="p-2 rounded-lg text-neutral-400 hover:text-[#B5FF03] hover:bg-[#222] transition-colors flex items-center justify-center min-w-[38px] min-h-[38px]"
               title="Atualizar relatórios"
             >
@@ -360,7 +381,7 @@ const EstoqueDeEventos = ({ onMessage }: EstoqueDeEventosProps) => {
           <div className="flex items-start gap-2 bg-[#B5FF03]/5 border border-[#B5FF03]/20 rounded-lg px-3 py-2.5">
             <Package size={13} className="text-[#B5FF03] shrink-0 mt-0.5" />
             <p className="text-[10px] text-neutral-400 leading-relaxed">
-              Nenhuma saída real em <span className="text-white font-bold">{reportYear}</span>. Mostrando{' '}
+              Nenhuma saída real em <span className="text-white font-bold">{[periodLabel, reportYear].filter(Boolean).join(' ') || reportYear}</span>. Mostrando{' '}
               <span className="text-[#B5FF03] font-bold">dados de exemplo</span> — vincule itens do estoque a eventos
               confirmados e realizados para ver os dados reais.
             </p>
@@ -371,7 +392,7 @@ const EstoqueDeEventos = ({ onMessage }: EstoqueDeEventosProps) => {
           <div className="bg-[#0a0a0a] border border-[#333] rounded-xl p-4">
             <p className="text-[10px] font-black uppercase tracking-widest text-white mb-1">Top Itens Mais Usados</p>
             <p className="text-[10px] text-neutral-500 mb-2">
-              {reportYear} — {hasReportData && report ? `${report.eventsCount} eventos` : 'dados de exemplo'}
+              {[periodLabel, reportYear].filter(Boolean).join(' ')} — {hasReportData && report ? `${report.eventsCount} eventos` : 'dados de exemplo'}
             </p>
             <ResponsiveContainer width="100%" height={260}>
               <PieChart>
