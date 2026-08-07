@@ -1814,20 +1814,12 @@ const CRMDashboard = () => {
                                 <input type="number" min="1" value={item.qtdAtual} onChange={e => handleItemChange(item.id, 'qtdAtual', e.target.value)}
                                   className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-1.5 text-sm text-white focus:border-[#B5FF03] outline-none" />
                               </div>
-                              {item.semPreco ? (
-                                <div>
-                                  <label className="block text-[8px] font-black uppercase tracking-widest text-neutral-500 mb-1">Valor</label>
-                                  <div className="w-full bg-[#111] border border-[#222] rounded-lg px-3 py-1.5 text-sm text-neutral-500">
-                                    Sem preço (interno)
-                                  </div>
-                                </div>
-                              ) : (
-                                <div>
-                                  <label className="block text-[8px] font-black uppercase tracking-widest text-neutral-500 mb-1">Valor Unit.</label>
-                                  <input type="number" min="0" step="0.01" value={item.valorUnit} onChange={e => handleItemChange(item.id, 'valorUnit', e.target.value)}
-                                    className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-1.5 text-sm text-white focus:border-[#B5FF03] outline-none" />
-                                </div>
-                              )}
+                              <div>
+                                <label className="block text-[8px] font-black uppercase tracking-widest text-neutral-500 mb-1">Valor Unit.</label>
+                                <input type="number" min="0" step="0.01" value={item.valorUnit} onChange={e => handleItemChange(item.id, 'valorUnit', e.target.value)}
+                                  placeholder="0,00"
+                                  className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-1.5 text-sm text-white focus:border-[#B5FF03] outline-none [color-scheme:dark]" />
+                              </div>
                             </div>
                             <div className="text-right">
                               <span className="text-[10px] text-neutral-400">Total: </span>
@@ -1839,9 +1831,7 @@ const CRMDashboard = () => {
                             <span className="text-sm text-white">
                               <span className="text-[#B5FF03] font-bold">{item.qtdAtual}x</span>
                               {' '}{item.item}
-                              {item.semPreco
-                                ? <span className="text-neutral-500 ml-2 text-[10px] italic">sem preço</span>
-                                : <span className="text-neutral-400 ml-2">R$ {(item.qtdAtual * item.valorUnit).toFixed(2)}</span>}
+                              <span className="text-neutral-400 ml-2 text-[10px]">R$ {(item.qtdAtual * item.valorUnit).toFixed(2)}</span>
                             </span>
                             <div className="flex items-center gap-1">
                               <button type="button" onClick={() => setExpandedItems(prev => { const next = new Set(prev); next.add(item.id); return next; })}
