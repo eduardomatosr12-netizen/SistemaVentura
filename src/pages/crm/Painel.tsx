@@ -136,7 +136,7 @@ const CRMDashboard = () => {
   const [editingItemId, setEditingItemId] = useState<string | null>(null);
   const [inlineItemSearch, setInlineItemSearch] = useState('');
   const [showCreateItemForm, setShowCreateItemForm] = useState(false);
-  const [newItemForm, setNewItemForm] = useState({
+  const [newItemForm, setNewItemForm] = useState<{ name: string; category: string; quantity: string; unit: string; valorReferencia: string; observacao: string }>({
     name: '',
     category: EVENT_STOCK_CATEGORIES[0],
     quantity: '',
@@ -349,7 +349,7 @@ const CRMDashboard = () => {
     setClientSearch(event.client ? `${event.client} — ${event.clientPhone || ''}` : '');
     setOrcSearch('');
     setOrcSearchOpen(false);
-    setAbaAtiva(leadId ? (event.clientId ? 'cliente_existente' : 'cliente') : 'cliente');
+    setAbaAtiva('cliente');
     setIsCreateOpen(true);
     setSelectedDayEvents(null);
     setSelectedDate(null);
@@ -786,7 +786,7 @@ const CRMDashboard = () => {
                       className={`min-h-[72px] md:min-h-[110px] p-1 md:p-1.5 text-left align-top border-r border-b border-[#222] select-none transition-colors
                         ${isToday ? 'bg-[#1a1a1a] ring-1 ring-inset ring-[#B5FF03]' : 'bg-[#111]'}
                         hover:bg-[#1a1a1a]`}
-                      style={{ cursor: 'pointer !important', pointerEvents: 'auto !important' } as React.CSSProperties}
+                      style={{ cursor: 'pointer !important', pointerEvents: 'auto !important' } as unknown as React.CSSProperties}
                     >
                       <span className={`inline-flex items-center justify-center w-5 h-5 text-[10px] font-bold rounded-full mb-1
                         ${isToday ? 'bg-[#B5FF03] text-black' : 'text-neutral-400'}`}>

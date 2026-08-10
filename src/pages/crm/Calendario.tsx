@@ -128,7 +128,7 @@ const CRMCalendario = () => {
   const [itemSearch, setItemSearch] = useState('');
   const [itemSearchOpen, setItemSearchOpen] = useState(false);
   const [showCreateItemForm, setShowCreateItemForm] = useState(false);
-  const [newItemForm, setNewItemForm] = useState({
+  const [newItemForm, setNewItemForm] = useState<{ name: string; category: string; quantity: string; unit: string; valorReferencia: string; observacao: string }>({
     name: '',
     category: EVENT_STOCK_CATEGORIES[0],
     quantity: '',
@@ -404,7 +404,7 @@ const CRMCalendario = () => {
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     setSaveError(null);
-    const cleanDescription = formData.description.replace(/\n\nItens do Evento:\n[\s\S]*$/, '');
+    const cleanDescription = (formData.description || '').replace(/\n\nItens do Evento:\n[\s\S]*$/, '');
     const itemsText = eventItems.length > 0
       ? `\n\nItens do Evento:\n${eventItems.map(i => i.semPreco
           ? `- ${i.qtdAtual}x ${i.item}`
@@ -447,8 +447,8 @@ const CRMCalendario = () => {
   const getOccurrenceDate = (occ: CalendarOccurrence): Date | null => {
     switch (occ.phase) {
       case 'evento': return parseDate(occ.event.date);
-      case 'montagem': return parseDate(occ.event.dataMontagem);
-      case 'desmontagem': return parseDate(occ.event.dataDesmontagem);
+      case 'montagem': return occ.event.dataMontagem ? parseDate(occ.event.dataMontagem) : null;
+      case 'desmontagem': return occ.event.dataDesmontagem ? parseDate(occ.event.dataDesmontagem) : null;
     }
   };
 
@@ -1149,7 +1149,7 @@ const CRMCalendario = () => {
                         <button
                           type="button"
                           onClick={() => {
-                            const current = formData.equipe.split(',').map(s => s.trim()).filter(Boolean);
+                            const current = formData.equipe ? formData.equipe.split(',').map(s => s.trim()).filter(Boolean) : [];
                             const next = current.filter(n => n !== name);
                             setFormData({ ...formData, equipe: next.join(', ') });
                           }}
@@ -1184,7 +1184,7 @@ const CRMCalendario = () => {
                               key={name}
                               type="button"
                               onClick={() => {
-                                const current = formData.equipe.split(',').map(s => s.trim()).filter(Boolean);
+                                const current = formData.equipe ? formData.equipe.split(',').map(s => s.trim()).filter(Boolean) : [];
                                 setFormData({ ...formData, equipe: [...current, name].join(', ') });
                                 setEquipeSearch('');
                                 setShowEquipeDropdown(false);

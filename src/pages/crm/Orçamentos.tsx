@@ -1,5 +1,4 @@
 ﻿import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
-import { ReactNode } from 'react';
 import { Plus, Pencil, Trash2, X, Save, Filter, XCircle, ChevronDown, ChevronUp, AlertCircle, MessageCircle, Package, Search, FileText, Percent, DollarSign } from 'lucide-react';
 import WhatsAppModal from '../../components/WhatsAppModal';
 import { useCRM } from '../../contexts/CRMContext';

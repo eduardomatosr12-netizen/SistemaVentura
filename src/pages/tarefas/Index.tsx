@@ -9,7 +9,6 @@ import { generateUUID } from '../../lib/uuid';
 import { generateWhatsAppLink, WHATSAPP_MESSAGE_TEMPLATES } from '../../lib/whatsapp';
 import { subscribeInventoryChanges, getBoards, updateBoard } from '../../lib/inventory';
 import { subscribeRentals, addRental, updateRental, deleteRental } from '../../services/rentalService';
-import type { RentalRecord } from '../../services/rentalService';
 
 interface ColumnOption {
   id: string;
@@ -767,7 +766,7 @@ const Board = ({
             <div className="flex justify-between items-start">
               <div className="flex-1 min-w-0">
                 <span className="text-white text-sm font-bold block truncate">{String(row.values['col-1'] || '')}</span>
-                {row.values['col-2'] && (
+                {Boolean(row.values['col-2']) && (
                   <span className="text-[10px] text-neutral-400 font-medium uppercase tracking-wider">{String(row.values['col-2'])}</span>
                 )}
               </div>
@@ -784,19 +783,19 @@ const Board = ({
                 <span className="text-neutral-500 block">Estoque</span>
                 <span className="text-white font-bold">{String(row.values['col-4'] ?? '0')}</span>
               </div>
-              {row.values['col-5'] && (
+              {Boolean(row.values['col-5']) && (
                 <div className="bg-[#1a1a1a] rounded-lg px-3 py-2">
                   <span className="text-neutral-500 block">Fornecedor</span>
                   <span className="text-white font-bold truncate block">{String(row.values['col-5'])}</span>
                 </div>
               )}
-              {row.values['col-6'] && (
+              {Boolean(row.values['col-6']) && (
                 <div className="bg-[#1a1a1a] rounded-lg px-3 py-2">
                   <span className="text-neutral-500 block">Últ. Entrada</span>
                   <span className="text-white font-bold">{String(row.values['col-6'])}</span>
                 </div>
               )}
-              {row.values['col-7'] && (
+              {Boolean(row.values['col-7']) && (
                 <div className="bg-[#1a1a1a] rounded-lg px-3 py-2">
                   <span className="text-neutral-500 block">Valor Unit.</span>
                   <span className="text-[#B5FF03] font-bold">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(row.values['col-7']) || 0)}</span>
@@ -935,7 +934,7 @@ const Tarefas = () => {
       }
     });
     const unsubRentals = subscribeRentals(records => {
-      setRentalRecords(records);
+      setRentalRecords(records as RentalRecord[]);
     });
     return () => {
       unsubBoards();

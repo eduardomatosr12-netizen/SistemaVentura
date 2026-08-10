@@ -78,7 +78,7 @@ const EstoqueDeEventos = ({ onMessage }: EstoqueDeEventosProps) => {
 
   const [formOpen, setFormOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<EventStockItem | null>(null);
-  const [form, setForm] = useState({
+  const [form, setForm] = useState<{ name: string; category: string; quantity: string; unit: string; valorReferencia: string; observacao: string }>({
     name: '',
     category: EVENT_STOCK_CATEGORIES[0],
     quantity: '',
