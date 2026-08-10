@@ -953,7 +953,7 @@ const Financeiro = () => {
 
       {/* View Toggle */}
       <div className="px-6 md:px-8 pt-6 pb-2">
-        <div className="flex gap-3">
+        <div className="flex flex-wrap gap-3">
           <button
             onClick={() => navigate('/financeiro/dashboard')}
             className="btn-secondary flex items-center gap-1.5"
@@ -1710,7 +1710,7 @@ const Financeiro = () => {
         {isSidebarOpen && (
           <>
             <div className="fixed inset-0 z-40 bg-black/60 md:hidden" onClick={() => setIsSidebarOpen(false)} />
-            <div className="fixed inset-x-0 bottom-0 z-[100] bg-surface-cardAlt border-t border-[rgba(255,255,255,0.08)] rounded-t-2xl p-4 max-h-[70vh] overflow-y-auto md:hidden">
+            <div className="fixed inset-x-0 bottom-0 z-[100] bg-surface-cardAlt border-t border-[rgba(255,255,255,0.08)] rounded-t-2xl p-4 max-h-[70dvh] overflow-y-auto md:hidden" style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}>
               {filterContent}
             </div>
             <div className="hidden md:block w-64 bg-surface-cardAlt border-l border-[rgba(255,255,255,0.08)] p-4 overflow-y-auto max-h-screen sticky top-0">
@@ -1726,7 +1726,7 @@ const Financeiro = () => {
           <div className="card w-full max-w-md p-8">
             <h3 className="text-lg font-extrabold text-white mb-4">Excluir Despesa Fixa</h3>
             <p className="text-sm text-[#A0A0A0] mb-6">Deseja excluir apenas este lançamento ou todos os futuros?</p>
-            <div className="flex justify-end gap-3">
+            <div className="flex flex-wrap justify-end gap-3">
               <button
                 onClick={() => setDeleteDialog({ expense: null as unknown as Expense, show: false })}
                 className="btn-secondary"
@@ -1859,8 +1859,8 @@ const Financeiro = () => {
       {/* Expense Modal */}
       {isExpenseModalOpen && editingExpense && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[100] p-4">
-          <div className="card w-full max-w-full md:max-w-md p-8 max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center mb-6">
+          <div className="card w-full max-w-full md:max-w-md p-8 max-h-[90vh] flex flex-col">
+            <div className="flex justify-between items-center mb-6 shrink-0">
               <h3 className="text-lg font-extrabold text-white">
                 {isNewExpense ? 'Nova Despesa' : 'Editar Despesa'}
               </h3>
@@ -1868,7 +1868,7 @@ const Financeiro = () => {
                 <X size={20} />
               </button>
             </div>
-            <form onSubmit={handleSaveExpense} className="space-y-5">
+            <form onSubmit={handleSaveExpense} className="space-y-5 overflow-y-auto flex-1 min-h-0">
               {/* Tipo de Despesa */}
               <div>
                 <label className="section-label mb-3 block">Tipo de Despesa</label>

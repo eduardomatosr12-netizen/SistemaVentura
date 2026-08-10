@@ -313,10 +313,10 @@ const Configuracoes = () => {
 
       {activeModal && activeModal !== 'delete' && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/60 backdrop-blur-md animate-in fade-in duration-300">
-          <div className="bg-[#0a0a0a] border border-[#222222] rounded-[40px] shadow-2xl w-full max-w-2xl overflow-hidden transform animate-in slide-in-from-bottom-8 duration-500">
+          <div className="bg-[#0a0a0a] border border-[#222222] rounded-[40px] shadow-2xl w-full max-w-2xl overflow-hidden transform animate-in slide-in-from-bottom-8 duration-500 flex flex-col max-h-[92dvh]">
             {activeModal === 'perfil' ? (
-              <form onSubmit={handleSaveProfile}>
-                <div className="px-4 md:px-12 py-10 border-b border-[#222222] flex justify-between items-start">
+              <form onSubmit={handleSaveProfile} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+                <div className="px-4 md:px-12 py-10 border-b border-[#222222] flex justify-between items-start shrink-0">
                   <div>
                     <span className="text-[10px] font-black text-[#aaaaaa] uppercase tracking-[3px] mb-3 block">Preferências do Sistema</span>
                     <h2 className="text-4xl font-black text-white tracking-tighter">Configurações de Perfil</h2>
@@ -325,7 +325,7 @@ const Configuracoes = () => {
                     <X size={24} />
                   </button>
                 </div>
-                <div className="p-4 md:p-12 space-y-4 md:space-y-10 max-h-[70vh] md:max-h-[60vh] overflow-y-auto custom-scrollbar">
+                <div className="p-4 md:p-12 space-y-4 md:space-y-10 flex-1 overflow-y-auto min-h-0 custom-scrollbar">
                   {profileError && (
                     <div className="p-4 bg-[#111111] border border-red-500/30 rounded-2xl flex items-center gap-3 text-red-400 text-sm font-medium">
                       <AlertCircle size={20} />
@@ -368,7 +368,7 @@ const Configuracoes = () => {
                     </div>
                   </div>
                 </div>
-                <div className="px-4 md:px-12 py-10 border-t border-[#222222] flex gap-4">
+                <div className="px-4 md:px-12 py-10 border-t border-[#222222] flex gap-4 shrink-0">
                   <button type="button" onClick={() => setActiveModal(null)} className="flex-1 py-4 rounded-[20px] font-black text-[11px] uppercase tracking-widest text-[#aaaaaa] hover:text-white hover:bg-[#111111] transition-all border border-transparent hover:border-[#222222]">Cancelar</button>
                   <button type="submit" disabled={isSavingProfile} className="flex-[2] py-4 rounded-[20px] bg-[#B5FF03] text-black font-black text-[11px] uppercase tracking-widest hover:bg-[#a1e600] transition-all active:scale-[0.98] flex items-center justify-center gap-3">
                     {isSavingProfile ? <><RefreshCw size={18} className="animate-spin" /> Salvando...</> : <><Save size={18} /> Salvar Perfil</>}
@@ -376,8 +376,8 @@ const Configuracoes = () => {
                 </div>
                 </form>
             ) : activeModal === 'equipe' ? (
-              <div className="bg-[#000000]">
-                <div className="px-4 md:px-12 py-10 border-b border-[#222222] flex justify-between items-start">
+              <div className="bg-[#000000] flex flex-col flex-1 min-h-0 overflow-hidden">
+                <div className="px-4 md:px-12 py-10 border-b border-[#222222] flex justify-between items-start shrink-0">
                   <div>
                     <span className="text-[10px] font-black text-[#aaaaaa] uppercase tracking-[3px] mb-3 block">Preferências do Sistema</span>
                     <h2 className="text-4xl font-black text-white tracking-tighter">Equipe</h2>
@@ -386,7 +386,7 @@ const Configuracoes = () => {
                     <X size={24} />
                   </button>
                 </div>
-                <div className="p-4 md:p-12 space-y-4 md:space-y-10 max-h-[70vh] md:max-h-[60vh] overflow-y-auto custom-scrollbar">
+                <div className="p-4 md:p-12 space-y-4 md:space-y-10 flex-1 overflow-y-auto min-h-0 custom-scrollbar">
                   {inviteError && (
                     <div className="p-4 bg-[#111111] border border-red-500/30 rounded-2xl flex items-center gap-3 text-red-400 text-sm font-medium">
                       <AlertCircle size={20} />
@@ -436,7 +436,7 @@ const Configuracoes = () => {
                     )}
                   </div>
                 </div>
-                <div className="px-4 md:px-12 py-10 border-t border-[#222222]">
+                <div className="px-4 md:px-12 py-10 border-t border-[#222222] shrink-0">
                   <button type="button" onClick={() => setActiveModal(null)} className="w-full py-5 rounded-[20px] font-black text-[11px] uppercase tracking-widest text-[#aaaaaa] hover:text-white hover:bg-[#111111] transition-all border border-transparent hover:border-[#222222]">Fechar</button>
                 </div>
               </div>
@@ -447,7 +447,7 @@ const Configuracoes = () => {
 
       {activeModal === 'delete' && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/60 backdrop-blur-md animate-in fade-in">
-          <div className="bg-white border-2 border-red-100 rounded-[40px] shadow-2xl w-full max-w-md overflow-hidden p-4 md:p-12 text-center transform animate-in slide-in-from-bottom-8">
+          <div className="bg-white border-2 border-red-100 rounded-[40px] shadow-2xl w-full max-w-md overflow-y-auto p-4 md:p-12 text-center max-h-[92dvh] transform animate-in slide-in-from-bottom-8">
             <div className="w-24 h-24 bg-red-50 rounded-[32px] flex items-center justify-center mx-auto mb-8 animate-bounce"><Trash2 size={48} className="text-red-600" /></div>
             <h2 className="text-4xl font-black text-black tracking-tighter mb-4">Tem certeza?</h2>
             <p className="text-neutral-500 text-sm font-bold leading-relaxed mb-10">Esta ação é irreversível e apagará todos os dados permanentemente.</p>

@@ -382,7 +382,9 @@ const Board = ({
                     setActiveCategoryRow(null);
                   } else {
                     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-                    setCategoryMenuPos({ top: rect.bottom, left: rect.left, width: Math.max(rect.width, 200) });
+                    const menuWidth = Math.max(rect.width, 200);
+                    const clampedLeft = Math.max(8, Math.min(rect.left, window.innerWidth - menuWidth - 8));
+                    setCategoryMenuPos({ top: rect.bottom, left: clampedLeft, width: menuWidth });
                     setActiveCategoryRow(row.id);
                     setAddingCategory(false);
                     setEditingCatId(null);
@@ -403,7 +405,7 @@ const Board = ({
                   <div className="fixed inset-0 z-40" onClick={() => setActiveCategoryRow(null)} />
                   <div
                     className="z-50 bg-[#1a1a1a] border border-[#333] rounded-lg shadow-xl overflow-hidden"
-                    style={{ position: 'fixed', top: categoryMenuPos.top, left: categoryMenuPos.left, minWidth: categoryMenuPos.width }}
+                    style={{ position: 'fixed', top: categoryMenuPos.top, left: categoryMenuPos.left, minWidth: categoryMenuPos.width, maxWidth: 'calc(100vw - 1rem)' }}
                   >
                     <div className="max-h-[240px] overflow-y-auto">
                       {options.map(opt => {
@@ -718,7 +720,7 @@ const Board = ({
         <div className="w-3 h-8 rounded-full" style={{ backgroundColor: board.color }} />
         <h2 className="text-xl font-black text-white">{board.title}</h2>
       </div>
-        <div className="border rounded-2xl border-[#333] bg-[#111] overflow-hidden flex flex-col">
+        <div className="border rounded-2xl border-[#333] bg-[#111] overflow-hidden flex flex-col hidden md:block">
         <div className="overflow-x-auto overflow-y-auto max-h-[400px] md:max-h-[600px]">
           <table className="w-full min-w-[700px] border-collapse">
             <thead className="sticky top-0 z-10">
@@ -1418,7 +1420,7 @@ const Tarefas = () => {
                     </div>
                   )}
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-black text-neutral-400 uppercase tracking-widest mb-2">Data de Saída</label>
                     <input
@@ -1627,8 +1629,8 @@ const Tarefas = () => {
 
       {editingNote && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="bg-[#111] border border-[#333] rounded-2xl p-4 md:p-8 max-w-full md:max-w-2xl w-full shadow-2xl">
-            <div className="flex items-center justify-between mb-6">
+          <div className="bg-[#111] border border-[#333] rounded-2xl p-4 md:p-8 max-w-full md:max-w-2xl w-full shadow-2xl flex flex-col max-h-[90dvh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-6 shrink-0">
               <h3 className="text-xl font-black text-white">Editar Notas</h3>
               <button onClick={() => { setEditingNote(null); setNoteContent(''); }} className="text-neutral-400 hover:text-white p-2 min-h-[44px]">
                 <X size={20} />
@@ -1639,7 +1641,7 @@ const Tarefas = () => {
               onChange={(e) => setNoteContent(e.target.value)}
               rows={16}
               autoFocus
-                className="w-full px-4 py-3 border-2 border-[#333] rounded-xl font-medium text-white focus:border-[#B5FF03] outline-none transition-colors resize-none leading-relaxed bg-[#111]"
+                className="w-full px-4 py-3 border-2 border-[#333] rounded-xl font-medium text-white focus:border-[#B5FF03] outline-none transition-colors resize-none leading-relaxed bg-[#111] flex-1 min-h-[160px]"
               placeholder="Digite suas notas aqui..."
             />
             <div className="flex gap-3 mt-6">

@@ -136,6 +136,9 @@ const CRMOrçamentos = () => {
   // City filter
   const [citySearch, setCitySearch] = useState<string>('');
 
+  // Mobile filter sheet (generic fields)
+  const [mobileFilters, setMobileFilters] = useState<Record<string, string>>({});
+
   useEffect(() => {
     setInvStockItems(getAllInventoryItems());
     const unsub = subscribeInventoryChanges(() => {
@@ -453,20 +456,84 @@ const CRMOrçamentos = () => {
       });
     }
 
-    return result;
-  }, [unifiedClients, searchTerm, eventType, citySearch, selectedMonth]);
+    // Mobile sheet generic filters
+    Object.entries(mobileFilters).forEach(([key, val]) => {
+      if (!val) return;
+      const q = val.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      result = result.filter(lead => {
+        switch (key) {
+          case 'name': return lead.name?.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').includes(q);
+          case 'whatsapp': return lead.whatsapp?.toLowerCase().includes(q);
+          case 'email': return lead.email?.toLowerCase().includes(q);
+          case 'cpf': return true;
+          case 'eventType': return lead.niche?.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').includes(q);
+          case 'date': return lead.firstContact?.startsWith(val);
+          case 'time': return true;
+          case 'city': return lead.address?.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').includes(q);
+          case 'status': return lead.stage?.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').includes(q);
+          default: return true;
+        }
+      });
+    });
 
-  const hasActiveFilters = selectedMonth !== '' || eventType !== '' || citySearch !== '';
+    return result;
+  }, [unifiedClients, searchTerm, eventType, citySearch, selectedMonth, mobileFilters]);
+
+  const hasActiveFilters = selectedMonth !== '' || eventType !== '' || citySearch !== '' || Object.values(mobileFilters).some(v => !!v);
 
   const handleClearFilters = () => {
     setSelectedMonth('');
     setEventType('');
     setCitySearch('');
+    setMobileFilters({});
     clearFilters();
   };
 
   const calculateItemsTotal = (items?: OrcamentoItem[]) => {
     return (items || []).reduce((sum, i) => sum + i.qtdAtual * i.valorUnit, 0);
+  };
+
+  const renderFilterField = (key: string, label: string, type: 'text' | 'date') => {
+    const value = mobileFilters[key] || '';
+    const setValue = (val: string) => {
+      setMobileFilters(prev => {
+        const next = { ...prev };
+        if (val) next[key] = val;
+        else delete next[key];
+        return next;
+      });
+    };
+
+    if (key === 'eventType') {
+      return (
+        <div className="space-y-1">
+          <label className="block text-[10px] font-black text-[#B5FF03] uppercase tracking-widest">{label}</label>
+          <select
+            value={value}
+            onChange={(e) => setValue(e.target.value)}
+            className="w-full bg-[#1a1a1a] border border-gray-700 rounded-md px-3 py-2.5 text-xs font-bold text-white focus:outline-none focus:border-[#B5FF03] transition-colors"
+          >
+            <option value="">Todos os tipos</option>
+            {EVENT_TYPES.map(t => (
+              <option key={t} value={t}>{t}</option>
+            ))}
+          </select>
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-1">
+        <label className="block text-[10px] font-black text-[#B5FF03] uppercase tracking-widest">{label}</label>
+        <input
+          type={type}
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          placeholder={type === 'date' ? 'DD/MM/AAAA' : `Filtrar por ${label.toLowerCase()}...`}
+          className="w-full bg-[#1a1a1a] border border-gray-700 rounded-md px-3 py-2.5 text-xs font-bold text-white placeholder-gray-500 focus:outline-none focus:border-[#B5FF03] transition-colors"
+        />
+      </div>
+    );
   };
 
   return (
@@ -475,7 +542,7 @@ const CRMOrçamentos = () => {
       {isSidebarOpen && (
         <>
           <div className="fixed inset-0 bg-black/60 z-40 md:hidden" onClick={() => setIsSidebarOpen(false)} />
-          <div className="fixed inset-x-0 bottom-0 z-[100] bg-[#111] border-t border-[#333] rounded-t-2xl p-4 max-h-[70vh] overflow-y-auto md:hidden shadow-xl">
+          <div className="fixed inset-x-0 bottom-0 z-[100] bg-[#111] border-t border-[#333] rounded-t-2xl p-4 max-h-[70dvh] overflow-y-auto md:hidden shadow-xl" style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}>
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-lg font-black text-[#B5FF03]">Filtrar Contatos</h2>
               <button onClick={() => setIsSidebarOpen(false)} className="p-2 hover:bg-[#222] rounded-md transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center">
@@ -904,8 +971,8 @@ const CRMOrçamentos = () => {
                     </div>
                   )}
 
-                  <div className="flex items-center gap-2 relative" ref={invDropdownRef}>
-                    <div className="flex-1 relative">
+                  <div className="flex flex-wrap items-center gap-2 relative" ref={invDropdownRef}>
+                    <div className="flex-1 min-w-0 basis-full sm:basis-auto relative">
                       <Search size={14} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-neutral-500" />
                       <input
                         type="text"
@@ -958,7 +1025,7 @@ const CRMOrçamentos = () => {
                           }
                         }
                       }}
-                      className="w-14 bg-[#1a1a1a] border border-gray-700 rounded-md py-2 px-2 text-white text-xs text-center focus:outline-none focus:border-[#B5FF03] transition-colors"
+                      className="w-14 bg-[#1a1a1a] border border-gray-700 rounded-md py-2 px-2 text-white text-xs text-center focus:outline-none focus:border-[#B5FF03] transition-colors flex-1 sm:flex-none sm:w-14"
                       placeholder="Qtd"
                     />
                     <input
@@ -967,7 +1034,7 @@ const CRMOrçamentos = () => {
                       step="0.01"
                       value={newItemVal}
                       onChange={e => setNewItemVal(parseFloat(e.target.value) || 0)}
-                      className="w-24 bg-[#1a1a1a] border border-gray-700 rounded-md py-2 px-2 text-white text-xs text-right focus:outline-none focus:border-[#B5FF03] transition-colors"
+                      className="w-24 bg-[#1a1a1a] border border-gray-700 rounded-md py-2 px-2 text-white text-xs text-right focus:outline-none focus:border-[#B5FF03] transition-colors flex-1 sm:flex-none sm:w-24"
                       placeholder="Valor unit."
                     />
                     <button

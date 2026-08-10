@@ -219,7 +219,7 @@ const WhatsAppModal = ({
 
             {selectedTemplate && (
               <div className="px-6 py-4 border-b border-[#333]">
-                <div className="flex items-center justify-between mb-3">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-3 mb-3">
                   <span className="text-[10px] font-black text-white uppercase tracking-widest">
                     {isEditing ? 'Editar Mensagem' : 'Preview da Mensagem'}
                   </span>
@@ -263,14 +263,13 @@ const WhatsAppModal = ({
           </div>
         )}
 
-        <div className="px-6 py-4 border-t border-[#333] shrink-0 flex items-center gap-3">
+        <div className="px-6 py-4 border-t border-[#333] shrink-0 flex flex-wrap items-center gap-2 sm:gap-3">
           <button
             onClick={onClose}
-            className="px-4 py-3 min-h-[44px] text-xs font-bold text-neutral-400 hover:text-white transition-colors"
+            className="px-4 py-3 min-h-[44px] text-xs font-bold text-neutral-400 hover:text-white transition-colors mr-auto"
           >
             Cancelar
           </button>
-          <div className="flex-1" />
           <button
             onClick={handleSendWithoutMessage}
             className="px-4 py-3 min-h-[44px] text-[10px] font-bold text-neutral-500 hover:text-white border border-[#333] hover:border-[#555] rounded-lg transition-all uppercase tracking-widest"
