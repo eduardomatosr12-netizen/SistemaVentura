@@ -1445,20 +1445,6 @@ const CRMDashboard = () => {
               <div className="border-t border-[#222] pt-4">
                 <p className="text-[9px] font-black uppercase tracking-widest text-neutral-400 mb-3">Dados do Evento</p>
                 <div className="space-y-3">
-                  <div>
-                    <label className="block text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-1.5 flex items-center gap-1.5">
-                      <CreditCard size={12} /> Valor do Evento (R$)
-                    </label>
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={formData.valor}
-                      onChange={e => setFormData(prev => ({ ...prev, valor: Math.max(0, Number(e.target.value) || 0) }))}
-                      placeholder="0,00"
-                      className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-sm text-white placeholder-neutral-600 focus:border-[#B5FF03] outline-none [color-scheme:dark]"
-                    />
-                  </div>
                   <div ref={eventTypeRef}>
                     <label className="block text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-1.5 flex items-center gap-1.5">
                       <CalendarDays size={12} /> Tipo de Evento
@@ -1701,6 +1687,12 @@ const CRMDashboard = () => {
 
                     {/* Financial footer */}
                     <div className="border-t border-[#333] pt-3 mt-3 space-y-2">
+                      <div className="flex items-center justify-between gap-4">
+                        <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 shrink-0">Valor do Evento (R$)</label>
+                        <input type="number" min="0" step="0.01" value={formData.valor}
+                          onChange={e => setFormData(prev => ({ ...prev, valor: Math.max(0, Number(e.target.value) || 0) }))}
+                          className="w-28 bg-[#111] border border-[#333] rounded-lg px-2 py-1.5 text-sm text-white text-right focus:border-[#B5FF03] outline-none" />
+                      </div>
                       <div className="flex items-center justify-between gap-4">
                         <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 shrink-0">Desconto (R$)</label>
                         <input type="number" min="0" step="0.01" value={formData.desconto}
