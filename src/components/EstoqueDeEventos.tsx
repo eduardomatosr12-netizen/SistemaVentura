@@ -15,7 +15,6 @@ import {
   updateEventStockItem,
   deleteEventStockItem,
   EVENT_STOCK_CATEGORIES,
-  EVENT_STOCK_UNITS,
   type EventStockItem,
 } from '../services/eventStockService';
 import {
@@ -78,18 +77,14 @@ const EstoqueDeEventos = ({ onMessage }: EstoqueDeEventosProps) => {
 
   const [formOpen, setFormOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<EventStockItem | null>(null);
-  const [form, setForm] = useState<{ name: string; category: string; quantity: string; unit: string; valorReferencia: string; observacao: string }>({
+  const [form, setForm] = useState<{ name: string; category: string; observacao: string }>({
     name: '',
     category: EVENT_STOCK_CATEGORIES[0],
-    quantity: '',
-    unit: EVENT_STOCK_UNITS[0],
-    valorReferencia: '',
     observacao: '',
   });
 
   const [linkItem, setLinkItem] = useState<EventStockItem | null>(null);
   const [linkOrcamentoId, setLinkOrcamentoId] = useState('');
-  const [linkQty, setLinkQty] = useState(1);
   const [linkError, setLinkError] = useState('');
 
   useEffect(() => {
@@ -114,16 +109,10 @@ const EstoqueDeEventos = ({ onMessage }: EstoqueDeEventosProps) => {
     setForm(item ? {
       name: item.name,
       category: item.category || EVENT_STOCK_CATEGORIES[0],
-      quantity: String(item.quantity || ''),
-      unit: item.unit || 'unidade',
-      valorReferencia: item.valorReferencia ? String(item.valorReferencia) : '',
       observacao: item.observacao || '',
     } : {
       name: '',
       category: EVENT_STOCK_CATEGORIES[0],
-      quantity: '',
-      unit: 'unidade',
-      valorReferencia: '',
       observacao: '',
     });
     setFormOpen(true);
@@ -131,13 +120,9 @@ const EstoqueDeEventos = ({ onMessage }: EstoqueDeEventosProps) => {
 
   const handleSaveItem = async () => {
     if (!form.name.trim()) return;
-    const quantity = Math.max(0, Number(form.quantity) || 0);
     const payload = {
       name: form.name.trim(),
       category: form.category,
-      quantity,
-      unit: form.unit,
-      valorReferencia: parseFloat(String(form.valorReferencia).replace(',', '.')) || 0,
       observacao: form.observacao.trim(),
     };
     try {
@@ -172,31 +157,24 @@ const EstoqueDeEventos = ({ onMessage }: EstoqueDeEventosProps) => {
       setLinkError('Selecione um orçamento para vincular o item.');
       return;
     }
-    const qty = Math.max(1, Math.floor(Number(linkQty) || 1));
-    if (qty > linkItem.quantity) {
-      setLinkError(`Quantidade disponível no estoque de eventos: ${linkItem.quantity}.`);
-      return;
-    }
     const lead = Orçamentos.find(o => o.id === linkOrcamentoId);
     if (!lead) {
       setLinkError('Orçamento não encontrado.');
       return;
     }
-    const cleanName = `${linkItem.name} — ${qty} ${linkItem.unit}`;
     const newItem: OrcamentoItem = {
       id: generateUUID(),
-      item: cleanName,
-      qtdAtual: qty,
+      item: linkItem.name,
+      qtdAtual: 1,
       valorUnit: 0,
       semPreco: true,
       eventStockId: linkItem.id,
     };
     try {
       await updateLead(linkOrcamentoId, { items: [...(lead.items || []), newItem] });
-      onMessage(`"${cleanName}" adicionado ao orçamento de ${lead.name}.`);
+      onMessage(`"${linkItem.name}" adicionado ao orçamento de ${lead.name}.`);
       setLinkItem(null);
       setLinkOrcamentoId('');
-      setLinkQty(1);
       setLinkError('');
     } catch (err) {
       console.error('[EstoqueDeEventos] Erro ao vincular ao orçamento:', err);
@@ -458,20 +436,18 @@ const EstoqueDeEventos = ({ onMessage }: EstoqueDeEventosProps) => {
 
       {/* Desktop Table */}
       <div className="overflow-x-auto hidden md:block">
-        <table className="w-full min-w-[820px] text-left">
+        <table className="w-full min-w-[560px] text-left">
           <thead>
             <tr className="border-b border-[#222]">
               <th className="text-[10px] font-black uppercase tracking-widest text-neutral-500 px-4 py-3">Item</th>
               <th className="text-[10px] font-black uppercase tracking-widest text-neutral-500 px-4 py-3">Categoria</th>
-              <th className="text-[10px] font-black uppercase tracking-widest text-neutral-500 px-4 py-3">Quantidade</th>
-              <th className="text-[10px] font-black uppercase tracking-widest text-neutral-500 px-4 py-3">Valor de Referência</th>
               <th className="text-[10px] font-black uppercase tracking-widest text-neutral-500 px-4 py-3 text-right">Ações</th>
             </tr>
           </thead>
           <tbody>
             {filteredItems.length === 0 ? (
               <tr>
-                <td colSpan={5} className="text-center py-12">
+                <td colSpan={3} className="text-center py-12">
                   <Package size={28} className="mx-auto text-neutral-600 mb-2" />
                   <p className="text-xs text-neutral-500 italic">Nenhum item no estoque de eventos.</p>
                   <p className="text-[10px] text-neutral-600 mt-1">Clique em "+ Adicionar Item" para cadastrar o primeiro.</p>
@@ -492,14 +468,10 @@ const EstoqueDeEventos = ({ onMessage }: EstoqueDeEventosProps) => {
                       {item.category}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-sm text-white font-bold">{item.quantity} <span className="text-neutral-400 font-normal text-xs">{item.unit}</span></td>
-                  <td className="px-4 py-3 text-sm text-neutral-300">
-                    {item.valorReferencia > 0 ? formatCurrency(item.valorReferencia) : '—'}
-                  </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center justify-end gap-1">
                       <button
-                        onClick={() => { setLinkItem(item); setLinkOrcamentoId(''); setLinkQty(item.quantity > 0 ? Math.min(1, item.quantity) : 1); setLinkError(''); }}
+                        onClick={() => { setLinkItem(item); setLinkOrcamentoId(''); setLinkError(''); }}
                         className="flex items-center gap-1 px-2.5 py-1.5 rounded-md text-[10px] font-bold text-[#B5FF03] border border-[#B5FF03]/30 hover:bg-[#B5FF03]/10 transition-colors min-h-[36px]"
                         title="Adicionar ao orçamento"
                       >
@@ -547,19 +519,15 @@ const EstoqueDeEventos = ({ onMessage }: EstoqueDeEventosProps) => {
                       <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: categoryColor(item.category) }} />
                       {item.category}
                     </span>
-                    <span className="text-xs text-white font-bold">{item.quantity} <span className="text-neutral-400 font-normal text-[10px]">{item.unit}</span></span>
                   </div>
                   {item.observacao && (
                     <p className="text-[10px] text-neutral-500 mt-1">{item.observacao}</p>
                   )}
                 </div>
-                <span className="shrink-0 text-xs text-neutral-300">
-                  {item.valorReferencia > 0 ? formatCurrency(item.valorReferencia) : '—'}
-                </span>
               </div>
               <div className="flex items-center gap-1.5">
                 <button
-                  onClick={() => { setLinkItem(item); setLinkOrcamentoId(''); setLinkQty(item.quantity > 0 ? Math.min(1, item.quantity) : 1); setLinkError(''); }}
+                  onClick={() => { setLinkItem(item); setLinkOrcamentoId(''); setLinkError(''); }}
                   className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-md text-[10px] font-bold text-[#B5FF03] border border-[#B5FF03]/30 hover:bg-[#B5FF03]/10 transition-colors min-h-[44px]"
                 >
                   <ShoppingBag size={12} /> Adicionar ao Orçamento
@@ -623,46 +591,6 @@ const EstoqueDeEventos = ({ onMessage }: EstoqueDeEventosProps) => {
                   <ChevronDown size={14} className="text-neutral-500 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-1.5">Quantidade *</label>
-                  <input
-                    type="number"
-                    min="0"
-                    step="1"
-                    value={form.quantity}
-                    onChange={e => setForm(p => ({ ...p, quantity: e.target.value }))}
-                    className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-sm text-white focus:border-[#B5FF03] outline-none [color-scheme:dark]"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-1.5">Unidade *</label>
-                  <div className="relative">
-                    <select
-                      value={form.unit}
-                      onChange={e => setForm(p => ({ ...p, unit: e.target.value }))}
-                      className="w-full appearance-none bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-sm text-white focus:border-[#B5FF03] outline-none [color-scheme:dark] pr-9"
-                    >
-                      {EVENT_STOCK_UNITS.map(u => (
-                        <option key={u} value={u}>{u}</option>
-                      ))}
-                    </select>
-                    <ChevronDown size={14} className="text-neutral-500 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-                  </div>
-                </div>
-              </div>
-              <div>
-                <label className="block text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-1.5">Valor de Referência por Evento (R$) <span className="text-neutral-600 normal-case font-medium">— interno</span></label>
-                <input
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={form.valorReferencia}
-                  onChange={e => setForm(p => ({ ...p, valorReferencia: e.target.value }))}
-                  placeholder="Opcional — não aparece no PDF/WhatsApp"
-                  className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-sm text-white placeholder-neutral-600 focus:border-[#B5FF03] outline-none [color-scheme:dark]"
-                />
-              </div>
               <div>
                 <label className="block text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-1.5">Observação Interna <span className="text-neutral-600 normal-case font-medium">— não exportada</span></label>
                 <textarea
@@ -704,11 +632,9 @@ const EstoqueDeEventos = ({ onMessage }: EstoqueDeEventosProps) => {
               </button>
             </div>
             <div className="p-4 space-y-4">
-              <div className="bg-[#111] border border-[#333] rounded-lg p-3 space-y-1">
+              <div className="bg-[#111] border border-[#333] rounded-lg p-3">
                 <p className="text-sm text-white font-bold">{linkItem.name}</p>
-                <p className="text-[10px] text-neutral-500">
-                  Disponível: <span className="text-white font-bold">{linkItem.quantity} {linkItem.unit}</span>
-                </p>
+                <p className="text-[10px] text-neutral-500 mt-0.5">O item será adicionado com o nome somente.</p>
               </div>
               <div>
                 <label className="block text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-1.5">Orçamento / Evento</label>
@@ -730,24 +656,6 @@ const EstoqueDeEventos = ({ onMessage }: EstoqueDeEventosProps) => {
                 {openOrcamentos.length === 0 && (
                   <p className="text-[10px] text-neutral-500 italic mt-1">Nenhum orçamento em aberto encontrado.</p>
                 )}
-              </div>
-              <div>
-                <label className="block text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-1.5">Quantidade a Alocar</label>
-                <input
-                  type="number"
-                  min="1"
-                  max={linkItem.quantity}
-                  step="1"
-                  value={linkQty}
-                  onChange={e => { setLinkQty(Number(e.target.value)); setLinkError(''); }}
-                  className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-sm text-white focus:border-[#B5FF03] outline-none [color-scheme:dark]"
-                />
-              </div>
-              <div className="bg-[#1a1a1a] border border-[#222] rounded-lg px-3 py-2">
-                <p className="text-[9px] font-black uppercase tracking-widest text-neutral-500 mb-1">Aparecerá no orçamento como</p>
-                <p className="text-xs text-white font-bold">
-                  {linkItem.name} — {Math.max(1, Math.floor(Number(linkQty) || 1))} {linkItem.unit}
-                </p>
               </div>
               {linkError && (
                 <div className="px-4 py-2.5 bg-red-900/20 border border-red-900/40 rounded-lg">

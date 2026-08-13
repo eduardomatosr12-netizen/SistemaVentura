@@ -31,6 +31,15 @@ export const EVENT_STOCK_UNITS = [
   'outros',
 ] as const;
 
+export interface EventStockItemInput {
+  name: string;
+  category: string;
+  observacao: string;
+  quantity?: number;
+  unit?: string;
+  valorReferencia?: number;
+}
+
 const COLLECTION = 'event_stock';
 
 const mapEventStockDoc = (d: { id: string; data: () => Record<string, unknown> }): EventStockItem => {
@@ -65,10 +74,15 @@ export const fetchEventStock = async (): Promise<EventStockItem[]> => {
   return sortByName(snapshot.docs.map(mapEventStockDoc));
 };
 
-export const addEventStockItem = async (item: Omit<EventStockItem, 'id'>): Promise<string> => {
+export const addEventStockItem = async (item: EventStockItemInput): Promise<string> => {
   try {
     const docRef = await addDoc(collection(db, COLLECTION), {
-      ...item,
+      name: item.name,
+      category: item.category,
+      observacao: item.observacao,
+      quantity: item.quantity ?? 0,
+      unit: item.unit ?? 'unidade',
+      valorReferencia: item.valorReferencia ?? 0,
       createdAt: Timestamp.now(),
     });
     console.log('[Firestore] Item do estoque de eventos criado:', docRef.id);

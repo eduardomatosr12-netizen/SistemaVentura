@@ -8,7 +8,7 @@ import { parseMonetaryValue, formatCurrency, generatePDF } from '../../lib/crmHe
 import { eventTypeLabel } from '../../lib/eventTypeLabel';
 import { useActivityLogs } from '../../contexts/ActivityContext';
 import { generateUUID } from '../../lib/uuid';
-import { subscribeEventStock, addEventStockItem, EVENT_STOCK_CATEGORIES, EVENT_STOCK_UNITS, type EventStockItem } from '../../services/eventStockService';
+import { subscribeEventStock, addEventStockItem, EVENT_STOCK_CATEGORIES, type EventStockItem } from '../../services/eventStockService';
 import { addTransaction } from '../../services/financeService';
 import { generateWhatsAppLink } from '../../lib/whatsapp';
 import DespesasDoEvento from '../../components/DespesasDoEvento';
@@ -96,7 +96,7 @@ const CRMDashboard = () => {
     name: '', whatsapp: '', email: '', cpf: '',
     eventType: '', date: '', time: '', city: '', observacao: '',
     dataMontagem: '', dataDesmontagem: '', status: '', outroEventoType: '',
-    orcamentoItems: [] as OrcamentoItem[], desconto: 0,
+    orcamentoItems: [] as OrcamentoItem[], desconto: 0, valor: 0,
   });
   const [selectedClientId, setSelectedClientId] = useState('');
   const [editingEventId, setEditingEventId] = useState<string | null>(null);
@@ -105,17 +105,6 @@ const CRMDashboard = () => {
     setFormData(prev => ({
       ...prev,
       orcamentoItems: prev.orcamentoItems.filter(i => i.id !== id),
-    }));
-    setExpandedItems(prev => { const next = new Set(prev); next.delete(id); return next; });
-  };
-
-  const handleItemChange = (id: string, field: keyof OrcamentoItem, value: string | number) => {
-    setFormData(prev => ({
-      ...prev,
-      orcamentoItems: prev.orcamentoItems.map(i => {
-        if (i.id !== id) return i;
-        return { ...i, [field]: field === 'item' ? value : Number(value) || 0 };
-      }),
     }));
   };
 
@@ -130,18 +119,12 @@ const CRMDashboard = () => {
 
   // Itens do orçamento (Estoque de Eventos — lista limpa para o cliente)
   const [orcamentoItems, setOrcamentoItems] = useState<EventStockItem[]>([]);
-  const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
   const [orcSearch, setOrcSearch] = useState('');
   const [orcSearchOpen, setOrcSearchOpen] = useState(false);
-  const [editingItemId, setEditingItemId] = useState<string | null>(null);
-  const [inlineItemSearch, setInlineItemSearch] = useState('');
   const [showCreateItemForm, setShowCreateItemForm] = useState(false);
-  const [newItemForm, setNewItemForm] = useState<{ name: string; category: string; quantity: string; unit: string; valorReferencia: string; observacao: string }>({
+  const [newItemForm, setNewItemForm] = useState<{ name: string; category: string; observacao: string }>({
     name: '',
     category: EVENT_STOCK_CATEGORIES[0],
-    quantity: '',
-    unit: 'unidade',
-    valorReferencia: '',
     observacao: '',
   });
   const orcSearchRef = useRef<HTMLDivElement>(null);
@@ -172,7 +155,7 @@ const CRMDashboard = () => {
   const handleAdicionarItem = (prod: EventStockItem) => {
     const newItem: OrcamentoItem = {
       id: generateUUID(),
-      item: `${prod.name} — 1 ${prod.unit}`,
+      item: prod.name,
       qtdAtual: 1,
       valorUnit: 0,
       semPreco: true,
@@ -182,7 +165,6 @@ const CRMDashboard = () => {
       ...prev,
       orcamentoItems: [...prev.orcamentoItems, newItem],
     }));
-    setExpandedItems(prev => new Set(prev).add(newItem.id));
     setOrcSearch('');
     setOrcSearchOpen(false);
   };
@@ -191,23 +173,17 @@ const CRMDashboard = () => {
     const name = newItemForm.name.trim();
     if (!name) return;
     try {
-      const quantity = Math.max(0, Number(newItemForm.quantity) || 0);
-      const valorReferencia = parseFloat(String(newItemForm.valorReferencia).replace(',', '.')) || 0;
       const newId = generateUUID();
       await addEventStockItem({
         name,
         category: newItemForm.category,
-        quantity,
-        unit: newItemForm.unit,
-        valorReferencia,
         observacao: newItemForm.observacao.trim(),
       });
       setFormData(prev => ({
         ...prev,
-        orcamentoItems: [...prev.orcamentoItems, { id: newId, item: `${name} — 1 ${newItemForm.unit}`, qtdAtual: 1, valorUnit: 0, semPreco: true }],
+        orcamentoItems: [...prev.orcamentoItems, { id: newId, item: name, qtdAtual: 1, valorUnit: 0, semPreco: true }],
       }));
-      setExpandedItems(prev => { const next = new Set(prev); next.add(newId); return next; });
-      setNewItemForm({ name: '', category: EVENT_STOCK_CATEGORIES[0], quantity: '', unit: 'unidade', valorReferencia: '', observacao: '' });
+      setNewItemForm({ name: '', category: EVENT_STOCK_CATEGORIES[0], observacao: '' });
       setShowCreateItemForm(false);
       setOrcSearch('');
       setOrcSearchOpen(false);
@@ -216,22 +192,7 @@ const CRMDashboard = () => {
     }
   };
 
-  const handleInlineItemSelect = (itemId: string, opt: EventStockItem) => {
-    setFormData(prev => ({
-      ...prev,
-      orcamentoItems: prev.orcamentoItems.map(i =>
-        i.id === itemId ? { ...i, item: `${opt.name} — ${i.qtdAtual} ${opt.unit}`, valorUnit: 0, semPreco: true, eventStockId: opt.id } : i
-      ),
-    }));
-    setEditingItemId(null);
-    setInlineItemSearch('');
-  };
-
-  const subtotal = useMemo(() =>
-    formData.orcamentoItems.reduce((sum, item) => sum + item.qtdAtual * item.valorUnit, 0),
-  [formData.orcamentoItems]);
-
-  const total = useMemo(() => Math.max(0, subtotal - formData.desconto), [subtotal, formData.desconto]);
+  const total = useMemo(() => Math.max(0, (formData.valor || 0) - formData.desconto), [formData.valor, formData.desconto]);
 
   const handleExportPDF = () => {
     const leadData: Lead = {
@@ -251,7 +212,7 @@ const CRMDashboard = () => {
       items: formData.orcamentoItems || [],
     };
 
-    generatePDF(leadData, formData.desconto > 0 ? { type: 'fixed', value: formData.desconto } : undefined);
+    generatePDF(leadData, formData.desconto > 0 ? { type: 'fixed', value: formData.desconto } : undefined, formData.valor);
   };
 
   const handleSendWhatsApp = () => {
@@ -282,10 +243,6 @@ const CRMDashboard = () => {
       if (orcSearchRef.current && !orcSearchRef.current.contains(e.target as Node)) {
         setOrcSearchOpen(false);
       }
-      if (editingItemId) {
-        setEditingItemId(null);
-        setInlineItemSearch('');
-      }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
@@ -309,7 +266,7 @@ const CRMDashboard = () => {
   const openCreateModal = (dateStr: string) => {
     setEditingEventId(null);
     setCreateDate(dateStr);
-    setFormData(prev => ({ ...prev, date: dateStr, eventType: '', city: '', observacao: '', dataMontagem: '', dataDesmontagem: '', status: '', outroEventoType: '', orcamentoItems: [], desconto: 0 }));
+    setFormData(prev => ({ ...prev, date: dateStr, eventType: '', city: '', observacao: '', dataMontagem: '', dataDesmontagem: '', status: '', outroEventoType: '', orcamentoItems: [], desconto: 0, valor: 0 }));
     setSelectedClientId('');
     setClientSearch('');
     setOrcSearch('');
@@ -344,6 +301,7 @@ const CRMDashboard = () => {
       outroEventoType: '',
       orcamentoItems: (lead?.items as OrcamentoItem[]) || [],
       desconto: event.desconto || 0,
+      valor: (event.valorTotal || 0) + (event.desconto || 0),
     });
     setSelectedClientId(leadId);
     setClientSearch(event.client ? `${event.client} — ${event.clientPhone || ''}` : '');
@@ -1487,6 +1445,20 @@ const CRMDashboard = () => {
               <div className="border-t border-[#222] pt-4">
                 <p className="text-[9px] font-black uppercase tracking-widest text-neutral-400 mb-3">Dados do Evento</p>
                 <div className="space-y-3">
+                  <div>
+                    <label className="block text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-1.5 flex items-center gap-1.5">
+                      <CreditCard size={12} /> Valor do Evento (R$)
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={formData.valor}
+                      onChange={e => setFormData(prev => ({ ...prev, valor: Math.max(0, Number(e.target.value) || 0) }))}
+                      placeholder="0,00"
+                      className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-sm text-white placeholder-neutral-600 focus:border-[#B5FF03] outline-none [color-scheme:dark]"
+                    />
+                  </div>
                   <div ref={eventTypeRef}>
                     <label className="block text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-1.5 flex items-center gap-1.5">
                       <CalendarDays size={12} /> Tipo de Evento
@@ -1621,46 +1593,15 @@ const CRMDashboard = () => {
                               autoFocus
                               autoComplete="off"
                             />
-                            <div className="grid grid-cols-2 gap-2">
-                              <select
-                                value={newItemForm.category}
-                                onChange={e => setNewItemForm(prev => ({ ...prev, category: e.target.value }))}
-                                className="w-full bg-[#0a0a0a] border border-[#333] rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-[#B5FF03] [color-scheme:dark]"
-                              >
-                                {EVENT_STOCK_CATEGORIES.map(cat => (
-                                  <option key={cat} value={cat}>{cat}</option>
-                                ))}
-                              </select>
-                              <input
-                                type="number"
-                                min="0"
-                                step="1"
-                                value={newItemForm.quantity}
-                                onChange={e => setNewItemForm(prev => ({ ...prev, quantity: e.target.value }))}
-                                placeholder="Quantidade"
-                                className="w-full bg-[#0a0a0a] border border-[#333] rounded-lg px-3 py-2 text-sm text-white placeholder-neutral-600 outline-none focus:border-[#B5FF03] [color-scheme:dark]"
-                              />
-                            </div>
-                            <div className="grid grid-cols-2 gap-2">
-                              <select
-                                value={newItemForm.unit}
-                                onChange={e => setNewItemForm(prev => ({ ...prev, unit: e.target.value }))}
-                                className="w-full bg-[#0a0a0a] border border-[#333] rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-[#B5FF03] [color-scheme:dark]"
-                              >
-                                {EVENT_STOCK_UNITS.map(u => (
-                                  <option key={u} value={u}>{u}</option>
-                                ))}
-                              </select>
-                              <input
-                                type="number"
-                                step="0.01"
-                                min="0"
-                                value={newItemForm.valorReferencia}
-                                onChange={e => setNewItemForm(prev => ({ ...prev, valorReferencia: e.target.value }))}
-                                placeholder="Valor ref. R$ (interno)"
-                                className="w-full bg-[#0a0a0a] border border-[#333] rounded-lg px-3 py-2 text-sm text-white placeholder-neutral-600 outline-none focus:border-[#B5FF03] [color-scheme:dark]"
-                              />
-                            </div>
+                            <select
+                              value={newItemForm.category}
+                              onChange={e => setNewItemForm(prev => ({ ...prev, category: e.target.value }))}
+                              className="w-full bg-[#0a0a0a] border border-[#333] rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-[#B5FF03] [color-scheme:dark]"
+                            >
+                              {EVENT_STOCK_CATEGORIES.map(cat => (
+                                <option key={cat} value={cat}>{cat}</option>
+                              ))}
+                            </select>
                             <textarea
                               rows={2}
                               value={newItemForm.observacao}
@@ -1725,7 +1666,6 @@ const CRMDashboard = () => {
                                         <span className="text-[9px] text-neutral-500 uppercase shrink-0">{item.category}</span>
                                       )}
                                     </div>
-                                    <span className="text-neutral-400 font-bold shrink-0 text-[11px]">{item.quantity} {item.unit}</span>
                                   </button>
                                 ))
                               )}
@@ -1742,110 +1682,16 @@ const CRMDashboard = () => {
                       </div>
                     )}
 
-                    <div className="space-y-2">
-                      {formData.orcamentoItems.map((item, idx) => {
-                        const isExpanded = expandedItems.has(item.id);
-                        return isExpanded ? (
-                          <div key={item.id} className="bg-[#1a1a1a] border border-[#333] rounded-lg p-3 space-y-2">
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-2 min-w-0">
-                                <span className="text-[9px] font-black uppercase tracking-widest text-neutral-500 shrink-0">Item {idx + 1}</span>
-                              </div>
-                              <div className="flex items-center gap-1">
-                                <button type="button" onClick={() => setExpandedItems(prev => { const next = new Set(prev); next.delete(item.id); return next; })}
-                                  className="p-1 hover:bg-[#333] rounded-md transition-colors">
-                                  <CheckSquare size={14} className="text-[#B5FF03]" />
-                                </button>
-                                <button type="button" onClick={() => handleRemoveItem(item.id)}
-                                  className="p-1 hover:bg-[#333] rounded-md transition-colors">
-                                  <Trash2 size={12} className="text-red-400" />
-                                </button>
-                              </div>
-                            </div>
-                            <div className="relative">
-                              <button
-                                type="button"
-                                onClick={() => { setEditingItemId(editingItemId === item.id ? null : item.id); setInlineItemSearch(''); }}
-                                className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-sm text-left text-white flex items-center justify-between gap-2 hover:border-[#B5FF03] transition-colors"
-                              >
-                                <span className="truncate">{item.item}</span>
-                                <ChevronDown size={12} className="text-neutral-500 shrink-0" />
-                              </button>
-                              {editingItemId === item.id && (
-                                <div className="mt-1 bg-[#1a1a1a] border border-[#333] rounded-lg overflow-hidden z-50 shadow-xl">
-                                  <div className="flex items-center bg-[#111] border-b border-[#333]">
-                                    <Search size={12} className="text-neutral-500 ml-3 shrink-0" />
-                                    <input
-                                      type="text"
-                                      value={inlineItemSearch}
-                                      onChange={e => setInlineItemSearch(e.target.value)}
-                                      placeholder="Buscar item..."
-                                      className="w-full bg-transparent border-none px-2 py-2 text-xs text-white placeholder-neutral-600 outline-none"
-                                      autoFocus
-                                      autoComplete="off"
-                                    />
-                                  </div>
-                                  <div className="max-h-40 overflow-y-auto">
-                                    {(inlineItemSearch.trim()
-                                      ? filteredOrcItems.filter(i =>
-                                          i.name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').includes(
-                                            inlineItemSearch.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-                                          )
-                                        )
-                                      : orcamentoItems
-                                    ).slice(0, 30).map(opt => (
-                                        <button
-                                          type="button"
-                                          key={opt.id}
-                                          onClick={() => handleInlineItemSelect(item.id, opt)}
-                                          className={`w-full text-left px-3 py-2 text-xs text-white hover:bg-[#333] transition-colors flex items-center justify-between gap-2 ${item.item === `${opt.name} — ${item.qtdAtual} ${opt.unit}` ? 'bg-[#2a2a2a] border-l-2 border-[#B5FF03]' : ''}`}
-                                        >
-                                          <span className="truncate">{opt.name}</span>
-                                          <span className="text-neutral-500 text-[9px] uppercase shrink-0">{opt.quantity} {opt.unit}</span>
-                                        </button>
-                                      ))}
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                              <div>
-                                <label className="block text-[8px] font-black uppercase tracking-widest text-neutral-500 mb-1">Qtd</label>
-                                <input type="number" min="1" value={item.qtdAtual} onChange={e => handleItemChange(item.id, 'qtdAtual', e.target.value)}
-                                  className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-1.5 text-sm text-white focus:border-[#B5FF03] outline-none" />
-                              </div>
-                              <div>
-                                <label className="block text-[8px] font-black uppercase tracking-widest text-neutral-500 mb-1">Valor Unit.</label>
-                                <input type="number" min="0" step="0.01" value={item.valorUnit} onChange={e => handleItemChange(item.id, 'valorUnit', e.target.value)}
-                                  placeholder="0,00"
-                                  className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-1.5 text-sm text-white focus:border-[#B5FF03] outline-none [color-scheme:dark]" />
-                              </div>
-                            </div>
-                            <div className="text-right">
-                              <span className="text-[10px] text-neutral-400">Total: </span>
-                              <span className="text-[11px] text-white font-bold">R$ {(item.qtdAtual * item.valorUnit).toFixed(2)}</span>
-                            </div>
-                          </div>
-                        ) : (
-                          <div key={item.id} className="flex items-center justify-between py-2 px-1 border-b border-[#222] last:border-b-0">
-                            <span className="text-sm text-white">
-                              <span className="text-[#B5FF03] font-bold">{item.qtdAtual}x</span>
-                              {' '}{item.item}
-                              <span className="text-neutral-400 ml-2 text-[10px]">R$ {(item.qtdAtual * item.valorUnit).toFixed(2)}</span>
-                            </span>
-                            <div className="flex items-center gap-1">
-                              <button type="button" onClick={() => setExpandedItems(prev => { const next = new Set(prev); next.add(item.id); return next; })}
-                                className="p-1 hover:bg-[#333] rounded-md transition-colors">
-                                <Pencil size={12} className="text-neutral-400" />
-                              </button>
-                              <button type="button" onClick={() => handleRemoveItem(item.id)}
-                                className="p-1 hover:bg-[#333] rounded-md transition-colors">
-                                <Trash2 size={12} className="text-red-400" />
-                              </button>
-                            </div>
-                          </div>
-                        );
-                      })}
+                    <div className="space-y-1">
+                      {formData.orcamentoItems.map(item => (
+                        <div key={item.id} className="flex items-center justify-between py-2 px-1 border-b border-[#222] last:border-b-0">
+                          <span className="text-sm text-white truncate">{item.item}</span>
+                          <button type="button" onClick={() => handleRemoveItem(item.id)}
+                            className="p-1 hover:bg-[#333] rounded-md transition-colors shrink-0 ml-2">
+                            <Trash2 size={12} className="text-red-400" />
+                          </button>
+                        </div>
+                      ))}
                       {formData.orcamentoItems.length === 0 && !orcSearchOpen && (
                         <div className="text-center py-3 bg-[#111] border border-dashed border-[#333] rounded-lg">
                           <p className="text-[10px] text-neutral-500 italic">Clique em "Adicionar Item" para buscar ou criar itens no estoque de eventos</p>
@@ -1855,10 +1701,6 @@ const CRMDashboard = () => {
 
                     {/* Financial footer */}
                     <div className="border-t border-[#333] pt-3 mt-3 space-y-2">
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="text-neutral-400">Subtotal dos Equipamentos</span>
-                        <span className="text-white font-bold">R$ {subtotal.toFixed(2)}</span>
-                      </div>
                       <div className="flex items-center justify-between gap-4">
                         <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 shrink-0">Desconto (R$)</label>
                         <input type="number" min="0" step="0.01" value={formData.desconto}

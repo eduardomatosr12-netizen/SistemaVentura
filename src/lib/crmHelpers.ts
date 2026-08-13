@@ -116,12 +116,14 @@ export function groupOrçamentosByStage(Orçamentos: Lead[]): Record<Stage, Lead
   return grouped;
 }
 
-export function generatePDF(lead: Lead, discountData?: { type: 'percent' | 'fixed'; value: number }): void {
+export function generatePDF(lead: Lead, discountData?: { type: 'percent' | 'fixed'; value: number }, grossTotal?: number): void {
   const win = window.open('', '_blank');
   if (!win) return;
 
   const items = lead.items || [];
-  const total = items.reduce((sum, item) => sum + ((item.valorUnit || 0) > 0 ? item.qtdAtual * item.valorUnit : 0), 0);
+  const total = grossTotal && grossTotal > 0
+    ? grossTotal
+    : items.reduce((sum, item) => sum + ((item.valorUnit || 0) > 0 ? item.qtdAtual * item.valorUnit : 0), 0);
   let discountAmount = 0;
   let discountLabel = '';
   let finalTotal = total;

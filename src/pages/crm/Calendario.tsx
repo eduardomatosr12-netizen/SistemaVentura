@@ -4,7 +4,7 @@ import type { CalendarEvent } from '../../types/crm';
 import { generateUUID } from '../../lib/uuid';
 import { generateWhatsAppLink } from '../../lib/whatsapp';
 import { eventTypeLabel } from '../../lib/eventTypeLabel';
-import { subscribeEventStock, addEventStockItem, EVENT_STOCK_CATEGORIES, EVENT_STOCK_UNITS, type EventStockItem } from '../../services/eventStockService';
+import { subscribeEventStock, addEventStockItem, EVENT_STOCK_CATEGORIES, type EventStockItem } from '../../services/eventStockService';
 import { X, Clock, User, Users, MessageSquare, Plus, Trash2, Calendar as CalendarIcon, FileText, ChevronLeft, ChevronRight, Search, MapPin, Mail, Phone, CreditCard, Flag, MessageCircle, Package, Save } from 'lucide-react';
 
 const toBR = (iso: string): string => {
@@ -128,12 +128,9 @@ const CRMCalendario = () => {
   const [itemSearch, setItemSearch] = useState('');
   const [itemSearchOpen, setItemSearchOpen] = useState(false);
   const [showCreateItemForm, setShowCreateItemForm] = useState(false);
-  const [newItemForm, setNewItemForm] = useState<{ name: string; category: string; quantity: string; unit: string; valorReferencia: string; observacao: string }>({
+  const [newItemForm, setNewItemForm] = useState<{ name: string; category: string; observacao: string }>({
     name: '',
     category: EVENT_STOCK_CATEGORIES[0],
-    quantity: '',
-    unit: 'unidade',
-    valorReferencia: '',
     observacao: '',
   });
   const itemDropdownRef = useRef<HTMLDivElement>(null);
@@ -179,12 +176,12 @@ const CRMCalendario = () => {
   const buildItemsDescription = (lead: typeof Orçamentos[number]): string => {
     const items = lead.items;
     if (!items || items.length === 0) return '';
-    const lines = items.map(i => `- ${i.qtdAtual}x ${i.item}`);
+    const lines = items.map(i => `- ${i.item}`);
     return `Itens do Orçamento Fechado:\n${lines.join('\n')}`;
   };
 
   const handleAddEventItem = (prod: EventStockItem) => {
-    const newItem = { id: generateUUID(), item: `${prod.name} — 1 ${prod.unit}`, qtdAtual: 1, valorUnit: 0, semPreco: true, eventStockId: prod.id };
+    const newItem = { id: generateUUID(), item: prod.name, qtdAtual: 1, valorUnit: 0, semPreco: true, eventStockId: prod.id };
     setEventItems(prev => [...prev, newItem]);
     setItemSearch('');
     setItemSearchOpen(false);
@@ -194,18 +191,13 @@ const CRMCalendario = () => {
     const name = newItemForm.name.trim();
     if (!name) return;
     try {
-      const quantity = Math.max(0, Number(newItemForm.quantity) || 0);
-      const valorReferencia = parseFloat(String(newItemForm.valorReferencia).replace(',', '.')) || 0;
       await addEventStockItem({
         name,
         category: newItemForm.category,
-        quantity,
-        unit: newItemForm.unit,
-        valorReferencia,
         observacao: newItemForm.observacao.trim(),
       });
-      setEventItems(prev => [...prev, { id: generateUUID(), item: `${name} — 1 ${newItemForm.unit}`, qtdAtual: 1, valorUnit: 0, semPreco: true }]);
-      setNewItemForm({ name: '', category: EVENT_STOCK_CATEGORIES[0], quantity: '', unit: 'unidade', valorReferencia: '', observacao: '' });
+      setEventItems(prev => [...prev, { id: generateUUID(), item: name, qtdAtual: 1, valorUnit: 0, semPreco: true }]);
+      setNewItemForm({ name: '', category: EVENT_STOCK_CATEGORIES[0], observacao: '' });
       setShowCreateItemForm(false);
       setItemSearch('');
       setItemSearchOpen(false);
@@ -406,10 +398,7 @@ const CRMCalendario = () => {
     setSaveError(null);
     const cleanDescription = (formData.description || '').replace(/\n\nItens do Evento:\n[\s\S]*$/, '');
     const itemsText = eventItems.length > 0
-      ? `\n\nItens do Evento:\n${eventItems.map(i => i.semPreco
-          ? `- ${i.qtdAtual}x ${i.item}`
-          : `- ${i.qtdAtual}x ${i.item} (R$ ${(i.qtdAtual * i.valorUnit).toFixed(2)})`
-        ).join('\n')}`
+      ? `\n\nItens do Evento:\n${eventItems.map(i => `- ${i.item}`).join('\n')}`
       : '';
     const payload = {
       ...formData,
@@ -1210,10 +1199,7 @@ const CRMCalendario = () => {
                     <div className="space-y-1.5">
                       {eventItems.map(item => (
                         <div key={item.id} className="flex items-center gap-2 bg-[#0a0a0a] border border-[#222] rounded-md px-3 py-2 overflow-hidden">
-                          <span className="text-[10px] font-bold text-white flex-1 truncate">{item.qtdAtual}x {item.item}</span>
-                          {item.semPreco
-                            ? <span className="text-[9px] text-neutral-500 italic shrink-0">sem preço</span>
-                            : <span className="text-[9px] text-[#B5FF03] font-bold shrink-0">R$ {(item.qtdAtual * item.valorUnit).toFixed(2)}</span>}
+                          <span className="text-[10px] font-bold text-white flex-1 truncate">{item.item}</span>
                           <button
                             type="button"
                             onClick={() => handleRemoverItemEstoque(item.id)}
@@ -1275,7 +1261,6 @@ const CRMCalendario = () => {
                               {prod.category && (
                                 <span className="text-[9px] text-neutral-500 uppercase shrink-0">{prod.category}</span>
                               )}
-                              <span className="text-neutral-400 font-bold shrink-0 text-[10px]">{prod.quantity} {prod.unit}</span>
                             </button>
                           )) : (
                             <p className="px-3 py-3 text-xs text-neutral-500 text-center">
@@ -1311,44 +1296,18 @@ const CRMCalendario = () => {
                             <option key={cat} value={cat} className="bg-[#111]">{cat}</option>
                           ))}
                         </select>
-                        <select
-                          value={newItemForm.unit}
-                          onChange={(e) => setNewItemForm(f => ({ ...f, unit: e.target.value }))}
-                          className="w-full bg-[#111] border border-[#333] rounded-md px-3 py-2 text-xs font-bold text-white focus:ring-1 focus:ring-[#B5FF03] outline-none transition-all"
-                        >
-                          {EVENT_STOCK_UNITS.map(u => (
-                            <option key={u} value={u} className="bg-[#111]">{u}</option>
-                          ))}
-                        </select>
-                        <input
-                          type="number"
-                          min="0"
-                          value={newItemForm.quantity}
-                          onChange={(e) => setNewItemForm(f => ({ ...f, quantity: e.target.value }))}
-                          placeholder="Quantidade em estoque"
-                          className="w-full bg-[#111] border border-[#333] rounded-md px-3 py-2 text-xs font-bold text-white focus:ring-1 focus:ring-[#B5FF03] outline-none transition-all"
-                        />
-                        <input
-                          type="number"
-                          step="0.01"
-                          min="0"
-                          value={newItemForm.valorReferencia}
-                          onChange={(e) => setNewItemForm(f => ({ ...f, valorReferencia: e.target.value }))}
-                          placeholder="Valor de referência R$ (opcional)"
-                          className="w-full bg-[#111] border border-[#333] rounded-md px-3 py-2 text-xs font-bold text-white focus:ring-1 focus:ring-[#B5FF03] outline-none transition-all"
-                        />
                         <input
                           type="text"
                           value={newItemForm.observacao}
                           onChange={(e) => setNewItemForm(f => ({ ...f, observacao: e.target.value }))}
                           placeholder="Observação (opcional)"
-                          className="w-full bg-[#111] border border-[#333] rounded-md px-3 py-2 text-xs font-bold text-white focus:ring-1 focus:ring-[#B5FF03] outline-none transition-all sm:col-span-2"
+                          className="w-full bg-[#111] border border-[#333] rounded-md px-3 py-2 text-xs font-bold text-white focus:ring-1 focus:ring-[#B5FF03] outline-none transition-all"
                         />
                       </div>
                       <div className="flex items-center justify-end gap-2 pt-1">
                         <button
                           type="button"
-                          onClick={() => { setShowCreateItemForm(false); setNewItemForm({ name: '', category: EVENT_STOCK_CATEGORIES[0], quantity: '', unit: 'unidade', valorReferencia: '', observacao: '' }); }}
+                          onClick={() => { setShowCreateItemForm(false); setNewItemForm({ name: '', category: EVENT_STOCK_CATEGORIES[0], observacao: '' }); }}
                           className="px-3 py-2 text-[10px] font-black uppercase tracking-widest text-neutral-500 hover:text-white transition-all"
                         >
                           Cancelar
