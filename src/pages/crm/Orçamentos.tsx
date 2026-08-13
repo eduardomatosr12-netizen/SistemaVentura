@@ -1078,6 +1078,7 @@ const CRMOrçamentos = () => {
         leadEvent={whatsAppTarget.niche}
         leadEventDate={whatsAppTarget.firstContact}
         leadValue={whatsAppTarget.value}
+        leadItems={whatsAppTarget.items}
         onEditLead={() => {
           const lead = whatsAppTarget;
           setWhatsAppTarget(null);

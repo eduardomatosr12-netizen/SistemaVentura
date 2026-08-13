@@ -3,6 +3,7 @@ import { X, MessageCircle, Edit3, Send, ChevronDown, ChevronUp, AlertCircle, Ext
 import { cleanPhoneNumber, generateWhatsAppLink } from '../lib/whatsapp';
 import { subscribeTemplates } from '../services/whatsappTemplateService';
 import { fillTemplate, type WhatsAppTemplate } from '../lib/whatsappTemplates';
+import { parseMonetaryValue, formatCurrency } from '../lib/crmHelpers';
 import { useAuth } from '../contexts/AuthContext';
 
 interface WhatsAppModalProps {
@@ -13,6 +14,7 @@ interface WhatsAppModalProps {
   leadEvent?: string;
   leadEventDate?: string;
   leadValue?: string;
+  leadItems?: { qtdAtual: number; valorUnit: number; semPreco?: boolean }[];
   onEditLead?: () => void;
 }
 
@@ -31,6 +33,7 @@ const WhatsAppModal = ({
   leadEvent,
   leadEventDate,
   leadValue,
+  leadItems,
   onEditLead,
 }: WhatsAppModalProps) => {
   const { employeeName } = useAuth();
@@ -56,14 +59,30 @@ const WhatsAppModal = ({
 
   const hasPhone = leadWhatsapp && leadWhatsapp.replace(/\D/g, '').length >= 10;
 
+  const finalValue = useMemo(() => parseMonetaryValue(leadValue || ''), [leadValue]);
+
+  const valueInfo = useMemo(() => {
+    const hasValue = !!leadValue;
+    const gross = (leadItems || []).reduce((sum, i) => sum + (i.qtdAtual || 0) * (i.valorUnit || 0), 0);
+    const desconto = hasValue && gross > 0 ? Math.max(0, gross - finalValue) : 0;
+    return {
+      bruto: gross > 0 ? formatCurrency(gross) : 'R$ 0,00',
+      desconto: desconto > 0 ? formatCurrency(desconto) : 'R$ 0,00',
+      final: hasValue ? leadValue : (gross > 0 ? formatCurrency(gross) : 'R$ 0,00'),
+    };
+  }, [leadItems, leadValue, finalValue]);
+
   const variableValues = useMemo(() => ({
     nome: leadName,
     evento: leadEvent || 'evento',
     data_evento: formatDateBR(leadEventDate),
-    valor: leadValue || 'R$ 0,00',
+    valor: valueInfo.final,
+    valor_bruto: valueInfo.bruto,
+    desconto: valueInfo.desconto,
+    valor_final: valueInfo.final,
     responsavel: employeeName || 'Usuário',
     empresa: 'Ventura Luz e Efeitos',
-  }), [leadName, leadEvent, leadEventDate, leadValue, employeeName]);
+  }), [leadName, leadEvent, leadEventDate, valueInfo, employeeName]);
 
   const previewMessage = useMemo(() => {
     if (!selectedTemplate) return '';
