@@ -21,6 +21,7 @@ export const TEMPLATE_VARIABLES: TemplateVariable[] = [
   { key: '{valor_bruto}', label: 'Valor bruto (sem desconto)', example: 'R$ 15.000,00' },
   { key: '{desconto}', label: 'Valor do desconto', example: 'R$ 1.500,00' },
   { key: '{valor_final}', label: 'Valor final (com desconto)', example: 'R$ 13.500,00' },
+  { key: '{itens}', label: 'Itens do orçamento com valores', example: '• Painel de LED — 2x R$ 150,00 = R$ 300,00' },
   { key: '{responsavel}', label: 'Responsável', example: 'Maria' },
   { key: '{empresa}', label: 'Empresa', example: 'Ventura Luz e Efeitos' },
 ];

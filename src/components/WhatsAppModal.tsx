@@ -14,7 +14,7 @@ interface WhatsAppModalProps {
   leadEvent?: string;
   leadEventDate?: string;
   leadValue?: string;
-  leadItems?: { qtdAtual: number; valorUnit: number; semPreco?: boolean }[];
+  leadItems?: { item?: string; qtdAtual: number; valorUnit: number; semPreco?: boolean }[];
   onEditLead?: () => void;
 }
 
@@ -72,6 +72,20 @@ const WhatsAppModal = ({
     };
   }, [leadItems, leadValue, finalValue]);
 
+  const itensText = useMemo(() => {
+    const list = leadItems || [];
+    if (list.length === 0) return '';
+    return list.map(i => {
+      const nome = i.item || 'Item';
+      if ((i.valorUnit || 0) > 0) {
+        const unit = formatCurrency(i.valorUnit);
+        const total = formatCurrency((i.qtdAtual || 0) * i.valorUnit);
+        return `• ${nome} — ${i.qtdAtual}x ${unit} = ${total}`;
+      }
+      return `• ${nome}`;
+    }).join('\n');
+  }, [leadItems]);
+
   const variableValues = useMemo(() => ({
     nome: leadName,
     evento: leadEvent || 'evento',
@@ -80,9 +94,10 @@ const WhatsAppModal = ({
     valor_bruto: valueInfo.bruto,
     desconto: valueInfo.desconto,
     valor_final: valueInfo.final,
+    itens: itensText,
     responsavel: employeeName || 'Usuário',
     empresa: 'Ventura Luz e Efeitos',
-  }), [leadName, leadEvent, leadEventDate, valueInfo, employeeName]);
+  }), [leadName, leadEvent, leadEventDate, valueInfo, itensText, employeeName]);
 
   const previewMessage = useMemo(() => {
     if (!selectedTemplate) return '';

@@ -8,7 +8,7 @@ const COLLECTION = 'whatsapp_templates';
 
 const DEFAULT_TEMPLATES: WhatsAppTemplate[] = [
   { id: 'default-1', name: 'Saudação', message: 'Olá {nome}! Tudo bem? Aqui é {responsavel} da {empresa}. Gostaria de conversar sobre o seu evento. Pode falar agora?', active: true, order: 0 },
-  { id: 'default-2', name: 'Envio de proposta', message: 'Olá {nome}! Preparei uma proposta para o evento *{evento}* no dia {data_evento}. O investimento total é de *{valor}*. Posso te enviar os detalhes completos?', active: true, order: 1 },
+  { id: 'default-2', name: 'Envio de proposta', message: 'Olá {nome}! Preparei uma proposta para o evento *{evento}* no dia {data_evento}:\n\n{itens}\n\nO investimento total é de *{valor}*. Posso te enviar os detalhes completos?', active: true, order: 1 },
   { id: 'default-3', name: 'Acompanhamento', message: 'Oi {nome}, tudo bem? Estou passando para saber se você teve a oportunidade de analisar nossa proposta para o {evento}. Ficou com alguma dúvida?', active: true, order: 2 },
 ];
 
