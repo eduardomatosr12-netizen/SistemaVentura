@@ -271,9 +271,7 @@ export function generatePDF(lead: Lead, discountData?: { type: 'percent' | 'fixe
           letter-spacing: 1.2px;
           font-weight: 600;
         }
-        thead th:last-child { text-align: right; }
-        thead th:nth-child(2) { text-align: center; }
-        thead th:nth-child(3) { text-align: right; }
+        thead th:last-child { text-align: center; }
         tbody td {
           padding: 12px 14px;
           border-bottom: 1px solid #e8e8e8;
@@ -281,9 +279,7 @@ export function generatePDF(lead: Lead, discountData?: { type: 'percent' | 'fixe
           color: #333;
           vertical-align: top;
         }
-        tbody td:last-child { text-align: right; font-weight: 600; }
-        tbody td:nth-child(2) { text-align: center; }
-        tbody td:nth-child(3) { text-align: right; }
+        tbody td:last-child { text-align: center; }
         tbody tr:last-child td { border-bottom: none; }
         .table-spacer td {
           padding: 6px 14px;
@@ -418,26 +414,15 @@ export function generatePDF(lead: Lead, discountData?: { type: 'percent' | 'fixe
         <table>
           <thead>
             <tr>
-              <th style="width: 48%;">Serviços</th>
-              <th style="width: 12%;">Unidade</th>
-              <th style="width: 20%;">Valor por unidade</th>
-              <th style="width: 20%;">Custo</th>
+              <th style="width: 70%;">Serviços</th>
+              <th style="width: 30%;">Unidade</th>
             </tr>
           </thead>
           <tbody>
-            ${items.map((item, i) => item.semPreco && !((item.valorUnit || 0) > 0) ? `
-              <tr${i === 0 ? '' : ''}>
+            ${items.map(item => `
+              <tr>
                 <td>${escapeHtml(item.item)}</td>
                 <td>${item.qtdAtual}</td>
-                <td>—</td>
-                <td>—</td>
-              </tr>
-            ` : `
-              <tr${i === 0 ? '' : ''}>
-                <td>${escapeHtml(item.item)}</td>
-                <td>${item.qtdAtual}</td>
-                <td>${formatCurrency(item.valorUnit)}</td>
-                <td>${formatCurrency(item.qtdAtual * item.valorUnit)}</td>
               </tr>
             `).join('')}
           </tbody>
