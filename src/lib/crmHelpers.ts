@@ -140,8 +140,7 @@ export function generatePDF(lead: Lead, discountData?: { type: 'percent' | 'fixe
     }
   }
 
-  const now = new Date();
-  const dateStr = now.toLocaleDateString('pt-BR');
+  const dateStr = new Date().toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' });
 
   const safeName = escapeHtml(lead.name);
   const safeWhatsapp = escapeHtml(lead.whatsapp);
@@ -409,7 +408,7 @@ export function generatePDF(lead: Lead, discountData?: { type: 'percent' | 'fixe
           <div class="col" style="text-align: right;">
             <h3>Evento</h3>
             <p><strong>${eventTypeLabel(lead.niche)}</strong></p>
-            <p>Data: ${lead.firstContact ? new Date(lead.firstContact).toLocaleDateString('pt-BR') : '—'}</p>
+            <p>Data: ${lead.firstContact ? new Date(lead.firstContact + 'T12:00:00').toLocaleDateString('pt-BR') : '—'}</p>
             ${lead.address ? `<p>Local: ${safeAddress}</p>` : ''}
             <p style="margin-top: 6px;"><span class="badge">${safeStage}</span></p>
           </div>

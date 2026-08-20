@@ -102,10 +102,10 @@ const CRMDashboard = () => {
   const [editingEventId, setEditingEventId] = useState<string | null>(null);
 
   const handleRemoveItem = (id: string) => {
-    setFormData(prev => ({
-      ...prev,
-      orcamentoItems: prev.orcamentoItems.filter(i => i.id !== id),
-    }));
+    setFormData(prev => {
+      const updated = prev.orcamentoItems.filter(i => i.id !== id);
+      return { ...prev, orcamentoItems: updated, valor: calcItemsTotal(updated) };
+    });
   };
 
   // Custom dropdown state
@@ -152,21 +152,50 @@ const CRMDashboard = () => {
     ).slice(0, 40);
   }, [orcamentoItems, orcSearch]);
 
-  const handleAdicionarItem = (prod: EventStockItem) => {
+  const [pendingItem, setPendingItem] = useState<EventStockItem | null>(null);
+  const [pendingItemValue, setPendingItemValue] = useState('');
+
+  const handleSelectItem = (prod: EventStockItem) => {
+    setPendingItem(prod);
+    setPendingItemValue('');
+    setOrcSearchOpen(false);
+  };
+
+  const calcItemsTotal = (items: OrcamentoItem[]) =>
+    items.reduce((sum, item) => sum + (item.valorUnit || 0) * item.qtdAtual, 0);
+
+  const handleConfirmAddItem = () => {
+    if (!pendingItem) return;
+    const valor = parseFloat(pendingItemValue) || 0;
     const newItem: OrcamentoItem = {
       id: generateUUID(),
-      item: prod.name,
+      item: pendingItem.name,
       qtdAtual: 1,
-      valorUnit: 0,
-      semPreco: true,
-      eventStockId: prod.id,
+      valorUnit: valor,
+      semPreco: valor <= 0,
+      eventStockId: pendingItem.id,
     };
-    setFormData(prev => ({
-      ...prev,
-      orcamentoItems: [...prev.orcamentoItems, newItem],
-    }));
+    setFormData(prev => {
+      const updated = [...prev.orcamentoItems, newItem];
+      return { ...prev, orcamentoItems: updated, valor: calcItemsTotal(updated) };
+    });
+    setPendingItem(null);
+    setPendingItemValue('');
     setOrcSearch('');
-    setOrcSearchOpen(false);
+  };
+
+  const handleCancelAddItem = () => {
+    setPendingItem(null);
+    setPendingItemValue('');
+  };
+
+  const handleUpdateItemValor = (itemId: string, newValor: number) => {
+    setFormData(prev => {
+      const updated = prev.orcamentoItems.map(item =>
+        item.id === itemId ? { ...item, valorUnit: newValor, semPreco: newValor <= 0 } : item
+      );
+      return { ...prev, orcamentoItems: updated, valor: calcItemsTotal(updated) };
+    });
   };
 
   const handleCreateEventItem = async () => {
@@ -1643,7 +1672,7 @@ const CRMDashboard = () => {
                                   <button
                                     type="button"
                                     key={item.id}
-                                    onClick={() => handleAdicionarItem(item)}
+                                    onClick={() => handleSelectItem(item)}
                                     className="w-full text-left px-3 py-2 text-sm text-white hover:bg-[#333] transition-colors flex items-center justify-between gap-2"
                                   >
                                     <div className="flex items-center gap-2 min-w-0">
@@ -1668,12 +1697,54 @@ const CRMDashboard = () => {
                       </div>
                     )}
 
+                    {pendingItem && (
+                      <div className="bg-[#1a1a1a] border border-[#B5FF03] rounded-lg p-3 space-y-2">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-[#B5FF03] font-bold uppercase">Item selecionado:</span>
+                          <span className="text-sm text-white font-medium">{pendingItem.name}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 shrink-0">Valor de locação (R$)</label>
+                          <input
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            autoFocus
+                            value={pendingItemValue}
+                            onChange={e => setPendingItemValue(e.target.value)}
+                            onKeyDown={e => { if (e.key === 'Enter') handleConfirmAddItem(); if (e.key === 'Escape') handleCancelAddItem(); }}
+                            placeholder="0,00"
+                            className="flex-1 bg-[#111] border border-[#333] rounded-lg px-2 py-1.5 text-sm text-white text-right focus:border-[#B5FF03] outline-none"
+                          />
+                        </div>
+                        <div className="flex gap-2">
+                          <button type="button" onClick={handleConfirmAddItem}
+                            className="flex-1 py-1.5 bg-[#B5FF03] text-black text-[10px] font-black uppercase tracking-widest rounded-lg hover:bg-[#a3e602] transition-colors">
+                            Confirmar
+                          </button>
+                          <button type="button" onClick={handleCancelAddItem}
+                            className="px-3 py-1.5 bg-[#333] text-neutral-400 text-[10px] font-black uppercase tracking-widest rounded-lg hover:bg-[#444] transition-colors">
+                            Cancelar
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
                     <div className="space-y-1">
                       {formData.orcamentoItems.map(item => (
-                        <div key={item.id} className="flex items-center justify-between py-2 px-1 border-b border-[#222] last:border-b-0">
-                          <span className="text-sm text-white truncate">{item.item}</span>
+                        <div key={item.id} className="flex items-center gap-2 py-2 px-1 border-b border-[#222] last:border-b-0">
+                          <span className="flex-1 text-sm text-white truncate">{item.item}</span>
+                          <input
+                            type="number"
+                            min="0"
+                            step="0.01"
+                            value={item.valorUnit || ''}
+                            onChange={e => handleUpdateItemValor(item.id, parseFloat(e.target.value) || 0)}
+                            className="w-24 bg-[#111] border border-[#333] rounded-lg px-2 py-1 text-xs text-white text-right focus:border-[#B5FF03] outline-none"
+                            placeholder="R$ 0,00"
+                          />
                           <button type="button" onClick={() => handleRemoveItem(item.id)}
-                            className="p-1 hover:bg-[#333] rounded-md transition-colors shrink-0 ml-2">
+                            className="p-1 hover:bg-[#333] rounded-md transition-colors shrink-0">
                             <Trash2 size={12} className="text-red-400" />
                           </button>
                         </div>
