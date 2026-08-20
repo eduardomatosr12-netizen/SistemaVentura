@@ -30,28 +30,28 @@ const maskDate = (raw: string): string => {
 };
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
-  confirmado: { label: 'Confirmado', color: 'text-[#B5FF03]', bg: 'bg-[#B5FF03]/10 border-[#B5FF03]' },
-  pendente: { label: 'Pendente', color: 'text-[#f59e0b]', bg: 'bg-[#f59e0b]/10 border-[#f59e0b]' },
-  cancelado: { label: 'Cancelado', color: 'text-[#ef4444]', bg: 'bg-[#ef4444]/10 border-[#ef4444]' },
-  realizado: { label: 'Realizado', color: 'text-[#3b82f6]', bg: 'bg-[#3b82f6]/10 border-[#3b82f6]' },
+  orcamento: { label: 'Orçamento', color: 'text-[#f59e0b]', bg: 'bg-[#f59e0b]/10 border-[#f59e0b]' },
+  orcamento_cancelado: { label: 'Orçamento Cancelado', color: 'text-[#ef4444]', bg: 'bg-[#ef4444]/10 border-[#ef4444]' },
+  evento_confirmado: { label: 'Evento Confirmado', color: 'text-[#B5FF03]', bg: 'bg-[#B5FF03]/10 border-[#B5FF03]' },
+  evento_concluido: { label: 'Evento Concluído', color: 'text-[#3b82f6]', bg: 'bg-[#3b82f6]/10 border-[#3b82f6]' },
 };
 
 const getEventStatusColor = (status?: string): string => {
   switch (status) {
-    case 'confirmado': return '#B5FF03';
-    case 'pendente': return '#f59e0b';
-    case 'cancelado': return '#ef4444';
-    case 'realizado': return '#3b82f6';
+    case 'evento_confirmado': return '#B5FF03';
+    case 'orcamento': return '#f59e0b';
+    case 'orcamento_cancelado': return '#ef4444';
+    case 'evento_concluido': return '#3b82f6';
     default: return '#6b7280';
   }
 };
 
 const getEventStatusBg = (status?: string): string => {
   switch (status) {
-    case 'confirmado': return 'rgba(181,255,3,0.15)';
-    case 'pendente': return 'rgba(245,158,11,0.15)';
-    case 'cancelado': return 'rgba(239,68,68,0.15)';
-    case 'realizado': return 'rgba(59,130,246,0.15)';
+    case 'evento_confirmado': return 'rgba(181,255,3,0.15)';
+    case 'orcamento': return 'rgba(245,158,11,0.15)';
+    case 'orcamento_cancelado': return 'rgba(239,68,68,0.15)';
+    case 'evento_concluido': return 'rgba(59,130,246,0.15)';
     default: return 'rgba(107,114,128,0.15)';
   }
 };
@@ -103,7 +103,7 @@ const CRMCalendario = () => {
     clientEmail: '',
     clientPhone: '',
     clientCpf: '',
-    status: 'pendente',
+    status: 'orcamento',
     city: '',
     decorator: '',
     description: '',
@@ -330,7 +330,7 @@ const CRMCalendario = () => {
       clientEmail: '',
       clientPhone: '',
       clientCpf: '',
-      status: 'pendente',
+      status: 'orcamento',
       city: '',
       decorator: '',
       description: '',
@@ -365,7 +365,7 @@ const CRMCalendario = () => {
       clientEmail: event.clientEmail || '',
       clientPhone: event.clientPhone || '',
       clientCpf: event.clientCpf || '',
-      status: event.status || 'pendente',
+      status: event.status || 'orcamento',
       city: event.city || '',
       decorator: event.decorator || '',
       description: desc,
@@ -665,7 +665,7 @@ const CRMCalendario = () => {
               <div>
                 <span className="text-[9px] font-black uppercase tracking-[2px] mb-2 block"
                   style={{ color: getEventStatusColor(viewEvent.status) }}>
-                  {STATUS_CONFIG[viewEvent.status || 'pendente']?.label || 'Pendente'}
+                  {STATUS_CONFIG[viewEvent.status || 'orcamento']?.label || 'Orçamento'}
                 </span>
                 <h2 className="text-2xl font-black text-white tracking-tighter leading-tight">{viewEvent.title || 'Evento'}</h2>
               </div>
@@ -862,14 +862,14 @@ const CRMCalendario = () => {
                     STATUS
                   </label>
                   <select
-                    value={formData.status || 'pendente'}
+                    value={formData.status || 'orcamento'}
                     onChange={(e) => setFormData({ ...formData, status: e.target.value as CalendarEvent['status'] })}
                     className="w-full bg-[#0a0a0a] border border-[#333] rounded-md px-3 py-2 text-xs font-black text-white focus:ring-1 focus:ring-[#B5FF03] outline-none transition-all"
                   >
-                    <option value="pendente">Pendente</option>
-                    <option value="confirmado">Confirmado</option>
-                    <option value="realizado">Realizado</option>
-                    <option value="cancelado">Cancelado</option>
+                    <option value="orcamento">Orçamento</option>
+                    <option value="orcamento_cancelado">Orçamento Cancelado</option>
+                    <option value="evento_confirmado">Evento Confirmado</option>
+                    <option value="evento_concluido">Evento Concluído</option>
                   </select>
                 </div>
 

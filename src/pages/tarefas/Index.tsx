@@ -861,11 +861,11 @@ const Tarefas = () => {
   const eventRentalRecords = useMemo(() => {
     const result: (RentalRecord & { eventId: string })[] = [];
     (events || []).forEach(ev => {
-      if (ev.status !== 'confirmado' && ev.status !== 'realizado') return;
+      if (ev.status !== 'evento_confirmado' && ev.status !== 'evento_concluido') return;
       if (!ev.client) return;
       const lead = (Orçamentos || []).find(o => o.name.toLowerCase() === ev.client!.toLowerCase());
       if (!lead || !lead.items || lead.items.length === 0) return;
-      const itemStatus = ev.status === 'realizado' ? 'Devolvido' as const : 'Em Trânsito' as const;
+      const itemStatus = ev.status === 'evento_concluido' ? 'Devolvido' as const : 'Em Trânsito' as const;
       result.push({
         id: `event-${ev.id}`,
         eventId: ev.id,

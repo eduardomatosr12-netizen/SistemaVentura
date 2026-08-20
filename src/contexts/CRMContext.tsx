@@ -76,7 +76,7 @@ export const CRMProvider = ({ children }: { children: ReactNode }) => {
   const deleteLead = useCallback(async (id: string) => {
     const lead = Orçamentos.find(o => o.id === id);
     if (lead?.items && lead.items.length > 0) {
-      const linkedEvents = events.filter(e => e.clientId === id && e.status === 'confirmado');
+      const linkedEvents = events.filter(e => e.clientId === id && e.status === 'evento_confirmado');
       for (const event of linkedEvents) {
         if (lead.items && lead.items.length > 0) {
           await Promise.all(lead.items.map(item => restoreInventory(item.item, item.qtdAtual)));
@@ -98,19 +98,19 @@ export const CRMProvider = ({ children }: { children: ReactNode }) => {
     const clientId = fields.clientId ?? previous?.clientId ?? '';
     const lead = Orçamentos.find(o => o.id === clientId);
 
-    if (fields.status === 'confirmado' && previous?.status !== 'confirmado') {
+    if (fields.status === 'evento_confirmado' && previous?.status !== 'evento_confirmado') {
       if (lead?.items && lead.items.length > 0) {
         await Promise.all(lead.items.map(item => deductInventory(item.item, item.qtdAtual)));
       }
     }
 
-    if (previous?.status === 'confirmado' && fields.status !== 'confirmado') {
+    if (previous?.status === 'evento_confirmado' && fields.status !== 'evento_confirmado') {
       if (lead?.items && lead.items.length > 0) {
         await Promise.all(lead.items.map(item => restoreInventory(item.item, item.qtdAtual)));
       }
     }
 
-    if (fields.status === 'realizado' && previous?.status !== 'realizado') {
+    if (fields.status === 'evento_concluido' && previous?.status !== 'evento_concluido') {
       const title = fields.title ?? previous?.title ?? 'Evento';
       const client = fields.client ?? previous?.client ?? '';
       const dataEvento = fields.date ?? previous?.date ?? '';
@@ -132,7 +132,7 @@ export const CRMProvider = ({ children }: { children: ReactNode }) => {
       });
     }
 
-    if (fields.status === 'cancelado' && previous?.status !== 'cancelado') {
+    if (fields.status === 'orcamento_cancelado' && previous?.status !== 'orcamento_cancelado') {
       getTransactionByEventId(id).then(existing => {
         if (!existing) return;
         updateTransaction(existing.id!, { status: 'Cancelado' })

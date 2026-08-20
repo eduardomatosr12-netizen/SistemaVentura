@@ -54,7 +54,7 @@ export interface CalendarEvent {
   clientEmail?: string;
   clientPhone?: string;
   clientCpf?: string;
-  status?: 'confirmado' | 'pendente' | 'cancelado' | 'realizado';
+  status?: 'orcamento' | 'orcamento_cancelado' | 'evento_confirmado' | 'evento_concluido';
   dataMontagem?: string;
   dataDesmontagem?: string;
   valorTotal?: number;

@@ -39,27 +39,27 @@ const sanitizeDescription = (desc: string | null | undefined): string => {
 };
 
 const statusLabel: Record<string, string> = {
-  confirmado: 'Confirmado',
-  pendente: 'Pendente',
-  cancelado: 'Cancelado',
-  realizado: 'Realizado',
+  orcamento: 'Orçamento',
+  orcamento_cancelado: 'Orçamento Cancelado',
+  evento_confirmado: 'Evento Confirmado',
+  evento_concluido: 'Evento Concluído',
 };
 
 const getStatusColor = (status?: string) => {
   switch (status) {
-    case 'confirmado': return '#B5FF03';
-    case 'pendente': return '#f59e0b';
-    case 'cancelado': return '#ef4444';
-    case 'realizado': return '#3b82f6';
+    case 'evento_confirmado': return '#B5FF03';
+    case 'orcamento': return '#f59e0b';
+    case 'orcamento_cancelado': return '#ef4444';
+    case 'evento_concluido': return '#3b82f6';
     default: return '#6b7280';
   }
 };
 
 const statusBg: Record<string, string> = {
-  confirmado: 'bg-[#B5FF03]',
-  pendente: 'bg-[#f59e0b]',
-  cancelado: 'bg-[#ef4444]',
-  realizado: 'bg-[#3b82f6]',
+  orcamento: 'bg-[#f59e0b]',
+  orcamento_cancelado: 'bg-[#ef4444]',
+  evento_confirmado: 'bg-[#B5FF03]',
+  evento_concluido: 'bg-[#3b82f6]',
 };
 
 const EVENT_TYPES = [
@@ -362,7 +362,7 @@ const CRMDashboard = () => {
           dataMontagem: formData.dataMontagem,
           dataDesmontagem: formData.dataDesmontagem,
           description: formData.observacao,
-          status: (formData.status as CalendarEvent['status']) || 'pendente',
+          status: (formData.status as CalendarEvent['status']) || 'orcamento',
           valorTotal: total,
           desconto: formData.desconto,
           items: formData.orcamentoItems,
@@ -453,7 +453,7 @@ const CRMDashboard = () => {
             dataMontagem: formData.dataMontagem,
             dataDesmontagem: formData.dataDesmontagem,
             description: formData.observacao,
-            status: (formData.status as CalendarEvent['status']) || 'pendente',
+            status: (formData.status as CalendarEvent['status']) || 'orcamento',
             valorTotal: total,
             desconto: formData.desconto,
             items: formData.orcamentoItems,
@@ -488,7 +488,7 @@ const CRMDashboard = () => {
           dataMontagem: formData.dataMontagem,
           dataDesmontagem: formData.dataDesmontagem,
           description: formData.observacao,
-          status: (formData.status as CalendarEvent['status']) || 'pendente',
+          status: (formData.status as CalendarEvent['status']) || 'orcamento',
           valorTotal: total,
           desconto: formData.desconto,
           items: formData.orcamentoItems,
@@ -506,24 +506,24 @@ const CRMDashboard = () => {
 
   const eventCountsByStatus = useMemo(() => {
     const counts: Record<string, number> = {
-      confirmado: 0,
-      pendente: 0,
-      cancelado: 0,
-      realizado: 0,
+      evento_confirmado: 0,
+      orcamento: 0,
+      orcamento_cancelado: 0,
+      evento_concluido: 0,
     };
     safeEvents.forEach(event => {
       if (!event.date) return;
       const d = new Date(event.date + 'T12:00:00');
       if (isNaN(d.getTime())) return;
       if (d.getMonth() !== viewMonth || d.getFullYear() !== viewYear) return;
-      const status = event.status || 'pendente';
+      const status = event.status || 'orcamento';
       if (status in counts) counts[status]++;
     });
     return [
-      { name: 'Confirmado', value: counts.confirmado, color: '#B5FF03' },
-      { name: 'Pendente', value: counts.pendente, color: '#f59e0b' },
-      { name: 'Cancelado', value: counts.cancelado, color: '#ef4444' },
-      { name: 'Realizado', value: counts.realizado, color: '#3b82f6' },
+      { name: 'Evento Confirmado', value: counts.evento_confirmado, color: '#B5FF03' },
+      { name: 'Orçamento', value: counts.orcamento, color: '#f59e0b' },
+      { name: 'Orçamento Cancelado', value: counts.orcamento_cancelado, color: '#ef4444' },
+      { name: 'Evento Concluído', value: counts.evento_concluido, color: '#3b82f6' },
     ];
   }, [safeEvents, viewMonth, viewYear]);
 
@@ -835,7 +835,7 @@ const CRMDashboard = () => {
                         <div className="min-w-0 flex-1">
                           <p className="text-[11px] font-bold text-white truncate group-hover:underline">{event.title || 'Sem título'}</p>
                           <div className="flex items-center gap-1.5 text-[9px] text-neutral-500 mt-0.5">
-                            <span className={`px-1.5 py-0.5 rounded-full text-[8px] font-bold ${event.status ? statusBg[event.status] : 'bg-[#333]'} ${event.status === 'confirmado' ? 'text-black' : 'text-white'}`}>
+                            <span className={`px-1.5 py-0.5 rounded-full text-[8px] font-bold ${event.status ? statusBg[event.status] : 'bg-[#333]'} ${event.status === 'evento_confirmado' ? 'text-black' : 'text-white'}`}>
                               {event.status ? statusLabel[event.status] : '—'}
                             </span>
                             {event.eventType && <span>{eventTypeLabel(event.eventType)}</span>}
@@ -948,10 +948,10 @@ const CRMDashboard = () => {
                       <td className="px-4 py-3">
                         {event.status ? (
                           <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                            event.status === 'confirmado' ? 'bg-[#B5FF03] text-black' :
-                            event.status === 'pendente' ? 'bg-[#f59e0b] text-white' :
-                            event.status === 'cancelado' ? 'bg-[#ef4444] text-white' :
-                            event.status === 'realizado' ? 'bg-[#3b82f6] text-white' :
+                            event.status === 'evento_confirmado' ? 'bg-[#B5FF03] text-black' :
+                            event.status === 'orcamento' ? 'bg-[#f59e0b] text-white' :
+                            event.status === 'orcamento_cancelado' ? 'bg-[#ef4444] text-white' :
+                            event.status === 'evento_concluido' ? 'bg-[#3b82f6] text-white' :
                             'bg-[#333] text-white'
                           }`}>
                             {statusLabel[event.status] || event.status}
@@ -996,10 +996,10 @@ const CRMDashboard = () => {
                       </div>
                       {event.status ? (
                         <span className={`shrink-0 px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                          event.status === 'confirmado' ? 'bg-[#B5FF03] text-black' :
-                          event.status === 'pendente' ? 'bg-[#f59e0b] text-white' :
-                          event.status === 'cancelado' ? 'bg-[#ef4444] text-white' :
-                          event.status === 'realizado' ? 'bg-[#3b82f6] text-white' :
+                          event.status === 'evento_confirmado' ? 'bg-[#B5FF03] text-black' :
+                          event.status === 'orcamento' ? 'bg-[#f59e0b] text-white' :
+                          event.status === 'orcamento_cancelado' ? 'bg-[#ef4444] text-white' :
+                          event.status === 'evento_concluido' ? 'bg-[#3b82f6] text-white' :
                           'bg-[#333] text-white'
                         }`}>
                           {statusLabel[event.status] || event.status}
@@ -1216,7 +1216,7 @@ const CRMDashboard = () => {
                         <Pencil size={11} />
                         Editar
                       </button>
-                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${event.status ? statusBg[event.status] : 'bg-[#333]'} ${event.status === 'confirmado' ? 'text-black' : 'text-white'}`}>
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${event.status ? statusBg[event.status] : 'bg-[#333]'} ${event.status === 'evento_confirmado' ? 'text-black' : 'text-white'}`}>
                         {event.status ? statusLabel[event.status] : '—'}
                       </span>
                     </div>
@@ -1351,7 +1351,7 @@ const CRMDashboard = () => {
                       dataMontagem: formData.dataMontagem || '',
                       dataDesmontagem: formData.dataDesmontagem || '',
                       description: formData.observacao || '',
-                      status: 'pendente' as const,
+                      status: 'orcamento' as const,
                     };
                     try {
                       const newId = await addEvent(draftData);

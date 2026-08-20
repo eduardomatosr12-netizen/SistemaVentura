@@ -2,7 +2,7 @@ import { fetchEvents } from './eventService';
 import { fetchEventStock } from './eventStockService';
 import type { OrcamentoItem } from '../types/crm';
 
-export const EVENT_ACTIVE_STATUS = ['confirmado', 'realizado'] as const;
+export const EVENT_ACTIVE_STATUS = ['evento_confirmado', 'evento_concluido'] as const;
 
 export interface ReportItemUsage {
   key: string;
@@ -121,7 +121,7 @@ export const fetchEventUsageReport = async (year: number, month?: number | null)
 
 export const fetchStockMetrics = async (): Promise<StockMetrics> => {
   const [stock, events] = await Promise.all([fetchEventStock(), fetchEvents()]);
-  const activeEvents = events.filter(e => e.status !== 'cancelado' && e.status !== undefined);
+  const activeEvents = events.filter(e => e.status !== 'orcamento_cancelado' && e.status !== undefined);
   const itemsInEvents = activeEvents.reduce(
     (sum, e) => sum + (e.items || []).reduce((x, item) => x + (item.qtdAtual || 0), 0),
     0

@@ -465,7 +465,7 @@ const Financeiro = () => {
       transactions.filter(t => t.origemEventoId).map(t => t.origemEventoId)
     );
     const eventosSemFatura = events.filter(
-      e => e.status === 'realizado' && e.id && !eventTransactions.has(e.id)
+      e => e.status === 'evento_concluido' && e.id && !eventTransactions.has(e.id)
     );
     for (const event of eventosSemFatura) {
       const lead = Orçamentos.find(o => o.id === event.clientId);
@@ -570,7 +570,7 @@ const Financeiro = () => {
       if (inv?.source === 'evento') {
         const fbRecord = transactions.find(t => t.id === id);
         if (fbRecord?.origemEventoId) {
-          updateEvent(fbRecord.origemEventoId, { status: 'pendente' }).catch(err =>
+          updateEvent(fbRecord.origemEventoId, { status: 'orcamento' }).catch(err =>
             console.error('[Finance] Erro ao reabrir evento:', err)
           );
         }
@@ -1940,7 +1940,7 @@ const Financeiro = () => {
                     className="input-field w-full"
                   >
                     <option value="">Nenhum</option>
-                    {(events || []).filter(e => e.status !== 'cancelado').map(event => (
+                    {(events || []).filter(e => e.status !== 'orcamento_cancelado').map(event => (
                       <option key={event.id} value={event.id}>{event.title} - {event.client || 'Sem cliente'}</option>
                     ))}
                   </select>

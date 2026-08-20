@@ -375,10 +375,10 @@ const CRMOrçamentos = () => {
 
   const unifiedClients = useMemo(() => {
     const eventStageMap: Record<string, string> = {
-      confirmado: 'Contrato Fechado',
-      realizado: 'Concluído',
-      pendente: 'Novos Orçamentos',
-      cancelado: 'Perdido',
+      evento_confirmado: 'Contrato Fechado',
+      evento_concluido: 'Contrato Fechado',
+      orcamento: 'Novos Orçamentos',
+      orcamento_cancelado: 'Perdido',
     };
 
     const map = new Map<string, Lead>();
