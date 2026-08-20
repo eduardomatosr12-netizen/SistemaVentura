@@ -56,7 +56,7 @@ function SummaryCard({ label, value, color, icon: Icon }: {
         <span className="text-[9px] font-black uppercase tracking-widest text-neutral-500">{label}</span>
         <Icon size={14} style={{ color }} />
       </div>
-      <p className="text-xl md:text-2xl font-black text-white">{formatCurrency(value)}</p>
+      <p className="text-base md:text-xl font-black text-white truncate">{formatCurrency(value)}</p>
     </div>
   );
 }
@@ -286,7 +286,7 @@ export default function DashboardFinanceiro() {
 
   return (
     <div className="min-h-screen bg-black p-4 md:p-6 pb-bottom-nav md:pb-6 space-y-6">
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-3 sm:gap-4">
         <button
           onClick={() => navigate('/financeiro')}
           className="p-2 rounded-lg bg-[#111] border border-[#222] text-neutral-400 hover:text-white hover:border-[#B5FF03] transition-colors"
@@ -294,26 +294,26 @@ export default function DashboardFinanceiro() {
         >
           <ArrowLeft size={18} />
         </button>
-        <div>
-          <h1 className="text-2xl md:text-3xl font-black text-white tracking-tight">DASHBOARD FINANCEIRO</h1>
-          <p className="text-sm text-neutral-400 font-medium">Visão geral do período</p>
+        <div className="min-w-0">
+          <h1 className="text-lg sm:text-2xl md:text-3xl font-black text-white tracking-tight truncate">DASHBOARD FINANCEIRO</h1>
+          <p className="text-xs sm:text-sm text-neutral-400 font-medium">Visão geral do período</p>
         </div>
       </div>
 
       <div className="flex justify-center">
-        <div className="inline-flex items-center gap-4 bg-[#111] border border-[#222] rounded-full px-5 py-2">
+        <div className="inline-flex items-center gap-2 sm:gap-4 bg-[#111] border border-[#222] rounded-full px-3 sm:px-5 py-2">
           <button
             onClick={goPrevMonth}
-            className="p-2 rounded-full text-neutral-400 hover:text-white hover:bg-[#222] transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
+            className="p-2 rounded-full text-neutral-400 hover:text-white hover:bg-[#222] transition-colors min-w-[36px] min-h-[36px] sm:min-w-[44px] sm:min-h-[44px] flex items-center justify-center"
           >
             <ChevronLeft size={18} />
           </button>
-          <span className="text-sm font-black text-white tracking-wide min-w-[140px] text-center">
+          <span className="text-xs sm:text-sm font-black text-white tracking-wide min-w-0 text-center">
             {MONTHS_PT[selectedDate.getMonth()]} {selectedDate.getFullYear()}
           </span>
           <button
             onClick={goNextMonth}
-            className="p-2 rounded-full text-neutral-400 hover:text-white hover:bg-[#222] transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
+            className="p-2 rounded-full text-neutral-400 hover:text-white hover:bg-[#222] transition-colors min-w-[36px] min-h-[36px] sm:min-w-[44px] sm:min-h-[44px] flex items-center justify-center"
           >
             <ChevronRight size={18} />
           </button>

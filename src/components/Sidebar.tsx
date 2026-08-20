@@ -40,7 +40,7 @@ const Sidebar = ({ isOpen = false, onClose }: SidebarProps) => {
     <>
       {isOpen && (
         <div 
-          className="fixed inset-0 bg-black/50 z-50 md:hidden"
+          className="fixed inset-0 bg-black/50 z-[55] md:hidden"
           onClick={onClose}
         />
       )}

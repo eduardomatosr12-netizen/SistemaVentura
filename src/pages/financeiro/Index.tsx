@@ -1088,7 +1088,7 @@ const Financeiro = () => {
 
       {/* Main Content */}
       <div className="flex relative">
-        <div className="flex-1 p-6">
+        <div className="flex-1 p-4 md:p-6">
           {/* Receitas View - RECEITAS tab */}
           {viewMode === 'receitas' && activeTab === 'receitas' && (
             <>
@@ -1753,7 +1753,7 @@ const Financeiro = () => {
       {/* Invoice Modal */}
       {isInvoiceModalOpen && editingInvoice && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[100] p-4">
-          <div className="card w-full max-w-full md:max-w-md p-8 max-h-[90vh] flex flex-col">
+          <div className="card w-full max-w-full md:max-w-md p-4 sm:p-8 max-h-[90vh] flex flex-col">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-lg font-extrabold text-white">
                 {isNewInvoice ? 'Nova Fatura' : 'Editar Fatura'}
@@ -1834,7 +1834,7 @@ const Financeiro = () => {
                   ))}
                 </select>
               </div>
-              <div className="flex justify-end gap-3 pt-4">
+              <div className="flex flex-wrap justify-end gap-3 pt-4">
                 {!isNewInvoice && (
                   <button
                     type="button"
@@ -1859,7 +1859,7 @@ const Financeiro = () => {
       {/* Expense Modal */}
       {isExpenseModalOpen && editingExpense && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[100] p-4">
-          <div className="card w-full max-w-full md:max-w-md p-8 max-h-[90vh] flex flex-col">
+          <div className="card w-full max-w-full md:max-w-md p-4 sm:p-8 max-h-[90vh] flex flex-col">
             <div className="flex justify-between items-center mb-6 shrink-0">
               <h3 className="text-lg font-extrabold text-white">
                 {isNewExpense ? 'Nova Despesa' : 'Editar Despesa'}
@@ -2047,7 +2047,7 @@ const Financeiro = () => {
                   ))}
                 </select>
               </div>
-              <div className="flex justify-end gap-3 pt-4">
+              <div className="flex flex-wrap justify-end gap-3 pt-4">
                 {!isNewExpense && (
                   <button
                     type="button"

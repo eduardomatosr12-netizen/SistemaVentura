@@ -659,9 +659,9 @@ const CRMCalendario = () => {
 
       {/* Event View Modal */}
       {showViewModal && viewEvent && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-[#111] border border-[#333] rounded-2xl shadow-2xl w-full max-w-lg transform animate-in slide-in-from-bottom-4 duration-300 max-h-[85vh] flex flex-col">
-            <div className="px-8 py-7 border-b border-[#333] flex justify-between items-start bg-[#111] shrink-0">
+        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 animate-in fade-in duration-200">
+          <div className="bg-[#111] border border-[#333] rounded-t-2xl sm:rounded-2xl shadow-2xl w-full max-w-lg transform animate-in slide-in-from-bottom-4 duration-300 max-h-[85vh] flex flex-col">
+            <div className="px-4 sm:px-8 py-5 sm:py-7 border-b border-[#333] flex justify-between items-start bg-[#111] shrink-0">
               <div>
                 <span className="text-[9px] font-black uppercase tracking-[2px] mb-2 block"
                   style={{ color: getEventStatusColor(viewEvent.status) }}>
@@ -803,14 +803,14 @@ const CRMCalendario = () => {
               )}
             </div>
 
-            <div className="px-8 py-5 bg-[#0a0a0a] flex justify-between items-center border-t border-[#333]">
+            <div className="px-4 sm:px-8 py-4 sm:py-5 bg-[#0a0a0a] flex justify-between items-center border-t border-[#333]">
               <button
                 type="button"
                 onClick={() => {
                   setShowViewModal(false);
                   handleOpenEdit(viewEvent);
                 }}
-                className="px-6 py-2.5 bg-[#B5FF03] text-black rounded-md font-black text-[10px] uppercase tracking-widest hover:bg-[#a1e600] transition-all"
+                className="px-4 sm:px-6 py-2.5 bg-[#B5FF03] text-black rounded-md font-black text-[10px] uppercase tracking-widest hover:bg-[#a1e600] transition-all"
               >
                 EDITAR
               </button>
@@ -828,10 +828,10 @@ const CRMCalendario = () => {
 
       {/* Event Modal (Create/Edit) */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-[#111] border border-[#333] rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden transform animate-in slide-in-from-bottom-4 duration-300 max-h-[95vh] overflow-y-auto">
+        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 animate-in fade-in duration-200">
+          <div className="bg-[#111] border border-[#333] rounded-t-2xl sm:rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden transform animate-in slide-in-from-bottom-4 duration-300 max-h-[95vh] overflow-y-auto">
             <form onSubmit={handleSave}>
-              <div className="px-8 py-7 border-b border-[#333] flex justify-between items-start bg-[#111]">
+              <div className="px-4 sm:px-8 py-5 sm:py-7 border-b border-[#333] flex justify-between items-start bg-[#111]">
                 <div>
                   <span className="text-[9px] font-black text-[#B5FF03] uppercase tracking-[2px] mb-2 block">
                     {modalMode === 'create' ? 'NOVO EVENTO' : 'EDITAR EVENTO'}
@@ -848,7 +848,7 @@ const CRMCalendario = () => {
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="p-2 hover:bg-[#222] rounded-full transition-colors text-neutral-400 hover:text-white mt-1"
+                  className="min-w-[44px] min-h-[44px] flex items-center justify-center hover:bg-[#222] rounded-full transition-colors text-neutral-400 hover:text-white mt-1"
                 >
                   <X size={20} />
                 </button>
@@ -873,7 +873,7 @@ const CRMCalendario = () => {
                   </select>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-6">
                   <div className="space-y-2">
                     <label className="flex items-center gap-2 text-[9px] font-black text-[#B5FF03] uppercase tracking-widest">
                       <MessageSquare size={12} strokeWidth={3} className="text-[#B5FF03]" />
@@ -1063,7 +1063,7 @@ const CRMCalendario = () => {
                 {formData.client && (
                   <div className="bg-[#0a0a0a] border border-[#1a1a1a] rounded-md p-4 space-y-3">
                     <label className="text-[9px] font-black text-[#B5FF03] uppercase tracking-widest block">DADOS DO CLIENTE</label>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div className="space-y-1">
                         <label className="text-[8px] font-bold text-neutral-500 uppercase tracking-widest">TELEFONE</label>
                         <input
@@ -1347,7 +1347,7 @@ const CRMCalendario = () => {
                 </div>
               )}
 
-            <div className="px-8 py-5 bg-[#0a0a0a] flex justify-between items-center border-t border-[#333] shrink-0">
+            <div className="px-4 sm:px-8 py-4 sm:py-5 bg-[#0a0a0a] flex justify-between items-center border-t border-[#333] shrink-0">
                 <div className="flex items-center gap-2">
                   {modalMode === 'edit' && (
                     <button

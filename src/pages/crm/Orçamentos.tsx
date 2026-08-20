@@ -540,7 +540,7 @@ const CRMOrçamentos = () => {
     <div className="relative min-h-screen pb-bottom-nav md:pb-0">
       {isSidebarOpen && (
         <>
-          <div className="fixed inset-0 bg-black/60 z-40 md:hidden" onClick={() => setIsSidebarOpen(false)} />
+          <div className="fixed inset-0 bg-black/60 z-[55] md:hidden" onClick={() => setIsSidebarOpen(false)} />
           <div className="fixed inset-x-0 bottom-0 z-[100] bg-[#111] border-t border-[#333] rounded-t-2xl p-4 max-h-[70dvh] overflow-y-auto md:hidden shadow-xl" style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}>
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-lg font-black text-[#B5FF03]">Filtrar Contatos</h2>

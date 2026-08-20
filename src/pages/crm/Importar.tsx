@@ -339,7 +339,7 @@ const Importar = () => {
 
       {toast && (
         <div
-          className={`fixed top-6 right-6 z-[200] flex items-center gap-4 px-6 py-4 rounded-xl shadow-2xl animate-in slide-in-from-top-2 fade-in duration-300 ${
+          className={`fixed top-6 left-6 right-6 sm:left-auto sm:right-6 sm:max-w-md z-[200] flex items-center gap-4 px-6 py-4 rounded-xl shadow-2xl animate-in slide-in-from-top-2 fade-in duration-300 ${
             toast.type === 'success'
               ? 'bg-[#1a1a1a] border border-[#B5FF03]'
               : toast.type === 'error'
@@ -432,7 +432,7 @@ const Importar = () => {
           onClick={handleClick}
           onDrop={handleDrop}
           onDragOver={handleDragOver}
-          className="w-full bg-[#0a0a0a] border-2 border-dashed border-[#333] rounded-2xl p-16 text-center cursor-pointer hover:border-[#B5FF03] transition-all group"
+          className="w-full bg-[#0a0a0a] border-2 border-dashed border-[#333] rounded-2xl p-8 md:p-16 text-center cursor-pointer hover:border-[#B5FF03] transition-all group"
         >
           <input
             ref={fileInputRef}

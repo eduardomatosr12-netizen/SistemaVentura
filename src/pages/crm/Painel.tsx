@@ -1289,18 +1289,18 @@ const CRMDashboard = () => {
                   {/* Three milestones */}
                   <div className="border-t border-[#222] pt-3">
                     <p className="text-[9px] font-black uppercase tracking-widest text-neutral-400 mb-2">Marcos do Evento</p>
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                       <div className="bg-[#1a1a1a] rounded-md p-2 text-center">
                         <p className="text-[8px] text-neutral-500 uppercase tracking-wider">Evento</p>
-                        <p className="text-[11px] text-white font-bold mt-0.5">{formatDate(event.date)}</p>
+                        <p className="text-[11px] text-white font-bold mt-0.5 truncate">{formatDate(event.date)}</p>
                       </div>
                       <div className="bg-[#1a1a1a] rounded-md p-2 text-center">
                         <p className="text-[8px] text-neutral-500 uppercase tracking-wider">Montagem</p>
-                        <p className="text-[11px] text-white font-bold mt-0.5">{formatDate(event.dataMontagem)}</p>
+                        <p className="text-[11px] text-white font-bold mt-0.5 truncate">{formatDate(event.dataMontagem)}</p>
                       </div>
                       <div className="bg-[#1a1a1a] rounded-md p-2 text-center">
                         <p className="text-[8px] text-neutral-500 uppercase tracking-wider">Desmontagem</p>
-                        <p className="text-[11px] text-white font-bold mt-0.5">{formatDate(event.dataDesmontagem)}</p>
+                        <p className="text-[11px] text-white font-bold mt-0.5 truncate">{formatDate(event.dataDesmontagem)}</p>
                       </div>
                     </div>
                   </div>
@@ -1317,21 +1317,21 @@ const CRMDashboard = () => {
           <div className="bg-[#0a0a0a] border border-[#222222] rounded-t-2xl sm:rounded-lg w-full max-w-md max-h-[95vh] sm:max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between p-4 border-b border-[#222] shrink-0">
               <h3 className="text-sm font-black uppercase tracking-widest text-[#B5FF03]">{editingEventId ? 'Editar Evento' : 'Novo Evento'}</h3>
-              <button onClick={() => { setEditingEventId(null); setIsCreateOpen(false); }} className="p-1 hover:bg-[#222] rounded-md transition-colors">
+              <button onClick={() => { setEditingEventId(null); setIsCreateOpen(false); }} className="min-w-[44px] min-h-[44px] flex items-center justify-center hover:bg-[#222] rounded-md transition-colors">
                 <X size={16} className="text-neutral-400" />
               </button>
             </div>
             {/* Mode toggle */}
-            <div className="flex border-b border-[#222] shrink-0">
+            <div className="flex border-b border-[#222] shrink-0 overflow-x-auto">
               <button
                 onClick={() => setAbaAtiva('cliente')}
-                className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest transition-colors ${abaAtiva === 'cliente' ? 'text-[#B5FF03] border-b-2 border-[#B5FF03]' : 'text-neutral-500 hover:text-white'}`}
+                className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest transition-colors whitespace-nowrap ${abaAtiva === 'cliente' ? 'text-[#B5FF03] border-b-2 border-[#B5FF03]' : 'text-neutral-500 hover:text-white'}`}
               >
                 Novo Cliente
               </button>
               <button
                 onClick={() => setAbaAtiva('evento')}
-                className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest transition-colors ${abaAtiva === 'evento' ? 'text-[#B5FF03] border-b-2 border-[#B5FF03]' : 'text-neutral-500 hover:text-white'}`}
+                className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest transition-colors whitespace-nowrap ${abaAtiva === 'evento' ? 'text-[#B5FF03] border-b-2 border-[#B5FF03]' : 'text-neutral-500 hover:text-white'}`}
               >
                 Novo Evento
               </button>
@@ -1369,7 +1369,7 @@ const CRMDashboard = () => {
                     setAbaAtiva('despesas');
                   }
                 }}
-                className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest transition-colors flex items-center justify-center gap-1.5 ${abaAtiva === 'despesas' ? 'text-[#B5FF03] border-b-2 border-[#B5FF03]' : 'text-neutral-500 hover:text-white'}`}
+                className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest transition-colors flex items-center justify-center gap-1.5 whitespace-nowrap ${abaAtiva === 'despesas' ? 'text-[#B5FF03] border-b-2 border-[#B5FF03]' : 'text-neutral-500 hover:text-white'}`}
               >
                 {!editingEventId && <Lock size={10} />}
                 Despesas do Evento
@@ -1703,8 +1703,8 @@ const CRMDashboard = () => {
                           <span className="text-xs text-[#B5FF03] font-bold uppercase">Item selecionado:</span>
                           <span className="text-sm text-white font-medium">{pendingItem.name}</span>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 shrink-0">Valor de locação (R$)</label>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400">Valor de locação (R$)</label>
                           <input
                             type="number"
                             min="0"
@@ -1822,7 +1822,7 @@ const CRMDashboard = () => {
       )}
 
       {toast && (
-        <div className="fixed bottom-5 left-1/2 -translate-x-1/2 z-[200] bg-[#B5FF03] text-black text-xs font-black uppercase tracking-widest px-5 py-3 rounded-full shadow-lg">
+        <div className="fixed bottom-20 sm:bottom-5 left-1/2 -translate-x-1/2 z-[200] bg-[#B5FF03] text-black text-xs font-black uppercase tracking-widest px-5 py-3 rounded-full shadow-lg">
           {toast}
         </div>
       )}

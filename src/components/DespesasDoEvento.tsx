@@ -196,7 +196,7 @@ export default function DespesasDoEvento({ eventId, eventDate }: Props) {
                   {exp.category}
                 </span>
               </div>
-              <div className="flex items-center gap-2 mt-0.5">
+              <div className="flex flex-wrap items-center gap-2 mt-0.5">
                 <span className="text-sm text-white font-bold">{formatMoeda(exp.valor)}</span>
                 {exp.paymentMethod && (
                   <span className="text-[9px] text-[#606060]">{exp.paymentMethod}</span>
@@ -280,7 +280,7 @@ export default function DespesasDoEvento({ eventId, eventDate }: Props) {
               </select>
             </div>
           </div>
-          <div className="flex items-center gap-2 pt-1">
+          <div className="flex flex-wrap items-center gap-2 pt-1">
             <button
               type="button"
               onClick={handleAdd}

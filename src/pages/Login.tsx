@@ -36,7 +36,7 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-black flex">
+    <div className="min-h-dvh bg-black flex">
       <div className="hidden lg:flex lg:w-1/2 bg-black flex-col justify-between p-12">
         <img src="/logo.jpg" alt="VENTURA" className="w-full max-w-[160px] object-contain" />
         <div>
