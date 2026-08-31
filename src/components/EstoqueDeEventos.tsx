@@ -260,7 +260,7 @@ const EstoqueDeEventos = ({ onMessage }: EstoqueDeEventosProps) => {
             <div className="flex items-center bg-[#0a0a0a] border border-[#333] rounded-lg overflow-hidden">
               <button
                 onClick={() => movePeriod(-1)}
-                className="p-2 text-neutral-400 hover:text-[#B5FF03] hover:bg-[#222] transition-colors flex items-center justify-center min-w-[32px] min-h-[38px]"
+                className="p-2 text-neutral-400 hover:text-[#B5FF03] hover:bg-[#222] transition-colors flex items-center justify-center min-w-[40px] min-h-[44px]"
                 title="Mês anterior"
                 aria-label="Mês anterior"
               >
@@ -271,7 +271,7 @@ const EstoqueDeEventos = ({ onMessage }: EstoqueDeEventosProps) => {
               </span>
               <button
                 onClick={() => movePeriod(1)}
-                className="p-2 text-neutral-400 hover:text-[#B5FF03] hover:bg-[#222] transition-colors flex items-center justify-center min-w-[32px] min-h-[38px]"
+                className="p-2 text-neutral-400 hover:text-[#B5FF03] hover:bg-[#222] transition-colors flex items-center justify-center min-w-[40px] min-h-[44px]"
                 title="Próximo mês"
                 aria-label="Próximo mês"
               >
@@ -280,7 +280,7 @@ const EstoqueDeEventos = ({ onMessage }: EstoqueDeEventosProps) => {
             </div>
             <button
               onClick={() => loadReports(periodYear, periodMonth)}
-              className="p-2 rounded-lg text-neutral-400 hover:text-[#B5FF03] hover:bg-[#222] transition-colors flex items-center justify-center min-w-[38px] min-h-[38px]"
+              className="p-2 rounded-lg text-neutral-400 hover:text-[#B5FF03] hover:bg-[#222] transition-colors flex items-center justify-center min-w-[44px] min-h-[44px]"
               title="Atualizar relatórios"
             >
               <RefreshCw size={14} />

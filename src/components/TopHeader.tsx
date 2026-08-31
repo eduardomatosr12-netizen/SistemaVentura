@@ -50,16 +50,21 @@ const TopHeader = ({ onMenuClick }: TopHeaderProps) => {
   const initials = userDisplayName.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase();
 
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (notificationRef.current && !notificationRef.current.contains(event.target as Node)) {
+    const handleClickOutside = (event: MouseEvent | TouchEvent) => {
+      const target = event.target as Node;
+      if (notificationRef.current && !notificationRef.current.contains(target)) {
         setIsNotificationsOpen(false);
       }
-      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+      if (userMenuRef.current && !userMenuRef.current.contains(target)) {
         setIsUserMenuOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
   }, []);
 
   const timeoutRefs = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
@@ -165,10 +170,11 @@ const TopHeader = ({ onMenuClick }: TopHeaderProps) => {
                        >
                           <button
                             onClick={(e) => { e.stopPropagation(); handleDismiss(n?.id); }}
-                            className="absolute top-2 right-2 w-5 h-5 flex items-center justify-center rounded-full bg-neutral-800 hover:bg-red-900/50 text-neutral-500 hover:text-red-400 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all duration-200 z-10"
+                            className="absolute top-1 right-1 w-9 h-9 md:w-5 md:h-5 flex items-center justify-center rounded-full bg-neutral-800 hover:bg-red-900/50 text-neutral-500 hover:text-red-400 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-all duration-200 z-10"
+                            aria-label="Descartar notificação"
                           >
-                           <X size={10} strokeWidth={3} />
-                         </button>
+                           <X size={14} strokeWidth={3} />
+                          </button>
                          <div className="flex gap-4">
                            <div className="w-8 h-8 rounded-md flex items-center justify-center shrink-0 bg-[#111] text-[#B5FF03] border border-[#222222]">
                              <Icon size={14} />

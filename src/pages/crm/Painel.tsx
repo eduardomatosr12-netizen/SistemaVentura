@@ -82,11 +82,22 @@ const CRMDashboard = () => {
   const [orcPage, setOrcPage] = useState(0);
   const ROWS_PER_PAGE = 15;
   const [toast, setToast] = useState<string | null>(null);
+  const toastTimerRef = useRef<number | null>(null);
 
   const showToast = (msg: string) => {
     setToast(msg);
-    window.setTimeout(() => setToast(null), 3000);
+    if (toastTimerRef.current !== null) window.clearTimeout(toastTimerRef.current);
+    toastTimerRef.current = window.setTimeout(() => {
+      setToast(null);
+      toastTimerRef.current = null;
+    }, 3000);
   };
+
+  useEffect(() => {
+    return () => {
+      if (toastTimerRef.current !== null) window.clearTimeout(toastTimerRef.current);
+    };
+  }, []);
 
   // Create modal state
   const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -259,22 +270,27 @@ const CRMDashboard = () => {
   };
 
   useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (eventTypeRef.current && !eventTypeRef.current.contains(e.target as Node)) {
+    const handleClickOutside = (e: MouseEvent | TouchEvent) => {
+      const target = e.target as Node;
+      if (eventTypeRef.current && !eventTypeRef.current.contains(target)) {
         setEventTypeOpen(false);
       }
-      if (statusRef.current && !statusRef.current.contains(e.target as Node)) {
+      if (statusRef.current && !statusRef.current.contains(target)) {
         setStatusOpen(false);
       }
-      if (clientSearchRef.current && !clientSearchRef.current.contains(e.target as Node)) {
+      if (clientSearchRef.current && !clientSearchRef.current.contains(target)) {
         setClientSearchOpen(false);
       }
-      if (orcSearchRef.current && !orcSearchRef.current.contains(e.target as Node)) {
+      if (orcSearchRef.current && !orcSearchRef.current.contains(target)) {
         setOrcSearchOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
   }, []);
 
   useEffect(() => {
@@ -775,7 +791,7 @@ const CRMDashboard = () => {
                         hover:bg-[#1a1a1a]`}
                       style={{ cursor: 'pointer !important', pointerEvents: 'auto !important' } as unknown as React.CSSProperties}
                     >
-                      <span className={`inline-flex items-center justify-center w-5 h-5 text-[10px] font-bold rounded-full mb-1
+                      <span className={`inline-flex items-center justify-center w-6 h-6 md:w-5 md:h-5 text-[11px] md:text-[10px] font-bold rounded-full mb-1
                         ${isToday ? 'bg-[#B5FF03] text-black' : 'text-neutral-400'}`}>
                         {day}
                       </span>
@@ -786,7 +802,7 @@ const CRMDashboard = () => {
                           return (
                             <div
                               key={occ.event.id + '-' + occ.type}
-                              className="text-[8px] leading-tight px-1 py-0.5 rounded truncate font-medium text-white"
+                              className="text-[8px] leading-tight px-1 py-1 rounded truncate font-medium text-white"
                               style={{ backgroundColor: color + '25', borderLeft: `2px solid ${color}` }}
                             >
                               {label}{occ.event.title || occ.event.client || eventTypeLabel(occ.event.eventType)}

@@ -184,13 +184,17 @@ const CRMOrçamentos = () => {
   }, [invStockItems, invSearch]);
 
   useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
+    const handleClickOutside = (e: MouseEvent | TouchEvent) => {
       if (invDropdownRef.current && !invDropdownRef.current.contains(e.target as Node)) {
         setShowInvDropdown(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
   }, []);
 
   // Calculate discount
@@ -579,9 +583,10 @@ const CRMOrçamentos = () => {
               </div>
               <button 
                 onClick={() => setIsSidebarOpen(false)}
-                className="p-1 hover:bg-[#222] rounded-md transition-colors"
+                className="p-2 hover:bg-[#222] rounded-md transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
+                aria-label="Fechar painel de filtros"
               >
-                <X size={14} className="text-[#B5FF03]" />
+                <X size={16} className="text-[#B5FF03]" />
               </button>
             </div>
             {hasActiveFilters && (

@@ -319,7 +319,7 @@ const Board = ({
             <button
               type="button"
               onClick={() => handleCellChange(row.id, col.id, Math.max(0, (Number(value) || 0) - 1))}
-              className="w-10 h-10 md:w-7 md:h-7 flex items-center justify-center rounded-md bg-[#222] text-white hover:bg-[#333] hover:text-[#B5FF03] transition-all font-bold text-lg"
+              className="w-11 h-11 md:w-7 md:h-7 flex items-center justify-center rounded-md bg-[#222] text-white hover:bg-[#333] hover:text-[#B5FF03] transition-all font-bold text-lg"
             >
               −
             </button>
@@ -334,7 +334,7 @@ const Board = ({
             <button
               type="button"
               onClick={() => handleCellChange(row.id, col.id, (Number(value) || 0) + 1)}
-              className="w-10 h-10 md:w-7 md:h-7 flex items-center justify-center rounded-md bg-[#222] text-white hover:bg-[#333] hover:text-[#B5FF03] transition-all font-bold text-lg"
+              className="w-11 h-11 md:w-7 md:h-7 flex items-center justify-center rounded-md bg-[#222] text-white hover:bg-[#333] hover:text-[#B5FF03] transition-all font-bold text-lg"
             >
               +
             </button>
@@ -646,7 +646,7 @@ const Board = ({
                       const colorInput = document.getElementById(`new-tag-color-${row.id}-${col.id}`) as HTMLInputElement;
                       if (colorInput) colorInput.value = color;
                     }}
-                    className="w-5 h-5 rounded-full transition-all hover:scale-110"
+                    className="w-7 h-7 md:w-5 md:h-5 rounded-full transition-all hover:scale-110"
                     style={{ backgroundColor: color }}
                   />
                 ))}
@@ -917,6 +917,7 @@ const Tarefas = () => {
   }, [dateFilterEstoque, events, Orçamentos]);
 
   const pendingBoardWrites = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
+  const feedbackTimerRef = useRef<number | null>(null);
   const [saveFeedback, setSaveFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [showCreateTaskModal, setShowCreateTaskModal] = useState(false);
   const [editingNote, setEditingNote] = useState<{ rowId: string; colId: string; boardId: string } | null>(null);
@@ -940,6 +941,7 @@ const Tarefas = () => {
       unsubBoards();
       unsubRentals();
       Object.values(pendingBoardWrites.current).forEach(clearTimeout);
+      if (feedbackTimerRef.current !== null) window.clearTimeout(feedbackTimerRef.current);
     };
   }, []);
 
@@ -970,11 +972,19 @@ const Tarefas = () => {
         rows: updatedBoard.rows as any,
       }).then(() => {
         setSaveFeedback({ type: 'success', message: 'Salvo no Firestore' });
-        setTimeout(() => setSaveFeedback(null), 3000);
+        if (feedbackTimerRef.current !== null) window.clearTimeout(feedbackTimerRef.current);
+        feedbackTimerRef.current = window.setTimeout(() => {
+          setSaveFeedback(null);
+          feedbackTimerRef.current = null;
+        }, 3000);
       }).catch(err => {
         console.error('[Tarefas] Erro ao salvar board:', err);
         setSaveFeedback({ type: 'error', message: 'Erro ao salvar no Firestore' });
-        setTimeout(() => setSaveFeedback(null), 5000);
+        if (feedbackTimerRef.current !== null) window.clearTimeout(feedbackTimerRef.current);
+        feedbackTimerRef.current = window.setTimeout(() => {
+          setSaveFeedback(null);
+          feedbackTimerRef.current = null;
+        }, 5000);
       });
     }, 500);
   };
@@ -1050,7 +1060,11 @@ const Tarefas = () => {
       await batch.commit();
       setShowSeedModal(false);
       setSeedFeedback('Estoque populado com sucesso!');
-      setTimeout(() => setSeedFeedback(null), 5000);
+      if (feedbackTimerRef.current !== null) window.clearTimeout(feedbackTimerRef.current);
+      feedbackTimerRef.current = window.setTimeout(() => {
+        setSeedFeedback(null);
+        feedbackTimerRef.current = null;
+      }, 5000);
     } catch (err) {
       setSeedError('Erro na inserção: ' + (err instanceof Error ? err.message : String(err)));
     } finally {

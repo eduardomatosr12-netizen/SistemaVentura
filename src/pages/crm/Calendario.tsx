@@ -211,20 +211,25 @@ const CRMCalendario = () => {
   };
 
   useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (clientDropdownRef.current && !clientDropdownRef.current.contains(e.target as Node)) {
+    const handleClickOutside = (e: MouseEvent | TouchEvent) => {
+      const target = e.target as Node;
+      if (clientDropdownRef.current && !clientDropdownRef.current.contains(target)) {
         setShowClientDropdown(false);
       }
-      if (equipeDropdownRef.current && !equipeDropdownRef.current.contains(e.target as Node)) {
+      if (equipeDropdownRef.current && !equipeDropdownRef.current.contains(target)) {
         setShowEquipeDropdown(false);
       }
-      if (itemDropdownRef.current && !itemDropdownRef.current.contains(e.target as Node)) {
+      if (itemDropdownRef.current && !itemDropdownRef.current.contains(target)) {
         setItemSearchOpen(false);
         setShowCreateItemForm(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
   }, []);
 
   useEffect(() => {
@@ -706,10 +711,11 @@ const CRMCalendario = () => {
                       <button
                         type="button"
                         onClick={() => window.open(generateWhatsAppLink(viewEvent.clientPhone!), '_blank')}
-                        className="text-[#25D366] hover:text-[#B5FF03] transition-colors ml-auto"
+                        className="text-[#25D366] hover:text-[#B5FF03] transition-colors ml-auto flex items-center justify-center min-w-[44px] min-h-[44px]"
                         title="Enviar mensagem via WhatsApp"
+                        aria-label="Enviar mensagem via WhatsApp"
                       >
-                        <MessageCircle size={14} />
+                        <MessageCircle size={18} />
                       </button>
                     </div>
                   )}

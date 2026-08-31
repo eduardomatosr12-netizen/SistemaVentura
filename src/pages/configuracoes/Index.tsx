@@ -51,6 +51,14 @@ const Configuracoes = () => {
     role: 'tecnico' as 'tecnico' | 'motorista' | 'decorador' | 'administrativo',
   });
 
+  const toastTimerRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (toastTimerRef.current !== null) window.clearTimeout(toastTimerRef.current);
+    };
+  }, []);
+
   useEffect(() => {
     if (!user?.id) return;
 
@@ -111,9 +119,11 @@ const Configuracoes = () => {
     setNewEmployee({ name: '', role: 'tecnico' });
     setInviteSuccess('Membro adicionado com sucesso');
     setInviteError('');
-    setTimeout(() => {
+    if (toastTimerRef.current !== null) window.clearTimeout(toastTimerRef.current);
+    toastTimerRef.current = window.setTimeout(() => {
       setInviteSuccess('');
       setActiveModal(null);
+      toastTimerRef.current = null;
     }, 1500);
   };
 
@@ -169,9 +179,11 @@ const Configuracoes = () => {
 
     setProfileSuccess('Perfil atualizado com sucesso!');
     setProfileData(prev => ({ ...prev, avatar: finalAvatar, email: profileData.email.trim() || prev.email }));
-    setTimeout(() => {
+    if (toastTimerRef.current !== null) window.clearTimeout(toastTimerRef.current);
+    toastTimerRef.current = window.setTimeout(() => {
       setProfileSuccess('');
       setActiveModal(null);
+      toastTimerRef.current = null;
     }, 1500);
     setIsSavingProfile(false);
   };
@@ -205,7 +217,11 @@ const Configuracoes = () => {
       });
       setAvatarPreview(base64);
       setProfileSuccess('Avatar carregado! Clique em Salvar para confirmar.');
-      setTimeout(() => setProfileSuccess(''), 3000);
+      if (toastTimerRef.current !== null) window.clearTimeout(toastTimerRef.current);
+      toastTimerRef.current = window.setTimeout(() => {
+        setProfileSuccess('');
+        toastTimerRef.current = null;
+      }, 3000);
     } catch {
       setProfileError('Erro ao processar a imagem. Tente novamente.');
     } finally {
@@ -312,8 +328,8 @@ const Configuracoes = () => {
       </div>
 
       {activeModal && activeModal !== 'delete' && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/60 backdrop-blur-md animate-in fade-in duration-300">
-          <div className="bg-[#0a0a0a] border border-[#222222] rounded-[40px] shadow-2xl w-full max-w-2xl overflow-hidden transform animate-in slide-in-from-bottom-8 duration-500 flex flex-col max-h-[92dvh]">
+        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-6 bg-black/60 backdrop-blur-md animate-in fade-in duration-300" onClick={() => { setActiveModal(null); setProfileError(''); setProfileSuccess(''); setInviteError(''); setInviteSuccess(''); }}>
+          <div className="bg-[#0a0a0a] border border-[#222222] rounded-t-[40px] sm:rounded-[40px] shadow-2xl w-full max-w-2xl overflow-hidden transform animate-in slide-in-from-bottom-8 duration-500 flex flex-col max-h-[92dvh]" onClick={e => e.stopPropagation()}>
             {activeModal === 'perfil' ? (
               <form onSubmit={handleSaveProfile} className="flex flex-col flex-1 min-h-0 overflow-hidden">
                 <div className="px-4 md:px-12 py-10 border-b border-[#222222] flex justify-between items-start shrink-0">
@@ -446,8 +462,8 @@ const Configuracoes = () => {
       )}
 
       {activeModal === 'delete' && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/60 backdrop-blur-md animate-in fade-in">
-          <div className="bg-white border-2 border-red-100 rounded-[40px] shadow-2xl w-full max-w-md overflow-y-auto p-4 md:p-12 text-center max-h-[92dvh] transform animate-in slide-in-from-bottom-8">
+        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-6 bg-black/60 backdrop-blur-md animate-in fade-in" onClick={() => { setActiveModal(null); setConfirmationText(''); }}>
+          <div className="bg-white border-2 border-red-100 rounded-t-[40px] sm:rounded-[40px] shadow-2xl w-full max-w-md overflow-y-auto p-4 md:p-12 text-center max-h-[92dvh] transform animate-in slide-in-from-bottom-8" onClick={e => e.stopPropagation()}>
             <div className="w-24 h-24 bg-red-50 rounded-[32px] flex items-center justify-center mx-auto mb-8 animate-bounce"><Trash2 size={48} className="text-red-600" /></div>
             <h2 className="text-4xl font-black text-black tracking-tighter mb-4">Tem certeza?</h2>
             <p className="text-neutral-500 text-sm font-bold leading-relaxed mb-10">Esta ação é irreversível e apagará todos os dados permanentemente.</p>
