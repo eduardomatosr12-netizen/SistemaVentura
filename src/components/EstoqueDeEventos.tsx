@@ -20,6 +20,7 @@ import {
 import {
   fetchEventUsageReport,
   fetchStockMetrics,
+  MONTH_LABELS,
   type EventUsageReport,
   type StockMetrics,
 } from '../services/eventReportsService';
@@ -36,30 +37,6 @@ const CATEGORY_COLORS: Record<string, string> = {
 const CLOSED_STAGES = new Set(['Contrato Fechado', 'Perdido']);
 
 const CHART_COLORS = ['#B5FF03', '#22d3ee', '#a78bfa', '#fb7185', '#fbbf24', '#64748b'];
-
-const FALLBACK_TOP_ITEMS = [
-  { key: 'mock-jatos-co2', name: 'Jatos CO2', qty: 38 },
-  { key: 'mock-pirotecnia', name: 'Pirotecnia', qty: 27 },
-  { key: 'mock-spotlights', name: 'Spotlights', qty: 22 },
-  { key: 'mock-gerador', name: 'Gerador', qty: 15 },
-  { key: 'mock-painel-led', name: 'Painel LED', qty: 12 },
-  { key: 'mock-outros', name: 'Outros', qty: 9 },
-];
-
-const FALLBACK_MONTHLY = [
-  { monthIndex: 0, label: 'Jan', total: 12 },
-  { monthIndex: 1, label: 'Fev', total: 19 },
-  { monthIndex: 2, label: 'Mar', total: 14 },
-  { monthIndex: 3, label: 'Abr', total: 26 },
-  { monthIndex: 4, label: 'Mai', total: 21 },
-  { monthIndex: 5, label: 'Jun', total: 33 },
-  { monthIndex: 6, label: 'Jul', total: 28 },
-  { monthIndex: 7, label: 'Ago', total: 41 },
-  { monthIndex: 8, label: 'Set', total: 25 },
-  { monthIndex: 9, label: 'Out', total: 30 },
-  { monthIndex: 10, label: 'Nov', total: 18 },
-  { monthIndex: 11, label: 'Dez', total: 36 },
-];
 
 const FULL_MONTHS = [
   'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
@@ -233,9 +210,9 @@ const EstoqueDeEventos = ({ onMessage }: EstoqueDeEventosProps) => {
   };
 
   const hasReportData = (report?.totalSaidas ?? 0) > 0;
-  const topItemsData = hasReportData && report ? report.topItems : FALLBACK_TOP_ITEMS;
+  const topItemsData = hasReportData && report ? report.topItems : [];
   const monthlyData = useMemo(() => {
-    const base = hasReportData && report ? report.monthly : FALLBACK_MONTHLY;
+    const base = hasReportData && report ? report.monthly : MONTH_LABELS.map((label, monthIndex) => ({ monthIndex, label, total: 0 }));
     return base.map(m => (m.monthIndex === periodMonth ? m : { ...m, total: 0 }));
   }, [hasReportData, report, periodMonth]);
 
@@ -360,9 +337,8 @@ const EstoqueDeEventos = ({ onMessage }: EstoqueDeEventosProps) => {
           <div className="flex items-start gap-2 bg-[#B5FF03]/5 border border-[#B5FF03]/20 rounded-lg px-3 py-2.5">
             <Package size={13} className="text-[#B5FF03] shrink-0 mt-0.5" />
             <p className="text-[10px] text-neutral-400 leading-relaxed">
-              Nenhuma saída real em <span className="text-white font-bold">{periodLabel} {periodYear}</span>. Mostrando{' '}
-              <span className="text-[#B5FF03] font-bold">dados de exemplo</span> — vincule itens do estoque a eventos
-              confirmados e realizados para ver os dados reais.
+          Nenhuma saída real em <span className="text-white font-bold">{periodLabel} {periodYear}</span>. Vincule itens do estoque a eventos
+          confirmados e realizados para ver os dados reais.
             </p>
           </div>
         )}
@@ -371,7 +347,7 @@ const EstoqueDeEventos = ({ onMessage }: EstoqueDeEventosProps) => {
           <div className="bg-[#0a0a0a] border border-[#333] rounded-xl p-4">
             <p className="text-[10px] font-black uppercase tracking-widest text-white mb-1">Top Itens Mais Usados</p>
             <p className="text-[10px] text-neutral-500 mb-2">
-              {periodLabel} {periodYear} — {hasReportData && report ? `${report.eventsCount} eventos` : 'dados de exemplo'}
+              {periodLabel} {periodYear} — {report ? `${report.eventsCount} eventos` : 'carregando...'}
             </p>
             <ResponsiveContainer width="100%" height={260}>
               <PieChart>
@@ -405,7 +381,7 @@ const EstoqueDeEventos = ({ onMessage }: EstoqueDeEventosProps) => {
           <div className="bg-[#0a0a0a] border border-[#333] rounded-xl p-4">
             <p className="text-[10px] font-black uppercase tracking-widest text-white mb-1">Saídas por Mês</p>
             <p className="text-[10px] text-neutral-500 mb-2">
-              {periodLabel} {periodYear} — {hasReportData && report ? `${report.totalSaidas} itens no total` : 'dados de exemplo'}
+              {periodLabel} {periodYear} — {report ? `${report.totalSaidas} itens no total` : 'carregando...'}
             </p>
             <ResponsiveContainer width="100%" height={260}>
               <AreaChart data={monthlyData} margin={{ top: 8, right: 8, bottom: 0, left: -16 }}>
