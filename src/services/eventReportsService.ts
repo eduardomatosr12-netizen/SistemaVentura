@@ -119,14 +119,32 @@ export const fetchEventUsageReport = async (year: number, month?: number | null)
   };
 };
 
-export const fetchStockMetrics = async (): Promise<StockMetrics> => {
+export const fetchStockMetrics = async (year?: number, month?: number | null): Promise<StockMetrics> => {
   const [stock, events] = await Promise.all([fetchEventStock(), fetchEvents()]);
-  const activeEvents = events.filter(e => e.status !== 'orcamento_cancelado' && e.status !== undefined);
-  const itemsInEvents = activeEvents.reduce(
+
+  let filteredEvents = events.filter(e =>
+    EVENT_ACTIVE_STATUS.includes((e.status || '') as (typeof EVENT_ACTIVE_STATUS)[number])
+    && e.date
+  );
+
+  if (year !== undefined) {
+    const yearStart = new Date(Date.UTC(year, 0, 1));
+    const yearEnd = new Date(Date.UTC(year + 1, 0, 1));
+    filteredEvents = filteredEvents.filter(e => {
+      const t = new Date(`${e.date}T00:00:00`);
+      return !Number.isNaN(t.getTime()) && t >= yearStart && t < yearEnd;
+    });
+  }
+
+  if (month !== null && month !== undefined) {
+    filteredEvents = filteredEvents.filter(e => dateToMonthIndex(e.date) === month);
+  }
+
+  const itemsInEvents = filteredEvents.reduce(
     (sum, e) => sum + (e.items || []).reduce((x, item) => x + (item.qtdAtual || 0), 0),
     0
   );
-  const itemsInEventsCount = activeEvents.reduce((sum, e) => sum + (e.items || []).length, 0);
+  const itemsInEventsCount = filteredEvents.reduce((sum, e) => sum + (e.items || []).length, 0);
   return {
     totalRegistered: stock.length,
     itemsInEvents,

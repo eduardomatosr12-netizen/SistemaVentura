@@ -201,7 +201,7 @@ const EstoqueDeEventos = ({ onMessage }: EstoqueDeEventosProps) => {
 
   const loadReports = useCallback(async (year: number, month: number) => {
     try {
-      const [r, m] = await Promise.all([fetchEventUsageReport(year, month), fetchStockMetrics()]);
+      const [r, m] = await Promise.all([fetchEventUsageReport(year, month), fetchStockMetrics(year, month)]);
       setReport(r);
       setMetrics(m);
     } catch (err) {
@@ -213,7 +213,7 @@ const EstoqueDeEventos = ({ onMessage }: EstoqueDeEventosProps) => {
     let cancelled = false;
     (async () => {
       try {
-        const [r, m] = await Promise.all([fetchEventUsageReport(periodYear, periodMonth), fetchStockMetrics()]);
+        const [r, m] = await Promise.all([fetchEventUsageReport(periodYear, periodMonth), fetchStockMetrics(periodYear, periodMonth)]);
         if (cancelled) return;
         setReport(r);
         setMetrics(m);
