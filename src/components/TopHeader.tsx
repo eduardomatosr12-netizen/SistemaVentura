@@ -105,22 +105,22 @@ const TopHeader = ({ onMenuClick }: TopHeaderProps) => {
   }, [notifications, dismissAll]);
 
   return (
-    <header className="sticky top-0 z-40 bg-[#f5f5f5] border-b border-[#e0e0e0] px-6 py-4 flex items-center justify-between transition-all duration-300 shadow-[0_1px_3px_rgba(0,0,0,0.1)]">
+    <header className="sticky top-0 z-40 bg-black border-b border-[#2d2d2d] px-6 py-4 flex items-center justify-between transition-all duration-300 shadow-[0_1px_3px_rgba(0,0,0,0.3)]">
       {/* Mobile Menu Button */}
       <button
         onClick={onMenuClick}
-        className="p-2.5 -ml-2 rounded-lg hover:bg-black/5 md:hidden min-w-[44px] min-h-[44px] flex items-center justify-center"
+        className="p-2.5 -ml-2 rounded-lg hover:bg-white/5 md:hidden min-w-[44px] min-h-[44px] flex items-center justify-center"
         aria-label="Abrir menu"
       >
-        <Menu className="w-5 h-5 text-[#000000]" />
+        <Menu className="w-5 h-5 text-white" />
       </button>
 
       {/* Logo */}
       <div className="hidden md:flex items-center gap-3">
         <img src="/logo.jpg" alt="VENTURA LUZ E EFEITOS" className="h-9 w-auto object-contain" style={{ maxWidth: 160 }} />
         <div className="leading-tight">
-          <h2 className="text-base font-black text-[#000000] tracking-tight leading-none">VENTURA LUZ E EFEITOS</h2>
-          <p className="text-[10px] text-neutral-500 font-medium mt-0.5">Sistema de Gestão</p>
+          <h2 className="text-base font-black text-white tracking-tight leading-none">VENTURA LUZ E EFEITOS</h2>
+          <p className="text-[10px] text-white/50 font-medium mt-0.5">Sistema de Gestão</p>
         </div>
       </div>
       {/* Mobile logo compact */}
@@ -133,11 +133,11 @@ const TopHeader = ({ onMenuClick }: TopHeaderProps) => {
         <div className="relative" ref={notificationRef}>
           <button
             onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
-            className={`relative p-2.5 rounded-lg transition-all min-w-[44px] min-h-[44px] flex items-center justify-center ${isNotificationsOpen ? 'bg-black/10 text-[#000000]' : 'text-neutral-500 hover:text-[#000000] hover:bg-black/5'}`}
+            className={`relative p-2.5 rounded-lg transition-all min-w-[44px] min-h-[44px] flex items-center justify-center ${isNotificationsOpen ? 'bg-white/10 text-white' : 'text-white/60 hover:text-white hover:bg-white/5'}`}
           >
             <Bell className="w-5 h-5" strokeWidth={2} />
             {unreadCount > 0 && (
-              <span className="absolute top-1 right-1 min-w-[18px] h-[18px] px-1 bg-[#CDFF00] text-black text-[9px] font-black flex items-center justify-center rounded-full ring-2 ring-[#f5f5f5]">
+              <span className="absolute top-1 right-1 min-w-[18px] h-[18px] px-1 bg-[#CDFF00] text-black text-[9px] font-black flex items-center justify-center rounded-full ring-2 ring-black">
                 {unreadCount > 99 ? '99+' : unreadCount}
               </span>
             )}
@@ -202,7 +202,7 @@ const TopHeader = ({ onMenuClick }: TopHeaderProps) => {
         {/* Settings */}
         <button
           onClick={() => navigate('/configuracoes')}
-          className="p-2.5 rounded-lg transition-all min-w-[44px] min-h-[44px] flex items-center justify-center text-neutral-500 hover:text-[#000000] hover:bg-black/5"
+          className="p-2.5 rounded-lg transition-all min-w-[44px] min-h-[44px] flex items-center justify-center text-white/60 hover:text-white hover:bg-white/5"
           title="Configurações"
         >
           <Settings className="w-5 h-5" strokeWidth={2} />
