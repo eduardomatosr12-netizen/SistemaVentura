@@ -39,10 +39,10 @@ const defaultFilters: FilterState = {
   dateFilter: '',
 };
 
-const RESPONSIBLES = ['João Silva', 'Maria Santos', 'Carlos Souza', 'Ana Oliveira', 'Pedro Lima', 'Julia Costa'];
-const STATUSES = ['Não iniciado', 'Em andamento', 'Feito', 'Parado'];
-const ORIGINS = ['Orgânico', 'Indicação', 'Facebook', 'Instagram', 'Google', 'Telefone', 'Outros'];
-const PRIORITIES = ['Baixa', 'Média', 'Alta'];
+const RESPONSIBLES: string[] = [];
+const STATUSES: string[] = [];
+const ORIGINS: string[] = [];
+const PRIORITIES: string[] = [];
 
 function FilterProvider({ children }: { children: ReactNode }) {
   const [filters, setFilters] = useState<FilterState>(defaultFilters);

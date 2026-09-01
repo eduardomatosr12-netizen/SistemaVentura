@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import { STAGES, STAGE_CONFIG, parseMonetaryValue, calculateTotalValue, groupOrçamentosByStage, type Stage } from '../lib/crmHelpers';
 import * as leadService from '../services/leadService';
 import * as eventService from '../services/eventService';
-import { subscribeInventory, ensureDefaultBoards, deductInventory, restoreInventory } from '../lib/inventory';
+import { subscribeInventory, deductInventory, restoreInventory } from '../lib/inventory';
 import { addTransaction, updateTransaction, getTransactionByEventId } from '../services/financeService';
 import type { Lead, CalendarEvent, OrcamentoItem } from '../types/crm';
 
@@ -46,7 +46,6 @@ export const CRMProvider = ({ children }: { children: ReactNode }) => {
     const unsubEvents = eventService.subscribeEvents(events => {
       setEvents(events);
     });
-    ensureDefaultBoards();
     const unsubInventory = subscribeInventory();
 
     return () => {

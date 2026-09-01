@@ -129,15 +129,21 @@ const MainLayout = ({ children, hideSubmenu }: MainLayoutProps) => {
               {loginRole === 'user' ? (
                 <div className="space-y-3">
                   <label className="text-[10px] font-bold text-neutral-400 uppercase tracking-widest ml-1">Selecione seu nome</label>
-                  <select
-                    value={employeeName || ''}
-                    onChange={(e) => selectEmployee(e.target.value)}
-                    className="w-full bg-[#111] border-2 border-[#333] rounded-xl px-4 py-3 font-bold text-white focus:border-[#B5FF03] outline-none"
-                  >
-                    {availableEmployees.map(emp => (
-                      <option key={emp} value={emp}>{emp}</option>
-                    ))}
-                  </select>
+                  {availableEmployees.length > 0 ? (
+                    <select
+                      value={employeeName || ''}
+                      onChange={(e) => selectEmployee(e.target.value)}
+                      className="w-full bg-[#111] border-2 border-[#333] rounded-xl px-4 py-3 font-bold text-white focus:border-[#B5FF03] outline-none"
+                    >
+                      {availableEmployees.map(emp => (
+                        <option key={emp} value={emp}>{emp}</option>
+                      ))}
+                    </select>
+                  ) : (
+                    <div className="w-full bg-[#111] border-2 border-[#333] rounded-xl px-4 py-3 font-bold text-neutral-500">
+                      Nenhum funcionário cadastrado
+                    </div>
+                  )}
                 </div>
               ) : null}
 

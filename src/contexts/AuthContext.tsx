@@ -1,5 +1,7 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import type { ReactNode } from 'react';
+import { collection, onSnapshot, query, orderBy } from 'firebase/firestore';
+import { db } from '../services/firebase';
 
 type UserRole = 'admin' | 'manager' | 'user';
 export type { UserRole };
@@ -30,8 +32,6 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const EMPLOYEES = ['Maria', 'João', 'Pedro', 'Ana'];
-
 const API_BASE = import.meta.env.VITE_API_URL || '/api';
 
 function getToken(): string | null {
@@ -52,6 +52,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [role, setRole] = useState<UserRole | null>(null);
   const [employeeName, setEmployeeName] = useState<string | null>(null);
+  const [availableEmployees, setAvailableEmployees] = useState<string[]>([]);
+
+  useEffect(() => {
+    const q = query(collection(db, 'employees'), orderBy('name'));
+    const unsub = onSnapshot(q, snapshot => {
+      const names = snapshot.docs
+        .map(d => String((d.data() as { name?: string }).name || '').trim())
+        .filter(Boolean);
+      setAvailableEmployees(names);
+    }, err => {
+      console.warn('[Auth] Erro ao carregar funcionários:', err);
+      setAvailableEmployees([]);
+    });
+    return () => unsub();
+  }, []);
 
   const hasPermission = useCallback((allowedRoles: UserRole[]): boolean => {
     if (!isAuthenticated || !user) return false;
@@ -125,7 +140,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const selectEmployee = useCallback((name: string) => {
-    if (!EMPLOYEES.includes(name)) return;
     setEmployeeName(name);
     setUser((prev) => (prev ? { ...prev, name } : null));
   }, []);
@@ -146,7 +160,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         user,
         role,
         employeeName,
-        availableEmployees: EMPLOYEES,
+        availableEmployees,
         hasPermission,
         login,
         selectEmployee,
