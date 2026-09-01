@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { Bell, User, Calendar as CalendarIcon, Clock, Menu, LogOut, UserPlus, FileText, CheckCircle, Package, DollarSign, X } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Bell, User, Calendar as CalendarIcon, Clock, Menu, LogOut, UserPlus, FileText, CheckCircle, Package, DollarSign, X, Settings } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNotifications } from '../hooks/useNotifications';
 import type { AppNotification } from '../hooks/useNotifications';
@@ -8,17 +8,6 @@ import type { AppNotification } from '../hooks/useNotifications';
 interface TopHeaderProps {
   onMenuClick?: () => void;
 }
-
-const routeTitles: Record<string, { title: string; subtitle: string }> = {
-  '/crm/painel': { title: 'Painel', subtitle: 'Visão geral das oportunidades' },
-  '/crm/orcamentos': { title: 'Clientes', subtitle: 'Gestão de contatos e funil' },
-  '/crm/calendario': { title: 'Calendário', subtitle: 'Compromissos e agendamentos' },
-  '/crm/importar': { title: 'Importar', subtitle: 'Importação de dados externos' },
-  '/financeiro': { title: 'Financeiro', subtitle: 'Receitas, despesas e fluxo de caixa' },
-  '/tarefas': { title: 'Controle de Estoque', subtitle: 'Gerencie seus itens, categorias e fornecedores.' },
-  '/configuracoes': { title: 'Configurações', subtitle: 'Preferências da aplicação' },
-  '/configuracoes/templates-whatsapp': { title: 'Templates WhatsApp', subtitle: 'Gerencie modelos de mensagens para WhatsApp' },
-};
 
 const notificationIcon = (type: AppNotification['type']) => {
   switch (type) {
@@ -33,18 +22,15 @@ const notificationIcon = (type: AppNotification['type']) => {
 };
 
 const TopHeader = ({ onMenuClick }: TopHeaderProps) => {
-  const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
-  const { notifications, unreadCount, markAsRead, markAllAsRead, dismissNotification, dismissAll } = useNotifications();
+  const { notifications, unreadCount, markAsRead, dismissNotification, dismissAll } = useNotifications();
 
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [leavingIds, setLeavingIds] = useState<Set<string>>(new Set());
   const notificationRef = useRef<HTMLDivElement>(null);
   const userMenuRef = useRef<HTMLDivElement>(null);
-
-  const route = routeTitles[location.pathname] ?? { title: 'Ventura Luz e Efeitos', subtitle: '' };
 
   const userDisplayName = user?.name || user?.email?.split('@')[0] || 'Usuário';
   const initials = userDisplayName.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase();
@@ -70,9 +56,10 @@ const TopHeader = ({ onMenuClick }: TopHeaderProps) => {
   const timeoutRefs = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
 
   useEffect(() => {
+    const map = timeoutRefs.current;
     return () => {
-      timeoutRefs.current.forEach(id => clearTimeout(id));
-      timeoutRefs.current.clear();
+      map.forEach(id => clearTimeout(id));
+      map.clear();
     };
   }, []);
 
@@ -118,21 +105,27 @@ const TopHeader = ({ onMenuClick }: TopHeaderProps) => {
   }, [notifications, dismissAll]);
 
   return (
-    <header className="sticky top-0 z-40 bg-black/80 backdrop-blur-lg border-b border-[#1a1a1a] px-3 md:px-8 py-3 md:py-4 flex items-center justify-between transition-all duration-300 min-h-[52px]">
+    <header className="sticky top-0 z-40 bg-[#f5f5f5] border-b border-[#e0e0e0] px-6 py-4 flex items-center justify-between transition-all duration-300 shadow-[0_1px_3px_rgba(0,0,0,0.1)]">
       {/* Mobile Menu Button */}
       <button
         onClick={onMenuClick}
-        className="p-2.5 -ml-2 rounded-lg hover:bg-[#222] md:hidden min-w-[44px] min-h-[44px] flex items-center justify-center"
+        className="p-2.5 -ml-2 rounded-lg hover:bg-black/5 md:hidden min-w-[44px] min-h-[44px] flex items-center justify-center"
         aria-label="Abrir menu"
       >
-        <Menu className="w-5 h-5 text-neutral-400" />
+        <Menu className="w-5 h-5 text-[#000000]" />
       </button>
 
-      <div>
-          <h2 className="text-base md:text-lg font-black text-white tracking-tight leading-none">{route.title}</h2>
-        {route.subtitle && (
-          <p className="text-[10px] md:text-xs text-neutral-400 font-medium mt-0.5">{route.subtitle}</p>
-        )}
+      {/* Logo */}
+      <div className="hidden md:flex items-center gap-3">
+        <img src="/logo.jpg" alt="VENTURA LUZ E EFEITOS" className="h-9 w-auto object-contain" style={{ maxWidth: 160 }} />
+        <div className="leading-tight">
+          <h2 className="text-base font-black text-[#000000] tracking-tight leading-none">VENTURA LUZ E EFEITOS</h2>
+          <p className="text-[10px] text-neutral-500 font-medium mt-0.5">Sistema de Gestão</p>
+        </div>
+      </div>
+      {/* Mobile logo compact */}
+      <div className="md:hidden flex items-center gap-2">
+        <img src="/logo.jpg" alt="VENTURA LUZ E EFEITOS" className="h-8 w-auto object-contain" style={{ maxWidth: 110 }} />
       </div>
 
       <div className="flex items-center gap-1 md:gap-3">
@@ -140,11 +133,11 @@ const TopHeader = ({ onMenuClick }: TopHeaderProps) => {
         <div className="relative" ref={notificationRef}>
           <button
             onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
-            className={`relative p-2.5 rounded-lg transition-all min-w-[44px] min-h-[44px] flex items-center justify-center ${isNotificationsOpen ? 'bg-[#222] text-[#B5FF03]' : 'text-neutral-400 hover:text-white hover:bg-[#222]'}`}
+            className={`relative p-2.5 rounded-lg transition-all min-w-[44px] min-h-[44px] flex items-center justify-center ${isNotificationsOpen ? 'bg-black/10 text-[#000000]' : 'text-neutral-500 hover:text-[#000000] hover:bg-black/5'}`}
           >
             <Bell className="w-5 h-5" strokeWidth={2} />
             {unreadCount > 0 && (
-              <span className="absolute top-1 right-1 min-w-[18px] h-[18px] px-1 bg-[#B5FF03] text-black text-[9px] font-black flex items-center justify-center rounded-full ring-2 ring-black">
+              <span className="absolute top-1 right-1 min-w-[18px] h-[18px] px-1 bg-[#CDFF00] text-black text-[9px] font-black flex items-center justify-center rounded-full ring-2 ring-[#f5f5f5]">
                 {unreadCount > 99 ? '99+' : unreadCount}
               </span>
             )}
@@ -159,12 +152,12 @@ const TopHeader = ({ onMenuClick }: TopHeaderProps) => {
                </div>
                <div className="max-h-[450px] overflow-y-auto divide-y divide-[#222222]">
                  {Array.isArray(notifications) && notifications.length > 0 ? (
-                   notifications.map((n) => {
+                   notifications.map((n, idx) => {
                      const Icon = notificationIcon(n?.type);
                      const isLeaving = leavingIds.has(n?.id);
                      return (
                        <div
-                         key={n?.id || String(Math.random())}
+                         key={n?.id ?? `notification-${idx}`}
                          onClick={() => !isLeaving && handleNotificationClick(n)}
                          className={`relative p-5 hover:bg-[#222] transition-all duration-300 cursor-pointer group ${!n?.isRead ? 'bg-[#222]/50' : ''} ${isLeaving ? 'opacity-0 -translate-x-4 scale-95 pointer-events-none' : 'opacity-100 translate-x-0 scale-100'}`}
                        >
@@ -176,7 +169,7 @@ const TopHeader = ({ onMenuClick }: TopHeaderProps) => {
                            <X size={14} strokeWidth={3} />
                           </button>
                          <div className="flex gap-4">
-                           <div className="w-8 h-8 rounded-md flex items-center justify-center shrink-0 bg-[#111] text-[#B5FF03] border border-[#222222]">
+                           <div className="w-8 h-8 rounded-md flex items-center justify-center shrink-0 bg-[#111] text-[#CDFF00] border border-[#222222]">
                              <Icon size={14} />
                            </div>
                            <div className="space-y-1 flex-1 min-w-0">
@@ -206,11 +199,20 @@ const TopHeader = ({ onMenuClick }: TopHeaderProps) => {
           )}
         </div>
 
+        {/* Settings */}
+        <button
+          onClick={() => navigate('/configuracoes')}
+          className="p-2.5 rounded-lg transition-all min-w-[44px] min-h-[44px] flex items-center justify-center text-neutral-500 hover:text-[#000000] hover:bg-black/5"
+          title="Configurações"
+        >
+          <Settings className="w-5 h-5" strokeWidth={2} />
+        </button>
+
         {/* Avatar */}
         <div className="relative" ref={userMenuRef}>
           <button
             onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-            className="w-9 h-9 rounded-full bg-[#B5FF03] text-black flex items-center justify-center text-xs font-bold hover:bg-[#a1e600] transition-colors shrink-0 shadow-sm min-w-[44px] min-h-[44px]"
+            className="w-10 h-10 rounded-full bg-[#CDFF00] text-black flex items-center justify-center text-xs font-bold hover:scale-105 transition-transform shadow-sm shrink-0 min-w-[44px] min-h-[44px]"
             title={user?.email}
           >
             {initials}

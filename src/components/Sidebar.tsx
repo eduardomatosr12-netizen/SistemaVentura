@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { BarChart3, DollarSign, Package, Settings, LogOut, X, User, MessageCircle, LayoutDashboard, Phone } from 'lucide-react';
+import { DollarSign, Package, Settings, LogOut, X, MessageCircle, LayoutDashboard, Phone } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 interface SidebarProps {
@@ -21,8 +21,8 @@ const Sidebar = ({ isOpen = false, onClose }: SidebarProps) => {
     { id: 'templates-whatsapp', label: 'Templates WhatsApp', icon: MessageCircle, path: '/configuracoes/templates-whatsapp', allowedRoles: ['admin', 'manager', 'user'] as const },
   ];
 
-  const visibleMenuItems = !hasPermission ? mainMenuItems : mainMenuItems.filter(item => 
-    item.allowedRoles.includes(user?.role as any)
+  const visibleMenuItems = !hasPermission ? mainMenuItems : mainMenuItems.filter(item =>
+    user?.role ? item.allowedRoles.includes(user.role) : false
   );
 
   const isActive = (path: string) => location.pathname === path || location.pathname.startsWith(path + '/');
@@ -36,6 +36,58 @@ const Sidebar = ({ isOpen = false, onClose }: SidebarProps) => {
     navigate('/login');
   };
 
+  const displayName = user?.name || 'Usuário';
+  const initials = displayName.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase();
+  const roleLabel = user?.role === 'admin' ? 'Administrador' : user?.role === 'manager' ? 'Gerente' : 'Usuário';
+
+  const menuContent = (
+    <>
+      {/* Avatar + User */}
+      <div className="px-4 pt-5 pb-5 border-b border-[#2d2d2d]">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-[#CDFF00] text-black flex items-center justify-center text-sm font-bold shrink-0">
+            {initials}
+          </div>
+          <div className="min-w-0">
+            <p className="text-sm text-white font-bold truncate">{displayName}</p>
+            <p className="text-[11px] text-[#A0A0A0] capitalize mt-0.5">{roleLabel}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Menu */}
+      <nav className="flex-1 px-3 py-3">
+        {visibleMenuItems.map((item) => {
+          const Icon = item.icon;
+          const active = isActive(item.path);
+          return (
+            <Link
+              key={item.id}
+              to={item.path}
+              onClick={onClose}
+              className={`sidebar-item ${active ? 'active' : ''}`}
+            >
+              <Icon className="w-6 h-6 shrink-0" strokeWidth={2} />
+              <span className={active ? 'text-black font-black' : 'text-[#A0A0A0]'}>{item.label}</span>
+            </Link>
+          );
+        })}
+      </nav>
+
+      {/* Sair */}
+      <div className="px-4 pb-6 border-t border-[#2d2d2d] pt-4">
+        <button
+          onClick={handleLogout}
+          className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-150 cursor-pointer text-white hover:text-[#ff4444] font-medium text-sm"
+        >
+          <LogOut className="w-6 h-6 shrink-0" strokeWidth={2} />
+          <span>Sair</span>
+        </button>
+        <p className="text-[11px] text-[#606060] text-center mt-4">© 2026 Ventura Luz e Efeitos</p>
+      </div>
+    </>
+  );
+
   return (
     <>
       {isOpen && (
@@ -45,101 +97,21 @@ const Sidebar = ({ isOpen = false, onClose }: SidebarProps) => {
         />
       )}
       
-      <aside className={`fixed md:hidden left-0 top-0 h-dvh w-[85vw] max-w-[320px] bg-black border-r border-[rgba(255,255,255,0.08)] flex-col overflow-y-auto overflow-x-hidden z-[60] transform transition-transform duration-300 ease-out ${isOpen ? 'translate-x-0' : '-translate-x-full'}`} style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
+      {/* Mobile drawer */}
+      <aside className={`fixed md:hidden left-0 top-0 h-dvh w-[220px] bg-black border-r border-[#2d2d2d] flex-col overflow-y-auto overflow-x-hidden z-[60] transform transition-transform duration-300 ease-out ${isOpen ? 'translate-x-0' : '-translate-x-full'}`} style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
         <button
           onClick={onClose}
           className="absolute top-4 right-4 p-2 rounded-md hover:bg-[#222]"
           aria-label="Fechar menu"
         >
-          <X className="w-5 h-5 text-[#A0A0A0] hover:text-[#CCFF00]" />
+          <X className="w-5 h-5 text-[#A0A0A0] hover:text-[#CDFF00]" />
         </button>
-        
-        <div className="px-4 pt-4 pb-4 border-b border-[rgba(255,255,255,0.08)] flex items-center justify-center">
-          <img src="/logo.jpg" alt="VENTURA" className="w-full object-contain" style={{ maxWidth: 120 }} />
-        </div>
-
-        <nav className="flex-1 px-4 py-6 space-y-1">
-          {visibleMenuItems.map((item) => {
-            const Icon = item.icon;
-            const active = isActive(item.path);
-            return (
-              <Link
-                key={item.id}
-                to={item.path}
-                onClick={onClose}
-                className={`sidebar-item ${active ? 'active' : ''}`}
-              >
-                <Icon className="w-4 h-4 shrink-0" strokeWidth={2} />
-                <span className={active ? 'text-[#CCFF00]' : 'text-[#A0A0A0]'}>{item.label}</span>
-              </Link>
-            );
-          })}
-        </nav>
-
-        <div className="px-4 pb-6 border-t border-neutral-100 pt-4">
-          <div className="mb-3 px-2">
-            <p className="text-[10px] text-neutral-400 font-medium uppercase tracking-wider mb-0.5">Conectado como</p>
-            <p className="text-sm text-neutral-700 font-medium truncate flex items-center gap-2">
-              <User className="w-4 h-4" />
-              {user?.name || 'Usuário'}
-            </p>
-            <p className="text-xs text-neutral-400 capitalize mt-1">
-              {user?.role === 'admin' ? 'Administrador' : user?.role === 'manager' ? 'Gerente' : 'Usuário'}
-            </p>
-          </div>
-          <button
-            onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-4 py-2.5 rounded-md transition-all duration-150 cursor-pointer text-neutral-500 hover:text-red-600 hover:bg-red-50 font-medium text-sm"
-          >
-            <LogOut className="w-4 h-4 shrink-0" strokeWidth={2} />
-            <span>Sair</span>
-          </button>
-          <p className="text-[11px] text-neutral-300 text-center mt-4">© 2026 Ventura Luz e Efeitos</p>
-        </div>
+        {menuContent}
       </aside>
 
-      <aside className="fixed left-0 top-0 h-dvh w-64 bg-black border-r border-[rgba(255,255,255,0.08)] flex-col overflow-y-auto overflow-x-hidden z-40 hidden md:flex">
-        <div className="px-6 pt-4 pb-4 border-b border-[rgba(255,255,255,0.08)] flex items-center justify-center">
-          <img src="/logo.jpg" alt="VENTURA" className="w-full object-contain" style={{ maxWidth: 140 }} />
-        </div>
-
-        <nav className="flex-1 px-4 py-6 space-y-1">
-          {visibleMenuItems.map((item) => {
-            const Icon = item.icon;
-            const active = isActive(item.path);
-            return (
-              <Link
-                key={item.id}
-                to={item.path}
-                className={`sidebar-item ${active ? 'active' : ''}`}
-              >
-                <Icon className="w-4 h-4 shrink-0" strokeWidth={2} />
-                <span className={active ? 'text-[#CCFF00]' : 'text-[#A0A0A0]'}>{item.label}</span>
-              </Link>
-            );
-          })}
-        </nav>
-
-        <div className="px-4 pb-6 border-t border-[rgba(255,255,255,0.08)] pt-4">
-          <div className="mb-3 px-2">
-            <p className="text-[10px] text-[#A0A0A0] font-medium uppercase tracking-wider mb-0.5">Conectado como</p>
-            <p className="text-sm text-white font-medium truncate flex items-center gap-2">
-              <User className="w-4 h-4" />
-              {user?.name || 'Usuário'}
-            </p>
-            <p className="text-xs text-[#606060] capitalize mt-1">
-              {user?.role === 'admin' ? 'Administrador' : user?.role === 'manager' ? 'Gerente' : 'Usuário'}
-            </p>
-          </div>
-          <button
-            onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-4 py-2.5 rounded-md transition-all duration-150 cursor-pointer text-[#A0A0A0] hover:text-[#FF4444] hover:bg-[rgba(255,68,68,0.1)] font-medium text-sm"
-          >
-            <LogOut className="w-4 h-4 shrink-0" strokeWidth={2} />
-            <span>Sair</span>
-          </button>
-          <p className="text-[11px] text-[#606060] text-center mt-4">© 2026 Ventura Luz e Efeitos</p>
-        </div>
+      {/* Desktop sidebar */}
+      <aside className="fixed left-0 top-0 h-dvh w-[220px] bg-black border-r border-[#2d2d2d] flex-col overflow-y-auto overflow-x-hidden z-40 hidden md:flex">
+        {menuContent}
       </aside>
     </>
   );

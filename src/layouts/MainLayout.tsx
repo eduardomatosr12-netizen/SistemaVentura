@@ -4,7 +4,7 @@ import { useLocation, useNavigate, Link } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import TopHeader from '../components/TopHeader';
 import { useAuth } from '../contexts/AuthContext';
-import { LayoutDashboard, Users, DollarSign, Package, Calendar } from 'lucide-react';
+import { LayoutDashboard, Users, DollarSign, Package } from 'lucide-react';
 
 type LoginRole = 'admin' | 'user';
 
@@ -13,7 +13,7 @@ interface MainLayoutProps {
   hideSubmenu?: boolean;
 }
 
-const MainLayout = ({ children, hideSubmenu }: MainLayoutProps) => {
+const MainLayout = ({ children }: MainLayoutProps) => {
   const location = useLocation();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -21,7 +21,6 @@ const MainLayout = ({ children, hideSubmenu }: MainLayoutProps) => {
   const { 
     isAuthenticated, 
     isLoading, 
-    role, 
     employeeName, 
     availableEmployees,
     login, 
@@ -67,9 +66,10 @@ const MainLayout = ({ children, hideSubmenu }: MainLayoutProps) => {
         }
         setLoginError(result.error || 'Erro ao fazer login');
       }
-    } catch (err: any) {
-      console.error('[AUTH] Erro inesperado:', err.message);
-      setLoginError(err.message || 'Erro ao fazer login');
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Erro ao fazer login';
+      console.error('[AUTH] Erro inesperado:', message);
+      setLoginError(message);
     } finally {
       setIsLoggingIn(false);
     }
@@ -187,11 +187,11 @@ const MainLayout = ({ children, hideSubmenu }: MainLayoutProps) => {
 
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-      <main className="flex-1 ml-0 md:ml-64 flex flex-col overflow-y-auto overflow-x-hidden w-full bg-black">
+      <main className="flex-1 ml-0 md:ml-[220px] flex flex-col overflow-y-auto overflow-x-hidden w-full bg-black">
         <TopHeader onMenuClick={() => setSidebarOpen(true)} />
 
         <div className="flex-1 bg-black w-full min-w-0">
-          <div className="px-3 sm:px-4 p-4 md:p-8 w-full pb-bottom-nav md:pb-6">
+          <div className="p-4 md:p-8 w-full pb-bottom-nav md:pb-6">
             {children}
           </div>
         </div>

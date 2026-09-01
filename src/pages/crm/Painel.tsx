@@ -1,5 +1,5 @@
-import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
-import { Calendar, UserPlus, ArrowRight, CheckSquare, Activity, AlertCircle, LayoutDashboard, X, ChevronLeft, ChevronRight, ChevronDown, Search, User, Phone, Mail, CreditCard, CalendarDays, Clock, Plus, Trash2, MapPin, Pencil, FileText, MessageCircle, Lock } from 'lucide-react';
+import { useState, useMemo, useRef, useEffect } from 'react';
+import { Calendar, UserPlus, ArrowRight, CheckSquare, Activity, AlertCircle, LayoutDashboard, X, ChevronLeft, ChevronRight, ChevronDown, Search, User, Phone, Mail, CreditCard, CalendarDays, Clock, Plus, Trash2, MapPin, Pencil, FileText, MessageCircle, Lock, Package, History, BadgeDollarSign } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell, LabelList } from 'recharts';
 import { useCRM } from '../../contexts/CRMContext';
@@ -47,19 +47,19 @@ const statusLabel: Record<string, string> = {
 
 const getStatusColor = (status?: string) => {
   switch (status) {
-    case 'evento_confirmado': return '#B5FF03';
-    case 'orcamento': return '#f59e0b';
-    case 'orcamento_cancelado': return '#ef4444';
-    case 'evento_concluido': return '#3b82f6';
+    case 'evento_confirmado': return '#00cc00';
+    case 'orcamento': return '#ff9900';
+    case 'orcamento_cancelado': return '#ff4444';
+    case 'evento_concluido': return '#FFB800';
     default: return '#6b7280';
   }
 };
 
 const statusBg: Record<string, string> = {
-  orcamento: 'bg-[#f59e0b]',
-  orcamento_cancelado: 'bg-[#ef4444]',
-  evento_confirmado: 'bg-[#B5FF03]',
-  evento_concluido: 'bg-[#3b82f6]',
+  orcamento: 'bg-[#ff9900]',
+  orcamento_cancelado: 'bg-[#ff4444]',
+  evento_confirmado: 'bg-[#00cc00]',
+  evento_concluido: 'bg-[#FFB800]',
 };
 
 const EVENT_TYPES = [
@@ -72,7 +72,7 @@ const EVENT_TYPES = [
 
 const CRMDashboard = () => {
   const { events, Orçamentos, addLead, addEvent, updateEvent, updateLead, deleteEvent, deleteLead } = useCRM();
-  const { activityLogs, isLoadingLogs, fetchActivityLogsError } = useActivityLogs();
+  const { activityLogs } = useActivityLogs();
   const [selectedDayEvents, setSelectedDayEvents] = useState<CalendarEvent[] | null>(null);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
   const [viewYear, setViewYear] = useState(new Date().getFullYear());
@@ -102,7 +102,7 @@ const CRMDashboard = () => {
   // Create modal state
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [abaAtiva, setAbaAtiva] = useState<'cliente' | 'evento' | 'despesas'>('cliente');
-  const [createDate, setCreateDate] = useState('');
+  const [, setCreateDate] = useState('');
   const [formData, setFormData] = useState({
     name: '', whatsapp: '', email: '', cpf: '',
     eventType: '', date: '', time: '', city: '', observacao: '',
@@ -517,7 +517,7 @@ const CRMDashboard = () => {
     }
   };
 
-  const safeEvents = Array.isArray(events) ? events : [];
+  const safeEvents = useMemo(() => (Array.isArray(events) ? events : []), [events]);
   const today = new Date();
 
   const eventCountsByStatus = useMemo(() => {
@@ -536,10 +536,10 @@ const CRMDashboard = () => {
       if (status in counts) counts[status]++;
     });
     return [
-      { name: 'Evento Confirmado', value: counts.evento_confirmado, color: '#B5FF03' },
-      { name: 'Orçamento', value: counts.orcamento, color: '#f59e0b' },
-      { name: 'Orçamento Cancelado', value: counts.orcamento_cancelado, color: '#ef4444' },
-      { name: 'Evento Concluído', value: counts.evento_concluido, color: '#3b82f6' },
+      { name: 'Evento Confirmado', value: counts.evento_confirmado, color: '#00cc00' },
+      { name: 'Orçamento', value: counts.orcamento, color: '#ff9900' },
+      { name: 'Orçamento Cancelado', value: counts.orcamento_cancelado, color: '#ff4444' },
+      { name: 'Evento Concluído', value: counts.evento_concluido, color: '#FFB800' },
     ];
   }, [safeEvents, viewMonth, viewYear]);
 
@@ -656,82 +656,89 @@ const CRMDashboard = () => {
     <div className="relative min-h-screen bg-black pb-bottom-nav md:pb-0">
       {/* Header section */}
       <div className="mb-6">
-        <h1 className="text-2xl md:text-4xl font-black text-white tracking-tight mb-2 flex items-center gap-3">
-          <LayoutDashboard className="text-[#B5FF03]" size={32} />
+        <h1 className="text-[32px] font-black text-white tracking-[0.5px] mb-2 flex items-center gap-3">
+          <LayoutDashboard className="text-[#CDFF00]" size={32} />
           Página Principal
         </h1>
-        <p className="text-neutral-400 text-xs md:text-sm">Bem-vindo ao painel de controle da Ventura Luz e Efeitos.</p>
+        <p className="text-sm font-medium text-white/70">Bem-vindo ao painel de controle da Ventura Luz e Efeitos.</p>
       </div>
 
-      {/* 3-tab navigation */}
-      <div className="flex gap-4 sm:gap-6 mb-6 overflow-x-auto scrollbar-hide pb-1 -mx-1 px-1">
+      {/* 4-tab navigation (card style) */}
+      <div className="bg-[#1a1a1a] border border-[#2d2d2d] rounded-xl px-6 py-3 flex gap-4 sm:gap-6 mb-6 overflow-x-auto scrollbar-hide w-full">
         <button
           onClick={() => handleTabChange('calendario')}
-          className={`pb-2 border-b-2 font-bold text-xs uppercase tracking-widest transition-colors whitespace-nowrap ${
+          className={`flex items-center gap-2 px-5 py-3 rounded-lg font-semibold cursor-pointer transition-all duration-150 whitespace-nowrap ${
             activeTab === 'calendario'
-              ? 'border-[#B5FF03] text-[#B5FF03]'
-              : 'border-transparent text-[#aaaaaa] hover:text-white'
+              ? 'bg-[#CDFF00] text-black font-black'
+              : 'text-white/60 hover:bg-[#CDFF00]/10 hover:scale-105 hover:text-white'
           }`}
         >
-          Calendário
+          <Calendar size={18} />
+          CALENDÁRIO
         </button>
         <button
           onClick={() => handleTabChange('eventos')}
-          className={`pb-2 border-b-2 font-bold text-xs uppercase tracking-widest transition-colors whitespace-nowrap ${
+          className={`flex items-center gap-2 px-5 py-3 rounded-lg font-semibold cursor-pointer transition-all duration-150 whitespace-nowrap ${
             activeTab === 'eventos'
-              ? 'border-[#B5FF03] text-[#B5FF03]'
-              : 'border-transparent text-[#aaaaaa] hover:text-white'
+              ? 'bg-[#CDFF00] text-black font-black'
+              : 'text-white/60 hover:bg-[#CDFF00]/10 hover:scale-105 hover:text-white'
           }`}
         >
-          Histórico de Eventos
+          <History size={18} />
+          HISTÓRICO DE EVENTOS
         </button>
         <button
           onClick={() => handleTabChange('orcamentos')}
-          className={`pb-2 border-b-2 font-bold text-xs uppercase tracking-widest transition-colors whitespace-nowrap ${
+          className={`flex items-center gap-2 px-5 py-3 rounded-lg font-semibold cursor-pointer transition-all duration-150 whitespace-nowrap ${
             activeTab === 'orcamentos'
-              ? 'border-[#B5FF03] text-[#B5FF03]'
-              : 'border-transparent text-[#aaaaaa] hover:text-white'
+              ? 'bg-[#CDFF00] text-black font-black'
+              : 'text-white/60 hover:bg-[#CDFF00]/10 hover:scale-105 hover:text-white'
           }`}
         >
-          Histórico de Orçamentos
+          <BadgeDollarSign size={18} />
+          ORÇAMENTOS
         </button>
         <button
           onClick={() => handleTabChange('estoque')}
-          className={`pb-2 border-b-2 font-bold text-xs uppercase tracking-widest transition-colors whitespace-nowrap ${
+          className={`flex items-center gap-2 px-5 py-3 rounded-lg font-semibold cursor-pointer transition-all duration-150 whitespace-nowrap ${
             activeTab === 'estoque'
-              ? 'border-[#B5FF03] text-[#B5FF03]'
-              : 'border-transparent text-[#aaaaaa] hover:text-white'
+              ? 'bg-[#CDFF00] text-black font-black'
+              : 'text-white/60 hover:bg-[#CDFF00]/10 hover:scale-105 hover:text-white'
           }`}
         >
-          Estoque de Eventos
+          <Package size={18} />
+          ESTOQUE
         </button>
       </div>
 
       {/* CALENDÁRIO */}
       {activeTab === 'calendario' && (
         <>
-        <div className="bg-[#111] border border-[#333] rounded-2xl shadow-sm overflow-hidden">
+        <div className="bg-[#1a1a1a] border border-[#2d2d2d] rounded-xl shadow-[0_4px_12px_rgba(0,0,0,0.3)] overflow-hidden transition-all duration-200">
           {/* Top bar */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 p-4 md:p-6 border-b border-[#222]">
-            <div>
-              <h2 className="text-lg font-black text-white tracking-tight">Calendário de Eventos</h2>
-              <p className="text-[11px] text-neutral-400 mt-0.5">Visualize e acompanhe seus compromissos agendados.</p>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 p-6 border-b border-[#2d2d2d]">
+            <div className="flex items-center gap-3">
+              <Calendar className="w-6 h-6 text-[#CDFF00]" />
+              <div>
+                <h2 className="text-xl font-black text-white tracking-tight">Calendário de Eventos</h2>
+                <p className="text-sm text-white/70 opacity-60">Visualize e acompanhe seus compromissos agendados.</p>
+              </div>
             </div>
             <div className="flex items-center gap-2 sm:gap-3 w-full sm:w-auto">
-              <div className="flex items-center gap-1 sm:gap-2 bg-[#0a0a0a] border border-[#333] rounded-lg px-2 sm:px-3 py-1.5 flex-1 sm:flex-none justify-center">
-                <button onClick={prevMonth} className="p-2 hover:bg-[#222] rounded-md transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center">
-                  <ChevronLeft size={16} className="text-neutral-400" />
+              <div className="flex items-center gap-1 sm:gap-2 bg-black border border-[#2d2d2d] rounded-lg px-2 sm:px-3 py-1.5 flex-1 sm:flex-none justify-center">
+                <button onClick={prevMonth} className="p-2 hover:scale-110 hover:text-[#CDFF00] rounded-md transition-all duration-150 min-w-[44px] min-h-[44px] flex items-center justify-center">
+                  <ChevronLeft size={18} className="text-neutral-300" />
                 </button>
-                <span className="text-xs sm:text-sm font-bold text-white min-w-[100px] sm:min-w-[140px] text-center select-none">
+                <span className="text-sm sm:text-base font-black text-white min-w-[100px] sm:min-w-[140px] text-center select-none">
                   {monthNames[viewMonth]} {viewYear}
                 </span>
-                <button onClick={nextMonth} className="p-2 hover:bg-[#222] rounded-md transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center">
-                  <ChevronRight size={16} className="text-neutral-400" />
+                <button onClick={nextMonth} className="p-2 hover:scale-110 hover:text-[#CDFF00] rounded-md transition-all duration-150 min-w-[44px] min-h-[44px] flex items-center justify-center">
+                  <ChevronRight size={18} className="text-neutral-300" />
                 </button>
               </div>
               <button
                 onClick={() => openCreateModal(new Date().toISOString().split('T')[0])}
-                className="rounded-full px-3 sm:px-4 py-2 bg-[#B5FF03] text-black font-bold text-[10px] sm:text-xs uppercase tracking-widest hover:bg-[#a1e600] transition-colors min-h-[44px] shrink-0"
+                className="rounded-lg px-4 py-2 bg-[#CDFF00] text-black font-black text-xs uppercase tracking-widest shadow-[0_4px_12px_rgba(205,255,0,0.2)] hover:scale-105 hover:shadow-[0_6px_16px_rgba(205,255,0,0.3)] transition-all duration-150 min-h-[44px] shrink-0"
               >
                 + CRIAR
               </button>
@@ -739,21 +746,21 @@ const CRMDashboard = () => {
           </div>
 
           {/* Legend bar */}
-          <div className="flex items-center gap-3 sm:gap-4 px-4 md:px-6 py-3 border-b border-[#222] bg-[#0a0a0a] overflow-x-auto scrollbar-hide">
-            <span className="text-[9px] font-black uppercase tracking-widest text-neutral-400 shrink-0">Status:</span>
+          <div className="flex flex-wrap items-center gap-4 px-6 py-3 border-b border-[#2d2d2d] bg-black/40">
+            <span className="text-xs font-semibold uppercase tracking-widest text-white/60 shrink-0">Status:</span>
             {Object.entries(statusLabel).map(([key, label]) => (
-              <div key={key} className="flex items-center gap-1.5 shrink-0">
-                <div className={`w-2.5 h-2.5 rounded-full ${statusBg[key]}`} />
-                <span className="text-[10px] text-neutral-500 font-medium">{label}</span>
+              <div key={key} className="flex items-center gap-2 shrink-0">
+                <div className={`w-2 h-2 rounded-full ${statusBg[key]}`} />
+                <span className="text-xs text-white/60 font-medium">{label}</span>
               </div>
             ))}
-            <div className="flex items-center gap-1.5 shrink-0">
-              <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: '#8B5CF6' }} />
-              <span className="text-[10px] text-neutral-500 font-medium">Montagem</span>
+            <div className="flex items-center gap-2 shrink-0">
+              <div className="w-2 h-2 rounded-full" style={{ backgroundColor: '#8B5CF6' }} />
+              <span className="text-xs text-white/60 font-medium">Montagem</span>
             </div>
-            <div className="flex items-center gap-1.5 shrink-0">
-              <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: '#06B6D4' }} />
-              <span className="text-[10px] text-neutral-500 font-medium">Desmontagem</span>
+            <div className="flex items-center gap-2 shrink-0">
+              <div className="w-2 h-2 rounded-full" style={{ backgroundColor: '#06B6D4' }} />
+              <span className="text-xs text-white/60 font-medium">Desmontagem</span>
             </div>
           </div>
 
@@ -761,14 +768,14 @@ const CRMDashboard = () => {
           <div className="flex flex-col lg:flex-row">
             {/* Left - Calendar Grid */}
             <div className="flex-1 p-4 md:p-6">
-              <div className="grid grid-cols-7 bg-[#222] rounded-lg overflow-hidden">
+              <div className="grid grid-cols-7 gap-1.5 md:gap-3">
                 {dayHeaders.map(d => (
-                  <div key={d} className="bg-[#111] text-center text-[9px] font-black uppercase tracking-widest text-neutral-400 py-2 px-1 border-b border-[#222]">
+                  <div key={d} className="text-center text-xs font-bold uppercase tracking-widest text-white/60 py-1 pb-2 shrink-0">
                     {d}
                   </div>
                 ))}
-                  {Array.from({ length: startOffset }).map((_, i) => (
-                  <div key={`empty-${i}`} className="bg-[#111] min-h-[72px] md:min-h-[110px] border-r border-b border-[#222]" />
+                {Array.from({ length: startOffset }).map((_, i) => (
+                  <div key={`empty-${i}`} />
                 ))}
                 {Array.from({ length: daysInMonth }).map((_, i) => {
                   const day = i + 1;
@@ -786,33 +793,30 @@ const CRMDashboard = () => {
                       tabIndex={0}
                       onClick={() => handleDayClick(day)}
                       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleDayClick(day); }}
-                      className={`min-h-[72px] md:min-h-[110px] p-1 md:p-1.5 text-left align-top border-r border-b border-[#222] select-none transition-colors
-                        ${isToday ? 'bg-[#1a1a1a] ring-1 ring-inset ring-[#B5FF03]' : 'bg-[#111]'}
-                        hover:bg-[#1a1a1a]`}
-                      style={{ cursor: 'pointer !important', pointerEvents: 'auto !important' } as unknown as React.CSSProperties}
+                      className={`relative flex flex-col items-center justify-center aspect-square rounded-lg border select-none transition-all duration-150 cursor-pointer
+                        ${isToday
+                          ? 'bg-[#CDFF00] border-[#CDFF00] text-black font-black shadow-[0_4px_12px_rgba(205,255,0,0.3)] scale-105'
+                          : 'bg-[#1a1a1a] border-[#2d2d2d] text-white/80 hover:border-[#CDFF00] hover:bg-[#2a2a2a] hover:scale-105'
+                        }`}
+                      style={{ minHeight: 52 }}
                     >
-                      <span className={`inline-flex items-center justify-center w-6 h-6 md:w-5 md:h-5 text-[11px] md:text-[10px] font-bold rounded-full mb-1
-                        ${isToday ? 'bg-[#B5FF03] text-black' : 'text-neutral-400'}`}>
+                      <span className={`text-base font-bold leading-none ${isToday ? 'text-black font-black' : 'font-semibold'}`}>
                         {day}
                       </span>
-                      <div className="space-y-0.5">
-                        {dayOccurrences.slice(0, 4).map(occ => {
-                          const color = occurrenceColor(occ.type, occ.event.status);
-                          const label = occ.type === 'montagem' ? '[M] ' : occ.type === 'desmontagem' ? '[D] ' : '';
-                          return (
-                            <div
-                              key={occ.event.id + '-' + occ.type}
-                              className="text-[8px] leading-tight px-1 py-1 rounded truncate font-medium text-white"
-                              style={{ backgroundColor: color + '25', borderLeft: `2px solid ${color}` }}
-                            >
-                              {label}{occ.event.title || occ.event.client || eventTypeLabel(occ.event.eventType)}
-                            </div>
-                          );
-                        })}
-                        {dayOccurrences.length > 4 && (
-                          <span className="text-[7px] text-neutral-500 pl-1">+{dayOccurrences.length - 4} mais</span>
-                        )}
-                      </div>
+                      {dayOccurrences.length > 0 && (
+                        <div className="flex items-center gap-1 mt-1.5">
+                          {dayOccurrences.slice(0, 3).map((occ, idx) => (
+                            <span
+                              key={occ.event.id + '-' + occ.type + '-' + idx}
+                              className="w-1.5 h-1.5 rounded-full"
+                              style={{ backgroundColor: occurrenceColor(occ.type, occ.event.status) }}
+                            />
+                          ))}
+                          {dayOccurrences.length > 3 && (
+                            <span className={`text-[8px] font-bold ${isToday ? 'text-black/70' : 'text-white/40'}`}>+{dayOccurrences.length - 3}</span>
+                          )}
+                        </div>
+                      )}
                     </div>
                   );
                 })}
@@ -820,10 +824,13 @@ const CRMDashboard = () => {
             </div>
 
             {/* Right - Upcoming Events Panel */}
-            <div className="w-full lg:w-80 border-t lg:border-t-0 lg:border-l border-[#222] bg-[#0a0a0a]">
+            <div className="w-full lg:w-[400px] border-t lg:border-t-0 lg:border-l border-[#2d2d2d] bg-black/40">
               <div className="p-4 md:p-6">
-                <h4 className="text-[10px] font-black text-[#B5FF03] uppercase tracking-widest mb-4">Próximos Eventos</h4>
-                <div className="space-y-2">
+                <div className="flex items-center justify-between mb-5">
+                  <h4 className="text-xs font-black text-[#CDFF00] uppercase tracking-widest">Próximos Eventos</h4>
+                  <span className="text-[10px] font-bold text-white/40">{upcomingEvents.length}</span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {upcomingEvents.map((event, idx) => {
                     const eventDate = event.date ? new Date(event.date + 'T12:00:00') : null;
                     const daysUntil = eventDate ? Math.ceil((eventDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)) : null;
@@ -838,38 +845,44 @@ const CRMDashboard = () => {
                               : '—'
                           );
                         }}
-                        className={`w-full text-left flex items-start gap-3 p-3 rounded-lg hover:bg-[#1a1a1a] transition-colors group ${idx > 0 ? 'border-t border-[#222]' : ''}`}
+                        className={`w-full text-left bg-[#1a1a1a] border border-[#2d2d2d] rounded-xl p-4 transition-all duration-150 hover:border-[#CDFF00] hover:shadow-[0_8px_20px_rgba(0,0,0,0.4)] hover:scale-[1.03] group card-clickable ${idx > 0 ? '' : ''}`}
                       >
-                        <div className="flex flex-col items-center min-w-[36px]">
-                          <span className="text-[18px] font-black text-white leading-none">
-                            {eventDate ? eventDate.getDate() : '—'}
-                          </span>
-                          <span className="text-[8px] text-neutral-500 uppercase font-bold">
-                            {eventDate ? eventDate.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '') : ''}
-                          </span>
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <p className="text-[11px] font-bold text-white truncate group-hover:underline">{event.title || 'Sem título'}</p>
-                          <div className="flex items-center gap-1.5 text-[9px] text-neutral-500 mt-0.5">
-                            <span className={`px-1.5 py-0.5 rounded-full text-[8px] font-bold ${event.status ? statusBg[event.status] : 'bg-[#333]'} ${event.status === 'evento_confirmado' ? 'text-black' : 'text-white'}`}>
-                              {event.status ? statusLabel[event.status] : '—'}
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="w-11 h-11 rounded-lg bg-black/60 border border-[#2d2d2d] flex flex-col items-center justify-center shrink-0">
+                            <span className="text-base font-black text-white leading-none">
+                              {eventDate ? eventDate.getDate() : '—'}
                             </span>
-                            {event.eventType && <span>{eventTypeLabel(event.eventType)}</span>}
-                            {event.time && <><span>•</span><span>{event.time}</span></>}
+                            <span className="text-[8px] text-white/40 uppercase font-bold mt-0.5">
+                              {eventDate ? eventDate.toLocaleDateString('pt-BR', { month: 'short' }).replace('.', '') : ''}
+                            </span>
                           </div>
-                          {daysUntil !== null && (
-                            <p className="text-[8px] text-neutral-600 mt-1">
-                              {daysUntil === 0 ? 'Hoje' : daysUntil === 1 ? 'Amanhã' : `Em ${daysUntil} dias`}
-                            </p>
-                          )}
+                          <span className={`badge ${event.status ? statusBg[event.status] : 'bg-[#2a2a2a]'} ${event.status === 'evento_confirmado' ? 'text-black font-black' : 'text-white font-bold'}`}>
+                            {event.status ? statusLabel[event.status] : '—'}
+                          </span>
                         </div>
+                        <p className="text-sm font-bold text-white truncate group-hover:underline leading-snug pl-1">{event.title || 'Sem título'}</p>
+                        <div className="flex items-center gap-1.5 text-[10px] text-white/50 mt-2 pl-1">
+                          {event.eventType && <span className="font-semibold">{eventTypeLabel(event.eventType)}</span>}
+                          {event.time && <><span>•</span><span>{event.time}</span></>}
+                        </div>
+                        {daysUntil !== null && (
+                          <p className="text-[10px] text-[#CDFF00]/80 font-bold mt-2 pl-1">
+                            {daysUntil === 0 ? 'HOJE' : daysUntil === 1 ? 'AMANHÃ' : `Em ${daysUntil} dias`}
+                          </p>
+                        )}
                       </button>
                     );
                   })}
                   {upcomingEvents.length === 0 && (
-                    <div className="text-center py-8">
-                      <Calendar size={24} className="mx-auto text-neutral-600 mb-2" />
-                      <p className="text-[10px] text-neutral-500 italic">Nenhum evento futuro</p>
+                    <div className="col-span-2 flex flex-col items-center justify-center text-center py-10">
+                      <Calendar size={64} className="text-[#2d2d2d] mb-3" strokeWidth={1.5} />
+                      <p className="text-sm font-medium text-white/40 mb-4">Nenhum evento futuro por enquanto.</p>
+                      <button
+                        onClick={() => openCreateModal(new Date().toISOString().split('T')[0])}
+                        className="rounded-lg px-5 py-3 bg-[#CDFF00] text-black font-black text-xs uppercase tracking-widest shadow-[0_4px_12px_rgba(205,255,0,0.2)] hover:scale-105 hover:shadow-[0_6px_16px_rgba(205,255,0,0.3)] transition-all duration-150"
+                      >
+                        + CRIAR EVENTO
+                      </button>
                     </div>
                   )}
                 </div>
@@ -879,12 +892,14 @@ const CRMDashboard = () => {
         </div>
 
         {/* Gráfico de Eventos por Status */}
-        <div className="p-4 md:p-8 border-t border-[#222]">
+        <div className="p-4 md:p-8 border-t border-[#2d2d2d]">
           <div className="flex items-center gap-2 mb-6">
-            <Activity className="w-4 h-4 text-[#B5FF03]" aria-hidden="true" />
-            <h2 className="text-lg md:text-xl font-bold text-white">Eventos por Status — {monthNames[viewMonth]} {viewYear}</h2>
+            <div className="w-9 h-9 rounded-lg bg-[#1a1a1a] border border-[#2d2d2d] flex items-center justify-center shrink-0">
+              <Activity className="w-4 h-4 text-[#CDFF00]" aria-hidden="true" />
+            </div>
+            <h2 className="text-lg md:text-xl font-black text-white tracking-tight">Eventos por Status — {monthNames[viewMonth]} {viewYear}</h2>
           </div>
-          <div className="bg-[#111] border border-[#333] rounded-2xl p-4 md:p-6">
+          <div className="bg-[#1a1a1a] border border-[#2d2d2d] rounded-xl p-4 md:p-6 shadow-[0_4px_12px_rgba(0,0,0,0.3)]">
             <ResponsiveContainer width="100%" height={260}>
               <BarChart key={`chart-${viewMonth}-${viewYear}`} data={eventCountsByStatus} margin={{ top: 20, right: 20, left: 0, bottom: 10 }} barCategoryGap="30%">
                 <XAxis
@@ -895,7 +910,7 @@ const CRMDashboard = () => {
                   dy={8}
                 />
                 <YAxis hide />
-                <Bar dataKey="value" radius={[6, 6, 0, 0]} background={{ fill: '#1a1a1a', radius: 6 }}>
+                <Bar dataKey="value" radius={[6, 6, 0, 0]} background={{ fill: '#2d2d2d', radius: 6 }}>
                   <LabelList
                     dataKey="value"
                     position="inside"
@@ -919,8 +934,8 @@ const CRMDashboard = () => {
                 const Icon = ACTION_ICONS[log.acao] || Activity;
                 return (
                   <div key={log.id} className="flex items-start gap-3">
-                    <div className="w-7 h-7 rounded-full bg-[#222] flex items-center justify-center shrink-0 mt-0.5">
-                      <Icon className="w-3.5 h-3.5 text-[#B5FF03]" strokeWidth={2} aria-hidden="true" />
+                    <div className="w-7 h-7 rounded-full bg-[#1a1a1a] border border-[#2d2d2d] flex items-center justify-center shrink-0 mt-0.5">
+                      <Icon className="w-3.5 h-3.5 text-[#CDFF00]" strokeWidth={2} aria-hidden="true" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-xs md:text-sm text-white leading-snug">{sanitizeDescription(log.descricao)}</p>
@@ -935,12 +950,12 @@ const CRMDashboard = () => {
 
       {/* HISTÓRICO DE EVENTOS */}
       {activeTab === 'eventos' && (
-        <div className="bg-[#111] border border-[#333] rounded-2xl shadow-sm overflow-hidden">
+        <div className="bg-[#1a1a1a] border border-[#2d2d2d] rounded-xl shadow-sm overflow-hidden">
           {/* Desktop Table */}
           <div className="overflow-x-auto hidden md:block">
             <table className="w-full min-w-[800px] text-left">
               <thead>
-                <tr className="border-b border-[#222]">
+                <tr className="border-b border-[#2d2d2d]">
                   <th className="text-[10px] font-black uppercase tracking-widest text-neutral-500 px-4 py-3">Cliente</th>
                   <th className="text-[10px] font-black uppercase tracking-widest text-neutral-500 px-4 py-3">Tipo</th>
                   <th className="text-[10px] font-black uppercase tracking-widest text-neutral-500 px-4 py-3">Data</th>
@@ -956,7 +971,7 @@ const CRMDashboard = () => {
                   </tr>
                 ) : (
                   paginatedEvents.map(event => (
-                    <tr key={event.id} className="border-b border-[#222] hover:bg-[#0a0a0a] transition-colors">
+                    <tr key={event.id} className="border-b border-[#2d2d2d] hover:bg-[#1a1a1a] transition-colors">
                       <td className="px-4 py-3 text-sm text-white">{event.client || event.title || '—'}</td>
                       <td className="px-4 py-3 text-sm text-neutral-300">{eventTypeLabel(event.eventType)}</td>
                       <td className="px-4 py-3 text-sm text-neutral-300">{formatDate(event.date)}</td>
@@ -964,11 +979,11 @@ const CRMDashboard = () => {
                       <td className="px-4 py-3">
                         {event.status ? (
                           <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                            event.status === 'evento_confirmado' ? 'bg-[#B5FF03] text-black' :
-                            event.status === 'orcamento' ? 'bg-[#f59e0b] text-white' :
-                            event.status === 'orcamento_cancelado' ? 'bg-[#ef4444] text-white' :
-                            event.status === 'evento_concluido' ? 'bg-[#3b82f6] text-white' :
-                            'bg-[#333] text-white'
+                            event.status === 'evento_confirmado' ? 'bg-[#00cc00] text-black' :
+                            event.status === 'orcamento' ? 'bg-[#ff9900] text-white' :
+                            event.status === 'orcamento_cancelado' ? 'bg-[#ff4444] text-white' :
+                            event.status === 'evento_concluido' ? 'bg-[#FFB800] text-black' :
+                            'bg-[#2a2a2a] text-white'
                           }`}>
                             {statusLabel[event.status] || event.status}
                           </span>
@@ -1002,7 +1017,7 @@ const CRMDashboard = () => {
             {paginatedEvents.length === 0 ? (
               <div className="text-center py-8 text-neutral-500 text-xs italic">Nenhum evento encontrado.</div>
             ) : (
-              <div className="divide-y divide-[#222]">
+              <div className="divide-y divide-[#2d2d2d]">
                 {paginatedEvents.map(event => (
                   <div key={event.id} className="p-4 space-y-2">
                     <div className="flex items-start justify-between gap-2">
@@ -1012,11 +1027,11 @@ const CRMDashboard = () => {
                       </div>
                       {event.status ? (
                         <span className={`shrink-0 px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                          event.status === 'evento_confirmado' ? 'bg-[#B5FF03] text-black' :
-                          event.status === 'orcamento' ? 'bg-[#f59e0b] text-white' :
-                          event.status === 'orcamento_cancelado' ? 'bg-[#ef4444] text-white' :
-                          event.status === 'evento_concluido' ? 'bg-[#3b82f6] text-white' :
-                          'bg-[#333] text-white'
+                          event.status === 'evento_confirmado' ? 'bg-[#00cc00] text-black' :
+                          event.status === 'orcamento' ? 'bg-[#ff9900] text-white' :
+                          event.status === 'orcamento_cancelado' ? 'bg-[#ff4444] text-white' :
+                          event.status === 'evento_concluido' ? 'bg-[#FFB800] text-black' :
+                          'bg-[#2a2a2a] text-white'
                         }`}>
                           {statusLabel[event.status] || event.status}
                         </span>
@@ -1044,7 +1059,7 @@ const CRMDashboard = () => {
           </div>
 
           {/* Pagination footer */}
-          <div className="flex items-center justify-between px-4 py-3 border-t border-[#222] bg-[#0a0a0a]">
+          <div className="flex items-center justify-between px-4 py-3 border-t border-[#2d2d2d] bg-[#1a1a1a]">
             <span className="text-[11px] text-neutral-500">
               Página {eventPage + 1} de {totalEventPages} ({safeEvents.length} registros)
             </span>
@@ -1055,7 +1070,7 @@ const CRMDashboard = () => {
                 className={`px-3 py-2 text-[10px] font-bold uppercase tracking-widest rounded-md transition-colors min-h-[36px] ${
                   eventPage === 0
                     ? 'text-neutral-600 cursor-not-allowed'
-                    : 'text-white hover:bg-[#222]'
+                    : 'text-white hover:bg-[#2a2a2a]'
                 }`}
               >
                 Anterior
@@ -1066,7 +1081,7 @@ const CRMDashboard = () => {
                 className={`px-3 py-2 text-[10px] font-bold uppercase tracking-widest rounded-md transition-colors min-h-[36px] ${
                   eventPage >= totalEventPages - 1
                     ? 'text-neutral-600 cursor-not-allowed'
-                    : 'text-white hover:bg-[#222]'
+                    : 'text-white hover:bg-[#2a2a2a]'
                 }`}
               >
                 Próximo
@@ -1078,12 +1093,12 @@ const CRMDashboard = () => {
 
       {/* HISTÓRICO DE ORÇAMENTOS */}
       {activeTab === 'orcamentos' && (
-        <div className="bg-[#111] border border-[#333] rounded-2xl shadow-sm overflow-hidden">
+        <div className="bg-[#1a1a1a] border border-[#2d2d2d] rounded-xl shadow-sm overflow-hidden">
           {/* Desktop Table */}
           <div className="overflow-x-auto hidden md:block">
             <table className="w-full min-w-[800px] text-left">
               <thead>
-                <tr className="border-b border-[#222]">
+                <tr className="border-b border-[#2d2d2d]">
                   <th className="text-[10px] font-black uppercase tracking-widest text-neutral-500 px-4 py-3">Cliente</th>
                   <th className="text-[10px] font-black uppercase tracking-widest text-neutral-500 px-4 py-3">Data de Criação</th>
                   <th className="text-[10px] font-black uppercase tracking-widest text-neutral-500 px-4 py-3">Valor Total</th>
@@ -1098,14 +1113,14 @@ const CRMDashboard = () => {
                   </tr>
                 ) : (
                   paginatedOrcamentos.map(lead => (
-                    <tr key={lead.id} className="border-b border-[#222] hover:bg-[#0a0a0a] transition-colors">
+                    <tr key={lead.id} className="border-b border-[#2d2d2d] hover:bg-[#1a1a1a] transition-colors">
                       <td className="px-4 py-3 text-sm text-white">{lead.name || '—'}</td>
                       <td className="px-4 py-3 text-sm text-neutral-300">{formatDate(lead.firstContact)}</td>
-                      <td className="px-4 py-3 text-sm text-[#B5FF03] font-bold">
+                      <td className="px-4 py-3 text-sm text-[#CDFF00] font-bold">
                         {lead.value ? formatCurrency(parseMonetaryValue(lead.value)) : 'R$ 0,00'}
                       </td>
                       <td className="px-4 py-3">
-                        <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#333] text-white">
+                        <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#2a2a2a] text-white">
                           {lead.stage || '—'}
                         </span>
                       </td>
@@ -1134,7 +1149,7 @@ const CRMDashboard = () => {
             {paginatedOrcamentos.length === 0 ? (
               <div className="text-center py-8 text-neutral-500 text-xs italic">Nenhum orçamento encontrado.</div>
             ) : (
-              <div className="divide-y divide-[#222]">
+              <div className="divide-y divide-[#2d2d2d]">
                 {paginatedOrcamentos.map(lead => (
                   <div key={lead.id} className="p-4 space-y-2">
                     <div className="flex items-start justify-between gap-2">
@@ -1142,12 +1157,12 @@ const CRMDashboard = () => {
                         <p className="text-sm text-white font-bold truncate">{lead.name || '—'}</p>
                         <p className="text-[11px] text-neutral-400">{formatDate(lead.firstContact)}</p>
                       </div>
-                      <span className="shrink-0 px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#333] text-white">
+                      <span className="shrink-0 px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#2a2a2a] text-white">
                         {lead.stage || '—'}
                       </span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <span className="text-sm text-[#B5FF03] font-bold">
+                      <span className="text-sm text-[#CDFF00] font-bold">
                         {lead.value ? formatCurrency(parseMonetaryValue(lead.value)) : 'R$ 0,00'}
                       </span>
                       <button
@@ -1169,7 +1184,7 @@ const CRMDashboard = () => {
           </div>
 
           {/* Pagination footer */}
-          <div className="flex items-center justify-between px-4 py-3 border-t border-[#222] bg-[#0a0a0a]">
+          <div className="flex items-center justify-between px-4 py-3 border-t border-[#2d2d2d] bg-[#1a1a1a]">
             <span className="text-[11px] text-neutral-500">
               Página {orcPage + 1} de {totalOrcPages} ({Orçamentos.length} registros)
             </span>
@@ -1180,7 +1195,7 @@ const CRMDashboard = () => {
                 className={`px-3 py-2 text-[10px] font-bold uppercase tracking-widest rounded-md transition-colors min-h-[36px] ${
                   orcPage === 0
                     ? 'text-neutral-600 cursor-not-allowed'
-                    : 'text-white hover:bg-[#222]'
+                    : 'text-white hover:bg-[#2a2a2a]'
                 }`}
               >
                 Anterior
@@ -1191,7 +1206,7 @@ const CRMDashboard = () => {
                 className={`px-3 py-2 text-[10px] font-bold uppercase tracking-widest rounded-md transition-colors min-h-[36px] ${
                   orcPage >= totalOrcPages - 1
                     ? 'text-neutral-600 cursor-not-allowed'
-                    : 'text-white hover:bg-[#222]'
+                    : 'text-white hover:bg-[#2a2a2a]'
                 }`}
               >
                 Próximo
@@ -1209,30 +1224,30 @@ const CRMDashboard = () => {
       {/* Event Detail Modal */}
       {selectedDayEvents && (
         <div className="fixed inset-0 bg-black/80 flex items-end sm:items-center justify-center z-[100] p-0 sm:p-4" onClick={closeModal}>
-          <div className="bg-[#0a0a0a] border border-[#222222] rounded-t-2xl sm:rounded-lg w-full max-w-lg max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between p-4 border-b border-[#222]">
-              <h3 className="text-sm font-black uppercase tracking-widest text-[#B5FF03]">
+          <div className="bg-[#1a1a1a] border border-[#2d2d2d] rounded-t-2xl sm:rounded-lg w-full max-w-lg max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between p-4 border-b border-[#2d2d2d]">
+              <h3 className="text-sm font-black uppercase tracking-widest text-[#CDFF00]">
                 Eventos — {selectedDate}
               </h3>
-              <button onClick={closeModal} className="p-2 hover:bg-[#222] rounded-md transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center">
+              <button onClick={closeModal} className="p-2 hover:bg-[#2a2a2a] rounded-md transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center">
                 <X size={16} className="text-neutral-400" />
               </button>
             </div>
             <div className="p-4 space-y-4">
               {selectedDayEvents.map(event => (
-                <div key={event.id} className="bg-[#111] border border-[#222] rounded-lg p-4 space-y-3">
+                <div key={event.id} className="bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg p-4 space-y-3">
                   {/* Status badge */}
                   <div className="flex justify-between items-start">
                     <span className="text-white font-bold text-sm">{event.title || 'Evento'}</span>
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => handleEditEvent(event)}
-                        className="flex items-center gap-1 px-3 py-1.5 rounded-md text-[10px] font-bold text-[#B5FF03] border border-[#B5FF03]/30 hover:bg-[#B5FF03]/10 transition-colors min-h-[44px]"
+                        className="flex items-center gap-1 px-3 py-1.5 rounded-md text-[10px] font-bold text-[#CDFF00] border border-[#CDFF00]/30 hover:bg-[#CDFF00]/10 transition-colors min-h-[44px]"
                       >
                         <Pencil size={11} />
                         Editar
                       </button>
-                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${event.status ? statusBg[event.status] : 'bg-[#333]'} ${event.status === 'evento_confirmado' ? 'text-black' : 'text-white'}`}>
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${event.status ? statusBg[event.status] : 'bg-[#2a2a2a]'} ${event.status === 'evento_confirmado' ? 'text-black' : 'text-white'}`}>
                         {event.status ? statusLabel[event.status] : '—'}
                       </span>
                     </div>
@@ -1253,7 +1268,7 @@ const CRMDashboard = () => {
                         <button
                           type="button"
                           onClick={(e) => { e.stopPropagation(); window.open(generateWhatsAppLink(event.clientPhone!), '_blank'); }}
-                          className="text-[#25D366] hover:text-[#B5FF03] transition-colors"
+                          className="text-[#25D366] hover:text-[#CDFF00] transition-colors"
                           title="Enviar mensagem via WhatsApp"
                         >
                           <MessageCircle size={14} />
@@ -1275,7 +1290,7 @@ const CRMDashboard = () => {
                     {event.eventType && (
                       <div>
                         <span className="text-neutral-500">Tipo:</span>{' '}
-                        <span className="text-[#B5FF03] font-bold">{eventTypeLabel(event.eventType)}</span>
+                        <span className="text-[#CDFF00] font-bold">{eventTypeLabel(event.eventType)}</span>
                       </div>
                     )}
                     <div>
@@ -1291,7 +1306,7 @@ const CRMDashboard = () => {
                     {(event.valorTotal ?? 0) > 0 && (
                       <div>
                         <span className="text-neutral-500">Valor:</span>{' '}
-                        <span className="text-[#B5FF03] font-bold">{formatCurrency(event.valorTotal!)}</span>
+                        <span className="text-[#CDFF00] font-bold">{formatCurrency(event.valorTotal!)}</span>
                       </div>
                     )}
                     {event.local && (
@@ -1303,7 +1318,7 @@ const CRMDashboard = () => {
                   </div>
 
                   {/* Three milestones */}
-                  <div className="border-t border-[#222] pt-3">
+                  <div className="border-t border-[#2d2d2d] pt-3">
                     <p className="text-[9px] font-black uppercase tracking-widest text-neutral-400 mb-2">Marcos do Evento</p>
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                       <div className="bg-[#1a1a1a] rounded-md p-2 text-center">
@@ -1330,24 +1345,24 @@ const CRMDashboard = () => {
       {/* Create Event/Client Modal */}
       {isCreateOpen && (
         <div className="fixed inset-0 bg-black/80 flex items-end sm:items-center justify-center z-[100] p-0 sm:p-4" onClick={() => { setEditingEventId(null); setIsCreateOpen(false); }}>
-          <div className="bg-[#0a0a0a] border border-[#222222] rounded-t-2xl sm:rounded-lg w-full max-w-md max-h-[95vh] sm:max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between p-4 border-b border-[#222] shrink-0">
-              <h3 className="text-sm font-black uppercase tracking-widest text-[#B5FF03]">{editingEventId ? 'Editar Evento' : 'Novo Evento'}</h3>
-              <button onClick={() => { setEditingEventId(null); setIsCreateOpen(false); }} className="min-w-[44px] min-h-[44px] flex items-center justify-center hover:bg-[#222] rounded-md transition-colors">
+          <div className="bg-[#1a1a1a] border border-[#2d2d2d] rounded-t-2xl sm:rounded-lg w-full max-w-md max-h-[95vh] sm:max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between p-4 border-b border-[#2d2d2d] shrink-0">
+              <h3 className="text-sm font-black uppercase tracking-widest text-[#CDFF00]">{editingEventId ? 'Editar Evento' : 'Novo Evento'}</h3>
+              <button onClick={() => { setEditingEventId(null); setIsCreateOpen(false); }} className="min-w-[44px] min-h-[44px] flex items-center justify-center hover:bg-[#2a2a2a] rounded-md transition-colors">
                 <X size={16} className="text-neutral-400" />
               </button>
             </div>
             {/* Mode toggle */}
-            <div className="flex border-b border-[#222] shrink-0 overflow-x-auto">
+            <div className="flex border-b border-[#2d2d2d] shrink-0 overflow-x-auto">
               <button
                 onClick={() => setAbaAtiva('cliente')}
-                className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest transition-colors whitespace-nowrap ${abaAtiva === 'cliente' ? 'text-[#B5FF03] border-b-2 border-[#B5FF03]' : 'text-neutral-500 hover:text-white'}`}
+                className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest transition-colors whitespace-nowrap ${abaAtiva === 'cliente' ? 'text-[#CDFF00] border-b-2 border-[#CDFF00]' : 'text-neutral-500 hover:text-white'}`}
               >
                 Novo Cliente
               </button>
               <button
                 onClick={() => setAbaAtiva('evento')}
-                className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest transition-colors whitespace-nowrap ${abaAtiva === 'evento' ? 'text-[#B5FF03] border-b-2 border-[#B5FF03]' : 'text-neutral-500 hover:text-white'}`}
+                className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest transition-colors whitespace-nowrap ${abaAtiva === 'evento' ? 'text-[#CDFF00] border-b-2 border-[#CDFF00]' : 'text-neutral-500 hover:text-white'}`}
               >
                 Novo Evento
               </button>
@@ -1385,18 +1400,18 @@ const CRMDashboard = () => {
                     setAbaAtiva('despesas');
                   }
                 }}
-                className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest transition-colors flex items-center justify-center gap-1.5 whitespace-nowrap ${abaAtiva === 'despesas' ? 'text-[#B5FF03] border-b-2 border-[#B5FF03]' : 'text-neutral-500 hover:text-white'}`}
+                className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest transition-colors flex items-center justify-center gap-1.5 whitespace-nowrap ${abaAtiva === 'despesas' ? 'text-[#CDFF00] border-b-2 border-[#CDFF00]' : 'text-neutral-500 hover:text-white'}`}
               >
                 {!editingEventId && <Lock size={10} />}
                 Despesas do Evento
               </button>
             </div>
             {abaAtiva === 'despesas' ? (
-              <div className="p-4 overflow-y-auto [&::-webkit-scrollbar]:w-[6px] [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-[#333] [&::-webkit-scrollbar-thumb]:rounded-[10px] [&::-webkit-scrollbar-thumb:hover]:bg-[#555]">
+              <div className="p-4 overflow-y-auto [&::-webkit-scrollbar]:w-[6px] [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-[#2a2a2a] [&::-webkit-scrollbar-thumb]:rounded-[10px] [&::-webkit-scrollbar-thumb:hover]:bg-[#555]">
                 <DespesasDoEvento eventId={editingEventId} eventDate={formData.date} />
               </div>
             ) : (
-            <form onSubmit={handleCreateSubmit} className="p-4 space-y-4 overflow-y-auto [&::-webkit-scrollbar]:w-[6px] [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-[#333] [&::-webkit-scrollbar-thumb]:rounded-[10px] [&::-webkit-scrollbar-thumb:hover]:bg-[#555]">
+            <form onSubmit={handleCreateSubmit} className="p-4 space-y-4 overflow-y-auto [&::-webkit-scrollbar]:w-[6px] [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-[#2a2a2a] [&::-webkit-scrollbar-thumb]:rounded-[10px] [&::-webkit-scrollbar-thumb:hover]:bg-[#555]">
               {abaAtiva === 'cliente' ? (
                 <>
                   <div>
@@ -1404,7 +1419,7 @@ const CRMDashboard = () => {
                       <User size={12} /> Nome
                     </label>
                     <input type="text" value={formData.name} onChange={e => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                      className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-sm text-white focus:border-[#B5FF03] outline-none" required />
+                      className="w-full bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg px-3 py-2 text-sm text-white focus:border-[#CDFF00] outline-none" required />
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
@@ -1412,14 +1427,14 @@ const CRMDashboard = () => {
                         <Phone size={12} /> WhatsApp
                       </label>
                       <input type="text" value={formData.whatsapp} onChange={e => setFormData(prev => ({ ...prev, whatsapp: e.target.value }))}
-                        className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-sm text-white focus:border-[#B5FF03] outline-none" required />
+                        className="w-full bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg px-3 py-2 text-sm text-white focus:border-[#CDFF00] outline-none" required />
                     </div>
                     <div>
                       <label className="block text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-1.5 flex items-center gap-1.5">
                         <Mail size={12} /> E-mail
                       </label>
                       <input type="email" value={formData.email} onChange={e => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                        className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-sm text-white focus:border-[#B5FF03] outline-none" />
+                        className="w-full bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg px-3 py-2 text-sm text-white focus:border-[#CDFF00] outline-none" />
                     </div>
                   </div>
                   <div>
@@ -1427,7 +1442,7 @@ const CRMDashboard = () => {
                       <CreditCard size={12} /> CPF
                     </label>
                     <input type="text" value={formData.cpf} onChange={e => setFormData(prev => ({ ...prev, cpf: e.target.value }))}
-                      className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-sm text-white focus:border-[#B5FF03] outline-none" />
+                      className="w-full bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg px-3 py-2 text-sm text-white focus:border-[#CDFF00] outline-none" />
                   </div>
                 </>
               ) : (
@@ -1436,7 +1451,7 @@ const CRMDashboard = () => {
                     <User size={12} /> Selecione o Cliente
                   </label>
                   <div className="relative">
-                    <div className="flex items-center bg-[#111] border border-[#333] rounded-lg overflow-hidden focus-within:border-[#B5FF03] transition-colors">
+                    <div className="flex items-center bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg overflow-hidden focus-within:border-[#CDFF00] transition-colors">
                       <Search size={14} className="text-neutral-500 ml-3 shrink-0" />
                       <input
                         type="text"
@@ -1449,7 +1464,7 @@ const CRMDashboard = () => {
                       />
                     </div>
                     {clientSearchOpen && (
-                      <div className="mt-1 bg-[#1a1a1a] border border-[#333] rounded-lg max-h-48 overflow-y-auto z-50 shadow-xl">
+                      <div className="mt-1 bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg max-h-48 overflow-y-auto z-50 shadow-xl">
                         {filteredClients.length === 0 ? (
                           <div className="px-3 py-2 text-xs text-neutral-500 italic">Nenhum cliente encontrado</div>
                         ) : (
@@ -1468,7 +1483,7 @@ const CRMDashboard = () => {
                                   whatsapp: lead.whatsapp,
                                 }));
                               }}
-                              className={`w-full text-left px-3 py-2 text-sm text-white hover:bg-[#333] transition-colors flex items-center gap-2 ${selectedClientId === lead.id ? 'bg-[#2a2a2a] border-l-2 border-[#B5FF03]' : ''}`}
+                              className={`w-full text-left px-3 py-2 text-sm text-white hover:bg-[#2a2a2a] transition-colors flex items-center gap-2 ${selectedClientId === lead.id ? 'bg-[#2a2a2a] border-l-2 border-[#CDFF00]' : ''}`}
                             >
                               <User size={12} className="text-neutral-500 shrink-0" />
                               <div className="min-w-0">
@@ -1482,12 +1497,12 @@ const CRMDashboard = () => {
                     )}
                   </div>
                   {selectedClientId && (
-                    <p className="text-[10px] text-[#B5FF03] mt-1">Cliente selecionado</p>
+                    <p className="text-[10px] text-[#CDFF00] mt-1">Cliente selecionado</p>
                   )}
                 </div>
               )}
               {/* Event fields — common to both modes */}
-              <div className="border-t border-[#222] pt-4">
+              <div className="border-t border-[#2d2d2d] pt-4">
                 <p className="text-[9px] font-black uppercase tracking-widest text-neutral-400 mb-3">Dados do Evento</p>
                 <div className="space-y-3">
                   <div ref={eventTypeRef}>
@@ -1498,19 +1513,19 @@ const CRMDashboard = () => {
                       <button
                         type="button"
                         onClick={() => setEventTypeOpen(prev => !prev)}
-                        className={`w-full bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-sm text-left flex items-center justify-between gap-2 transition-colors ${formData.eventType ? 'text-white' : 'text-neutral-500'} focus:border-[#B5FF03] outline-none`}
+                        className={`w-full bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg px-3 py-2 text-sm text-left flex items-center justify-between gap-2 transition-colors ${formData.eventType ? 'text-white' : 'text-neutral-500'} focus:border-[#CDFF00] outline-none`}
                       >
                         <span>{formData.eventType ? EVENT_TYPES.find(t => t.value === formData.eventType)?.label || formData.eventType : 'Selecionar...'}</span>
                         <ChevronDown size={14} className={`text-neutral-500 transition-transform ${eventTypeOpen ? 'rotate-180' : ''}`} />
                       </button>
                       {eventTypeOpen && (
-                        <div className="mt-1 bg-[#1a1a1a] border border-[#333] rounded-lg overflow-hidden z-50 shadow-xl">
+                        <div className="mt-1 bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg overflow-hidden z-50 shadow-xl">
                           {EVENT_TYPES.map(t => (
                             <button
                               type="button"
                               key={t.value}
                               onClick={() => { setFormData(prev => ({ ...prev, eventType: t.value })); setEventTypeOpen(false); }}
-                              className={`w-full text-left px-3 py-2 text-sm transition-colors ${formData.eventType === t.value ? 'bg-[#2a2a2a] text-[#B5FF03] font-bold' : 'text-white hover:bg-[#333]'}`}
+                              className={`w-full text-left px-3 py-2 text-sm transition-colors ${formData.eventType === t.value ? 'bg-[#2a2a2a] text-[#CDFF00] font-bold' : 'text-white hover:bg-[#2a2a2a]'}`}
                             >
                               {t.label}
                             </button>
@@ -1522,7 +1537,7 @@ const CRMDashboard = () => {
                       <div className="mt-3">
                         <input type="text" value={formData.outroEventoType} onChange={e => setFormData(prev => ({ ...prev, outroEventoType: e.target.value }))}
                           placeholder="Especifique o tipo de evento..."
-                          className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-sm text-white placeholder-neutral-600 focus:border-[#B5FF03] outline-none" />
+                          className="w-full bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg px-3 py-2 text-sm text-white placeholder-neutral-600 focus:border-[#CDFF00] outline-none" />
                       </div>
                     )}
                   </div>
@@ -1533,7 +1548,7 @@ const CRMDashboard = () => {
                     </label>
                     <input type="text" value={formData.city} onChange={e => setFormData(prev => ({ ...prev, city: e.target.value }))}
                       placeholder="Ex: São Paulo, SP"
-                      className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-sm text-white placeholder-neutral-600 focus:border-[#B5FF03] outline-none" />
+                      className="w-full bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg px-3 py-2 text-sm text-white placeholder-neutral-600 focus:border-[#CDFF00] outline-none" />
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
@@ -1541,14 +1556,14 @@ const CRMDashboard = () => {
                         <CalendarDays size={12} /> Data do Evento
                       </label>
                       <input type="date" value={formData.date} onChange={e => setFormData(prev => ({ ...prev, date: e.target.value }))}
-                        className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-sm text-white focus:border-[#B5FF03] outline-none" style={{ colorScheme: 'dark' }} required />
+                        className="w-full bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg px-3 py-2 text-sm text-white focus:border-[#CDFF00] outline-none" style={{ colorScheme: 'dark' }} required />
                     </div>
                     <div>
                       <label className="block text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-1.5 flex items-center gap-1.5">
                         <Clock size={12} /> Horário
                       </label>
                       <input type="time" value={formData.time} onChange={e => setFormData(prev => ({ ...prev, time: e.target.value }))}
-                        className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-sm text-white focus:border-[#B5FF03] outline-none" />
+                        className="w-full bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg px-3 py-2 text-sm text-white focus:border-[#CDFF00] outline-none" />
                     </div>
                   </div>
                   {/* Data de Montagem e Desmontagem */}
@@ -1558,14 +1573,14 @@ const CRMDashboard = () => {
                         <CalendarDays size={12} /> Data de Montagem
                       </label>
                       <input type="date" value={formData.dataMontagem} onChange={e => setFormData(prev => ({ ...prev, dataMontagem: e.target.value }))}
-                        className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-sm text-white focus:border-[#B5FF03] outline-none" style={{ colorScheme: 'dark' }} />
+                        className="w-full bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg px-3 py-2 text-sm text-white focus:border-[#CDFF00] outline-none" style={{ colorScheme: 'dark' }} />
                     </div>
                     <div>
                       <label className="block text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-1.5 flex items-center gap-1.5">
                         <CalendarDays size={12} /> Data de Desmontagem
                       </label>
                       <input type="date" value={formData.dataDesmontagem} onChange={e => setFormData(prev => ({ ...prev, dataDesmontagem: e.target.value }))}
-                        className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-sm text-white focus:border-[#B5FF03] outline-none" style={{ colorScheme: 'dark' }} />
+                        className="w-full bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg px-3 py-2 text-sm text-white focus:border-[#CDFF00] outline-none" style={{ colorScheme: 'dark' }} />
                     </div>
                   </div>
                   {/* Status do Evento */}
@@ -1577,19 +1592,19 @@ const CRMDashboard = () => {
                       <button
                         type="button"
                         onClick={() => setStatusOpen(prev => !prev)}
-                        className={`w-full bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-sm text-left flex items-center justify-between gap-2 transition-colors ${formData.status ? 'text-white' : 'text-neutral-500'} focus:border-[#B5FF03] outline-none`}
+                        className={`w-full bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg px-3 py-2 text-sm text-left flex items-center justify-between gap-2 transition-colors ${formData.status ? 'text-white' : 'text-neutral-500'} focus:border-[#CDFF00] outline-none`}
                       >
                         <span>{formData.status ? statusLabel[formData.status] || formData.status : 'Selecionar...'}</span>
                         <ChevronDown size={14} className={`text-neutral-500 transition-transform ${statusOpen ? 'rotate-180' : ''}`} />
                       </button>
                       {statusOpen && (
-                        <div className="mt-1 bg-[#1a1a1a] border border-[#333] rounded-lg overflow-hidden z-50 shadow-xl">
+                        <div className="mt-1 bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg overflow-hidden z-50 shadow-xl">
                           {Object.entries(statusLabel).map(([key, label]) => (
                             <button
                               type="button"
                               key={key}
                               onClick={() => { setFormData(prev => ({ ...prev, status: key })); setStatusOpen(false); }}
-                              className={`w-full text-left px-3 py-2 text-sm transition-colors flex items-center gap-2 ${formData.status === key ? 'bg-[#2a2a2a] text-[#B5FF03] font-bold' : 'text-white hover:bg-[#333]'}`}
+                              className={`w-full text-left px-3 py-2 text-sm transition-colors flex items-center gap-2 ${formData.status === key ? 'bg-[#2a2a2a] text-[#CDFF00] font-bold' : 'text-white hover:bg-[#2a2a2a]'}`}
                             >
                               <div className={`w-2.5 h-2.5 rounded-full ${statusBg[key]}`} />
                               {label}
@@ -1600,11 +1615,11 @@ const CRMDashboard = () => {
                     </div>
                   </div>
                   {/* Itens do Orçamento */}
-                  <div className="border-t border-[#222] pt-3">
+                  <div className="border-t border-[#2d2d2d] pt-3">
                     <div className="flex items-center justify-between mb-3">
                       <p className="text-[9px] font-black uppercase tracking-widest text-neutral-400">Itens do Orçamento</p>
                       <button type="button" onClick={() => { setOrcSearch(''); setOrcSearchOpen(true); }}
-                        className="flex items-center gap-1 text-[10px] font-bold text-[#B5FF03] hover:text-white transition-colors">
+                        className="flex items-center gap-1 text-[10px] font-bold text-[#CDFF00] hover:text-white transition-colors">
                         <Plus size={12} /> Adicionar Item
                       </button>
                     </div>
@@ -1613,21 +1628,21 @@ const CRMDashboard = () => {
                     {orcSearchOpen && (
                       <div ref={orcSearchRef} className="mb-3">
                         {showCreateItemForm || orcamentoItems.length === 0 ? (
-                          <div className="bg-[#111] border border-[#333] rounded-lg p-3 space-y-2">
+                          <div className="bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg p-3 space-y-2">
                             <p className="text-[9px] font-black uppercase tracking-widest text-neutral-400">Criar item no estoque de eventos</p>
                             <input
                               type="text"
                               value={newItemForm.name}
                               onChange={e => setNewItemForm(prev => ({ ...prev, name: e.target.value }))}
                               placeholder="Nome do item (obrigatório)"
-                              className="w-full bg-[#0a0a0a] border border-[#333] rounded-lg px-3 py-2 text-sm text-white placeholder-neutral-600 outline-none focus:border-[#B5FF03]"
+                              className="w-full bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg px-3 py-2 text-sm text-white placeholder-neutral-600 outline-none focus:border-[#CDFF00]"
                               autoFocus
                               autoComplete="off"
                             />
                             <select
                               value={newItemForm.category}
                               onChange={e => setNewItemForm(prev => ({ ...prev, category: e.target.value }))}
-                              className="w-full bg-[#0a0a0a] border border-[#333] rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-[#B5FF03] [color-scheme:dark]"
+                              className="w-full bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg px-3 py-2 text-sm text-white outline-none focus:border-[#CDFF00] [color-scheme:dark]"
                             >
                               {EVENT_STOCK_CATEGORIES.map(cat => (
                                 <option key={cat} value={cat}>{cat}</option>
@@ -1638,7 +1653,7 @@ const CRMDashboard = () => {
                               value={newItemForm.observacao}
                               onChange={e => setNewItemForm(prev => ({ ...prev, observacao: e.target.value }))}
                               placeholder="Observação interna (não exportada)..."
-                              className="w-full bg-[#0a0a0a] border border-[#333] rounded-lg px-3 py-2 text-sm text-white placeholder-neutral-600 outline-none focus:border-[#B5FF03] resize-none"
+                              className="w-full bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg px-3 py-2 text-sm text-white placeholder-neutral-600 outline-none focus:border-[#CDFF00] resize-none"
                             />
                             <div className="flex items-center justify-end gap-2 pt-1">
                               <button
@@ -1655,7 +1670,7 @@ const CRMDashboard = () => {
                                 type="button"
                                 onClick={handleCreateEventItem}
                                 disabled={!newItemForm.name.trim()}
-                                className="flex items-center gap-1.5 px-3 py-2 bg-[#B5FF03] text-black rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-[#a1e600] transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                                className="flex items-center gap-1.5 px-3 py-2 bg-[#CDFF00] text-black rounded-lg text-[10px] font-black uppercase tracking-widest hover:bg-[#a1e600] transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                               >
                                 <Plus size={12} /> Salvar e adicionar
                               </button>
@@ -1663,7 +1678,7 @@ const CRMDashboard = () => {
                           </div>
                         ) : (
                           <>
-                            <div className="flex items-center bg-[#111] border border-[#333] rounded-lg overflow-hidden focus-within:border-[#B5FF03] transition-colors">
+                            <div className="flex items-center bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg overflow-hidden focus-within:border-[#CDFF00] transition-colors">
                               <Search size={14} className="text-neutral-500 ml-3 shrink-0" />
                               <input
                                 type="text"
@@ -1676,11 +1691,11 @@ const CRMDashboard = () => {
                                 autoComplete="off"
                               />
                               <button type="button" onClick={() => setOrcSearchOpen(false)}
-                                className="p-2 hover:bg-[#222] transition-colors">
+                                className="p-2 hover:bg-[#2a2a2a] transition-colors">
                                 <X size={14} className="text-neutral-500" />
                               </button>
                             </div>
-                            <div className="mt-1 bg-[#1a1a1a] border border-[#333] rounded-lg max-h-44 overflow-y-auto shadow-xl">
+                            <div className="mt-1 bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg max-h-44 overflow-y-auto shadow-xl">
                               {filteredOrcItems.length === 0 ? (
                                 <div className="px-3 py-2 text-xs text-neutral-500 italic">Nenhum item no estoque de eventos</div>
                               ) : (
@@ -1689,7 +1704,7 @@ const CRMDashboard = () => {
                                     type="button"
                                     key={item.id}
                                     onClick={() => handleSelectItem(item)}
-                                    className="w-full text-left px-3 py-2 text-sm text-white hover:bg-[#333] transition-colors flex items-center justify-between gap-2"
+                                    className="w-full text-left px-3 py-2 text-sm text-white hover:bg-[#2a2a2a] transition-colors flex items-center justify-between gap-2"
                                   >
                                     <div className="flex items-center gap-2 min-w-0">
                                       <span className="truncate">{item.name}</span>
@@ -1704,7 +1719,7 @@ const CRMDashboard = () => {
                             <button
                               type="button"
                               onClick={() => setShowCreateItemForm(true)}
-                              className="mt-1 w-full flex items-center justify-center gap-1 px-3 py-2 text-[10px] font-black uppercase tracking-widest text-[#B5FF03] hover:bg-[#222] transition-colors rounded-lg"
+                              className="mt-1 w-full flex items-center justify-center gap-1 px-3 py-2 text-[10px] font-black uppercase tracking-widest text-[#CDFF00] hover:bg-[#2a2a2a] transition-colors rounded-lg"
                             >
                               <Plus size={12} /> Criar novo item
                             </button>
@@ -1714,9 +1729,9 @@ const CRMDashboard = () => {
                     )}
 
                     {pendingItem && (
-                      <div className="bg-[#1a1a1a] border border-[#B5FF03] rounded-lg p-3 space-y-2">
+                      <div className="bg-[#1a1a1a] border border-[#CDFF00] rounded-lg p-3 space-y-2">
                         <div className="flex items-center gap-2">
-                          <span className="text-xs text-[#B5FF03] font-bold uppercase">Item selecionado:</span>
+                          <span className="text-xs text-[#CDFF00] font-bold uppercase">Item selecionado:</span>
                           <span className="text-sm text-white font-medium">{pendingItem.name}</span>
                         </div>
                         <div className="flex flex-wrap items-center gap-2">
@@ -1730,16 +1745,16 @@ const CRMDashboard = () => {
                             onChange={e => setPendingItemValue(e.target.value)}
                             onKeyDown={e => { if (e.key === 'Enter') handleConfirmAddItem(); if (e.key === 'Escape') handleCancelAddItem(); }}
                             placeholder="0,00"
-                            className="flex-1 bg-[#111] border border-[#333] rounded-lg px-2 py-1.5 text-sm text-white text-right focus:border-[#B5FF03] outline-none"
+                            className="flex-1 bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg px-2 py-1.5 text-sm text-white text-right focus:border-[#CDFF00] outline-none"
                           />
                         </div>
                         <div className="flex gap-2">
                           <button type="button" onClick={handleConfirmAddItem}
-                            className="flex-1 py-1.5 bg-[#B5FF03] text-black text-[10px] font-black uppercase tracking-widest rounded-lg hover:bg-[#a3e602] transition-colors">
+                            className="flex-1 py-1.5 bg-[#CDFF00] text-black text-[10px] font-black uppercase tracking-widest rounded-lg hover:bg-[#a3e602] transition-colors">
                             Confirmar
                           </button>
                           <button type="button" onClick={handleCancelAddItem}
-                            className="px-3 py-1.5 bg-[#333] text-neutral-400 text-[10px] font-black uppercase tracking-widest rounded-lg hover:bg-[#444] transition-colors">
+                            className="px-3 py-1.5 bg-[#2a2a2a] text-neutral-400 text-[10px] font-black uppercase tracking-widest rounded-lg hover:bg-[#444] transition-colors">
                             Cancelar
                           </button>
                         </div>
@@ -1748,7 +1763,7 @@ const CRMDashboard = () => {
 
                     <div className="space-y-1">
                       {formData.orcamentoItems.map(item => (
-                        <div key={item.id} className="flex items-center gap-2 py-2 px-1 border-b border-[#222] last:border-b-0">
+                        <div key={item.id} className="flex items-center gap-2 py-2 px-1 border-b border-[#2d2d2d] last:border-b-0">
                           <span className="flex-1 text-sm text-white truncate">{item.item}</span>
                           <input
                             type="number"
@@ -1756,38 +1771,38 @@ const CRMDashboard = () => {
                             step="0.01"
                             value={item.valorUnit || ''}
                             onChange={e => handleUpdateItemValor(item.id, parseFloat(e.target.value) || 0)}
-                            className="w-24 bg-[#111] border border-[#333] rounded-lg px-2 py-1 text-xs text-white text-right focus:border-[#B5FF03] outline-none"
+                            className="w-24 bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg px-2 py-1 text-xs text-white text-right focus:border-[#CDFF00] outline-none"
                             placeholder="R$ 0,00"
                           />
                           <button type="button" onClick={() => handleRemoveItem(item.id)}
-                            className="p-1 hover:bg-[#333] rounded-md transition-colors shrink-0">
+                            className="p-1 hover:bg-[#2a2a2a] rounded-md transition-colors shrink-0">
                             <Trash2 size={12} className="text-red-400" />
                           </button>
                         </div>
                       ))}
                       {formData.orcamentoItems.length === 0 && !orcSearchOpen && (
-                        <div className="text-center py-3 bg-[#111] border border-dashed border-[#333] rounded-lg">
+                        <div className="text-center py-3 bg-[#1a1a1a] border border-dashed border-[#2d2d2d] rounded-lg">
                           <p className="text-[10px] text-neutral-500 italic">Clique em "Adicionar Item" para buscar ou criar itens no estoque de eventos</p>
                         </div>
                       )}
                     </div>
 
                     {/* Financial footer */}
-                    <div className="border-t border-[#333] pt-3 mt-3 space-y-2">
+                    <div className="border-t border-[#2d2d2d] pt-3 mt-3 space-y-2">
                       <div className="flex items-center justify-between gap-4">
                         <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 shrink-0">Valor do Evento (R$)</label>
                         <input type="number" min="0" step="0.01" value={formData.valor}
                           onChange={e => setFormData(prev => ({ ...prev, valor: Math.max(0, Number(e.target.value) || 0) }))}
-                          className="w-28 bg-[#111] border border-[#333] rounded-lg px-2 py-1.5 text-sm text-white text-right focus:border-[#B5FF03] outline-none" />
+                          className="w-28 bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg px-2 py-1.5 text-sm text-white text-right focus:border-[#CDFF00] outline-none" />
                       </div>
                       <div className="flex items-center justify-between gap-4">
                         <label className="text-[10px] font-black uppercase tracking-widest text-neutral-400 shrink-0">Desconto (R$)</label>
                         <input type="number" min="0" step="0.01" value={formData.desconto}
                           onChange={e => setFormData(prev => ({ ...prev, desconto: Math.max(0, Number(e.target.value) || 0) }))}
-                          className="w-28 bg-[#111] border border-[#333] rounded-lg px-2 py-1.5 text-sm text-white text-right focus:border-[#B5FF03] outline-none" />
+                          className="w-28 bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg px-2 py-1.5 text-sm text-white text-right focus:border-[#CDFF00] outline-none" />
                       </div>
-                      <div className="border-t border-[#222] pt-2 flex items-center justify-between">
-                        <span className="text-xs font-black uppercase tracking-widest text-[#B5FF03]">Valor Total do Aluguel</span>
+                      <div className="border-t border-[#2d2d2d] pt-2 flex items-center justify-between">
+                        <span className="text-xs font-black uppercase tracking-widest text-[#CDFF00]">Valor Total do Aluguel</span>
                         <span className="text-base font-black text-white">R$ {total.toFixed(2)}</span>
                       </div>
                     </div>
@@ -1800,7 +1815,7 @@ const CRMDashboard = () => {
                     <textarea value={formData.observacao} onChange={e => setFormData(prev => ({ ...prev, observacao: e.target.value }))}
                       placeholder="Informações adicionais sobre o evento..."
                       rows={3}
-                      className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-sm text-white placeholder-neutral-600 focus:border-[#B5FF03] outline-none resize-none" />
+                      className="w-full bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg px-3 py-2 text-sm text-white placeholder-neutral-600 focus:border-[#CDFF00] outline-none resize-none" />
                   </div>
                 </div>
               </div>
@@ -1818,7 +1833,7 @@ const CRMDashboard = () => {
                   </button>
                 )}
                 <button type="button" onClick={handleExportPDF}
-                  className="flex-1 py-3 bg-[#1a1a1a] border border-[#333] text-white font-bold text-[10px] uppercase tracking-widest rounded-lg hover:bg-[#222] hover:border-[#555] transition-all flex items-center justify-center gap-2 min-w-0">
+                  className="flex-1 py-3 bg-[#1a1a1a] border border-[#2d2d2d] text-white font-bold text-[10px] uppercase tracking-widest rounded-lg hover:bg-[#2a2a2a] hover:border-[#555] transition-all flex items-center justify-center gap-2 min-w-0">
                   <FileText size={14} />
                   EXPORTAR (PDF)
                 </button>
@@ -1828,7 +1843,7 @@ const CRMDashboard = () => {
                   ENVIAR WHATSAPP
                 </button>
                 <button type="submit"
-                  className="flex-[1.5] py-3 bg-[#B5FF03] text-black font-bold text-[10px] uppercase tracking-widest rounded-lg hover:bg-[#a1e600] transition-colors text-center leading-tight">
+                  className="flex-[1.5] py-3 bg-[#CDFF00] text-black font-bold text-[10px] uppercase tracking-widest rounded-lg hover:bg-[#a1e600] transition-colors text-center leading-tight">
                   {editingEventId ? 'Salvar Alterações' : abaAtiva === 'cliente' ? 'Cadastrar e Agendar' : 'Agendar Evento'}
                 </button>
               </div>
@@ -1838,7 +1853,7 @@ const CRMDashboard = () => {
       )}
 
       {toast && (
-        <div className="fixed bottom-20 sm:bottom-5 left-1/2 -translate-x-1/2 z-[200] bg-[#B5FF03] text-black text-xs font-black uppercase tracking-widest px-5 py-3 rounded-full shadow-lg">
+        <div className="fixed bottom-20 sm:bottom-5 left-1/2 -translate-x-1/2 z-[200] bg-[#CDFF00] text-black text-xs font-black uppercase tracking-widest px-5 py-3 rounded-full shadow-lg">
           {toast}
         </div>
       )}
