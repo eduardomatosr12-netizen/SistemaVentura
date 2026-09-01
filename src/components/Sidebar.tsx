@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { DollarSign, Package, Settings, LogOut, X, MessageCircle, LayoutDashboard, Phone } from 'lucide-react';
+import { DollarSign, Package, Settings, LogOut, X, LayoutDashboard, Phone } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 interface SidebarProps {
@@ -18,7 +18,6 @@ const Sidebar = ({ isOpen = false, onClose }: SidebarProps) => {
     { id: 'tarefas', label: 'Estoque', icon: Package, path: '/tarefas', allowedRoles: ['admin', 'manager', 'user'] as const },
     { id: 'financeiro', label: 'Financeiro', icon: DollarSign, path: '/financeiro', allowedRoles: ['admin', 'manager', 'user'] as const },
     { id: 'configuracoes', label: 'Configurações', icon: Settings, path: '/configuracoes', allowedRoles: ['admin', 'manager', 'user'] as const },
-    { id: 'templates-whatsapp', label: 'Templates WhatsApp', icon: MessageCircle, path: '/configuracoes/templates-whatsapp', allowedRoles: ['admin', 'manager', 'user'] as const },
   ];
 
   const visibleMenuItems = !hasPermission ? mainMenuItems : mainMenuItems.filter(item =>
