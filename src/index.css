@@ -272,7 +272,7 @@ html {
   .btn-primary {
     background-color: #CDFF00;
     color: #000000;
-    @apply font-black px-6 py-3 rounded-lg text-sm transition-all duration-150 borde-none cursor-pointer;
+    @apply font-black px-6 py-3 rounded-lg text-sm transition-all duration-150 border-none cursor-pointer;
     font-size: 14px;
     letter-spacing: 0.04em;
     border: none;
