@@ -5,34 +5,30 @@ interface BeforeInstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
 }
 
+const isStandaloneMode = () =>
+  window.matchMedia('(display-mode: standalone)').matches ||
+  (window.navigator as unknown as { standalone?: boolean }).standalone === true;
+
+const isDismissedRecently = () => {
+  try {
+    const stored = localStorage.getItem('ventura_pwa_dismissed');
+    if (!stored) return false;
+    const dismissedAt = parseInt(stored, 10);
+    const daysSince = (Date.now() - dismissedAt) / (1000 * 60 * 60 * 24);
+    return daysSince < 7;
+  } catch {
+    return false;
+  }
+};
+
 export function usePWAInstall() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [isInstallable, setIsInstallable] = useState(false);
-  const [isInstalled, setIsInstalled] = useState(false);
-  const [isStandalone, setIsStandalone] = useState(false);
+  const [isInstalled, setIsInstalled] = useState<boolean>(() => isStandaloneMode());
+  const [isStandalone] = useState<boolean>(() => isStandaloneMode());
 
   useEffect(() => {
-    const isStandaloneMode =
-      window.matchMedia('(display-mode: standalone)').matches ||
-      (window.navigator as any).standalone === true;
-
-    setIsStandalone(isStandaloneMode);
-
-    if (isStandaloneMode) {
-      setIsInstalled(true);
-      setIsInstallable(false);
-      return;
-    }
-
-    const stored = localStorage.getItem('ventura_pwa_dismissed');
-    if (stored) {
-      const dismissedAt = parseInt(stored, 10);
-      const daysSince = (Date.now() - dismissedAt) / (1000 * 60 * 60 * 24);
-      if (daysSince < 7) {
-        setIsInstallable(false);
-        return;
-      }
-    }
+    if (isStandalone || isDismissedRecently()) return;
 
     const handler = (e: Event) => {
       e.preventDefault();
@@ -40,20 +36,20 @@ export function usePWAInstall() {
       setIsInstallable(true);
     };
 
-    window.addEventListener('beforeinstallprompt', handler);
-
     const installedHandler = () => {
       setIsInstalled(true);
       setIsInstallable(false);
       setDeferredPrompt(null);
     };
+
+    window.addEventListener('beforeinstallprompt', handler);
     window.addEventListener('appinstalled', installedHandler);
 
     return () => {
       window.removeEventListener('beforeinstallprompt', handler);
       window.removeEventListener('appinstalled', installedHandler);
     };
-  }, []);
+  }, [isStandalone]);
 
   const install = useCallback(async () => {
     if (!deferredPrompt) return false;
@@ -73,7 +69,11 @@ export function usePWAInstall() {
   }, [deferredPrompt]);
 
   const dismiss = useCallback(() => {
-    localStorage.setItem('ventura_pwa_dismissed', Date.now().toString());
+    try {
+      localStorage.setItem('ventura_pwa_dismissed', Date.now().toString());
+    } catch {
+      // ignore
+    }
     setIsInstallable(false);
     setDeferredPrompt(null);
   }, []);

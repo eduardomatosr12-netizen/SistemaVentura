@@ -41,7 +41,7 @@ export default function PWAUpdateNotification() {
     <div className="fixed top-4 left-1/2 -translate-x-1/2 z-[200]">
       <button
         onClick={handleUpdate}
-        className="flex items-center gap-2 px-4 py-2.5 bg-[#B5FF03] text-black text-xs font-black rounded-full shadow-2xl hover:bg-[#a1e600] transition-colors min-h-[44px]"
+        className="flex items-center gap-2 px-4 py-2.5 bg-[#CDFF00] text-black text-xs font-black rounded-full shadow-2xl hover:bg-[#bcef00] transition-colors min-h-[44px]"
       >
         <RefreshCw size={14} strokeWidth={3} />
         Nova versão disponível

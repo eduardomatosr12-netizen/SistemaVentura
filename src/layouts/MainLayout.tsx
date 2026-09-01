@@ -78,7 +78,7 @@ const MainLayout = ({ children }: MainLayoutProps) => {
   if (isLoading) {
     return (
       <div className="min-h-dvh flex items-center justify-center bg-black">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#B5FF03]"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#CDFF00]"></div>
       </div>
     );
   }
@@ -87,7 +87,7 @@ const MainLayout = ({ children }: MainLayoutProps) => {
     return (
       <div className="min-h-dvh flex items-center justify-center bg-black p-4">
         <div className="w-full max-w-md">
-          <div className="bg-[#111] rounded-3xl shadow-xl p-8 md:p-12 border border-[#333]">
+          <div className="bg-[#1a1a1a] rounded-3xl shadow-xl p-8 md:p-12 border border-[#2d2d2d]">
             <div className="text-center mb-8">
               <img
                 src="/logo.png"
@@ -105,24 +105,24 @@ const MainLayout = ({ children }: MainLayoutProps) => {
                   onClick={() => setLoginRole('admin')}
                   className={`p-4 rounded-2xl border-2 transition-all flex flex-col items-center gap-2 ${
                     loginRole === 'admin' 
-                      ? 'border-[#B5FF03] bg-black text-[#B5FF03]' 
-                      : 'border-[#333] hover:border-[#555]'
+                      ? 'border-[#CDFF00] bg-black text-[#CDFF00]' 
+                      : 'border-[#2d2d2d] hover:border-[#3a3a3a]'
                   }`}
                 >
-                  <LayoutDashboard className={`w-6 h-6 ${loginRole === 'admin' ? 'text-[#B5FF03]' : 'text-neutral-400'}`} />
-                  <span className={`text-xs font-bold uppercase tracking-wider ${loginRole === 'admin' ? 'text-[#B5FF03]' : 'text-neutral-400'}`}>Admin</span>
+                  <LayoutDashboard className={`w-6 h-6 ${loginRole === 'admin' ? 'text-[#CDFF00]' : 'text-neutral-400'}`} />
+                  <span className={`text-xs font-bold uppercase tracking-wider ${loginRole === 'admin' ? 'text-[#CDFF00]' : 'text-neutral-400'}`}>Admin</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setLoginRole('user')}
                   className={`p-4 rounded-2xl border-2 transition-all flex flex-col items-center gap-2 ${
                     loginRole === 'user' 
-                      ? 'border-[#B5FF03] bg-black text-[#B5FF03]' 
-                      : 'border-[#333] hover:border-[#555]'
+                      ? 'border-[#CDFF00] bg-black text-[#CDFF00]' 
+                      : 'border-[#2d2d2d] hover:border-[#3a3a3a]'
                   }`}
                 >
-                  <Users className={`w-6 h-6 ${loginRole === 'user' ? 'text-[#B5FF03]' : 'text-neutral-400'}`} />
-                  <span className={`text-xs font-bold uppercase tracking-wider ${loginRole === 'user' ? 'text-[#B5FF03]' : 'text-neutral-400'}`}>Funcionário</span>
+                  <Users className={`w-6 h-6 ${loginRole === 'user' ? 'text-[#CDFF00]' : 'text-neutral-400'}`} />
+                  <span className={`text-xs font-bold uppercase tracking-wider ${loginRole === 'user' ? 'text-[#CDFF00]' : 'text-neutral-400'}`}>Funcionário</span>
                 </button>
               </div>
 
@@ -133,14 +133,14 @@ const MainLayout = ({ children }: MainLayoutProps) => {
                     <select
                       value={employeeName || ''}
                       onChange={(e) => selectEmployee(e.target.value)}
-                      className="w-full bg-[#111] border-2 border-[#333] rounded-xl px-4 py-3 font-bold text-white focus:border-[#B5FF03] outline-none"
+className="w-full bg-[#1a1a1a] border-2 border-[#2d2d2d] rounded-xl px-4 py-3 font-bold text-white focus:border-[#CDFF00] outline-none"
                     >
                       {availableEmployees.map(emp => (
                         <option key={emp} value={emp}>{emp}</option>
                       ))}
                     </select>
                   ) : (
-                    <div className="w-full bg-[#111] border-2 border-[#333] rounded-xl px-4 py-3 font-bold text-neutral-500">
+                    <div className="w-full bg-[#1a1a1a] border-2 border-[#2d2d2d] rounded-xl px-4 py-3 font-bold text-neutral-500">
                       Nenhum funcionário cadastrado
                     </div>
                   )}
@@ -156,7 +156,7 @@ const MainLayout = ({ children }: MainLayoutProps) => {
                   value={loginPassword}
                   onChange={(e) => setLoginPassword(e.target.value)}
                   placeholder="Digite sua senha"
-                  className="w-full bg-[#111] border-2 border-[#333] rounded-xl px-4 py-3 font-bold text-white focus:border-[#B5FF03] outline-none"
+                  className="w-full bg-[#1a1a1a] border-2 border-[#2d2d2d] rounded-xl px-4 py-3 font-bold text-white focus:border-[#CDFF00] outline-none"
                 />
               </div>
 
@@ -169,7 +169,7 @@ const MainLayout = ({ children }: MainLayoutProps) => {
               <button
                 type="submit"
                 disabled={isLoggingIn}
-                className="w-full py-4 bg-[#B5FF03] text-black rounded-xl font-black text-sm uppercase tracking-widest hover:bg-[#a1e600] transition-all disabled:opacity-50"
+                className="w-full py-4 bg-[#CDFF00] text-black rounded-xl font-black text-sm uppercase tracking-widest hover:bg-[#bcef00] transition-all disabled:opacity-50"
               >
                 {isLoggingIn ? 'Entrando...' : 'Entrar'}
               </button>
@@ -197,20 +197,20 @@ const MainLayout = ({ children }: MainLayoutProps) => {
         </div>
       </main>
 
-      <nav className="bottom-nav fixed bottom-0 left-0 right-0 z-50 bg-black border-t border-[#333] flex md:hidden justify-around items-center h-16" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)', height: 'var(--bottom-nav-height, 64px)' }}>
-        <Link to="/home" className={`flex flex-col items-center gap-0.5 px-3 py-1 min-w-[56px] min-h-[48px] justify-center ${location.pathname === '/home' ? 'text-[#B5FF03]' : 'text-neutral-400'}`}>
+      <nav className="bottom-nav fixed bottom-0 left-0 right-0 z-50 bg-black border-t border-[#2d2d2d] flex md:hidden justify-around items-center h-16" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)', height: 'var(--bottom-nav-height, 64px)' }}>
+        <Link to="/home" className={`flex flex-col items-center gap-0.5 px-3 py-1 min-w-[56px] min-h-[48px] justify-center ${location.pathname === '/home' ? 'text-[#CDFF00]' : 'text-neutral-400'}`}>
           <LayoutDashboard size={20} />
           <span className="text-[9px] font-bold uppercase tracking-wider">Home</span>
         </Link>
-        <Link to="/contatos" className={`flex flex-col items-center gap-0.5 px-3 py-1 min-w-[56px] min-h-[48px] justify-center ${location.pathname === '/contatos' ? 'text-[#B5FF03]' : 'text-neutral-400'}`}>
+        <Link to="/contatos" className={`flex flex-col items-center gap-0.5 px-3 py-1 min-w-[56px] min-h-[48px] justify-center ${location.pathname === '/contatos' ? 'text-[#CDFF00]' : 'text-neutral-400'}`}>
           <Users size={20} />
           <span className="text-[9px] font-bold uppercase tracking-wider">Contatos</span>
         </Link>
-        <Link to="/tarefas" className={`flex flex-col items-center gap-0.5 px-3 py-1 min-w-[56px] min-h-[48px] justify-center ${location.pathname === '/tarefas' ? 'text-[#B5FF03]' : 'text-neutral-400'}`}>
+        <Link to="/tarefas" className={`flex flex-col items-center gap-0.5 px-3 py-1 min-w-[56px] min-h-[48px] justify-center ${location.pathname === '/tarefas' ? 'text-[#CDFF00]' : 'text-neutral-400'}`}>
           <Package size={20} />
           <span className="text-[9px] font-bold uppercase tracking-wider">Estoque</span>
         </Link>
-        <Link to="/financeiro" className={`flex flex-col items-center gap-0.5 px-3 py-1 min-w-[56px] min-h-[48px] justify-center ${location.pathname.startsWith('/financeiro') ? 'text-[#B5FF03]' : 'text-neutral-400'}`}>
+        <Link to="/financeiro" className={`flex flex-col items-center gap-0.5 px-3 py-1 min-w-[56px] min-h-[48px] justify-center ${location.pathname.startsWith('/financeiro') ? 'text-[#CDFF00]' : 'text-neutral-400'}`}>
           <DollarSign size={20} />
           <span className="text-[9px] font-bold uppercase tracking-wider">Financeiro</span>
         </Link>

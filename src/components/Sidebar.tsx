@@ -91,13 +91,13 @@ const Sidebar = ({ isOpen = false, onClose }: SidebarProps) => {
     <>
       {isOpen && (
         <div 
-          className="fixed inset-0 bg-black/50 z-[55] md:hidden"
+          className="fixed inset-0 bg-black/50 z-[65] md:hidden"
           onClick={onClose}
         />
       )}
       
       {/* Mobile drawer */}
-      <aside className={`fixed md:hidden left-0 top-0 h-dvh w-[220px] bg-black border-r border-[#2d2d2d] flex-col overflow-y-auto overflow-x-hidden z-[60] transform transition-transform duration-300 ease-out ${isOpen ? 'translate-x-0' : '-translate-x-full'}`} style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
+      <aside className={`fixed md:hidden left-0 top-0 h-dvh w-[220px] bg-black border-r border-[#2d2d2d] flex flex-col overflow-y-auto overflow-x-hidden z-[70] transform transition-transform duration-300 ease-out ${isOpen ? 'translate-x-0' : '-translate-x-full'}`} style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
         <button
           onClick={onClose}
           className="absolute top-4 right-4 p-2 rounded-md hover:bg-[#222]"
