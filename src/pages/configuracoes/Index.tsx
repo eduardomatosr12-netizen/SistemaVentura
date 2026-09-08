@@ -347,19 +347,19 @@ const Configuracoes = () => {
         </Link>
       </div>
 
-      <div className="mt-12 max-w-2xl border-2 border-red-50 bg-red-50/20 rounded-[40px] p-10 relative overflow-hidden group/danger">
+      <div className="mt-12 max-w-2xl bg-[#1a1a1a] border border-red-500/30 rounded-xl p-10 shadow-[0_4px_12px_rgba(0,0,0,0.3)] relative overflow-hidden group/danger">
         <div className="absolute -right-10 -bottom-10 opacity-5 group-hover/danger:opacity-10 transition-opacity">
           <ShieldAlert size={240} className="text-red-500" />
         </div>
         <div className="relative z-10">
           <div className="flex items-center gap-3 mb-4">
-            <AlertTriangle className="text-red-600" size={24} />
-            <h3 className="font-black text-red-600 uppercase tracking-widest text-sm">Zona de Perigo</h3>
+            <AlertTriangle className="text-red-400" size={24} />
+            <h3 className="font-black text-red-400 uppercase tracking-widest text-sm">Zona de Perigo</h3>
           </div>
-          <p className="text-sm text-neutral-500 font-bold leading-relaxed mb-8 max-w-md">Estas ações são irreversíveis e deletarão todos os seus dados e Orçamentos permanentemente.</p>
+          <p className="text-sm text-white/60 font-bold leading-relaxed mb-8 max-w-md">Estas ações são irreversíveis e deletarão todos os seus dados e Orçamentos permanentemente.</p>
           <button 
             onClick={() => setActiveModal('delete')}
-            className="text-[11px] font-black uppercase tracking-[2px] bg-white border-2 border-red-100 text-red-600 px-10 py-4 rounded-2xl hover:bg-red-600 hover:text-white hover:border-red-600 transition-all shadow-xl shadow-red-100/50 active:scale-[0.98]"
+            className="text-[11px] font-black uppercase tracking-[2px] bg-transparent border-2 border-red-500/40 text-red-400 px-10 py-4 rounded-xl hover:bg-red-600 hover:text-white hover:border-red-600 transition-all shadow-xl active:scale-[0.98]"
           >
             Deletar Conta Permanentemente
           </button>
@@ -368,7 +368,7 @@ const Configuracoes = () => {
 
       {activeModal && activeModal !== 'delete' && (
         <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-6 bg-black/60 backdrop-blur-md animate-in fade-in duration-300" onClick={() => { setActiveModal(null); setProfileError(''); setProfileSuccess(''); setInviteError(''); setInviteSuccess(''); }}>
-          <div className="bg-[#0a0a0a] border border-[#222222] rounded-t-[40px] sm:rounded-[40px] shadow-2xl w-full max-w-2xl overflow-hidden transform animate-in slide-in-from-bottom-8 duration-500 flex flex-col max-h-[92dvh]" onClick={e => e.stopPropagation()}>
+          <div className="bg-[#1a1a1a] border border-[#2d2d2d] rounded-t-[40px] sm:rounded-xl shadow-[0_20px_40px_rgba(0,0,0,0.5)] w-full max-w-2xl overflow-hidden transform animate-in slide-in-from-bottom-8 duration-500 flex flex-col max-h-[92dvh]" onClick={e => e.stopPropagation()}>
             {activeModal === 'perfil' ? (
               <form onSubmit={handleSaveProfile} className="flex flex-col flex-1 min-h-0 overflow-hidden">
                 <div className="px-4 md:px-12 py-10 border-b border-[#222222] flex justify-between items-start shrink-0">
@@ -502,18 +502,18 @@ const Configuracoes = () => {
 
       {activeModal === 'delete' && (
         <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-6 bg-black/60 backdrop-blur-md animate-in fade-in" onClick={() => { setActiveModal(null); setConfirmationText(''); }}>
-          <div className="bg-white border-2 border-red-100 rounded-t-[40px] sm:rounded-[40px] shadow-2xl w-full max-w-md overflow-y-auto p-4 md:p-12 text-center max-h-[92dvh] transform animate-in slide-in-from-bottom-8" onClick={e => e.stopPropagation()}>
-            <div className="w-24 h-24 bg-red-50 rounded-[32px] flex items-center justify-center mx-auto mb-8 animate-bounce"><Trash2 size={48} className="text-red-600" /></div>
-            <h2 className="text-4xl font-black text-black tracking-tighter mb-4">Tem certeza?</h2>
-            <p className="text-neutral-500 text-sm font-bold leading-relaxed mb-10">Esta ação é irreversível e apagará todos os dados permanentemente.</p>
+          <div className="bg-[#1a1a1a] border border-red-500/30 rounded-t-[40px] sm:rounded-xl shadow-2xl w-full max-w-md overflow-y-auto p-4 md:p-12 text-center max-h-[92dvh] transform animate-in slide-in-from-bottom-8" onClick={e => e.stopPropagation()}>
+            <div className="w-24 h-24 bg-red-500/10 border border-red-500/30 rounded-[32px] flex items-center justify-center mx-auto mb-8 animate-bounce"><Trash2 size={48} className="text-red-400" /></div>
+            <h2 className="text-4xl font-black text-white tracking-tighter mb-4">Tem certeza?</h2>
+            <p className="text-white/60 text-sm font-bold leading-relaxed mb-10">Esta ação é irreversível e apagará todos os dados permanentemente.</p>
             <div className="space-y-8 text-left">
               <div className="space-y-3">
-                <label className="text-[10px] font-black text-neutral-400 uppercase tracking-widest block text-center">Digite <span className="text-black font-black">DELETE</span> para confirmar</label>
-                <input autoFocus type="text" value={confirmationText} onChange={(e) => setConfirmationText(e.target.value)} placeholder="CONFIRMAÇÃO" className="w-full bg-red-50/50 border-2 border-red-100 rounded-3xl px-8 py-5 text-center text-xl font-black text-red-600 focus:border-red-600 outline-none" />
+                <label className="text-[10px] font-black text-white/60 uppercase tracking-widest block text-center">Digite <span className="text-red-400 font-black">DELETE</span> para confirmar</label>
+                <input autoFocus type="text" value={confirmationText} onChange={(e) => setConfirmationText(e.target.value)} placeholder="CONFIRMAÇÃO" className="w-full bg-black border-2 border-red-500/30 rounded-3xl px-8 py-5 text-center text-xl font-black text-red-400 placeholder-red-400/40 focus:border-red-500 outline-none" />
               </div>
               <div className="flex flex-col gap-4">
-                <button disabled={confirmationText !== 'DELETE' || isDeleting} onClick={handleDeleteAccount} className={`w-full py-5 rounded-[24px] font-black text-[11px] uppercase tracking-[2px] shadow-2xl transition-all flex items-center justify-center gap-3 ${confirmationText === 'DELETE' ? 'bg-red-600 text-white hover:bg-red-700 shadow-red-200' : 'bg-neutral-100 text-neutral-300 cursor-not-allowed'}`}>{isDeleting ? <div className="w-6 h-6 border-4 border-white/30 border-t-white rounded-full animate-spin" /> : 'Deletar Conta e Dados'}</button>
-                <button onClick={() => { setActiveModal(null); setConfirmationText(''); }} className="w-full py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest text-neutral-400 hover:text-black">Cancelar</button>
+                <button disabled={confirmationText !== 'DELETE' || isDeleting} onClick={handleDeleteAccount} className={`w-full py-5 rounded-[24px] font-black text-[11px] uppercase tracking-[2px] shadow-2xl transition-all flex items-center justify-center gap-3 ${confirmationText === 'DELETE' ? 'bg-red-600 text-white hover:bg-red-700 shadow-red-900/40' : 'bg-[#2a2a2a] text-white/30 cursor-not-allowed'}`}>{isDeleting ? <div className="w-6 h-6 border-4 border-white/30 border-t-white rounded-full animate-spin" /> : 'Deletar Conta e Dados'}</button>
+                <button onClick={() => { setActiveModal(null); setConfirmationText(''); }} className="w-full py-4 rounded-2xl font-black text-[11px] uppercase tracking-widest text-white/50 hover:text-white hover:bg-[#222] transition-all">Cancelar</button>
               </div>
             </div>
           </div>

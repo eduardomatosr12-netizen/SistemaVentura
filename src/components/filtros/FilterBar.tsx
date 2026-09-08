@@ -50,8 +50,8 @@ function FilterDropdown({ label, options, value, onChange }: FilterDropdownProps
         aria-haspopup="listbox"
         className={`flex items-center gap-1.5 px-3 py-2.5 min-h-[44px] text-xs font-semibold rounded-lg border transition-all ${
           value
-            ? 'bg-black text-white border-black'
-            : 'bg-white text-neutral-600 border-neutral-200 hover:border-neutral-400'
+            ? 'bg-[#1a1a1a] text-white border-[#CDFF00]'
+            : 'bg-black text-white/70 border-[#2d2d2d] hover:border-[#444]'
         }`}
       >
         <span>{label}</span>
@@ -62,12 +62,12 @@ function FilterDropdown({ label, options, value, onChange }: FilterDropdownProps
         )}
       </button>
       {isOpen && (
-        <div role="listbox" className="absolute top-full left-0 right-auto mt-1 min-w-48 w-max max-w-[80vw] max-h-[80dvh] overflow-y-auto bg-white border border-neutral-200 rounded-xl shadow-xl z-[999] overflow-hidden">
+        <div role="listbox" className="absolute top-full left-0 right-auto mt-1 min-w-48 w-max max-w-[80vw] max-h-[80dvh] overflow-y-auto bg-[#1a1a1a] border border-[#2d2d2d] rounded-xl shadow-xl z-[999] overflow-hidden">
           {value && (
             <button
               role="option"
               onClick={() => { onChange(null); setIsOpen(false); }}
-              className="w-full px-3 py-3 min-h-[44px] text-left text-xs font-medium text-neutral-500 hover:bg-neutral-50 border-b border-neutral-100 flex items-center"
+              className="w-full px-3 py-3 min-h-[44px] text-left text-xs font-medium text-white/50 hover:bg-[#222] border-b border-[#2d2d2d] flex items-center"
             >
               Limpar filtro
             </button>
@@ -78,8 +78,8 @@ function FilterDropdown({ label, options, value, onChange }: FilterDropdownProps
               role="option"
               aria-selected={value === opt.id}
               onClick={() => { onChange(opt.id); setIsOpen(false); }}
-              className={`w-full px-3 py-3 min-h-[44px] text-left text-xs font-medium hover:bg-neutral-50 transition-colors flex items-center ${
-                value === opt.id ? 'bg-black text-white' : 'text-neutral-700'
+              className={`w-full px-3 py-3 min-h-[44px] text-left text-xs font-medium hover:bg-[#222] transition-colors flex items-center ${
+                value === opt.id ? 'bg-[#CDFF00]/10 text-[#CDFF00] font-bold' : 'text-white/80'
               }`}
             >
               {opt.label}
@@ -123,7 +123,7 @@ function FilterBar() {
       {hasActiveFilters && (
         <button
           onClick={clearFilters}
-          className="flex items-center gap-1.5 px-3 py-2.5 min-h-[44px] text-xs font-semibold text-neutral-500 hover:text-red-600 hover:bg-red-50 rounded-lg border border-neutral-200 hover:border-red-200 transition-all"
+          className="flex items-center gap-1.5 px-3 py-2.5 min-h-[44px] text-xs font-semibold text-white/50 hover:text-red-400 hover:bg-red-500/10 rounded-lg border border-[#2d2d2d] hover:border-red-500/30 transition-all"
         >
           <X size={12} />
           Limpar Filtros

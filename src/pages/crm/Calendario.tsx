@@ -668,7 +668,7 @@ const CRMCalendario = () => {
       {/* Event View Modal */}
       {showViewModal && viewEvent && (
         <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 animate-in fade-in duration-200">
-          <div className="bg-[#111] border border-[#333] rounded-t-2xl sm:rounded-2xl shadow-2xl w-full max-w-lg transform animate-in slide-in-from-bottom-4 duration-300 max-h-[85vh] flex flex-col">
+          <div className="bg-[#1a1a1a] border border-[#2d2d2d] rounded-t-2xl sm:rounded-xl shadow-[0_20px_40px_rgba(0,0,0,0.5)] w-full max-w-lg transform animate-in slide-in-from-bottom-4 duration-300 max-h-[85vh] flex flex-col">
             <div className="px-4 sm:px-8 py-5 sm:py-7 border-b border-[#333] flex justify-between items-start bg-[#111] shrink-0">
               <div>
                 <span className="text-[9px] font-black uppercase tracking-[2px] mb-2 block"
@@ -812,7 +812,7 @@ const CRMCalendario = () => {
               )}
             </div>
 
-            <div className="px-4 sm:px-8 py-4 sm:py-5 bg-[#0a0a0a] flex justify-between items-center border-t border-[#333]">
+            <div className="px-4 sm:px-8 py-4 sm:py-5 bg-[#0a0a0a] flex justify-between items-center border-t border-[#2d2d2d]">
               <button
                 type="button"
                 onClick={() => {
@@ -838,9 +838,9 @@ const CRMCalendario = () => {
       {/* Event Modal (Create/Edit) */}
       {isModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 animate-in fade-in duration-200">
-          <div className="bg-[#111] border border-[#333] rounded-t-2xl sm:rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden transform animate-in slide-in-from-bottom-4 duration-300 max-h-[95vh] overflow-y-auto">
+          <div className="bg-[#1a1a1a] border border-[#2d2d2d] rounded-t-2xl sm:rounded-xl shadow-[0_20px_40px_rgba(0,0,0,0.5)] w-full max-w-lg overflow-hidden transform animate-in slide-in-from-bottom-4 duration-300 max-h-[95vh] overflow-y-auto">
             <form onSubmit={handleSave}>
-              <div className="px-4 sm:px-8 py-5 sm:py-7 border-b border-[#333] flex justify-between items-start bg-[#111]">
+              <div className="px-4 sm:px-8 py-5 sm:py-7 border-b border-[#2d2d2d] flex justify-between items-start bg-[#1a1a1a]">
                 <div>
                   <span className="text-[9px] font-black text-[#CDFF00] uppercase tracking-[2px] mb-2 block">
                     {modalMode === 'create' ? 'NOVO EVENTO' : 'EDITAR EVENTO'}
@@ -1356,7 +1356,7 @@ const CRMCalendario = () => {
                 </div>
               )}
 
-            <div className="px-4 sm:px-8 py-4 sm:py-5 bg-[#0a0a0a] flex justify-between items-center border-t border-[#333] shrink-0">
+            <div className="px-4 sm:px-8 py-4 sm:py-5 bg-[#0a0a0a] flex justify-between items-center border-t border-[#2d2d2d] shrink-0">
                 <div className="flex items-center gap-2">
                   {modalMode === 'edit' && (
                     <button

@@ -161,7 +161,7 @@ className="w-full bg-[#1a1a1a] border-2 border-[#2d2d2d] rounded-xl px-4 py-3 fo
               </div>
 
               {loginError && (
-                <div className="p-3 bg-red-50 border border-red-100 rounded-xl text-red-600 text-sm font-medium">
+                <div className="p-3 bg-[#3a1a1a] border border-[#5a2a2a] rounded-xl text-red-400 text-sm font-medium">
                   {loginError}
                 </div>
               )}

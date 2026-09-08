@@ -31,20 +31,20 @@ class ErrorBoundary extends Component<Props, State> {
   render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-dvh bg-neutral-50 flex items-center justify-center p-4 sm:p-8">
-          <div className="bg-white border border-red-200 rounded-2xl p-6 sm:p-8 max-w-md text-center shadow-lg">
-            <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <div className="min-h-dvh bg-black flex items-center justify-center p-4 sm:p-8">
+          <div className="bg-[#1a1a1a] border border-red-500/30 rounded-xl p-6 sm:p-8 max-w-md text-center shadow-[0_4px_12px_rgba(0,0,0,0.3)]">
+            <div className="w-16 h-16 bg-red-500/10 border border-red-500/30 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
               </svg>
             </div>
-            <h2 className="text-xl font-black text-black mb-2">Algo deu errado</h2>
-            <p className="text-neutral-500 text-sm mb-4">
+            <h2 className="text-xl font-black text-white mb-2">Algo deu errado</h2>
+            <p className="text-white/60 text-sm mb-4">
               Ocorreu um erro inesperado. Tente recarregar a página.
             </p>
             <button 
               onClick={this.handleReload}
-              className="px-6 py-3 min-h-[44px] bg-black text-white rounded-lg font-bold text-sm hover:bg-neutral-800 transition-colors"
+              className="px-6 py-3 min-h-[44px] bg-[#CDFF00] text-black rounded-lg font-black text-sm hover:scale-105 hover:shadow-[0_6px_16px_rgba(205,255,0,0.3)] transition-all"
             >
               Recarregar Página
             </button>

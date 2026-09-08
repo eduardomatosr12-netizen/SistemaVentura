@@ -1375,7 +1375,7 @@ const Tarefas = () => {
 
       {showRentalModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="bg-[#111] border border-[#333] rounded-2xl p-4 md:p-8 max-w-full md:max-w-2xl w-full shadow-2xl max-h-[90vh] overflow-y-auto">
+          <div className="bg-[#1a1a1a] border border-[#2d2d2d] rounded-xl p-4 md:p-8 max-w-full md:max-w-2xl w-full shadow-[0_20px_40px_rgba(0,0,0,0.5)] max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xl font-black text-white">{isNewRental ? 'Novo Aluguel' : 'Editar Aluguel'}</h3>
               <button onClick={() => setShowRentalModal(false)} className="text-neutral-400 hover:text-white p-2 min-h-[44px]">
@@ -1550,7 +1550,7 @@ const Tarefas = () => {
 
       {showCreateTaskModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="bg-[#111] border border-[#333] rounded-2xl p-4 md:p-8 max-w-full md:max-w-md w-full shadow-2xl">
+          <div className="bg-[#1a1a1a] border border-[#2d2d2d] rounded-xl p-4 md:p-8 max-w-full md:max-w-md w-full shadow-[0_20px_40px_rgba(0,0,0,0.5)]">
             <h3 className="text-xl font-black text-white mb-6">Qual categoria deseja adicionar o item?</h3>
             <div className="space-y-3">
               {boards.map(board => (
@@ -1576,7 +1576,7 @@ const Tarefas = () => {
 
       {showSeedModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={() => { if (!seedLoading) setShowSeedModal(false); }}>
-          <div className="bg-[#111] border border-[#333] rounded-2xl p-6 md:p-8 max-w-full md:max-w-md w-full shadow-2xl" onClick={e => e.stopPropagation()}>
+          <div className="bg-[#1a1a1a] border border-[#2d2d2d] rounded-xl p-6 md:p-8 max-w-full md:max-w-md w-full shadow-[0_20px_40px_rgba(0,0,0,0.5)]" onClick={e => e.stopPropagation()}>
             <div className="w-12 h-12 bg-yellow-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
               <AlertTriangle size={24} className="text-yellow-500" />
             </div>
@@ -1621,7 +1621,7 @@ const Tarefas = () => {
 
       {editingNote && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="bg-[#111] border border-[#333] rounded-2xl p-4 md:p-8 max-w-full md:max-w-2xl w-full shadow-2xl flex flex-col max-h-[90dvh] overflow-y-auto">
+          <div className="bg-[#1a1a1a] border border-[#2d2d2d] rounded-xl p-4 md:p-8 max-w-full md:max-w-2xl w-full shadow-[0_20px_40px_rgba(0,0,0,0.5)] flex flex-col max-h-[90dvh] overflow-y-auto">
             <div className="flex items-center justify-between mb-6 shrink-0">
               <h3 className="text-xl font-black text-white">Editar Notas</h3>
               <button onClick={() => { setEditingNote(null); setNoteContent(''); }} className="text-neutral-400 hover:text-white p-2 min-h-[44px]">
@@ -1639,7 +1639,7 @@ const Tarefas = () => {
             <div className="flex gap-3 mt-6">
               <button
                 onClick={() => { setEditingNote(null); setNoteContent(''); }}
-                className="flex-1 p-3 border border-neutral-200 rounded-lg text-neutral-600 hover:text-black hover:bg-neutral-50 transition-colors font-bold min-h-[44px]"
+                className="flex-1 p-3 border border-[#2d2d2d] rounded-lg text-white hover:border-[#CDFF00] hover:bg-[#222] transition-colors font-bold min-h-[44px]"
               >
                 Cancelar
               </button>

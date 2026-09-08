@@ -248,7 +248,7 @@ const TemplatesWhatsApp = () => {
                       <span className={`inline-block px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
                         tpl.active
                           ? 'bg-[#CDFF00]/10 text-[#CDFF00]'
-                          : 'bg-neutral-800 text-neutral-400'
+                          : 'bg-[#2a2a2a] text-white/50'
                       }`}>
                         {tpl.active ? 'Ativo' : 'Inativo'}
                       </span>
@@ -283,7 +283,7 @@ const TemplatesWhatsApp = () => {
                   <span className={`inline-block px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${
                     tpl.active
                       ? 'bg-[#CDFF00]/10 text-[#CDFF00]'
-                      : 'bg-neutral-800 text-neutral-400'
+                      : 'bg-[#2a2a2a] text-white/50'
                   }`}>
                     {tpl.active ? 'Ativo' : 'Inativo'}
                   </span>
@@ -321,7 +321,7 @@ const TemplatesWhatsApp = () => {
       {formOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 md:p-6 bg-black/60 backdrop-blur-md" onClick={closeForm}>
           <div
-            className="bg-[#0a0a0a] border border-[#333] rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col"
+            className="bg-[#1a1a1a] border border-[#2d2d2d] rounded-xl shadow-[0_20px_40px_rgba(0,0,0,0.5)] w-full max-w-2xl max-h-[90vh] flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between px-6 py-5 border-b border-[#333] shrink-0">

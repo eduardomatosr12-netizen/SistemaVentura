@@ -545,7 +545,7 @@ const CRMOrçamentos = () => {
       {isSidebarOpen && (
         <>
           <div className="fixed inset-0 bg-black/60 z-[55] md:hidden" onClick={() => setIsSidebarOpen(false)} />
-          <div className="fixed inset-x-0 bottom-0 z-[100] bg-[#111] border-t border-[#333] rounded-t-2xl p-4 max-h-[70dvh] overflow-y-auto md:hidden shadow-xl" style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}>
+          <div className="fixed inset-x-0 bottom-0 z-[100] bg-[#1a1a1a] border-t border-[#2d2d2d] rounded-t-xl p-4 max-h-[70dvh] overflow-y-auto md:hidden shadow-xl" style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}>
             <div className="flex items-center justify-between mb-3">
               <h2 className="text-lg font-black text-[#CDFF00]">Filtrar Contatos</h2>
               <button onClick={() => setIsSidebarOpen(false)} className="p-2 hover:bg-[#222] rounded-md transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center">
@@ -570,8 +570,8 @@ const CRMOrçamentos = () => {
               {renderFilterField('status', 'Status', 'text')}
             </div>
           </div>
-          <div className="hidden md:block absolute top-14 left-4 w-[280px] max-h-[80vh] bg-[#111] border border-[#333] rounded-xl shadow-xl overflow-y-auto z-50">
-            <div className="p-3 sticky top-0 bg-[#111] border-b border-[#333] flex items-center justify-between">
+          <div className="hidden md:block absolute top-14 left-4 w-[280px] max-h-[80vh] bg-[#1a1a1a] border border-[#2d2d2d] rounded-xl shadow-xl overflow-y-auto z-50">
+            <div className="p-3 sticky top-0 bg-[#1a1a1a] border-b border-[#2d2d2d] flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <div>
                   <h2 className="text-2xl md:text-3xl font-black text-white tracking-tight mb-1">Contatos</h2>
@@ -723,7 +723,7 @@ const CRMOrçamentos = () => {
                         <button onClick={() => openEdit(lead)} className="p-2 md:p-1.5 text-neutral-400 hover:text-white hover:bg-[#111] rounded-md transition-all min-w-[44px] min-h-[44px] flex items-center justify-center">
                           <Pencil size={12} className="md:w-3.5 md:h-3.5" />
                         </button>
-                        <button onClick={() => handleDelete(lead?.id)} className="p-2 md:p-1.5 text-neutral-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-all min-w-[44px] min-h-[44px] flex items-center justify-center">
+                        <button onClick={() => handleDelete(lead?.id)} className="p-2 md:p-1.5 text-neutral-400 hover:text-red-400 hover:bg-red-500/10 rounded-md transition-all min-w-[44px] min-h-[44px] flex items-center justify-center">
                           <Trash2 size={12} className="md:w-3.5 md:h-3.5" />
                         </button>
                       </div>
@@ -782,7 +782,7 @@ const CRMOrçamentos = () => {
                     <button onClick={() => openEdit(lead)} className="p-2 text-neutral-400 hover:text-white hover:bg-[#1a1a1a] rounded-md transition-all min-w-[44px] min-h-[44px] flex items-center justify-center">
                       <Pencil size={14} />
                     </button>
-                    <button onClick={() => handleDelete(lead?.id)} className="p-2 text-neutral-400 hover:text-red-500 hover:bg-red-50 rounded-md transition-all min-w-[44px] min-h-[44px] flex items-center justify-center">
+                    <button onClick={() => handleDelete(lead?.id)} className="p-2 text-neutral-400 hover:text-red-400 hover:bg-red-500/10 rounded-md transition-all min-w-[44px] min-h-[44px] flex items-center justify-center">
                       <Trash2 size={14} />
                     </button>
                   </div>
