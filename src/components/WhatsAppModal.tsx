@@ -169,7 +169,7 @@ const WhatsAppModal = ({
       <div
         ref={modalRef}
         tabIndex={-1}
-        className="bg-[#111] border border-[#333] rounded-t-2xl sm:rounded-2xl w-full max-w-lg shadow-2xl max-h-[92vh] sm:max-h-[90vh] flex flex-col outline-none"
+        className="bg-[#1a1a1a] border border-[#2d2d2d] rounded-t-2xl sm:rounded-2xl w-full max-w-lg shadow-2xl max-h-[92vh] sm:max-h-[90vh] flex flex-col outline-none"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between px-6 py-4 border-b border-[#333] shrink-0">
@@ -201,7 +201,7 @@ const WhatsAppModal = ({
             {onEditLead && (
               <button
                 onClick={() => { onClose(); onEditLead(); }}
-                className="inline-flex items-center gap-2 px-5 py-3 min-h-[44px] bg-[#B5FF03] text-black font-bold text-xs uppercase tracking-widest rounded-lg hover:bg-[#a1e600] transition-colors"
+                className="inline-flex items-center gap-2 px-5 py-3 min-h-[44px] bg-[#CDFF00] text-black font-bold text-xs uppercase tracking-widest rounded-lg hover:bg-[#a1e600] transition-colors"
               >
                 <Edit3 size={14} /> Editar Cadastro
               </button>
@@ -235,11 +235,11 @@ const WhatsAppModal = ({
                       onClick={() => handleSelectTemplate(tpl)}
                       className={`w-full text-left p-3 rounded-xl border transition-all min-h-[44px] ${
                         selectedTemplate?.id === tpl.id
-                          ? 'border-[#B5FF03] bg-[#B5FF03]/5'
+                          ? 'border-[#CDFF00] bg-[#CDFF00]/5'
                           : 'border-[#333] hover:border-[#555] bg-[#0a0a0a]'
                       }`}
                     >
-                      <span className={`text-xs font-bold ${selectedTemplate?.id === tpl.id ? 'text-[#B5FF03]' : 'text-white'}`}>
+                      <span className={`text-xs font-bold ${selectedTemplate?.id === tpl.id ? 'text-[#CDFF00]' : 'text-white'}`}>
                         {tpl.name}
                       </span>
                       <p className="text-[10px] text-neutral-500 mt-0.5 truncate">
@@ -261,7 +261,7 @@ const WhatsAppModal = ({
                     onClick={() => setIsEditing(!isEditing)}
                     className={`flex items-center gap-1.5 px-3 py-2.5 min-h-[44px] rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all ${
                       isEditing
-                        ? 'bg-[#B5FF03] text-black'
+                        ? 'bg-[#CDFF00] text-black'
                         : 'bg-[#222] text-neutral-300 hover:bg-[#333]'
                     }`}
                   >
@@ -275,7 +275,7 @@ const WhatsAppModal = ({
                     ref={textareaRef}
                     value={editedMessage}
                     onChange={(e) => setEditedMessage(e.target.value)}
-                    className="w-full bg-[#0a0a0a] border border-[#333] rounded-xl px-4 py-3 text-sm text-white focus:border-[#B5FF03] outline-none transition-colors resize-none"
+                    className="w-full bg-[#0a0a0a] border border-[#333] rounded-xl px-4 py-3 text-sm text-white focus:border-[#CDFF00] outline-none transition-colors resize-none"
                     rows={5}
                   />
                 ) : (

@@ -59,7 +59,7 @@ const RENTAL_STATUSES = ['Em Trânsito', 'Montado', 'Devolvido'] as const;
 const DEFAULT_STATUS_COLUMNS: ColumnOption[] = [
   { id: 'st-1', label: 'Pendente', color: '#6b7280' },
   { id: 'st-2', label: 'Em Andamento', color: '#f59e0b' },
-  { id: 'st-3', label: 'Concluído', color: '#B5FF03' },
+  { id: 'st-3', label: 'Concluído', color: '#CDFF00' },
 ];
 
 const CATEGORY_OPTIONS: ColumnOption[] = [
@@ -225,7 +225,7 @@ const Board = ({
               value={String(value)}
               onChange={(e) => handleCellChange(row.id, col.id, e.target.value)}
               onKeyDown={(e) => e.stopPropagation()}
-              className="flex-1 min-h-[36px] bg-transparent border-none outline-none text-sm px-3 py-2 text-white hover:bg-[#111] focus:bg-[#222] focus:border-b-2 focus:border-[#B5FF03] transition-colors"
+              className="flex-1 min-h-[36px] bg-transparent border-none outline-none text-sm px-3 py-2 text-white hover:bg-[#111] focus:bg-[#222] focus:border-b-2 focus:border-[#CDFF00] transition-colors"
               autoComplete="off"
               placeholder="Editar..."
             />
@@ -250,7 +250,7 @@ const Board = ({
           const numVal = Number(value) || 0;
           return (
             <div className="flex items-center gap-1 px-3 w-full">
-              <span className="text-[#B5FF03] text-sm font-bold shrink-0">
+              <span className="text-[#CDFF00] text-sm font-bold shrink-0">
                 {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(numVal)}
               </span>
             </div>
@@ -260,7 +260,7 @@ const Board = ({
           const numVal = Number(value) || 0;
           return (
             <div className="flex items-center gap-1 px-3 w-full">
-              <span className="text-[#B5FF03] text-sm font-bold shrink-0">
+              <span className="text-[#CDFF00] text-sm font-bold shrink-0">
                 {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(numVal)}
               </span>
             </div>
@@ -269,14 +269,14 @@ const Board = ({
         if (col.id === 'col-9') {
           return (
             <div className="flex items-center gap-1 px-3 w-full">
-              <span className="text-[#B5FF03] text-sm font-bold shrink-0">R$</span>
+              <span className="text-[#CDFF00] text-sm font-bold shrink-0">R$</span>
               <input
                 type="number"
                 step="0.01"
                 value={String(value ?? 0)}
                 onChange={(e) => handleCellChange(row.id, col.id, e.target.value)}
                 onKeyDown={(e) => e.stopPropagation()}
-                className="flex-1 min-h-[36px] bg-transparent border-none outline-none text-sm text-white font-bold hover:bg-[#111] focus:bg-[#222] focus:border-b-2 focus:border-[#B5FF03] transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                className="flex-1 min-h-[36px] bg-transparent border-none outline-none text-sm text-white font-bold hover:bg-[#111] focus:bg-[#222] focus:border-b-2 focus:border-[#CDFF00] transition-colors [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                 autoComplete="off"
                 placeholder="0,00"
               />
@@ -295,7 +295,7 @@ const Board = ({
             <button
               type="button"
               onClick={() => handleCellChange(row.id, col.id, Math.max(0, (Number(value) || 0) - 1))}
-              className="w-11 h-11 md:w-7 md:h-7 flex items-center justify-center rounded-md bg-[#222] text-white hover:bg-[#333] hover:text-[#B5FF03] transition-all font-bold text-lg"
+              className="w-11 h-11 md:w-7 md:h-7 flex items-center justify-center rounded-md bg-[#222] text-white hover:bg-[#333] hover:text-[#CDFF00] transition-all font-bold text-lg"
             >
               −
             </button>
@@ -304,13 +304,13 @@ const Board = ({
               value={String(value)}
               onChange={(e) => handleCellChange(row.id, col.id, e.target.value)}
               onKeyDown={(e) => e.stopPropagation()}
-              className="w-14 sm:w-14 min-h-[44px] md:min-h-[36px] bg-transparent border-none outline-none text-sm text-center text-white font-bold focus:border-b-2 focus:border-[#B5FF03] transition-colors"
+              className="w-14 sm:w-14 min-h-[44px] md:min-h-[36px] bg-transparent border-none outline-none text-sm text-center text-white font-bold focus:border-b-2 focus:border-[#CDFF00] transition-colors"
               autoComplete="off"
             />
             <button
               type="button"
               onClick={() => handleCellChange(row.id, col.id, (Number(value) || 0) + 1)}
-              className="w-11 h-11 md:w-7 md:h-7 flex items-center justify-center rounded-md bg-[#222] text-white hover:bg-[#333] hover:text-[#B5FF03] transition-all font-bold text-lg"
+              className="w-11 h-11 md:w-7 md:h-7 flex items-center justify-center rounded-md bg-[#222] text-white hover:bg-[#333] hover:text-[#CDFF00] transition-all font-bold text-lg"
             >
               +
             </button>
@@ -322,21 +322,21 @@ const Board = ({
             value={String(value)}
             onChange={(e) => handleCellChange(row.id, col.id, e.target.value)}
             onKeyDown={(e) => e.stopPropagation()}
-            className="w-full min-h-[36px] bg-transparent border-none outline-none text-sm px-3 py-2 text-white hover:bg-[#111] focus:bg-[#222] focus:border-b-2 focus:border-[#B5FF03] transition-colors"
+            className="w-full min-h-[36px] bg-transparent border-none outline-none text-sm px-3 py-2 text-white hover:bg-[#111] focus:bg-[#222] focus:border-b-2 focus:border-[#CDFF00] transition-colors"
             autoComplete="off"
           />
         );
       case 'priority':
         return (
           <div className="flex items-center gap-1 px-3 w-full">
-            <span className="text-[#B5FF03] text-sm font-bold shrink-0">R$</span>
+            <span className="text-[#CDFF00] text-sm font-bold shrink-0">R$</span>
             <input
               type="number"
               step="0.01"
               value={String(value || '')}
               onChange={(e) => handleCellChange(row.id, col.id, e.target.value)}
               onKeyDown={(e) => e.stopPropagation()}
-              className="flex-1 min-h-[36px] bg-transparent border-none outline-none text-sm text-white font-bold focus:border-b-2 focus:border-[#B5FF03] transition-colors"
+              className="flex-1 min-h-[36px] bg-transparent border-none outline-none text-sm text-white font-bold focus:border-b-2 focus:border-[#CDFF00] transition-colors"
               autoComplete="off"
               placeholder="0,00"
             />
@@ -370,7 +370,7 @@ const Board = ({
                 {value && (
                   <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: getOptionColor(col.id, String(value)) }} />
                 )}
-                <span className="text-sm font-bold truncate" style={{ color: value ? '#B5FF03' : '#888' }}>
+                <span className="text-sm font-bold truncate" style={{ color: value ? '#CDFF00' : '#888' }}>
                   {String(value) || '—'}
                 </span>
               </button>
@@ -403,7 +403,7 @@ const Board = ({
                                   if (e.key === 'Escape') { setEditingCatId(null); setEditingCatLabel(''); }
                                 }}
                                 onBlur={() => { setEditingCatId(null); setEditingCatLabel(''); }}
-                                className="flex-1 bg-[#111] border border-[#B5FF03] rounded px-2 py-0.5 text-xs text-white outline-none"
+                                className="flex-1 bg-[#111] border border-[#CDFF00] rounded px-2 py-0.5 text-xs text-white outline-none"
                                 onClick={(e) => e.stopPropagation()}
                               />
                             ) : (
@@ -419,7 +419,7 @@ const Board = ({
                               <button
                                 type="button"
                                 onClick={(e) => { e.stopPropagation(); setEditingCatId(opt.id); setEditingCatLabel(opt.label); setAddingCategory(false); }}
-                                className="p-2 text-neutral-400 hover:text-[#B5FF03] transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
+                                className="p-2 text-neutral-400 hover:text-[#CDFF00] transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
                                 title="Editar"
                               >
                                 ✎
@@ -453,13 +453,13 @@ const Board = ({
                               if (e.key === 'Escape') { setAddingCategory(false); setNewCategoryLabel(''); }
                             }}
                             placeholder="Nova categoria..."
-                            className="flex-1 bg-[#111] border border-[#B5FF03] rounded px-2 py-0.5 text-xs text-white outline-none placeholder-neutral-500"
+                            className="flex-1 bg-[#111] border border-[#CDFF00] rounded px-2 py-0.5 text-xs text-white outline-none placeholder-neutral-500"
                             onClick={(e) => e.stopPropagation()}
                           />
                           <button
                             type="button"
                             onClick={(e) => { e.stopPropagation(); handleAddCategory(); }}
-                            className="text-[#B5FF03] text-xs font-bold hover:text-white transition-colors"
+                            className="text-[#CDFF00] text-xs font-bold hover:text-white transition-colors"
                           >
                             OK
                           </button>
@@ -468,9 +468,9 @@ const Board = ({
                         <button
                           type="button"
                           onClick={(e) => { e.stopPropagation(); setAddingCategory(true); setEditingCatId(null); setNewCategoryLabel(''); }}
-                          className="flex items-center gap-2 px-3 py-2 w-full text-left text-xs text-[#B5FF03] font-bold hover:bg-[#222] transition-colors"
+                          className="flex items-center gap-2 px-3 py-2 w-full text-left text-xs text-[#CDFF00] font-bold hover:bg-[#222] transition-colors"
                         >
-                          <span className="w-4 h-4 flex items-center justify-center rounded-full border border-[#B5FF03] text-[10px]">+</span>
+                          <span className="w-4 h-4 flex items-center justify-center rounded-full border border-[#CDFF00] text-[10px]">+</span>
                           Nova Categoria
                         </button>
                       )}
@@ -608,7 +608,7 @@ const Board = ({
                 id={`new-tag-${row.id}-${col.id}`}
                 type="text"
                 placeholder="Nome da tag..."
-                className="w-full px-2 py-1 text-xs border border-[#333] rounded outline-none focus:border-[#B5FF03] text-white bg-[#111]"
+                className="w-full px-2 py-1 text-xs border border-[#333] rounded outline-none focus:border-[#CDFF00] text-white bg-[#111]"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') createAndAddTag();
                 }}
@@ -646,7 +646,7 @@ const Board = ({
                 <button
                   type="button"
                   onClick={createAndAddTag}
-                   className="flex-1 px-2 py-1 text-xs bg-[#B5FF03] text-black rounded hover:bg-[#a1e600] transition-colors"
+                   className="flex-1 px-2 py-1 text-xs bg-[#CDFF00] text-black rounded hover:bg-[#a1e600] transition-colors"
                 >
                   Criar
                 </button>
@@ -774,12 +774,12 @@ const Board = ({
               {Boolean(row.values['col-7']) && (
                 <div className="bg-[#1a1a1a] rounded-lg px-3 py-2">
                   <span className="text-neutral-500 block">Valor Unit.</span>
-                  <span className="text-[#B5FF03] font-bold">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(row.values['col-7']) || 0)}</span>
+                  <span className="text-[#CDFF00] font-bold">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(row.values['col-7']) || 0)}</span>
                 </div>
               )}
               <div className="bg-[#1a1a1a] rounded-lg px-3 py-2">
                 <span className="text-neutral-500 block">Aluguel Unit.</span>
-                <span className="text-[#B5FF03] font-bold">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(row.values['col-8']) || 0)}</span>
+                <span className="text-[#CDFF00] font-bold">{new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(row.values['col-8']) || 0)}</span>
               </div>
               <div className="bg-[#1a1a1a] rounded-lg px-3 py-2">
                 <span className="text-neutral-500 block">Custo Unit.</span>
@@ -1124,23 +1124,26 @@ const Tarefas = () => {
 
   const statusRentalColor: Record<string, string> = {
     'Em Trânsito': 'text-[#f59e0b] border-[#f59e0b]/50',
-    'Montado': 'text-[#B5FF03] border-[#B5FF03]',
+    'Montado': 'text-[#CDFF00] border-[#CDFF00]',
     'Devolvido': 'text-[#aaaaaa] border-[#222222]',
   };
 
   return (
     <div className="p-4 md:p-6 pb-bottom-nav md:pb-6 space-y-4 md:space-y-8 min-h-screen bg-black">
       <div>
-        <h1 className="text-3xl font-black text-white tracking-tight mb-1">Controle de Estoque</h1>
-        <p className="text-neutral-400 text-sm font-medium mb-6">Gerencie seus itens, categorias e fornecedores.</p>
+        <h1 className="text-[32px] font-black text-white tracking-[0.5px] mb-2 flex items-center gap-3">
+          <Package className="text-[#CDFF00]" size={32} />
+          Controle de Estoque
+        </h1>
+        <p className="text-sm font-medium text-white/70">Gerencie seus itens, categorias e fornecedores.</p>
       </div>
 
-      <div className="flex gap-6 border-b border-[#222222] overflow-x-auto scrollbar-hide">
+      <div className="flex gap-6 border-b border-[#2d2d2d] overflow-x-auto scrollbar-hide">
         <button
           onClick={() => setActiveTab('inventario')}
           className={`py-3 px-1 border-b-2 font-bold text-xs uppercase tracking-widest transition-colors whitespace-nowrap ${
             activeTab === 'inventario'
-              ? 'border-[#B5FF03] text-[#B5FF03]'
+              ? 'border-[#CDFF00] text-[#CDFF00]'
               : 'border-transparent text-[#aaaaaa] hover:text-white'
           }`}
         >
@@ -1151,7 +1154,7 @@ const Tarefas = () => {
           onClick={() => setActiveTab('aluguel')}
           className={`py-3 px-1 border-b-2 font-bold text-xs uppercase tracking-widest transition-colors whitespace-nowrap ${
             activeTab === 'aluguel'
-              ? 'border-[#B5FF03] text-[#B5FF03]'
+              ? 'border-[#CDFF00] text-[#CDFF00]'
               : 'border-transparent text-[#aaaaaa] hover:text-white'
           }`}
         >
@@ -1163,9 +1166,9 @@ const Tarefas = () => {
       {activeTab === 'inventario' && (
         <>
           {/* Inventory Filters */}
-          <div className="flex flex-wrap items-center gap-3 mb-4 p-3 bg-[#0a0a0a] border border-[#1a1a1a] rounded-md">
+          <div className="flex flex-wrap items-center gap-3 mb-4 p-3 bg-[#1a1a1a] border border-[#2d2d2d] rounded-xl shadow-[0_4px_12px_rgba(0,0,0,0.3)]">
             <div className="flex items-center gap-2">
-              <FilterIcon size={14} className="text-[#B5FF03]" />
+              <FilterIcon size={14} className="text-[#CDFF00]" />
               <span className="text-[9px] font-black text-white uppercase tracking-widest">Filtros:</span>
             </div>
             <div className="flex items-center gap-2">
@@ -1174,7 +1177,7 @@ const Tarefas = () => {
                 type="date"
                 value={dateFilterEstoque}
                 onChange={(e) => setDateFilterEstoque(e.target.value)}
-                className="bg-[#1a1a1a] border border-[#333] rounded-md px-2 py-1.5 text-[10px] font-bold text-white focus:outline-none focus:border-[#B5FF03] [color-scheme:dark]"
+                className="bg-[#1a1a1a] border border-[#333] rounded-md px-2 py-1.5 text-[10px] font-bold text-white focus:outline-none focus:border-[#CDFF00] [color-scheme:dark]"
               />
             </div>
             <label className="flex items-center gap-2 cursor-pointer">
@@ -1182,9 +1185,9 @@ const Tarefas = () => {
                 type="checkbox"
                 checked={estoqueZeroFilter}
                 onChange={(e) => setEstoqueZeroFilter(e.target.checked)}
-                className="w-3.5 h-3.5 accent-[#B5FF03]"
+                className="w-3.5 h-3.5 accent-[#CDFF00]"
               />
-              <span className="text-[10px] font-bold text-neutral-400 hover:text-[#B5FF03] transition-colors">
+              <span className="text-[10px] font-bold text-neutral-400 hover:text-[#CDFF00] transition-colors">
                 Estoque Zero
               </span>
             </label>
@@ -1193,13 +1196,13 @@ const Tarefas = () => {
           <div className="flex flex-wrap gap-3">
             <button
               onClick={handleSeedEstoque}
-              className="flex items-center gap-2 px-6 py-3 bg-[#1a1a2e] text-[#B5FF03] font-black rounded-lg hover:bg-[#2a2a4e] transition-colors border border-[#B5FF03]/30"
+              className="flex items-center gap-2 px-6 py-3 bg-[#1a1a1a] text-[#CDFF00] font-black rounded-lg hover:bg-[#2a2a2a] transition-colors border border-[#CDFF00]/30"
             >
               <Database size={18} /> Seed Estoque
             </button>
             <button
               onClick={() => setShowCreateTaskModal(true)}
-              className="flex items-center gap-2 px-6 py-3 bg-[#B5FF03] text-black font-black rounded-lg hover:bg-[#a1e600] transition-colors"
+              className="flex items-center gap-2 px-6 py-3 bg-[#CDFF00] text-black font-black rounded-lg hover:bg-[#a1e600] transition-colors"
             >
               <Plus size={20} /> Novo Item
             </button>
@@ -1207,14 +1210,14 @@ const Tarefas = () => {
 
           {saveFeedback && (
             <div className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold ${
-              saveFeedback.type === 'success' ? 'bg-[#1a3a1a] text-[#B5FF03] border border-[#2a5a2a]' : 'bg-[#3a1a1a] text-red-400 border border-[#5a2a2a]'
+              saveFeedback.type === 'success' ? 'bg-[#1a3a1a] text-[#CDFF00] border border-[#2a5a2a]' : 'bg-[#3a1a1a] text-red-400 border border-[#5a2a2a]'
             }`}>
               {saveFeedback.type === 'success' ? <CheckCircle2 size={16} /> : <AlertCircle size={16} />}
               {saveFeedback.message}
             </div>
           )}
           {seedFeedback && (
-            <div className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold bg-[#1a1a2e] text-[#B5FF03] border border-[#B5FF03]/20">
+            <div className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold bg-[#1a1a1a] text-[#CDFF00] border border-[#CDFF00]/20">
               <Database size={16} />
               {seedFeedback}
             </div>
@@ -1254,7 +1257,7 @@ const Tarefas = () => {
                 type="month"
                 value={rentalMonthFilter}
                 onChange={(e) => setRentalMonthFilter(e.target.value)}
-                className="bg-[#1a1a1a] border border-[#333] rounded-md px-2 py-1.5 text-[10px] font-bold text-white focus:outline-none focus:border-[#B5FF03] [color-scheme:dark]"
+                className="bg-[#1a1a1a] border border-[#333] rounded-md px-2 py-1.5 text-[10px] font-bold text-white focus:outline-none focus:border-[#CDFF00] [color-scheme:dark]"
               />
               {rentalMonthFilter && (
                 <button
@@ -1267,21 +1270,21 @@ const Tarefas = () => {
             </div>
             <button
               onClick={() => handleOpenRentalModal()}
-              className="flex items-center gap-2 px-6 py-3 bg-[#B5FF03] text-black font-black rounded-lg hover:bg-[#a1e600] transition-colors"
+              className="flex items-center gap-2 px-6 py-3 bg-[#CDFF00] text-black font-black rounded-lg hover:bg-[#a1e600] transition-colors"
             >
               <Plus size={20} /> Novo Aluguel
             </button>
           </div>
 
-          <div className="hidden md:block bg-[#111111] border border-[#222222] rounded-lg overflow-x-auto">
+          <div className="hidden md:block bg-[#1a1a1a] border border-[#2d2d2d] rounded-xl shadow-[0_4px_12px_rgba(0,0,0,0.3)] overflow-x-auto">
             <table className="w-full min-w-[700px]">
               <thead>
-                <tr className="border-b border-[#222222]">
-                  <th className="text-left p-4 text-xs font-black uppercase tracking-widest text-[#B5FF03]">Cliente</th>
-                  <th className="text-left p-4 text-xs font-black uppercase tracking-widest text-[#B5FF03]">Itens</th>
-                  <th className="text-left p-4 text-xs font-black uppercase tracking-widest text-[#B5FF03]">Data de Saída</th>
-                  <th className="text-left p-4 text-xs font-black uppercase tracking-widest text-[#B5FF03]">Data de Devolução</th>
-                  <th className="text-right p-4 text-xs font-black uppercase tracking-widest text-[#B5FF03]">Ações</th>
+                <tr className="border-b border-[#2d2d2d]">
+                  <th className="text-left p-4 text-xs font-black uppercase tracking-widest text-[#CDFF00]">Cliente</th>
+                  <th className="text-left p-4 text-xs font-black uppercase tracking-widest text-[#CDFF00]">Itens</th>
+                  <th className="text-left p-4 text-xs font-black uppercase tracking-widest text-[#CDFF00]">Data de Saída</th>
+                  <th className="text-left p-4 text-xs font-black uppercase tracking-widest text-[#CDFF00]">Data de Devolução</th>
+                  <th className="text-right p-4 text-xs font-black uppercase tracking-widest text-[#CDFF00]">Ações</th>
                 </tr>
               </thead>
               <tbody>
@@ -1307,7 +1310,7 @@ const Tarefas = () => {
                         <>
                           <button
                             onClick={() => handleOpenRentalModal(record)}
-                            className="text-[#B5FF03] hover:text-white transition-colors mr-3"
+                            className="text-[#CDFF00] hover:text-white transition-colors mr-3"
                           >
                             <Edit3 size={16} />
                           </button>
@@ -1343,7 +1346,7 @@ const Tarefas = () => {
                       <span className="text-[10px] text-neutral-500 uppercase tracking-widest font-bold">Automático</span>
                     ) : (
                       <>
-                        <button onClick={() => handleOpenRentalModal(record)} className="text-[#B5FF03] p-2 min-h-[44px]"><Edit3 size={18} /></button>
+                        <button onClick={() => handleOpenRentalModal(record)} className="text-[#CDFF00] p-2 min-h-[44px]"><Edit3 size={18} /></button>
                         <button onClick={() => handleDeleteRental(record.id)} className="text-[#ff4444] p-2 min-h-[44px]"><Trash2 size={18} /></button>
                       </>
                     )}
@@ -1390,7 +1393,7 @@ const Tarefas = () => {
                       value={clientSearch}
                       onChange={(e) => { setClientSearch(e.target.value); setRentalForm({ ...rentalForm, client: e.target.value }); }}
                       placeholder="Buscar cliente dos orçamentos..."
-                      className="w-full pl-10 pr-4 py-3 border border-[#333] rounded-lg font-bold text-white focus:border-[#B5FF03] outline-none transition-colors bg-[#1a1a1a]"
+                      className="w-full pl-10 pr-4 py-3 border border-[#333] rounded-lg font-bold text-white focus:border-[#CDFF00] outline-none transition-colors bg-[#1a1a1a]"
                       autoComplete="off"
                     />
                   </div>
@@ -1416,7 +1419,7 @@ const Tarefas = () => {
                       type="date"
                       value={rentalForm.dataSaida}
                       onChange={(e) => setRentalForm({ ...rentalForm, dataSaida: e.target.value })}
-                      className="w-full px-4 py-3 border border-[#333] rounded-lg font-bold text-white focus:border-[#B5FF03] outline-none transition-colors bg-[#1a1a1a]"
+                      className="w-full px-4 py-3 border border-[#333] rounded-lg font-bold text-white focus:border-[#CDFF00] outline-none transition-colors bg-[#1a1a1a]"
                       required
                     />
                   </div>
@@ -1426,7 +1429,7 @@ const Tarefas = () => {
                       type="date"
                       value={rentalForm.dataDevolucao}
                       onChange={(e) => setRentalForm({ ...rentalForm, dataDevolucao: e.target.value })}
-                      className="w-full px-4 py-3 border border-[#333] rounded-lg font-bold text-white focus:border-[#B5FF03] outline-none transition-colors bg-[#1a1a1a]"
+                      className="w-full px-4 py-3 border border-[#333] rounded-lg font-bold text-white focus:border-[#CDFF00] outline-none transition-colors bg-[#1a1a1a]"
                     />
                   </div>
                 </div>
@@ -1449,7 +1452,7 @@ const Tarefas = () => {
                               setRentalForm({ ...rentalForm, items: newItems });
                             }}
                             placeholder="Buscar item do estoque..."
-                            className="w-full pl-9 pr-3 py-2 border border-[#333] rounded-lg text-sm font-bold text-white focus:border-[#B5FF03] outline-none transition-colors bg-[#111]"
+                            className="w-full pl-9 pr-3 py-2 border border-[#333] rounded-lg text-sm font-bold text-white focus:border-[#CDFF00] outline-none transition-colors bg-[#111]"
                             autoComplete="off"
                           />
                         </div>
@@ -1480,7 +1483,7 @@ const Tarefas = () => {
                             newItems[idx] = { ...newItems[idx], status: e.target.value as RentalItem['status'] };
                             setRentalForm({ ...rentalForm, items: newItems });
                           }}
-                          className="w-full px-3 py-2 border border-[#333] rounded-lg text-sm font-bold text-white focus:border-[#B5FF03] outline-none transition-colors bg-[#111]"
+                          className="w-full px-3 py-2 border border-[#333] rounded-lg text-sm font-bold text-white focus:border-[#CDFF00] outline-none transition-colors bg-[#111]"
                         >
                           {RENTAL_STATUSES.map(s => (
                             <option key={s} value={s}>{s}</option>
@@ -1497,7 +1500,7 @@ const Tarefas = () => {
                             newItems[idx] = { ...newItems[idx], quantidade: Number(e.target.value) };
                             setRentalForm({ ...rentalForm, items: newItems });
                           }}
-                          className="w-full px-3 py-2 border border-[#333] rounded-lg text-sm font-bold text-white focus:border-[#B5FF03] outline-none transition-colors bg-[#111]"
+                          className="w-full px-3 py-2 border border-[#333] rounded-lg text-sm font-bold text-white focus:border-[#CDFF00] outline-none transition-colors bg-[#111]"
                         />
                       </div>
                       <button
@@ -1519,7 +1522,7 @@ const Tarefas = () => {
                     ...rentalForm,
                     items: [...rentalForm.items, { id: generateUUID(), item: '', status: 'Em Trânsito', quantidade: 1 }]
                   })}
-                  className="mt-3 flex items-center gap-2 text-xs font-bold text-[#B5FF03] hover:text-white transition-colors"
+                  className="mt-3 flex items-center gap-2 text-xs font-bold text-[#CDFF00] hover:text-white transition-colors"
                 >
                   + Adicionar outro item
                 </button>
@@ -1535,7 +1538,7 @@ const Tarefas = () => {
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 p-3 bg-[#B5FF03] text-black rounded-lg font-bold hover:bg-[#a1e600] transition-colors min-h-[44px]"
+                  className="flex-1 p-3 bg-[#CDFF00] text-black rounded-lg font-bold hover:bg-[#a1e600] transition-colors min-h-[44px]"
                 >
                   {isNewRental ? 'Adicionar' : 'Salvar'}
                 </button>
@@ -1554,7 +1557,7 @@ const Tarefas = () => {
                 <button
                   key={board.id}
                   onClick={() => handleCreateNewTask(board.id)}
-                  className="w-full p-4 text-left border border-[#333] rounded-lg hover:bg-[#222] hover:border-[#B5FF03] transition-colors flex items-center gap-3 min-h-[44px]"
+                  className="w-full p-4 text-left border border-[#333] rounded-lg hover:bg-[#222] hover:border-[#CDFF00] transition-colors flex items-center gap-3 min-h-[44px]"
                 >
                   <div className="w-4 h-4 rounded-full" style={{ backgroundColor: board.color }} />
                   <span className="font-bold text-white">{board.title}</span>
@@ -1600,7 +1603,7 @@ const Tarefas = () => {
                 type="button"
                 onClick={handleConfirmSeed}
                 disabled={seedLoading}
-                className="flex-1 p-3 bg-[#B5FF03] text-black rounded-lg font-bold hover:bg-[#a1e600] transition-colors min-h-[44px] disabled:opacity-50 flex items-center justify-center gap-2"
+                className="flex-1 p-3 bg-[#CDFF00] text-black rounded-lg font-bold hover:bg-[#a1e600] transition-colors min-h-[44px] disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {seedLoading ? (
                   <>
@@ -1630,7 +1633,7 @@ const Tarefas = () => {
               onChange={(e) => setNoteContent(e.target.value)}
               rows={16}
               autoFocus
-                className="w-full px-4 py-3 border-2 border-[#333] rounded-xl font-medium text-white focus:border-[#B5FF03] outline-none transition-colors resize-none leading-relaxed bg-[#111] flex-1 min-h-[160px]"
+                className="w-full px-4 py-3 border-2 border-[#333] rounded-xl font-medium text-white focus:border-[#CDFF00] outline-none transition-colors resize-none leading-relaxed bg-[#111] flex-1 min-h-[160px]"
               placeholder="Digite suas notas aqui..."
             />
             <div className="flex gap-3 mt-6">
@@ -1642,7 +1645,7 @@ const Tarefas = () => {
               </button>
               <button
                 onClick={handleSaveNote}
-                className="flex-1 p-3 bg-[#B5FF03] text-black rounded-lg font-bold hover:bg-[#a1e600] transition-colors min-h-[44px]"
+                className="flex-1 p-3 bg-[#CDFF00] text-black rounded-lg font-bold hover:bg-[#a1e600] transition-colors min-h-[44px]"
                >
                   Salvar Nota
               </button>

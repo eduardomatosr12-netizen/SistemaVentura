@@ -183,8 +183,8 @@ export default function DespesasDoEvento({ eventId, eventDate }: Props) {
               onClick={() => toggleStatus(exp)}
               className={`mt-0.5 w-11 h-11 min-w-[44px] min-h-[44px] rounded border flex items-center justify-center shrink-0 transition-colors ${
                 exp.status === 'Pago'
-                  ? 'bg-[#CCFF00] border-[#CCFF00] text-black'
-                  : 'border-[rgba(255,255,255,0.2)] hover:border-[#CCFF00]'
+                  ? 'bg-[#CDFF00] border-[#CDFF00] text-black'
+                  : 'border-[rgba(255,255,255,0.2)] hover:border-[#CDFF00]'
               }`}
             >
               {exp.status === 'Pago' && <Check size={14} strokeWidth={3} />}
@@ -304,7 +304,7 @@ export default function DespesasDoEvento({ eventId, eventDate }: Props) {
         <button
           type="button"
           onClick={() => setShowForm(true)}
-          className="flex items-center gap-1.5 text-[10px] font-bold text-[#CCFF00] hover:text-white transition-colors py-2 min-h-[44px]"
+          className="flex items-center gap-1.5 text-[10px] font-bold text-[#CDFF00] hover:text-white transition-colors py-2 min-h-[44px]"
         >
           <Plus size={12} />
           Adicionar Despesa
@@ -319,7 +319,7 @@ export default function DespesasDoEvento({ eventId, eventDate }: Props) {
           </div>
           <div className="flex justify-between text-xs">
             <span className="text-[#A0A0A0]">Total Pago</span>
-            <span className="text-[#CCFF00] font-bold">{formatMoeda(totalPago)}</span>
+            <span className="text-[#CDFF00] font-bold">{formatMoeda(totalPago)}</span>
           </div>
           <div className="flex justify-between text-xs">
             <span className="text-[#A0A0A0]">Total Pendente</span>

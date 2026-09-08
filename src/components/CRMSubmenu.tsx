@@ -33,7 +33,7 @@ const CRMSubmenu = () => {
                 relative whitespace-nowrap flex items-center gap-1 md:gap-2
                 px-3 md:px-3 py-3 md:py-3.5 min-h-[44px] text-xs md:text-sm font-medium transition-colors duration-150
                 ${active
-                  ? 'text-[#B5FF03] font-semibold'
+                  ? 'text-[#CDFF00] font-semibold'
                   : 'text-neutral-400 hover:text-white'
                 }
               `}
@@ -41,7 +41,7 @@ const CRMSubmenu = () => {
               <Icon className="w-4 h-4 shrink-0" strokeWidth={active ? 2.5 : 2} />
               <span>{item.label}</span>
               {active && (
-                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#B5FF03] rounded-t-full" />
+                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#CDFF00] rounded-t-full" />
               )}
             </Link>
           );

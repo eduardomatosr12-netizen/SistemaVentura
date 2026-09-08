@@ -62,8 +62,8 @@ const Login = () => {
           </div>
 
           {error && (
-            <div className="mb-4 md:mb-6 p-2 md:p-3.5 bg-red-50 border border-red-200 rounded-md">
-              <p className="text-red-600 text-xs md:text-sm font-medium">{error}</p>
+            <div className="mb-4 md:mb-6 p-2 md:p-3.5 bg-[#3a1a1a] border border-[#5a2a2a] rounded-lg">
+              <p className="text-red-400 text-xs md:text-sm font-medium">{error}</p>
             </div>
           )}
 
@@ -80,7 +80,7 @@ const Login = () => {
                   value={email}
                   onChange={(e) => { setEmail(e.target.value); setError(''); }}
                   placeholder="seu@email.com"
-                   className="w-full border border-neutral-200 rounded-md py-2 md:py-3 pl-10 md:pl-11 pr-4 text-black text-xs md:text-sm placeholder-neutral-400 focus:outline-none focus:border-[#B5FF03] focus:ring-1 focus:ring-[#B5FF03] transition-colors bg-white"
+                   className="w-full border border-[#2d2d2d] rounded-lg py-2 md:py-3 pl-10 md:pl-11 pr-4 text-white text-xs md:text-sm placeholder-neutral-500 focus:outline-none focus:border-[#CDFF00] focus:ring-1 focus:ring-[#CDFF00] transition-colors bg-[#1a1a1a]"
                   disabled={isLoading}
                 />
               </div>
@@ -98,13 +98,13 @@ const Login = () => {
                   value={password}
                   onChange={(e) => { setPassword(e.target.value); setError(''); }}
                   placeholder="Sua senha secreta"
-                   className="w-full border border-neutral-200 rounded-md py-3 pl-11 pr-12 text-black text-sm placeholder-neutral-400 focus:outline-none focus:border-[#B5FF03] focus:ring-1 focus:ring-[#B5FF03] transition-colors bg-white"
+                   className="w-full border border-[#2d2d2d] rounded-lg py-3 pl-11 pr-12 text-white text-sm placeholder-neutral-500 focus:outline-none focus:border-[#CDFF00] focus:ring-1 focus:ring-[#CDFF00] transition-colors bg-[#1a1a1a]"
                   disabled={isLoading}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                   className="absolute right-3.5 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-[#B5FF03] transition-colors"
+                   className="absolute right-3.5 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-[#CDFF00] transition-colors"
                   disabled={isLoading}
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -115,7 +115,7 @@ const Login = () => {
             <button
               type="submit"
               disabled={isLoading}
-               className="w-full bg-[#B5FF03] hover:bg-[#a1e600] disabled:bg-neutral-300 disabled:cursor-not-allowed text-black font-bold py-3.5 rounded-md transition-colors flex items-center justify-center gap-2 text-sm mt-6"
+               className="w-full bg-[#CDFF00] hover:bg-[#a1e600] disabled:bg-neutral-700 disabled:cursor-not-allowed text-black font-black py-3.5 rounded-lg transition-colors flex items-center justify-center gap-2 text-sm mt-6 uppercase tracking-widest"
             >
               {isLoading ? (
                 <><Loader2 className="w-4 h-4 animate-spin" /> Entrando...</>

@@ -32,13 +32,13 @@ const maskDate = (raw: string): string => {
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
   orcamento: { label: 'Orçamento', color: 'text-[#f59e0b]', bg: 'bg-[#f59e0b]/10 border-[#f59e0b]' },
   orcamento_cancelado: { label: 'Orçamento Cancelado', color: 'text-[#ef4444]', bg: 'bg-[#ef4444]/10 border-[#ef4444]' },
-  evento_confirmado: { label: 'Evento Confirmado', color: 'text-[#B5FF03]', bg: 'bg-[#B5FF03]/10 border-[#B5FF03]' },
+  evento_confirmado: { label: 'Evento Confirmado', color: 'text-[#CDFF00]', bg: 'bg-[#CDFF00]/10 border-[#CDFF00]' },
   evento_concluido: { label: 'Evento Concluído', color: 'text-[#3b82f6]', bg: 'bg-[#3b82f6]/10 border-[#3b82f6]' },
 };
 
 const getEventStatusColor = (status?: string): string => {
   switch (status) {
-    case 'evento_confirmado': return '#B5FF03';
+    case 'evento_confirmado': return '#CDFF00';
     case 'orcamento': return '#f59e0b';
     case 'orcamento_cancelado': return '#ef4444';
     case 'evento_concluido': return '#3b82f6';
@@ -65,7 +65,7 @@ interface CalendarOccurrence {
 
 const PHASE_CONFIG: Record<EventPhase, { label: string; shortLabel: string; color: string; bg: string }> = {
   montagem: { label: 'Montagem', shortLabel: 'M', color: '#f59e0b', bg: 'rgba(245,158,11,0.15)' },
-  evento: { label: 'Evento', shortLabel: 'E', color: '#B5FF03', bg: 'rgba(181,255,3,0.15)' },
+  evento: { label: 'Evento', shortLabel: 'E', color: '#CDFF00', bg: 'rgba(181,255,3,0.15)' },
   desmontagem: { label: 'Desmontagem', shortLabel: 'D', color: '#ef4444', bg: 'rgba(239,68,68,0.15)' },
 };
 
@@ -474,12 +474,15 @@ const CRMCalendario = () => {
   }, [safeEvents]);
 
   return (
-    <div className="min-h-screen p-2 md:p-8 pb-bottom-nav md:pb-8 bg-[#000000]">
+    <div className="relative min-h-screen bg-black p-2 md:p-8 pb-bottom-nav md:pb-8">
       <div className="mb-4 md:mb-8 flex flex-col md:flex-row justify-between items-start md:items-end gap-3 md:gap-0">
         <div className="flex items-center gap-4">
           <div>
-            <h1 className="text-2xl md:text-3xl font-black text-white tracking-tight mb-1">Calendário de Eventos</h1>
-            <p className="text-neutral-400 text-xs md:text-sm">Visualize e acompanhe seus compromissos agendados.</p>
+            <h1 className="text-[32px] font-black text-white tracking-[0.5px] mb-2 flex items-center gap-3">
+              <CalendarIcon className="text-[#CDFF00]" size={32} />
+              Calendário de Eventos
+            </h1>
+            <p className="text-sm font-medium text-white/70">Visualize e acompanhe seus compromissos agendados.</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -501,7 +504,7 @@ const CRMCalendario = () => {
         </div>
         <button
           onClick={handleOpenCreate}
-          className="w-full md:w-auto bg-[#B5FF03] text-black px-4 md:px-6 py-2 md:py-3 rounded-md font-black text-[10px] md:text-[11px] uppercase tracking-widest flex items-center justify-center md:justify-start gap-2 hover:bg-[#a1e600] transition-all active:scale-[0.98] shadow-sm"
+          className="w-full md:w-auto bg-[#CDFF00] text-black px-4 md:px-6 py-2 md:py-3 rounded-lg font-black text-[10px] md:text-[11px] uppercase tracking-widest flex items-center justify-center md:justify-start gap-2 shadow-[0_4px_12px_rgba(205,255,0,0.2)] hover:scale-105 hover:shadow-[0_6px_16px_rgba(205,255,0,0.3)] transition-all min-h-[44px]"
         >
           <Plus size={14} className="md:w-4 md:h-4" strokeWidth={3} />
           <span className="hidden sm:inline">CRIAR</span>
@@ -510,7 +513,7 @@ const CRMCalendario = () => {
       </div>
 
       {/* Status Legend */}
-      <div className="mb-6 flex flex-wrap items-center gap-4 p-3 bg-[#0a0a0a] border border-[#1a1a1a] rounded-md">
+      <div className="mb-6 flex flex-wrap items-center gap-4 p-3 bg-[#1a1a1a] border border-[#2d2d2d] rounded-xl shadow-[0_4px_12px_rgba(0,0,0,0.3)]">
         <span className="text-[9px] font-black text-white uppercase tracking-widest mr-2">Legenda:</span>
         {Object.entries(STATUS_CONFIG).map(([key, config]) => (
           <div key={key} className="flex items-center gap-1.5">
@@ -521,7 +524,7 @@ const CRMCalendario = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-3 md:gap-6">
-        <div className="lg:col-span-3 bg-[#000000] border border-[#1a1a1a] rounded-md p-6 shadow-sm overflow-x-auto">
+        <div className="lg:col-span-3 bg-[#1a1a1a] border border-[#2d2d2d] rounded-xl p-6 shadow-[0_4px_12px_rgba(0,0,0,0.3)] overflow-x-auto transition-all duration-200">
           {/* Calendar Grid Header */}
           <div className="grid grid-cols-7 gap-1 mb-4">
             {days.map((day) => (
@@ -548,13 +551,13 @@ const CRMCalendario = () => {
                 return (
                   <div
                     key={idx}
-                    className={`min-h-[72px] md:min-h-[120px] p-1 md:p-2 border border-[#1a1a1a] rounded-md flex flex-col gap-1 transition-all ${
-                      isCurrentMonth ? 'bg-[#000000] hover:border-[#333]' : 'bg-[#000000]/50'
-                    } ${isToday ? 'ring-2 ring-[#B5FF03] ring-inset' : ''}`}
+                    className={`min-h-[72px] md:min-h-[120px] p-1 md:p-2 border border-[#2d2d2d] rounded-xl flex flex-col gap-1 transition-all ${
+                      isCurrentMonth ? 'bg-black/40 hover:border-[#CDFF00]' : 'bg-black/20'
+                    } ${isToday ? 'ring-2 ring-[#CDFF00] ring-inset' : ''}`}
                   >
                     <div className="flex justify-between items-center mb-1">
                       <span className={`text-[10px] font-black ${
-                        isToday ? 'bg-[#B5FF03] text-black w-5 h-5 flex items-center justify-center rounded-full' :
+                        isToday ? 'bg-[#CDFF00] text-black w-5 h-5 flex items-center justify-center rounded-full' :
                         isCurrentMonth ? 'text-white' : 'text-neutral-600'
                       }`}>
                         {isCurrentMonth && dayNum}
@@ -612,9 +615,9 @@ const CRMCalendario = () => {
 
         {/* Sidebar: Upcoming Events */}
         <div className="space-y-6">
-          <div className="bg-[#0a0a0a] border border-[#1a1a1a] rounded-md p-6 shadow-sm">
-            <h3 className="text-[10px] font-black text-[#B5FF03] uppercase tracking-widest mb-6 border-b border-[#1a1a1a] pb-4 flex items-center gap-2">
-              <Clock size={12} className="text-[#B5FF03]" />
+          <div className="bg-[#1a1a1a] border border-[#2d2d2d] rounded-xl p-6 shadow-[0_4px_12px_rgba(0,0,0,0.3)]">
+            <h3 className="text-[10px] font-black text-[#CDFF00] uppercase tracking-widest mb-6 border-b border-[#2d2d2d] pb-4 flex items-center gap-2">
+              <Clock size={12} className="text-[#CDFF00]" />
               PRÓXIMOS EVENTOS
             </h3>
             <div className="space-y-5">
@@ -687,19 +690,19 @@ const CRMCalendario = () => {
               {/* Tipo e Horário */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="text-[9px] font-black text-[#B5FF03] uppercase tracking-widest block mb-1">TIPO DE EVENTO</label>
+                  <label className="text-[9px] font-black text-[#CDFF00] uppercase tracking-widest block mb-1">TIPO DE EVENTO</label>
                   <p className="text-sm font-bold text-white">{eventTypeLabel(viewEvent.eventType)}</p>
                 </div>
                 <div>
-                  <label className="text-[9px] font-black text-[#B5FF03] uppercase tracking-widest block mb-1">HORÁRIO</label>
+                  <label className="text-[9px] font-black text-[#CDFF00] uppercase tracking-widest block mb-1">HORÁRIO</label>
                   <p className="text-sm font-bold text-white">{viewEvent.time || '—'}</p>
                 </div>
               </div>
 
               {/* Cliente Info */}
               {viewEvent.client && (
-                <div className="bg-[#0a0a0a] border border-[#1a1a1a] rounded-md p-4 space-y-2">
-                  <label className="text-[9px] font-black text-[#B5FF03] uppercase tracking-widest block mb-2">INFORMAÇÕES DO CLIENTE</label>
+                <div className="bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg p-4 space-y-2">
+                  <label className="text-[9px] font-black text-[#CDFF00] uppercase tracking-widest block mb-2">INFORMAÇÕES DO CLIENTE</label>
                   <div className="flex items-center gap-2">
                     <User size={12} className="text-neutral-500 shrink-0" />
                     <span className="text-sm text-white font-medium">{viewEvent.client}</span>
@@ -711,7 +714,7 @@ const CRMCalendario = () => {
                       <button
                         type="button"
                         onClick={() => window.open(generateWhatsAppLink(viewEvent.clientPhone!), '_blank')}
-                        className="text-[#25D366] hover:text-[#B5FF03] transition-colors ml-auto flex items-center justify-center min-w-[44px] min-h-[44px]"
+                        className="text-[#25D366] hover:text-[#CDFF00] transition-colors ml-auto flex items-center justify-center min-w-[44px] min-h-[44px]"
                         title="Enviar mensagem via WhatsApp"
                         aria-label="Enviar mensagem via WhatsApp"
                       >
@@ -735,12 +738,12 @@ const CRMCalendario = () => {
               )}
 
               {/* Três Marcos Temporais */}
-              <div className="bg-[#0a0a0a] border border-[#1a1a1a] rounded-md p-4">
-                <label className="text-[9px] font-black text-[#B5FF03] uppercase tracking-widest block mb-3">MARCOS DO EVENTO</label>
+              <div className="bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg p-4">
+                <label className="text-[9px] font-black text-[#CDFF00] uppercase tracking-widest block mb-3">MARCOS DO EVENTO</label>
                 <div className="space-y-3">
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-[#B5FF03]/20 flex items-center justify-center shrink-0">
-                      <CalendarIcon size={14} className="text-[#B5FF03]" />
+                    <div className="w-8 h-8 rounded-full bg-[#CDFF00]/20 flex items-center justify-center shrink-0">
+                      <CalendarIcon size={14} className="text-[#CDFF00]" />
                     </div>
                     <div>
                       <p className="text-[10px] text-neutral-500 font-bold uppercase tracking-widest">Data do Evento</p>
@@ -771,7 +774,7 @@ const CRMCalendario = () => {
               {/* Valor */}
               {(viewEvent.valorTotal ?? 0) > 0 && (
                 <div className="flex items-center gap-2">
-                  <CreditCard size={12} className="text-[#B5FF03]" />
+                  <CreditCard size={12} className="text-[#CDFF00]" />
                   <span className="text-sm text-white font-black">
                     {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(viewEvent.valorTotal ?? 0)}
                   </span>
@@ -789,7 +792,7 @@ const CRMCalendario = () => {
               {/* Descrição */}
               {viewEvent.description && (
                 <div>
-                  <label className="text-[9px] font-black text-[#B5FF03] uppercase tracking-widest block mb-1">DESCRIÇÃO</label>
+                  <label className="text-[9px] font-black text-[#CDFF00] uppercase tracking-widest block mb-1">DESCRIÇÃO</label>
                   <p className="text-xs text-neutral-300 whitespace-pre-wrap">{viewEvent.description}</p>
                 </div>
               )}
@@ -797,7 +800,7 @@ const CRMCalendario = () => {
               {/* Equipe */}
               {viewEvent.equipe && (
                 <div>
-                  <label className="text-[9px] font-black text-[#B5FF03] uppercase tracking-widest block mb-1">EQUIPE</label>
+                  <label className="text-[9px] font-black text-[#CDFF00] uppercase tracking-widest block mb-1">EQUIPE</label>
                   <div className="flex flex-wrap gap-1">
                     {viewEvent.equipe.split(',').map(name => (
                       <span key={name.trim()} className="px-2 py-1 bg-[#1a1a1a] border border-[#333] rounded-md text-[10px] text-white font-bold">
@@ -816,7 +819,7 @@ const CRMCalendario = () => {
                   setShowViewModal(false);
                   handleOpenEdit(viewEvent);
                 }}
-                className="px-4 sm:px-6 py-2.5 bg-[#B5FF03] text-black rounded-md font-black text-[10px] uppercase tracking-widest hover:bg-[#a1e600] transition-all"
+                className="px-4 sm:px-6 py-2.5 bg-[#CDFF00] text-black rounded-md font-black text-[10px] uppercase tracking-widest hover:bg-[#a1e600] transition-all"
               >
                 EDITAR
               </button>
@@ -839,7 +842,7 @@ const CRMCalendario = () => {
             <form onSubmit={handleSave}>
               <div className="px-4 sm:px-8 py-5 sm:py-7 border-b border-[#333] flex justify-between items-start bg-[#111]">
                 <div>
-                  <span className="text-[9px] font-black text-[#B5FF03] uppercase tracking-[2px] mb-2 block">
+                  <span className="text-[9px] font-black text-[#CDFF00] uppercase tracking-[2px] mb-2 block">
                     {modalMode === 'create' ? 'NOVO EVENTO' : 'EDITAR EVENTO'}
                   </span>
                   <input
@@ -863,14 +866,14 @@ const CRMCalendario = () => {
               <div className="p-4 md:p-8 space-y-4 md:space-y-6">
                 {/* Status */}
                 <div className="space-y-2">
-                  <label className="flex items-center gap-2 text-[9px] font-black text-[#B5FF03] uppercase tracking-widest">
-                    <Flag size={12} strokeWidth={3} className="text-[#B5FF03]" />
+                  <label className="flex items-center gap-2 text-[9px] font-black text-[#CDFF00] uppercase tracking-widest">
+                    <Flag size={12} strokeWidth={3} className="text-[#CDFF00]" />
                     STATUS
                   </label>
                   <select
                     value={formData.status || 'orcamento'}
                     onChange={(e) => setFormData({ ...formData, status: e.target.value as CalendarEvent['status'] })}
-                    className="w-full bg-[#0a0a0a] border border-[#333] rounded-md px-3 py-2 text-xs font-black text-white focus:ring-1 focus:ring-[#B5FF03] outline-none transition-all"
+                    className="w-full bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg px-3 py-2 text-xs font-black text-white focus:ring-1 focus:ring-[#CDFF00] outline-none transition-all"
                   >
                     <option value="orcamento">Orçamento</option>
                     <option value="orcamento_cancelado">Orçamento Cancelado</option>
@@ -881,8 +884,8 @@ const CRMCalendario = () => {
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-6">
                   <div className="space-y-2">
-                    <label className="flex items-center gap-2 text-[9px] font-black text-[#B5FF03] uppercase tracking-widest">
-                      <MessageSquare size={12} strokeWidth={3} className="text-[#B5FF03]" />
+                    <label className="flex items-center gap-2 text-[9px] font-black text-[#CDFF00] uppercase tracking-widest">
+                      <MessageSquare size={12} strokeWidth={3} className="text-[#CDFF00]" />
                       TIPO DE EVENTO
                     </label>
                     {(() => {
@@ -900,7 +903,7 @@ const CRMCalendario = () => {
                                 setFormData({ ...formData, eventType: val });
                               }
                             }}
-                            className="w-full bg-[#0a0a0a] border border-[#333] rounded-md px-3 py-2 text-xs font-black text-white focus:ring-1 focus:ring-[#B5FF03] outline-none transition-all"
+                            className="w-full bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg px-3 py-2 text-xs font-black text-white focus:ring-1 focus:ring-[#CDFF00] outline-none transition-all"
                           >
                             <option value="">Selecione...</option>
                             <option value="Aniver">Aniver (Aniversário)</option>
@@ -914,7 +917,7 @@ const CRMCalendario = () => {
                               type="text"
                               value={isCustom ? formData.eventType : ''}
                               onChange={(e) => setFormData({ ...formData, eventType: e.target.value })}
-                              className="w-full bg-[#0a0a0a] border border-[#333] rounded-md px-3 py-2 mt-2 text-xs font-black text-white focus:ring-1 focus:ring-[#B5FF03] outline-none transition-all"
+                              className="w-full bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg px-3 py-2 mt-2 text-xs font-black text-white focus:ring-1 focus:ring-[#CDFF00] outline-none transition-all"
                               placeholder="Especifique o tipo de evento"
                               required
                             />
@@ -925,8 +928,8 @@ const CRMCalendario = () => {
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                     <div className="space-y-2">
-                      <label className="flex items-center gap-2 text-[9px] font-black text-[#B5FF03] uppercase tracking-widest">
-                        <CalendarIcon size={12} strokeWidth={3} className="text-[#B5FF03]" />
+                      <label className="flex items-center gap-2 text-[9px] font-black text-[#CDFF00] uppercase tracking-widest">
+                        <CalendarIcon size={12} strokeWidth={3} className="text-[#CDFF00]" />
                         DATA
                       </label>
                       <input
@@ -941,19 +944,19 @@ const CRMCalendario = () => {
                           if (iso) setFormData(prev => ({ ...prev, date: iso }));
                         }}
                         placeholder="DD/MM/AAAA"
-                        className="w-full bg-[#0a0a0a] border border-[#333] rounded-md px-3 py-2.5 text-xs font-black text-white focus:ring-1 focus:ring-[#B5FF03] outline-none transition-all tracking-wider"
+                        className="w-full bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg px-3 py-2.5 text-xs font-black text-white focus:ring-1 focus:ring-[#CDFF00] outline-none transition-all tracking-wider"
                       />
                     </div>
                     <div className="space-y-2">
-                      <label className="flex items-center gap-2 text-[9px] font-black text-[#B5FF03] uppercase tracking-widest">
-                        <Clock size={12} strokeWidth={3} className="text-[#B5FF03]" />
+                      <label className="flex items-center gap-2 text-[9px] font-black text-[#CDFF00] uppercase tracking-widest">
+                        <Clock size={12} strokeWidth={3} className="text-[#CDFF00]" />
                         HORÁRIO
                       </label>
                       <input
                         type="time"
                         value={formData.time || ''}
                         onChange={(e) => setFormData({ ...formData, time: e.target.value })}
-                        className="w-full bg-[#0a0a0a] border border-[#333] rounded-md px-3 py-2 text-xs font-black text-white focus:ring-1 focus:ring-[#B5FF03] outline-none transition-all [color-scheme:dark]"
+                        className="w-full bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg px-3 py-2 text-xs font-black text-white focus:ring-1 focus:ring-[#CDFF00] outline-none transition-all [color-scheme:dark]"
                       />
                     </div>
                   </div>
@@ -961,7 +964,7 @@ const CRMCalendario = () => {
 
                 {/* Marcos Temporais (Montagem / Desmontagem) */}
                 <div className="border border-[#1a1a1a] rounded-md p-4 space-y-3">
-                  <label className="text-[9px] font-black text-[#B5FF03] uppercase tracking-widest block">MARCOS DO EVENTO</label>
+                  <label className="text-[9px] font-black text-[#CDFF00] uppercase tracking-widest block">MARCOS DO EVENTO</label>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div className="space-y-1">
                       <label className="text-[8px] font-bold text-neutral-500 uppercase tracking-widest">Montagem</label>
@@ -969,7 +972,7 @@ const CRMCalendario = () => {
                         type="date"
                         value={formData.dataMontagem || ''}
                         onChange={(e) => setFormData({ ...formData, dataMontagem: e.target.value })}
-                        className="w-full bg-[#0a0a0a] border border-[#333] rounded-md px-2 py-2 text-xs font-black text-white focus:ring-1 focus:ring-[#B5FF03] outline-none transition-all [color-scheme:dark]"
+                        className="w-full bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg px-2 py-2 text-xs font-black text-white focus:ring-1 focus:ring-[#CDFF00] outline-none transition-all [color-scheme:dark]"
                       />
                     </div>
                     <div className="space-y-1">
@@ -978,7 +981,7 @@ const CRMCalendario = () => {
                         type="date"
                         value={formData.dataDesmontagem || ''}
                         onChange={(e) => setFormData({ ...formData, dataDesmontagem: e.target.value })}
-                        className="w-full bg-[#0a0a0a] border border-[#333] rounded-md px-2 py-2 text-xs font-black text-white focus:ring-1 focus:ring-[#B5FF03] outline-none transition-all [color-scheme:dark]"
+                        className="w-full bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg px-2 py-2 text-xs font-black text-white focus:ring-1 focus:ring-[#CDFF00] outline-none transition-all [color-scheme:dark]"
                       />
                     </div>
                   </div>
@@ -986,8 +989,8 @@ const CRMCalendario = () => {
 
                 {/* Valor do Evento */}
                 <div className="space-y-2">
-                  <label className="flex items-center gap-2 text-[9px] font-black text-[#B5FF03] uppercase tracking-widest">
-                    <CreditCard size={12} strokeWidth={3} className="text-[#B5FF03]" />
+                  <label className="flex items-center gap-2 text-[9px] font-black text-[#CDFF00] uppercase tracking-widest">
+                    <CreditCard size={12} strokeWidth={3} className="text-[#CDFF00]" />
                     VALOR DO EVENTO (R$)
                   </label>
                   <input
@@ -997,14 +1000,14 @@ const CRMCalendario = () => {
                     value={formData.valorTotal ?? 0}
                     onChange={(e) => setFormData({ ...formData, valorTotal: parseFloat(e.target.value) || 0 })}
                     placeholder="0,00"
-                    className="w-full bg-[#0a0a0a] border border-[#333] rounded-md px-3 py-2 text-xs font-black text-white focus:ring-1 focus:ring-[#B5FF03] outline-none transition-all"
+                    className="w-full bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg px-3 py-2 text-xs font-black text-white focus:ring-1 focus:ring-[#CDFF00] outline-none transition-all"
                   />
                 </div>
 
                 {/* Cliente */}
                 <div className="space-y-2 relative" ref={clientDropdownRef}>
-                  <label className="flex items-center gap-2 text-[9px] font-black text-[#B5FF03] uppercase tracking-widest">
-                    <User size={12} strokeWidth={3} className="text-[#B5FF03]" />
+                  <label className="flex items-center gap-2 text-[9px] font-black text-[#CDFF00] uppercase tracking-widest">
+                    <User size={12} strokeWidth={3} className="text-[#CDFF00]" />
                     CLIENTE
                   </label>
                   <div className="relative">
@@ -1019,7 +1022,7 @@ const CRMCalendario = () => {
                       }}
                       onFocus={() => setShowClientDropdown(true)}
                       placeholder="Pesquise por clientes com orçamentos fechados..."
-                      className="w-full bg-[#0a0a0a] border border-[#333] rounded-md pl-9 pr-3 py-2 text-xs font-black text-white focus:ring-1 focus:ring-[#B5FF03] outline-none transition-all"
+                      className="w-full bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg pl-9 pr-3 py-2 text-xs font-black text-white focus:ring-1 focus:ring-[#CDFF00] outline-none transition-all"
                     />
                   </div>
                   {showClientDropdown && (
@@ -1067,8 +1070,8 @@ const CRMCalendario = () => {
 
                 {/* Dados do Cliente */}
                 {formData.client && (
-                  <div className="bg-[#0a0a0a] border border-[#1a1a1a] rounded-md p-4 space-y-3">
-                    <label className="text-[9px] font-black text-[#B5FF03] uppercase tracking-widest block">DADOS DO CLIENTE</label>
+                  <div className="bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg p-4 space-y-3">
+                    <label className="text-[9px] font-black text-[#CDFF00] uppercase tracking-widest block">DADOS DO CLIENTE</label>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div className="space-y-1">
                         <label className="text-[8px] font-bold text-neutral-500 uppercase tracking-widest">TELEFONE</label>
@@ -1077,7 +1080,7 @@ const CRMCalendario = () => {
                           value={formData.clientPhone || ''}
                           onChange={(e) => setFormData({ ...formData, clientPhone: e.target.value })}
                           placeholder="(11) 99999-9999"
-                          className="w-full bg-[#0a0a0a] border border-[#333] rounded-md px-3 py-2 text-xs font-bold text-white focus:ring-1 focus:ring-[#B5FF03] outline-none transition-all"
+                          className="w-full bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg px-3 py-2 text-xs font-bold text-white focus:ring-1 focus:ring-[#CDFF00] outline-none transition-all"
                         />
                       </div>
                       <div className="space-y-1">
@@ -1087,7 +1090,7 @@ const CRMCalendario = () => {
                           value={formData.clientEmail || ''}
                           onChange={(e) => setFormData({ ...formData, clientEmail: e.target.value })}
                           placeholder="cliente@email.com"
-                          className="w-full bg-[#0a0a0a] border border-[#333] rounded-md px-3 py-2 text-xs font-bold text-white focus:ring-1 focus:ring-[#B5FF03] outline-none transition-all"
+                          className="w-full bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg px-3 py-2 text-xs font-bold text-white focus:ring-1 focus:ring-[#CDFF00] outline-none transition-all"
                         />
                       </div>
                       <div className="space-y-1">
@@ -1097,7 +1100,7 @@ const CRMCalendario = () => {
                           value={formData.clientCpf || ''}
                           onChange={(e) => setFormData({ ...formData, clientCpf: e.target.value })}
                           placeholder="000.000.000-00"
-                          className="w-full bg-[#0a0a0a] border border-[#333] rounded-md px-3 py-2 text-xs font-bold text-white focus:ring-1 focus:ring-[#B5FF03] outline-none transition-all"
+                          className="w-full bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg px-3 py-2 text-xs font-bold text-white focus:ring-1 focus:ring-[#CDFF00] outline-none transition-all"
                         />
                       </div>
                     </div>
@@ -1105,8 +1108,8 @@ const CRMCalendario = () => {
                 )}
 
                 <div className="space-y-2">
-                  <label className="flex items-center gap-2 text-[9px] font-black text-[#B5FF03] uppercase tracking-widest">
-                    <User size={12} strokeWidth={3} className="text-[#B5FF03]" />
+                  <label className="flex items-center gap-2 text-[9px] font-black text-[#CDFF00] uppercase tracking-widest">
+                    <User size={12} strokeWidth={3} className="text-[#CDFF00]" />
                     DECORADOR
                   </label>
                   <input
@@ -1114,13 +1117,13 @@ const CRMCalendario = () => {
                     value={formData.decorator}
                     onChange={(e) => setFormData({ ...formData, decorator: e.target.value })}
                     placeholder="Nome do decorador"
-                    className="w-full bg-[#0a0a0a] border border-[#333] rounded-md px-3 py-2 text-xs font-black text-white focus:ring-1 focus:ring-[#B5FF03] outline-none transition-all"
+                    className="w-full bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg px-3 py-2 text-xs font-black text-white focus:ring-1 focus:ring-[#CDFF00] outline-none transition-all"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <label className="flex items-center gap-2 text-[9px] font-black text-[#B5FF03] uppercase tracking-widest">
-                    <MapPin size={12} strokeWidth={3} className="text-[#B5FF03]" />
+                  <label className="flex items-center gap-2 text-[9px] font-black text-[#CDFF00] uppercase tracking-widest">
+                    <MapPin size={12} strokeWidth={3} className="text-[#CDFF00]" />
                     LOCAL DO EVENTO
                   </label>
                   <input
@@ -1128,18 +1131,18 @@ const CRMCalendario = () => {
                     value={formData.local || ''}
                     onChange={(e) => setFormData({ ...formData, local: e.target.value })}
                     placeholder="Endereço do evento"
-                    className="w-full bg-[#0a0a0a] border border-[#333] rounded-md px-3 py-2 text-xs font-black text-white focus:ring-1 focus:ring-[#B5FF03] outline-none transition-all"
+                    className="w-full bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg px-3 py-2 text-xs font-black text-white focus:ring-1 focus:ring-[#CDFF00] outline-none transition-all"
                   />
                 </div>
 
                 <div className="space-y-2 relative" ref={equipeDropdownRef}>
-                  <label className="flex items-center gap-2 text-[9px] font-black text-[#B5FF03] uppercase tracking-widest">
-                    <Users size={12} strokeWidth={3} className="text-[#B5FF03]" />
+                  <label className="flex items-center gap-2 text-[9px] font-black text-[#CDFF00] uppercase tracking-widest">
+                    <Users size={12} strokeWidth={3} className="text-[#CDFF00]" />
                     EQUIPE
                   </label>
                   <div className="flex flex-wrap gap-1.5 mb-2 min-h-[28px]">
                     {(formData.equipe ? formData.equipe.split(',').map(s => s.trim()).filter(Boolean) : []).map(name => (
-                      <span key={name} className="inline-flex items-center gap-1 bg-[#1a1a1a] border border-[#B5FF03] rounded-md px-2 py-1 text-[10px] font-bold text-white">
+                      <span key={name} className="inline-flex items-center gap-1 bg-[#1a1a1a] border border-[#CDFF00] rounded-md px-2 py-1 text-[10px] font-bold text-white">
                         {name}
                         <button
                           type="button"
@@ -1161,7 +1164,7 @@ const CRMCalendario = () => {
                     onChange={(e) => { setEquipeSearch(e.target.value); setShowEquipeDropdown(true); }}
                     onFocus={() => setShowEquipeDropdown(true)}
                     placeholder="Selecione os membros da equipe..."
-                    className="w-full bg-[#0a0a0a] border border-[#333] rounded-md px-3 py-2 text-xs font-black text-white focus:ring-1 focus:ring-[#B5FF03] outline-none transition-all"
+                    className="w-full bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg px-3 py-2 text-xs font-black text-white focus:ring-1 focus:ring-[#CDFF00] outline-none transition-all"
                   />
                   {showEquipeDropdown && (
                     <div className="mt-1 bg-[#1a1a1a] border border-[#333] rounded-md shadow-xl max-h-48 overflow-y-auto">
@@ -1197,8 +1200,8 @@ const CRMCalendario = () => {
 
                 {/* Itens do Evento */}
                 <div className="border border-[#1a1a1a] rounded-md p-4 space-y-3" ref={itemDropdownRef}>
-                  <label className="flex items-center gap-2 text-[9px] font-black text-[#B5FF03] uppercase tracking-widest">
-                    <Package size={12} strokeWidth={3} className="text-[#B5FF03]" />
+                  <label className="flex items-center gap-2 text-[9px] font-black text-[#CDFF00] uppercase tracking-widest">
+                    <Package size={12} strokeWidth={3} className="text-[#CDFF00]" />
                     ITENS DO EVENTO
                   </label>
                   {eventItems.length > 0 && (
@@ -1218,7 +1221,7 @@ const CRMCalendario = () => {
                     </div>
                   )}
                   {!showCreateItemForm && eventItemOptions.length === 0 ? (
-                    <div className="bg-[#0a0a0a] border border-[#333] rounded-md p-4 space-y-3 text-center">
+                    <div className="bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg p-4 space-y-3 text-center">
                       <p className="text-[10px] text-neutral-500 font-bold uppercase tracking-widest">
                         A lista de itens de eventos ainda está vazia
                       </p>
@@ -1228,7 +1231,7 @@ const CRMCalendario = () => {
                       <button
                         type="button"
                         onClick={() => setShowCreateItemForm(true)}
-                        className="w-full flex items-center justify-center gap-2 px-3 py-2.5 bg-[#B5FF03] text-black rounded-md text-[10px] font-black uppercase tracking-widest hover:bg-[#a1e600] transition-all"
+                        className="w-full flex items-center justify-center gap-2 px-3 py-2.5 bg-[#CDFF00] text-black rounded-md text-[10px] font-black uppercase tracking-widest hover:bg-[#a1e600] transition-all"
                       >
                         <Plus size={14} strokeWidth={3} />
                         Criar novo item
@@ -1243,12 +1246,12 @@ const CRMCalendario = () => {
                           onChange={(e) => { setItemSearch(e.target.value); setItemSearchOpen(true); }}
                           onFocus={() => setItemSearchOpen(true)}
                           placeholder="Buscar item na lista de eventos..."
-                          className="flex-1 bg-[#0a0a0a] border border-[#333] rounded-md px-3 py-2 text-xs font-bold text-white focus:ring-1 focus:ring-[#B5FF03] outline-none transition-all"
+                          className="flex-1 bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg px-3 py-2 text-xs font-bold text-white focus:ring-1 focus:ring-[#CDFF00] outline-none transition-all"
                         />
                         <button
                           type="button"
                           onClick={() => { setShowCreateItemForm(true); setItemSearchOpen(false); }}
-                          className="flex items-center gap-1.5 px-3 py-2 bg-[#1a1a1a] border border-[#B5FF03] rounded-md text-[10px] font-black uppercase tracking-widest text-[#B5FF03] hover:bg-[#B5FF03] hover:text-black transition-all"
+                          className="flex items-center gap-1.5 px-3 py-2 bg-[#1a1a1a] border border-[#CDFF00] rounded-md text-[10px] font-black uppercase tracking-widest text-[#CDFF00] hover:bg-[#CDFF00] hover:text-black transition-all"
                         >
                           <Plus size={12} strokeWidth={3} />
                           <span className="hidden sm:inline">Criar</span>
@@ -1282,21 +1285,21 @@ const CRMCalendario = () => {
                       )}
                     </>
                   ) : (
-                    <div className="bg-[#0a0a0a] border border-[#333] rounded-md p-3 space-y-2">
+                    <div className="bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg p-3 space-y-2">
                       <p className="text-[9px] font-black text-white uppercase tracking-widest">NOVO ITEM PARA EVENTOS</p>
                       <input
                         type="text"
                         value={newItemForm.name}
                         onChange={(e) => setNewItemForm(f => ({ ...f, name: e.target.value }))}
                         placeholder="Nome do item (obrigatório)"
-                        className="w-full bg-[#111] border border-[#333] rounded-md px-3 py-2 text-xs font-bold text-white focus:ring-1 focus:ring-[#B5FF03] outline-none transition-all"
+                        className="w-full bg-[#111] border border-[#333] rounded-md px-3 py-2 text-xs font-bold text-white focus:ring-1 focus:ring-[#CDFF00] outline-none transition-all"
                         autoFocus
                       />
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         <select
                           value={newItemForm.category}
                           onChange={(e) => setNewItemForm(f => ({ ...f, category: e.target.value }))}
-                          className="w-full bg-[#111] border border-[#333] rounded-md px-3 py-2 text-xs font-bold text-white focus:ring-1 focus:ring-[#B5FF03] outline-none transition-all"
+                          className="w-full bg-[#111] border border-[#333] rounded-md px-3 py-2 text-xs font-bold text-white focus:ring-1 focus:ring-[#CDFF00] outline-none transition-all"
                         >
                           {EVENT_STOCK_CATEGORIES.map(cat => (
                             <option key={cat} value={cat} className="bg-[#111]">{cat}</option>
@@ -1307,7 +1310,7 @@ const CRMCalendario = () => {
                           value={newItemForm.observacao}
                           onChange={(e) => setNewItemForm(f => ({ ...f, observacao: e.target.value }))}
                           placeholder="Observação (opcional)"
-                          className="w-full bg-[#111] border border-[#333] rounded-md px-3 py-2 text-xs font-bold text-white focus:ring-1 focus:ring-[#B5FF03] outline-none transition-all"
+                          className="w-full bg-[#111] border border-[#333] rounded-md px-3 py-2 text-xs font-bold text-white focus:ring-1 focus:ring-[#CDFF00] outline-none transition-all"
                         />
                       </div>
                       <div className="flex items-center justify-end gap-2 pt-1">
@@ -1322,7 +1325,7 @@ const CRMCalendario = () => {
                           type="button"
                           onClick={handleCreateEventItem}
                           disabled={!newItemForm.name.trim()}
-                          className="flex items-center gap-1.5 px-3 py-2 bg-[#B5FF03] text-black rounded-md text-[10px] font-black uppercase tracking-widest hover:bg-[#a1e600] transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                          className="flex items-center gap-1.5 px-3 py-2 bg-[#CDFF00] text-black rounded-md text-[10px] font-black uppercase tracking-widest hover:bg-[#a1e600] transition-all disabled:opacity-40 disabled:cursor-not-allowed"
                         >
                           <Save size={12} strokeWidth={3} />
                           Salvar e adicionar
@@ -1333,8 +1336,8 @@ const CRMCalendario = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="flex items-center gap-2 text-[9px] font-black text-[#B5FF03] uppercase tracking-widest">
-                    <FileText size={12} strokeWidth={3} className="text-[#B5FF03]" />
+                  <label className="flex items-center gap-2 text-[9px] font-black text-[#CDFF00] uppercase tracking-widest">
+                    <FileText size={12} strokeWidth={3} className="text-[#CDFF00]" />
                     DESCRIÇÃO
                   </label>
                   <textarea
@@ -1342,7 +1345,7 @@ const CRMCalendario = () => {
                     value={formData.description}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                     placeholder="Adicione observações importantes..."
-                    className="w-full bg-[#0a0a0a] border border-[#333] rounded-md px-3 py-2 text-xs font-bold text-white focus:ring-1 focus:ring-[#B5FF03] outline-none transition-all resize-none"
+                    className="w-full bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg px-3 py-2 text-xs font-bold text-white focus:ring-1 focus:ring-[#CDFF00] outline-none transition-all resize-none"
                   />
                 </div>
               </div>
@@ -1376,7 +1379,7 @@ const CRMCalendario = () => {
                   </button>
                   <button
                     type="submit"
-                    className="bg-[#B5FF03] text-black px-8 py-2.5 rounded-md font-black text-[10px] uppercase tracking-widest hover:bg-[#a1e600] transition-all active:scale-[0.98] shadow-sm"
+                    className="bg-[#CDFF00] text-black px-8 py-2.5 rounded-md font-black text-[10px] uppercase tracking-widest hover:bg-[#a1e600] transition-all active:scale-[0.98] shadow-sm"
                   >
                     {modalMode === 'create' ? 'SALVAR EVENTO' : 'ATUALIZAR'}
                   </button>

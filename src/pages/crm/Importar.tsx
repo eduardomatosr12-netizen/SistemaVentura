@@ -171,7 +171,7 @@ const Importar = () => {
       inventoryBoard = {
         id: 'board-1',
         title: 'Inventário',
-        color: '#B5FF03',
+        color: '#CDFF00',
         columns: config.headers.map((h, i) => ({
           id: `col-${i + 1}`,
           title: h,
@@ -331,36 +331,39 @@ const Importar = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#000000] p-2 md:p-8 pb-bottom-nav md:pb-8">
+    <div className="min-h-screen bg-black p-2 md:p-8 pb-bottom-nav md:pb-8">
       <div className="mb-4 md:mb-8">
-        <h1 className="text-2xl md:text-3xl font-black text-white tracking-tight mb-1">Importar Dados</h1>
-        <p className="text-neutral-400 text-xs md:text-sm">Selecione o tipo de importação e envie seu arquivo.</p>
+        <h1 className="text-[32px] font-black text-white tracking-[0.5px] mb-2 flex items-center gap-3">
+          <Upload className="text-[#CDFF00]" size={32} />
+          Importar Dados
+        </h1>
+        <p className="text-sm font-medium text-white/70">Selecione o tipo de importação e envie seu arquivo.</p>
       </div>
 
       {toast && (
         <div
           className={`fixed top-6 left-6 right-6 sm:left-auto sm:right-6 sm:max-w-md z-[200] flex items-center gap-4 px-6 py-4 rounded-xl shadow-2xl animate-in slide-in-from-top-2 fade-in duration-300 ${
             toast.type === 'success'
-              ? 'bg-[#1a1a1a] border border-[#B5FF03]'
+              ? 'bg-[#1a1a1a] border border-[#CDFF00]'
               : toast.type === 'error'
               ? 'bg-[#1a1a1a] border border-red-500'
-              : 'bg-[#1a1a1a] border border-[#B5FF03]'
+              : 'bg-[#1a1a1a] border border-[#CDFF00]'
           }`}
         >
           <div className="flex items-center gap-3 flex-1">
             {toast.type === 'success' ? (
-              <CheckCircle size={20} className="text-[#B5FF03]" />
+              <CheckCircle size={20} className="text-[#CDFF00]" />
             ) : (
               <AlertCircle size={20} className="text-red-400" />
             )}
-            <span className={`text-sm font-bold ${toast.type === 'success' ? 'text-[#B5FF03]' : 'text-red-400'}`}>
+            <span className={`text-sm font-bold ${toast.type === 'success' ? 'text-[#CDFF00]' : 'text-red-400'}`}>
               {toast.message}
             </span>
           </div>
           {toast.action && (
             <a
               href={toast.action.href}
-              className="flex items-center gap-1 px-4 py-2 bg-[#B5FF03] text-black rounded-lg font-black text-[10px] uppercase tracking-widest hover:bg-[#a1e600] transition-all shrink-0"
+              className="flex items-center gap-1 px-4 py-2 bg-[#CDFF00] text-black rounded-lg font-black text-[10px] uppercase tracking-widest hover:bg-[#a1e600] transition-all shrink-0"
             >
               {toast.action.label}
               <ArrowRight size={14} />
@@ -370,8 +373,8 @@ const Importar = () => {
       )}
 
       <div className="max-w-2xl space-y-8">
-        <div className="bg-[#111] border border-[#333] rounded-2xl p-6">
-          <h3 className="text-[10px] font-black text-[#B5FF03] uppercase tracking-widest mb-4">Tipo de Importação</h3>
+        <div className="bg-[#1a1a1a] border border-[#2d2d2d] rounded-xl p-6 shadow-[0_4px_12px_rgba(0,0,0,0.3)]">
+          <h3 className="text-[10px] font-black text-[#CDFF00] uppercase tracking-widest mb-4">Tipo de Importação</h3>
           <div className="flex flex-wrap gap-3">
             {Object.keys(COLUMNS_BY_TYPE).map((type) => (
               <button
@@ -380,8 +383,8 @@ const Importar = () => {
                 className={
                   'px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-widest transition-all ' +
                   (selectedType === type
-                    ? 'bg-[#B5FF03] text-black'
-                    : 'bg-[#1a1a1a] text-neutral-400 border border-[#333] hover:border-[#B5FF03]')
+                    ? 'bg-[#CDFF00] text-black'
+                    : 'bg-[#1a1a1a] text-neutral-400 border border-[#333] hover:border-[#CDFF00]')
                 }
               >
                 {type}
@@ -390,8 +393,8 @@ const Importar = () => {
           </div>
         </div>
 
-        <div className="bg-[#111] border border-[#333] rounded-2xl p-6">
-          <h3 className="text-[10px] font-black text-[#B5FF03] uppercase tracking-widest mb-4">Baixar Modelo de Planilha</h3>
+        <div className="bg-[#1a1a1a] border border-[#2d2d2d] rounded-xl p-6 shadow-[0_4px_12px_rgba(0,0,0,0.3)]">
+          <h3 className="text-[10px] font-black text-[#CDFF00] uppercase tracking-widest mb-4">Baixar Modelo de Planilha</h3>
           <p className="text-xs text-neutral-400 mb-4">
             Baixe um arquivo modelo com os cabeçalhos corretos para o tipo selecionado.
           </p>
@@ -401,7 +404,7 @@ const Importar = () => {
                 const config = COLUMNS_BY_TYPE[selectedType];
                 downloadCSV(config.headers, `modelo_${selectedType.toLowerCase()}`);
               }}
-              className="flex items-center gap-2 px-4 py-2.5 bg-[#1a1a1a] border border-[#333] rounded-lg text-xs font-bold text-neutral-300 hover:text-white hover:border-[#B5FF03] transition-all"
+              className="flex items-center gap-2 px-4 py-2.5 bg-[#1a1a1a] border border-[#333] rounded-lg text-xs font-bold text-neutral-300 hover:text-white hover:border-[#CDFF00] transition-all"
             >
               <Download size={14} /> CSV
             </button>
@@ -410,7 +413,7 @@ const Importar = () => {
                 const config = COLUMNS_BY_TYPE[selectedType];
                 downloadXLSX(config.headers, `modelo_${selectedType.toLowerCase()}`);
               }}
-              className="flex items-center gap-2 px-4 py-2.5 bg-[#1a1a1a] border border-[#333] rounded-lg text-xs font-bold text-neutral-300 hover:text-white hover:border-[#B5FF03] transition-all"
+              className="flex items-center gap-2 px-4 py-2.5 bg-[#1a1a1a] border border-[#333] rounded-lg text-xs font-bold text-neutral-300 hover:text-white hover:border-[#CDFF00] transition-all"
             >
               <FileSpreadsheet size={14} /> XLSX
             </button>
@@ -432,7 +435,7 @@ const Importar = () => {
           onClick={handleClick}
           onDrop={handleDrop}
           onDragOver={handleDragOver}
-          className="w-full bg-[#0a0a0a] border-2 border-dashed border-[#333] rounded-2xl p-8 md:p-16 text-center cursor-pointer hover:border-[#B5FF03] transition-all group"
+          className="w-full bg-[#0a0a0a] border-2 border-dashed border-[#333] rounded-2xl p-8 md:p-16 text-center cursor-pointer hover:border-[#CDFF00] transition-all group"
         >
           <input
             ref={fileInputRef}
@@ -442,7 +445,7 @@ const Importar = () => {
             className="hidden"
           />
           <div className="w-16 h-16 bg-[#111] rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:bg-[#222] transition-all">
-            <Upload className="w-6 h-6 text-[#B5FF03] transition-colors" />
+            <Upload className="w-6 h-6 text-[#CDFF00] transition-colors" />
           </div>
           <h3 className="text-white font-black text-xl mb-2">
             {isProcessing ? 'Processando...' : 'Clique ou arraste o arquivo CSV'}

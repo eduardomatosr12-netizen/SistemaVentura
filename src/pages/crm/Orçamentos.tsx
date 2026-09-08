@@ -1,5 +1,5 @@
 ﻿import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
-import { Plus, Pencil, Trash2, X, Save, Filter, XCircle, ChevronDown, ChevronUp, AlertCircle, MessageCircle, Package, Search, FileText, Percent, DollarSign } from 'lucide-react';
+import { Plus, Pencil, Trash2, X, Save, Filter, XCircle, ChevronDown, ChevronUp, AlertCircle, MessageCircle, Package, Search, FileText, Percent, DollarSign, Users } from 'lucide-react';
 import WhatsAppModal from '../../components/WhatsAppModal';
 import { useCRM } from '../../contexts/CRMContext';
 import type { Lead, OrcamentoItem } from '../../types/crm';
@@ -68,7 +68,7 @@ const FilterSection = ({ title, children, defaultOpen = true }: { title: string;
         className="flex items-center justify-between w-full text-left py-1"
       >
         <span className="text-[9px] font-black text-white uppercase tracking-widest">{title}</span>
-        {isOpen ? <ChevronUp size={12} className="text-[#B5FF03]" /> : <ChevronDown size={12} className="text-[#B5FF03]" />}
+        {isOpen ? <ChevronUp size={12} className="text-[#CDFF00]" /> : <ChevronDown size={12} className="text-[#CDFF00]" />}
       </button>
       {isOpen && <div className="mt-1 space-y-1">{children}</div>}
     </div>
@@ -77,7 +77,7 @@ const FilterSection = ({ title, children, defaultOpen = true }: { title: string;
 
 const Field = ({ label, required, children }: { label: string; required?: boolean; children: React.ReactNode }) => (
   <div className="space-y-1.5">
-    <label className="block text-[11px] font-semibold uppercase tracking-widest" style={{color: '#B5FF03'}}>
+    <label className="block text-[11px] font-semibold uppercase tracking-widest" style={{color: '#CDFF00'}}>
       {label}{required && <span className="text-white ml-0.5">*</span>}
     </label>
     {children}
@@ -85,7 +85,7 @@ const Field = ({ label, required, children }: { label: string; required?: boolea
 );
 
 const inputCls =
-  'w-full bg-[#1a1a1a] border border-gray-700 rounded-md py-2.5 px-3.5 text-white text-sm placeholder-gray-500 focus:outline-none focus:border-[#B5FF03] transition-colors';
+  'w-full bg-[#1a1a1a] border border-gray-700 rounded-md py-2.5 px-3.5 text-white text-sm placeholder-gray-500 focus:outline-none focus:border-[#CDFF00] transition-colors';
 
 // PDF Generation
 const MONTHS = [
@@ -510,11 +510,11 @@ const CRMOrçamentos = () => {
     if (key === 'eventType') {
       return (
         <div className="space-y-1">
-          <label className="block text-[10px] font-black text-[#B5FF03] uppercase tracking-widest">{label}</label>
+          <label className="block text-[10px] font-black text-[#CDFF00] uppercase tracking-widest">{label}</label>
           <select
             value={value}
             onChange={(e) => setValue(e.target.value)}
-            className="w-full bg-[#1a1a1a] border border-gray-700 rounded-md px-3 py-2.5 text-xs font-bold text-white focus:outline-none focus:border-[#B5FF03] transition-colors"
+            className="w-full bg-[#1a1a1a] border border-gray-700 rounded-md px-3 py-2.5 text-xs font-bold text-white focus:outline-none focus:border-[#CDFF00] transition-colors"
           >
             <option value="">Todos os tipos</option>
             {EVENT_TYPES.map(t => (
@@ -527,13 +527,13 @@ const CRMOrçamentos = () => {
 
     return (
       <div className="space-y-1">
-        <label className="block text-[10px] font-black text-[#B5FF03] uppercase tracking-widest">{label}</label>
+        <label className="block text-[10px] font-black text-[#CDFF00] uppercase tracking-widest">{label}</label>
         <input
           type={type}
           value={value}
           onChange={(e) => setValue(e.target.value)}
           placeholder={type === 'date' ? 'DD/MM/AAAA' : `Filtrar por ${label.toLowerCase()}...`}
-          className="w-full bg-[#1a1a1a] border border-gray-700 rounded-md px-3 py-2.5 text-xs font-bold text-white placeholder-gray-500 focus:outline-none focus:border-[#B5FF03] transition-colors"
+          className="w-full bg-[#1a1a1a] border border-gray-700 rounded-md px-3 py-2.5 text-xs font-bold text-white placeholder-gray-500 focus:outline-none focus:border-[#CDFF00] transition-colors"
         />
       </div>
     );
@@ -547,14 +547,14 @@ const CRMOrçamentos = () => {
           <div className="fixed inset-0 bg-black/60 z-[55] md:hidden" onClick={() => setIsSidebarOpen(false)} />
           <div className="fixed inset-x-0 bottom-0 z-[100] bg-[#111] border-t border-[#333] rounded-t-2xl p-4 max-h-[70dvh] overflow-y-auto md:hidden shadow-xl" style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}>
             <div className="flex items-center justify-between mb-3">
-              <h2 className="text-lg font-black text-[#B5FF03]">Filtrar Contatos</h2>
+              <h2 className="text-lg font-black text-[#CDFF00]">Filtrar Contatos</h2>
               <button onClick={() => setIsSidebarOpen(false)} className="p-2 hover:bg-[#222] rounded-md transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center">
-                <X size={14} className="text-[#B5FF03]" />
+                <X size={14} className="text-[#CDFF00]" />
               </button>
             </div>
             {hasActiveFilters && (
               <button onClick={handleClearFilters}
-                className="text-[10px] font-bold text-[#B5FF03] hover:text-red-500 transition-colors flex items-center gap-1 mb-3">
+                className="text-[10px] font-bold text-[#CDFF00] hover:text-red-500 transition-colors flex items-center gap-1 mb-3">
                 <X size={12} /> LIMPAR TODOS OS FILTROS
               </button>
             )}
@@ -575,9 +575,9 @@ const CRMOrçamentos = () => {
               <div className="flex items-center gap-2">
                 <div>
                   <h2 className="text-2xl md:text-3xl font-black text-white tracking-tight mb-1">Contatos</h2>
-                  <p className="text-[#B5FF03] text-xs md:text-sm">
+                  <p className="text-[#CDFF00] text-xs md:text-sm">
                     {filteredOrçamentos.length} contato{filteredOrçamentos.length !== 1 ? 's' : ''} encontrado{filteredOrçamentos.length !== 1 ? 's' : ''}
-                    {hasActiveFilters && <span className="text-[#B5FF03]"> (filtrado{filteredOrçamentos.length !== 1 ? 's' : ''})</span>}
+                    {hasActiveFilters && <span className="text-[#CDFF00]"> (filtrado{filteredOrçamentos.length !== 1 ? 's' : ''})</span>}
                   </p>
                 </div>
               </div>
@@ -586,13 +586,13 @@ const CRMOrçamentos = () => {
                 className="p-2 hover:bg-[#222] rounded-md transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
                 aria-label="Fechar painel de filtros"
               >
-                <X size={16} className="text-[#B5FF03]" />
+                <X size={16} className="text-[#CDFF00]" />
               </button>
             </div>
             {hasActiveFilters && (
               <button 
                 onClick={handleClearFilters}
-                className="text-[10px] font-bold text-[#B5FF03] hover:text-red-500 transition-colors flex items-center gap-1 px-3 py-2 border-b border-[#1a1a1a] w-full"
+                className="text-[10px] font-bold text-[#CDFF00] hover:text-red-500 transition-colors flex items-center gap-1 px-3 py-2 border-b border-[#1a1a1a] w-full"
               >
                 <XCircle size={10} />
                 Limpar filtros
@@ -603,7 +603,7 @@ const CRMOrçamentos = () => {
               <select
                 value={selectedMonth}
                 onChange={(e) => setSelectedMonth(e.target.value)}
-                className="w-full bg-[#1a1a1a] border border-[#333] rounded-md px-3 py-2 text-xs font-bold text-white focus:ring-1 focus:ring-[#B5FF03] outline-none"
+                className="w-full bg-[#1a1a1a] border border-[#333] rounded-md px-3 py-2 text-xs font-bold text-white focus:ring-1 focus:ring-[#CDFF00] outline-none"
               >
                 <option value="">Todos os meses</option>
                 {MONTHS.map(m => (
@@ -616,7 +616,7 @@ const CRMOrçamentos = () => {
               <select
                 value={eventType}
                 onChange={(e) => setEventType(e.target.value)}
-                className="w-full bg-[#1a1a1a] border border-[#333] rounded-md px-3 py-2 text-xs font-bold text-white focus:ring-1 focus:ring-[#B5FF03] outline-none"
+                className="w-full bg-[#1a1a1a] border border-[#333] rounded-md px-3 py-2 text-xs font-bold text-white focus:ring-1 focus:ring-[#CDFF00] outline-none"
               >
                 <option value="">Todos os tipos</option>
                 {EVENT_TYPES.map(t => (
@@ -631,7 +631,7 @@ const CRMOrçamentos = () => {
                 value={citySearch}
                 onChange={(e) => setCitySearch(e.target.value)}
                 placeholder="Digite o nome da cidade..."
-                className="w-full bg-[#1a1a1a] border border-[#333] rounded-md px-3 py-2 text-xs font-bold text-white placeholder-neutral-500 focus:ring-1 focus:ring-[#B5FF03] outline-none"
+                className="w-full bg-[#1a1a1a] border border-[#333] rounded-md px-3 py-2 text-xs font-bold text-white placeholder-neutral-500 focus:ring-1 focus:ring-[#CDFF00] outline-none"
               />
             </FilterSection>
           </div>
@@ -645,7 +645,7 @@ const CRMOrçamentos = () => {
               <div className="relative group">
                 <button 
                   onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                  className={`p-2 rounded-lg border transition-all relative ${hasActiveFilters || selectedMonth ? 'bg-[#111] text-white border-[#333]' : 'bg-transparent border-transparent text-[#B5FF03] hover:text-[#B5FF03] hover:bg-[#0a0a0a]'}`}
+                  className={`p-2 rounded-lg border transition-all relative ${hasActiveFilters || selectedMonth ? 'bg-[#111] text-white border-[#333]' : 'bg-transparent border-transparent text-[#CDFF00] hover:text-[#CDFF00] hover:bg-[#0a0a0a]'}`}
                 >
                   <Filter size={16} strokeWidth={hasActiveFilters || selectedMonth ? 2.5 : 1.5} />
                   {(hasActiveFilters || selectedMonth) && (
@@ -657,28 +657,31 @@ const CRMOrçamentos = () => {
                 </span>
               </div>
               <div>
-                <h1 className="text-2xl md:text-3xl font-black text-white tracking-tight mb-1">Contatos</h1>
-                <p className="text-neutral-500 text-xs md:text-sm">
+                <h1 className="text-[32px] font-black text-white tracking-[0.5px] mb-2 flex items-center gap-3">
+                  <Users size={32} className="text-[#CDFF00]" />
+                  Contatos
+                </h1>
+                <p className="text-sm font-medium text-white/70">
                   {filteredOrçamentos.length} contato{filteredOrçamentos.length !== 1 ? 's' : ''} encontrado{filteredOrçamentos.length !== 1 ? 's' : ''}
-                  {hasActiveFilters && <span className="text-[#B5FF03]"> (filtrado{filteredOrçamentos.length !== 1 ? 's' : ''})</span>}
+                  {hasActiveFilters && <span className="text-[#CDFF00]"> (filtrado{filteredOrçamentos.length !== 1 ? 's' : ''})</span>}
                 </p>
               </div>
             </div>
-            <button onClick={openAdd} className="flex items-center gap-2 px-6 py-3 bg-[#B5FF03] text-black font-black rounded-lg hover:bg-[#a1e600] transition-all whitespace-nowrap">
+            <button onClick={openAdd} className="flex items-center gap-2 px-6 py-3 bg-[#CDFF00] text-black font-black rounded-lg hover:bg-[#a1e600] transition-all whitespace-nowrap">
               <Plus size={15} strokeWidth={2.5} />
               <span className="hidden sm:inline">Novo Contato</span>
               <span className="sm:hidden text-xs">Novo</span>
             </button>
           </div>
 
-          <div className="bg-[#0a0a0a] border border-[#333] rounded-md overflow-hidden shadow-sm">
+          <div className="bg-[#1a1a1a] border border-[#2d2d2d] rounded-xl overflow-hidden shadow-[0_4px_12px_rgba(0,0,0,0.3)]">
             {/* Desktop Table */}
             <div className="overflow-x-auto hidden md:block">
             <table className="w-full text-xs md:text-sm">
               <thead>
-                <tr className="border-b border-[#1a1a1a] bg-[#111]">
+                <tr className="border-b border-[#2d2d2d] bg-[#0a0a0a]">
                   {['NOME', 'WHATSAPP', 'INSTAGRAM', 'VALOR', 'STATUS', 'AÇÕES'].map((h, i) => (
-                    <th key={h} className={`px-3 md:px-5 py-2 md:py-3.5 text-[10px] md:text-[11px] text-[#B5FF03] font-semibold uppercase tracking-wider whitespace-nowrap ${i >= 4 ? 'text-center' : 'text-left'}`}>
+                    <th key={h} className={`px-3 md:px-5 py-2 md:py-3.5 text-[10px] md:text-[11px] text-[#CDFF00] font-semibold uppercase tracking-wider whitespace-nowrap ${i >= 4 ? 'text-center' : 'text-left'}`}>
                       {h}
                     </th>
                   ))}
@@ -698,14 +701,14 @@ const CRMOrçamentos = () => {
                           <button
                             type="button"
                             onClick={() => setWhatsAppTarget(lead)}
-                            className="text-[#25D366] hover:text-[#B5FF03] transition-colors"
+                            className="text-[#25D366] hover:text-[#CDFF00] transition-colors"
                             title="Enviar mensagem via WhatsApp"
                           >
                             <MessageCircle size={14} className="md:w-4 md:h-4" />
                           </button>
                         </div>
                       ) : (
-                        <span className="text-[#B5FF03]">—</span>
+                        <span className="text-[#CDFF00]">—</span>
                       )}
                     </td>
                     <td className="px-3 md:px-5 py-2 md:py-4 text-neutral-400 text-xs md:text-sm whitespace-nowrap">{lead?.instagram}</td>
@@ -753,13 +756,13 @@ const CRMOrçamentos = () => {
                         <button
                           type="button"
                           onClick={() => setWhatsAppTarget(lead)}
-                          className="text-[#25D366] hover:text-[#B5FF03] transition-colors"
+                          className="text-[#25D366] hover:text-[#CDFF00] transition-colors"
                         >
                           <MessageCircle size={14} />
                         </button>
                       </div>
                     ) : (
-                      <span className="text-[#B5FF03]">—</span>
+                      <span className="text-[#CDFF00]">—</span>
                     )}
                   </div>
                   <div className="flex items-center gap-2 text-xs text-neutral-300">
@@ -802,11 +805,11 @@ const CRMOrçamentos = () => {
                 <h2 className="text-lg md:text-xl font-black text-white tracking-tight">
                   {mode === 'add' ? 'Novo Evento' : 'Editar Evento'}
                 </h2>
-                <p className="text-[10px] md:text-xs text-[#B5FF03] mt-0.5 md:mt-0.5">
+                <p className="text-[10px] md:text-xs text-[#CDFF00] mt-0.5 md:mt-0.5">
                   {mode === 'add' ? 'Preencha os dados para cadastrar um novo evento.' : `Editando: ${current.name}`}
                 </p>
               </div>
-              <button onClick={() => setIsOpen(false)} className="text-[#B5FF03] hover:text-white transition-colors p-1 flex-shrink-0" type="button">
+              <button onClick={() => setIsOpen(false)} className="text-[#CDFF00] hover:text-white transition-colors p-1 flex-shrink-0" type="button">
                 <X size={20} className="w-5 h-5 md:w-5 md:h-5" />
               </button>
             </div>
@@ -892,7 +895,7 @@ const CRMOrçamentos = () => {
 
                 {/* Itens do Orçamento */}
                 <div className="border-t border-[#333] pt-4 mt-2">
-                  <label className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-widest mb-3" style={{color: '#B5FF03'}}>
+                  <label className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-widest mb-3" style={{color: '#CDFF00'}}>
                     <Package size={14} /> ITENS DO ORÇAMENTO
                   </label>
 
@@ -914,7 +917,7 @@ const CRMOrçamentos = () => {
                       {/* Discount Section */}
                       {current.items.length > 0 && calculateItemsTotal(current.items) > 0 && (
                         <div className="bg-[#111] border border-[#333] rounded-md p-4 mt-3 space-y-3">
-                          <label className="flex items-center gap-2 text-[10px] font-black text-[#B5FF03] uppercase tracking-widest">
+                          <label className="flex items-center gap-2 text-[10px] font-black text-[#CDFF00] uppercase tracking-widest">
                             <Percent size={12} /> Desconto
                           </label>
                           <div className="flex items-center gap-3">
@@ -922,14 +925,14 @@ const CRMOrçamentos = () => {
                               <button
                                 type="button"
                                 onClick={() => { setDiscountType('percent'); setDiscountValue(0); }}
-                                className={`px-3 py-1.5 text-[10px] font-black rounded transition-colors ${discountType === 'percent' ? 'bg-[#B5FF03] text-black' : 'text-neutral-400 hover:text-white'}`}
+                                className={`px-3 py-1.5 text-[10px] font-black rounded transition-colors ${discountType === 'percent' ? 'bg-[#CDFF00] text-black' : 'text-neutral-400 hover:text-white'}`}
                               >
                                 %
                               </button>
                               <button
                                 type="button"
                                 onClick={() => { setDiscountType('fixed'); setDiscountValue(0); }}
-                                className={`px-3 py-1.5 text-[10px] font-black rounded transition-colors ${discountType === 'fixed' ? 'bg-[#B5FF03] text-black' : 'text-neutral-400 hover:text-white'}`}
+                                className={`px-3 py-1.5 text-[10px] font-black rounded transition-colors ${discountType === 'fixed' ? 'bg-[#CDFF00] text-black' : 'text-neutral-400 hover:text-white'}`}
                               >
                                 R$
                               </button>
@@ -940,7 +943,7 @@ const CRMOrçamentos = () => {
                               max={discountType === 'percent' ? 100 : undefined}
                               value={discountValue}
                               onChange={e => setDiscountValue(parseFloat(e.target.value) || 0)}
-                              className="w-20 bg-[#1a1a1a] border border-[#333] rounded-md px-3 py-1.5 text-xs font-bold text-white text-center focus:outline-none focus:border-[#B5FF03]"
+                              className="w-20 bg-[#1a1a1a] border border-[#333] rounded-md px-3 py-1.5 text-xs font-bold text-white text-center focus:outline-none focus:border-[#CDFF00]"
                               placeholder="0"
                             />
                             <span className="text-[10px] text-neutral-500 font-bold">
@@ -963,7 +966,7 @@ const CRMOrçamentos = () => {
                                     <span>-{formatCurrency(discountAmount)}</span>
                                   </div>
                                 )}
-                                <div className="flex justify-between text-sm font-black text-[#B5FF03] border-t border-[#333] pt-1 mt-1">
+                                <div className="flex justify-between text-sm font-black text-[#CDFF00] border-t border-[#333] pt-1 mt-1">
                                   <span>Valor Final:</span>
                                   <span>{formatCurrency(discountedTotal)}</span>
                                 </div>
@@ -988,7 +991,7 @@ const CRMOrçamentos = () => {
                         }}
                         onFocus={() => setShowInvDropdown(true)}
                         placeholder="Buscar produto no estoque..."
-                        className="w-full bg-[#1a1a1a] border border-gray-700 rounded-md py-2 pl-8 pr-3 text-white text-xs placeholder-gray-500 focus:outline-none focus:border-[#B5FF03] transition-colors"
+                        className="w-full bg-[#1a1a1a] border border-gray-700 rounded-md py-2 pl-8 pr-3 text-white text-xs placeholder-gray-500 focus:outline-none focus:border-[#CDFF00] transition-colors"
                       />
                       {showInvDropdown && (
                         <div className="mt-1 bg-[#1a1a1a] border border-[#333] rounded-md shadow-xl max-h-48 overflow-y-auto">
@@ -1029,7 +1032,7 @@ const CRMOrçamentos = () => {
                           }
                         }
                       }}
-                      className="w-14 bg-[#1a1a1a] border border-gray-700 rounded-md py-2 px-2 text-white text-xs text-center focus:outline-none focus:border-[#B5FF03] transition-colors flex-1 sm:flex-none sm:w-14"
+                      className="w-14 bg-[#1a1a1a] border border-gray-700 rounded-md py-2 px-2 text-white text-xs text-center focus:outline-none focus:border-[#CDFF00] transition-colors flex-1 sm:flex-none sm:w-14"
                       placeholder="Qtd"
                     />
                     <input
@@ -1038,13 +1041,13 @@ const CRMOrçamentos = () => {
                       step="0.01"
                       value={newItemVal}
                       onChange={e => setNewItemVal(parseFloat(e.target.value) || 0)}
-                      className="w-24 bg-[#1a1a1a] border border-gray-700 rounded-md py-2 px-2 text-white text-xs text-right focus:outline-none focus:border-[#B5FF03] transition-colors flex-1 sm:flex-none sm:w-24"
+                      className="w-24 bg-[#1a1a1a] border border-gray-700 rounded-md py-2 px-2 text-white text-xs text-right focus:outline-none focus:border-[#CDFF00] transition-colors flex-1 sm:flex-none sm:w-24"
                       placeholder="Valor unit."
                     />
                     <button
                       type="button"
                       onClick={addItem}
-                      className="p-2 bg-[#B5FF03] text-black rounded-md hover:bg-[#a1e600] transition-colors"
+                      className="p-2 bg-[#CDFF00] text-black rounded-md hover:bg-[#a1e600] transition-colors"
                     >
                       <Plus size={16} />
                     </button>

@@ -36,7 +36,7 @@ const CATEGORY_COLORS: Record<string, string> = {
 
 const CLOSED_STAGES = new Set(['Contrato Fechado', 'Perdido']);
 
-const CHART_COLORS = ['#B5FF03', '#22d3ee', '#a78bfa', '#fb7185', '#fbbf24', '#64748b'];
+const CHART_COLORS = ['#CDFF00', '#22d3ee', '#a78bfa', '#fb7185', '#fbbf24', '#64748b'];
 
 const FULL_MONTHS = [
   'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
@@ -217,7 +217,7 @@ const EstoqueDeEventos = ({ onMessage }: EstoqueDeEventosProps) => {
   }, [hasReportData, report, periodMonth]);
 
   return (
-    <div className="bg-[#111] border border-[#333] rounded-2xl shadow-sm overflow-hidden">
+    <div className="bg-[#1a1a1a] border border-[#2d2d2d] rounded-xl shadow-[0_4px_12px_rgba(0,0,0,0.3)] overflow-hidden">
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 md:p-6 border-b border-[#222]">
         <div>
@@ -225,7 +225,7 @@ const EstoqueDeEventos = ({ onMessage }: EstoqueDeEventosProps) => {
           <p className="text-[11px] text-neutral-400 mt-0.5">Itens entregues ao cliente em cada evento — lista limpa, sem dados internos.</p>
         </div>
         <div className="flex items-center gap-2 w-full sm:w-auto">
-          <div className="flex items-center flex-1 sm:flex-none bg-[#0a0a0a] border border-[#333] rounded-lg overflow-hidden focus-within:border-[#B5FF03] transition-colors">
+          <div className="flex items-center flex-1 sm:flex-none bg-[#0a0a0a] border border-[#333] rounded-lg overflow-hidden focus-within:border-[#CDFF00] transition-colors">
             <Search size={14} className="text-neutral-500 ml-3 shrink-0" />
             <input
               type="text"
@@ -238,7 +238,7 @@ const EstoqueDeEventos = ({ onMessage }: EstoqueDeEventosProps) => {
           </div>
           <button
             onClick={() => openForm()}
-            className="rounded-full px-3 sm:px-4 py-2 bg-[#B5FF03] text-black font-bold text-[10px] sm:text-xs uppercase tracking-widest hover:bg-[#a1e600] transition-colors min-h-[44px] shrink-0 flex items-center gap-1.5"
+            className="rounded-full px-3 sm:px-4 py-2 bg-[#CDFF00] text-black font-bold text-[10px] sm:text-xs uppercase tracking-widest hover:bg-[#a1e600] transition-colors min-h-[44px] shrink-0 flex items-center gap-1.5"
           >
             <Plus size={14} /> Adicionar Item
           </button>
@@ -249,7 +249,7 @@ const EstoqueDeEventos = ({ onMessage }: EstoqueDeEventosProps) => {
       <div className="p-4 md:p-6 space-y-4 border-b border-[#222]">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
           <div>
-            <h3 className="text-sm font-black uppercase tracking-widest text-[#B5FF03] flex items-center gap-2">
+            <h3 className="text-sm font-black uppercase tracking-widest text-[#CDFF00] flex items-center gap-2">
               <BarChart3 size={14} strokeWidth={3} /> Relatórios Analíticos
             </h3>
             <p className="text-[10px] text-neutral-500 mt-0.5">
@@ -260,7 +260,7 @@ const EstoqueDeEventos = ({ onMessage }: EstoqueDeEventosProps) => {
             <div className="flex items-center bg-[#0a0a0a] border border-[#333] rounded-lg overflow-hidden">
               <button
                 onClick={() => movePeriod(-1)}
-                className="p-2 text-neutral-400 hover:text-[#B5FF03] hover:bg-[#222] transition-colors flex items-center justify-center min-w-[40px] min-h-[44px]"
+                className="p-2 text-neutral-400 hover:text-[#CDFF00] hover:bg-[#222] transition-colors flex items-center justify-center min-w-[40px] min-h-[44px]"
                 title="Mês anterior"
                 aria-label="Mês anterior"
               >
@@ -271,7 +271,7 @@ const EstoqueDeEventos = ({ onMessage }: EstoqueDeEventosProps) => {
               </span>
               <button
                 onClick={() => movePeriod(1)}
-                className="p-2 text-neutral-400 hover:text-[#B5FF03] hover:bg-[#222] transition-colors flex items-center justify-center min-w-[40px] min-h-[44px]"
+                className="p-2 text-neutral-400 hover:text-[#CDFF00] hover:bg-[#222] transition-colors flex items-center justify-center min-w-[40px] min-h-[44px]"
                 title="Próximo mês"
                 aria-label="Próximo mês"
               >
@@ -280,7 +280,7 @@ const EstoqueDeEventos = ({ onMessage }: EstoqueDeEventosProps) => {
             </div>
             <button
               onClick={() => loadReports(periodYear, periodMonth)}
-              className="p-2 rounded-lg text-neutral-400 hover:text-[#B5FF03] hover:bg-[#222] transition-colors flex items-center justify-center min-w-[44px] min-h-[44px]"
+              className="p-2 rounded-lg text-neutral-400 hover:text-[#CDFF00] hover:bg-[#222] transition-colors flex items-center justify-center min-w-[44px] min-h-[44px]"
               title="Atualizar relatórios"
             >
               <RefreshCw size={14} />
@@ -291,8 +291,8 @@ const EstoqueDeEventos = ({ onMessage }: EstoqueDeEventosProps) => {
         {/* Cards de métricas rápidas */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           <div className="bg-[#0a0a0a] border border-[#333] rounded-xl p-4 flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-[#B5FF03]/10 border border-[#B5FF03]/30 flex items-center justify-center shrink-0">
-              <Package size={17} className="text-[#B5FF03]" />
+            <div className="w-10 h-10 rounded-lg bg-[#CDFF00]/10 border border-[#CDFF00]/30 flex items-center justify-center shrink-0">
+              <Package size={17} className="text-[#CDFF00]" />
             </div>
             <div className="min-w-0">
               <p className="text-[9px] font-black uppercase tracking-widest text-neutral-500">Itens Cadastrados</p>
@@ -321,7 +321,7 @@ const EstoqueDeEventos = ({ onMessage }: EstoqueDeEventosProps) => {
               {report?.mostProfitable ? (
                 <>
                   <p className="text-sm font-black text-white leading-tight truncate">{report.mostProfitable.name}</p>
-                  <p className="text-[9px] text-[#B5FF03] font-bold">
+                  <p className="text-[9px] text-[#CDFF00] font-bold">
                     {formatCurrency(report.mostProfitable.valor)} em valor de referência
                   </p>
                 </>
@@ -334,8 +334,8 @@ const EstoqueDeEventos = ({ onMessage }: EstoqueDeEventosProps) => {
 
         {/* Gráficos */}
         {!hasReportData && (
-          <div className="flex items-start gap-2 bg-[#B5FF03]/5 border border-[#B5FF03]/20 rounded-lg px-3 py-2.5">
-            <Package size={13} className="text-[#B5FF03] shrink-0 mt-0.5" />
+          <div className="flex items-start gap-2 bg-[#CDFF00]/5 border border-[#CDFF00]/20 rounded-lg px-3 py-2.5">
+            <Package size={13} className="text-[#CDFF00] shrink-0 mt-0.5" />
             <p className="text-[10px] text-neutral-400 leading-relaxed">
           Nenhuma saída real em <span className="text-white font-bold">{periodLabel} {periodYear}</span>. Vincule itens do estoque a eventos
           confirmados e realizados para ver os dados reais.
@@ -387,8 +387,8 @@ const EstoqueDeEventos = ({ onMessage }: EstoqueDeEventosProps) => {
               <AreaChart data={monthlyData} margin={{ top: 8, right: 8, bottom: 0, left: -16 }}>
                 <defs>
                   <linearGradient id="saidasGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#B5FF03" stopOpacity={0.45} />
-                    <stop offset="100%" stopColor="#B5FF03" stopOpacity={0} />
+                    <stop offset="0%" stopColor="#CDFF00" stopOpacity={0.45} />
+                    <stop offset="100%" stopColor="#CDFF00" stopOpacity={0} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#222" />
@@ -398,10 +398,10 @@ const EstoqueDeEventos = ({ onMessage }: EstoqueDeEventosProps) => {
                 <Area
                   type="monotone"
                   dataKey="total"
-                  stroke="#B5FF03"
+                  stroke="#CDFF00"
                   strokeWidth={2}
                   fill="url(#saidasGrad)"
-                  dot={{ fill: '#B5FF03', r: 2.5, strokeWidth: 0 }}
+                  dot={{ fill: '#CDFF00', r: 2.5, strokeWidth: 0 }}
                   activeDot={{ r: 4 }}
                 />
               </AreaChart>
@@ -448,14 +448,14 @@ const EstoqueDeEventos = ({ onMessage }: EstoqueDeEventosProps) => {
                     <div className="flex items-center justify-end gap-1">
                       <button
                         onClick={() => { setLinkItem(item); setLinkOrcamentoId(''); setLinkError(''); }}
-                        className="flex items-center gap-1 px-2.5 py-1.5 rounded-md text-[10px] font-bold text-[#B5FF03] border border-[#B5FF03]/30 hover:bg-[#B5FF03]/10 transition-colors min-h-[36px]"
+                        className="flex items-center gap-1 px-2.5 py-1.5 rounded-md text-[10px] font-bold text-[#CDFF00] border border-[#CDFF00]/30 hover:bg-[#CDFF00]/10 transition-colors min-h-[36px]"
                         title="Adicionar ao orçamento"
                       >
                         <ShoppingBag size={12} /> Orçamento
                       </button>
                       <button
                         onClick={() => openForm(item)}
-                        className="p-2 rounded-md text-neutral-400 hover:text-[#B5FF03] hover:bg-[#222] transition-colors min-w-[36px] min-h-[36px] flex items-center justify-center"
+                        className="p-2 rounded-md text-neutral-400 hover:text-[#CDFF00] hover:bg-[#222] transition-colors min-w-[36px] min-h-[36px] flex items-center justify-center"
                         title="Editar item"
                       >
                         <Pencil size={14} />
@@ -504,13 +504,13 @@ const EstoqueDeEventos = ({ onMessage }: EstoqueDeEventosProps) => {
               <div className="flex items-center gap-1.5">
                 <button
                   onClick={() => { setLinkItem(item); setLinkOrcamentoId(''); setLinkError(''); }}
-                  className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-md text-[10px] font-bold text-[#B5FF03] border border-[#B5FF03]/30 hover:bg-[#B5FF03]/10 transition-colors min-h-[44px]"
+                  className="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-md text-[10px] font-bold text-[#CDFF00] border border-[#CDFF00]/30 hover:bg-[#CDFF00]/10 transition-colors min-h-[44px]"
                 >
                   <ShoppingBag size={12} /> Adicionar ao Orçamento
                 </button>
                 <button
                   onClick={() => openForm(item)}
-                  className="p-2.5 rounded-md text-neutral-400 hover:text-[#B5FF03] hover:bg-[#222] transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
+                  className="p-2.5 rounded-md text-neutral-400 hover:text-[#CDFF00] hover:bg-[#222] transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
                   title="Editar item"
                 >
                   <Pencil size={14} />
@@ -531,9 +531,9 @@ const EstoqueDeEventos = ({ onMessage }: EstoqueDeEventosProps) => {
       {/* Create/Edit modal */}
       {formOpen && (
         <div className="fixed inset-0 bg-black/80 flex items-end sm:items-center justify-center z-[100] p-0 sm:p-4" onClick={() => setFormOpen(false)}>
-          <div className="bg-[#0a0a0a] border border-[#222222] rounded-t-2xl sm:rounded-lg w-full max-w-md max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+          <div className="bg-[#1a1a1a] border border-[#2d2d2d] rounded-t-2xl sm:rounded-t-2xl w-full max-w-md max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between p-4 border-b border-[#222]">
-              <h3 className="text-sm font-black uppercase tracking-widest text-[#B5FF03]">
+              <h3 className="text-sm font-black uppercase tracking-widest text-[#CDFF00]">
                 {editingItem ? 'Editar Item' : 'Novo Item'}
               </h3>
               <button onClick={() => setFormOpen(false)} className="p-2 hover:bg-[#222] rounded-md transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center">
@@ -548,7 +548,7 @@ const EstoqueDeEventos = ({ onMessage }: EstoqueDeEventosProps) => {
                   value={form.name}
                   onChange={e => setForm(p => ({ ...p, name: e.target.value }))}
                   placeholder="Ex: Iluminação Cênica"
-                  className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-sm text-white placeholder-neutral-600 focus:border-[#B5FF03] outline-none"
+                  className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-sm text-white placeholder-neutral-600 focus:border-[#CDFF00] outline-none"
                   autoFocus
                 />
               </div>
@@ -558,7 +558,7 @@ const EstoqueDeEventos = ({ onMessage }: EstoqueDeEventosProps) => {
                   <select
                     value={form.category}
                     onChange={e => setForm(p => ({ ...p, category: e.target.value }))}
-                    className="w-full appearance-none bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-sm text-white focus:border-[#B5FF03] outline-none [color-scheme:dark] pr-9"
+                    className="w-full appearance-none bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-sm text-white focus:border-[#CDFF00] outline-none [color-scheme:dark] pr-9"
                   >
                     {EVENT_STOCK_CATEGORIES.map(cat => (
                       <option key={cat} value={cat}>{cat}</option>
@@ -574,7 +574,7 @@ const EstoqueDeEventos = ({ onMessage }: EstoqueDeEventosProps) => {
                   value={form.observacao}
                   onChange={e => setForm(p => ({ ...p, observacao: e.target.value }))}
                   placeholder="Anotações internas (não vão para o cliente)..."
-                  className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-sm text-white placeholder-neutral-600 focus:border-[#B5FF03] outline-none resize-none"
+                  className="w-full bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-sm text-white placeholder-neutral-600 focus:border-[#CDFF00] outline-none resize-none"
                 />
               </div>
               <div className="flex items-center gap-2 pt-1">
@@ -587,7 +587,7 @@ const EstoqueDeEventos = ({ onMessage }: EstoqueDeEventosProps) => {
                 <button
                   onClick={handleSaveItem}
                   disabled={!form.name.trim()}
-                  className="flex-1 py-3 bg-[#B5FF03] text-black font-bold text-[10px] uppercase tracking-widest rounded-lg hover:bg-[#a1e600] transition-all min-h-[44px] disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="flex-1 py-3 bg-[#CDFF00] text-black font-bold text-[10px] uppercase tracking-widest rounded-lg hover:bg-[#a1e600] transition-all min-h-[44px] disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   {editingItem ? 'Salvar Alterações' : 'Cadastrar Item'}
                 </button>
@@ -600,9 +600,9 @@ const EstoqueDeEventos = ({ onMessage }: EstoqueDeEventosProps) => {
       {/* Link to orçamento modal */}
       {linkItem && (
         <div className="fixed inset-0 bg-black/80 flex items-end sm:items-center justify-center z-[100] p-0 sm:p-4" onClick={() => setLinkItem(null)}>
-          <div className="bg-[#0a0a0a] border border-[#222222] rounded-t-2xl sm:rounded-lg w-full max-w-md max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+          <div className="bg-[#1a1a1a] border border-[#2d2d2d] rounded-t-2xl sm:rounded-t-2xl w-full max-w-md max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between p-4 border-b border-[#222]">
-              <h3 className="text-sm font-black uppercase tracking-widest text-[#B5FF03]">Adicionar ao Orçamento</h3>
+              <h3 className="text-sm font-black uppercase tracking-widest text-[#CDFF00]">Adicionar ao Orçamento</h3>
               <button onClick={() => setLinkItem(null)} className="p-2 hover:bg-[#222] rounded-md transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center">
                 <X size={16} className="text-neutral-400" />
               </button>
@@ -618,7 +618,7 @@ const EstoqueDeEventos = ({ onMessage }: EstoqueDeEventosProps) => {
                   <select
                     value={linkOrcamentoId}
                     onChange={e => { setLinkOrcamentoId(e.target.value); setLinkError(''); }}
-                    className="w-full appearance-none bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-sm text-white focus:border-[#B5FF03] outline-none [color-scheme:dark] pr-9"
+                    className="w-full appearance-none bg-[#111] border border-[#333] rounded-lg px-3 py-2 text-sm text-white focus:border-[#CDFF00] outline-none [color-scheme:dark] pr-9"
                   >
                     <option value="">Selecionar orçamento...</option>
                     {openOrcamentos.map(o => (
@@ -647,7 +647,7 @@ const EstoqueDeEventos = ({ onMessage }: EstoqueDeEventosProps) => {
                 </button>
                 <button
                   onClick={handleConfirmLink}
-                  className="flex-1 py-3 bg-[#B5FF03] text-black font-bold text-[10px] uppercase tracking-widest rounded-lg hover:bg-[#a1e600] transition-all min-h-[44px] flex items-center justify-center gap-1.5"
+                  className="flex-1 py-3 bg-[#CDFF00] text-black font-bold text-[10px] uppercase tracking-widest rounded-lg hover:bg-[#a1e600] transition-all min-h-[44px] flex items-center justify-center gap-1.5"
                 >
                   <FileText size={13} /> Confirmar
                 </button>

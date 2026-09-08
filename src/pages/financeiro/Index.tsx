@@ -6,7 +6,7 @@ import { useFinance } from '../../contexts/FinanceContext';
 import { generateUUID } from '../../lib/uuid';
 import { parseMonetaryValue } from '../../lib/crmHelpers';
 import { eventTypeLabel } from '../../lib/eventTypeLabel';
-import { Pencil, X, TrendingUp, TrendingDown, Clock, AlertTriangle, XCircle, ChevronDown, ChevronUp, SlidersHorizontal, Trash2, BarChart3 } from 'lucide-react';
+import { Pencil, X, TrendingUp, TrendingDown, Clock, AlertTriangle, XCircle, ChevronDown, ChevronUp, SlidersHorizontal, Trash2, BarChart3, DollarSign } from 'lucide-react';
 
 interface Invoice {
   id: string;
@@ -99,7 +99,7 @@ const FilterSection = ({ title, children, defaultOpen = true }: { title: string;
 
 const CheckboxFilter = ({ label, checked, onChange }: { label: string; checked: boolean; onChange: (checked: boolean) => void }) => (
   <label className="flex items-center gap-2.5 cursor-pointer group pl-1 min-h-[36px]">
-    <div className={`w-4 h-4 border rounded flex items-center justify-center transition-all ${checked ? 'bg-[#CCFF00] border-[#CCFF00]' : 'border-[rgba(255,255,255,0.2)] group-hover:border-[#CCFF00]'}`}>
+    <div className={`w-4 h-4 border rounded flex items-center justify-center transition-all ${checked ? 'bg-[#CDFF00] border-[#CDFF00]' : 'border-[rgba(255,255,255,0.2)] group-hover:border-[#CDFF00]'}`}>
       {checked && <svg className="w-3 h-3 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
       </svg>}
@@ -111,7 +111,7 @@ const CheckboxFilter = ({ label, checked, onChange }: { label: string; checked: 
 
 const RadioFilter = ({ label, checked, onChange }: { label: string; checked: boolean; onChange: () => void }) => (
   <label className="flex items-center gap-2.5 cursor-pointer group pl-1 min-h-[36px]">
-    <div className={`w-4 h-4 border rounded-full flex items-center justify-center transition-all ${checked ? 'bg-[#CCFF00] border-[#CCFF00]' : 'border-[rgba(255,255,255,0.2)] group-hover:border-[#CCFF00]'}`}>
+    <div className={`w-4 h-4 border rounded-full flex items-center justify-center transition-all ${checked ? 'bg-[#CDFF00] border-[#CDFF00]' : 'border-[rgba(255,255,255,0.2)] group-hover:border-[#CDFF00]'}`}>
       {checked && <div className="w-2 h-2 bg-black rounded-full" />}
     </div>
     <input type="radio" className="hidden" checked={checked} onChange={onChange} />
@@ -423,7 +423,7 @@ const Financeiro = () => {
 
     const cards = viewMode === 'receitas'
       ? [
-          { label: 'Total Recebido', icon: TrendingUp, iconColor: 'text-[#B5FF03]', value: totalRecebido, dimmed: false },
+          { label: 'Total Recebido', icon: TrendingUp, iconColor: 'text-[#CDFF00]', value: totalRecebido, dimmed: false },
           { label: 'Receitas Pendentes', icon: Clock, iconColor: 'text-[#aaaaaa]', value: receitasPendentes, dimmed: false },
         ]
       : [
@@ -770,7 +770,7 @@ const Financeiro = () => {
         {hasActiveFilters && (
           <button
             onClick={clearFilters}
-            className="text-xs text-[#A0A0A0] hover:text-[#CCFF00] transition-colors flex items-center gap-1"
+            className="text-xs text-[#A0A0A0] hover:text-[#CDFF00] transition-colors flex items-center gap-1"
           >
             <XCircle size={12} />
             Limpar
@@ -901,7 +901,7 @@ const Financeiro = () => {
               type="number"
               value={activeFilters.minValue}
               onChange={(e) => handleFilterChange(prev => ({ ...prev, minValue: e.target.value }))}
-              className="w-full bg-[#111111] border border-[#222222] rounded px-3 py-2 text-sm text-white focus:border-[#B5FF03] outline-none transition-colors"
+              className="w-full bg-[#111111] border border-[#222222] rounded px-3 py-2 text-sm text-white focus:border-[#CDFF00] outline-none transition-colors"
             />
           </div>
           <div>
@@ -910,7 +910,7 @@ const Financeiro = () => {
               type="number"
               value={activeFilters.maxValue}
               onChange={(e) => handleFilterChange(prev => ({ ...prev, maxValue: e.target.value }))}
-              className="w-full bg-[#111111] border border-[#222222] rounded px-3 py-2 text-sm text-white focus:border-[#B5FF03] outline-none transition-colors"
+              className="w-full bg-[#111111] border border-[#222222] rounded px-3 py-2 text-sm text-white focus:border-[#CDFF00] outline-none transition-colors"
             />
           </div>
         </div>
@@ -923,7 +923,10 @@ const Financeiro = () => {
       {/* Header */}
       <div className="p-6 md:p-8 border-b border-[rgba(255,255,255,0.08)]">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <h1 className="page-title">Financeiro</h1>
+          <h1 className="flex items-center gap-3 text-[32px] font-black text-white tracking-[0.5px]">
+            <DollarSign className="text-[#CDFF00]" size={32} />
+            Financeiro
+          </h1>
           <div className="flex flex-wrap gap-3">
             {viewMode === 'receitas' ? (
               <button
@@ -965,7 +968,7 @@ const Financeiro = () => {
             onClick={() => { setViewMode('receitas'); setActiveTab('receitas'); }}
             className={`rounded-full px-5 py-2.5 font-bold text-xs uppercase tracking-widest transition-all duration-150 ${
               viewMode === 'receitas'
-                ? 'bg-[#CCFF00] text-black'
+                ? 'bg-[#CDFF00] text-black'
                 : 'bg-[#111111] text-white border border-[rgba(255,255,255,0.2)] hover:border-[rgba(255,255,255,0.5)] hover:bg-[rgba(255,255,255,0.05)]'
             }`}
           >
@@ -975,7 +978,7 @@ const Financeiro = () => {
             onClick={() => { setViewMode('despesas'); setActiveTab('fixas'); }}
             className={`rounded-full px-5 py-2.5 font-bold text-xs uppercase tracking-widest transition-all duration-150 ${
               viewMode === 'despesas'
-                ? 'bg-[#CCFF00] text-black'
+                ? 'bg-[#CDFF00] text-black'
                 : 'bg-[#111111] text-white border border-[rgba(255,255,255,0.2)] hover:border-[rgba(255,255,255,0.5)] hover:bg-[rgba(255,255,255,0.05)]'
             }`}
           >
@@ -1013,7 +1016,7 @@ const Financeiro = () => {
               onClick={() => setActiveTab('receitas')}
               className={`py-3.5 px-1 border-b-2 font-bold text-xs uppercase tracking-widest transition-colors ${
                 activeTab === 'receitas'
-                  ? 'border-[#CCFF00] text-[#CCFF00]'
+                  ? 'border-[#CDFF00] text-[#CDFF00]'
                   : 'border-transparent text-[#A0A0A0] hover:text-white'
               }`}
             >
@@ -1023,7 +1026,7 @@ const Financeiro = () => {
               onClick={() => setActiveTab('fluxo')}
               className={`py-3.5 px-1 border-b-2 font-bold text-xs uppercase tracking-widest transition-colors ${
                 activeTab === 'fluxo'
-                  ? 'border-[#CCFF00] text-[#CCFF00]'
+                  ? 'border-[#CDFF00] text-[#CDFF00]'
                   : 'border-transparent text-[#A0A0A0] hover:text-white'
               }`}
             >
@@ -1033,7 +1036,7 @@ const Financeiro = () => {
               onClick={() => setActiveTab('projecao')}
               className={`py-3.5 px-1 border-b-2 font-bold text-xs uppercase tracking-widest transition-colors ${
                 activeTab === 'projecao'
-                  ? 'border-[#CCFF00] text-[#CCFF00]'
+                  ? 'border-[#CDFF00] text-[#CDFF00]'
                   : 'border-transparent text-[#A0A0A0] hover:text-white'
               }`}
             >
@@ -1046,7 +1049,7 @@ const Financeiro = () => {
               onClick={() => setActiveTab('fixas')}
               className={`py-3.5 px-1 border-b-2 font-bold text-xs uppercase tracking-widest transition-colors ${
                 activeTab === 'fixas'
-                  ? 'border-[#CCFF00] text-[#CCFF00]'
+                  ? 'border-[#CDFF00] text-[#CDFF00]'
                   : 'border-transparent text-[#A0A0A0] hover:text-white'
               }`}
             >
@@ -1056,7 +1059,7 @@ const Financeiro = () => {
               onClick={() => setActiveTab('variaveis')}
               className={`py-3.5 px-1 border-b-2 font-bold text-xs uppercase tracking-widest transition-colors ${
                 activeTab === 'variaveis'
-                  ? 'border-[#CCFF00] text-[#CCFF00]'
+                  ? 'border-[#CDFF00] text-[#CDFF00]'
                   : 'border-transparent text-[#A0A0A0] hover:text-white'
               }`}
             >
@@ -1066,7 +1069,7 @@ const Financeiro = () => {
               onClick={() => setActiveTab('fluxo')}
               className={`py-3 px-1 border-b-2 font-bold text-xs uppercase tracking-widest transition-colors ${
                 activeTab === 'fluxo'
-                  ? 'border-[#B5FF03] text-[#B5FF03]'
+                  ? 'border-[#CDFF00] text-[#CDFF00]'
                   : 'border-transparent text-[#aaaaaa] hover:text-white'
               }`}
             >
@@ -1076,7 +1079,7 @@ const Financeiro = () => {
               onClick={() => setActiveTab('projecao')}
               className={`py-3 px-1 border-b-2 font-bold text-xs uppercase tracking-widest transition-colors ${
                 activeTab === 'projecao'
-                  ? 'border-[#B5FF03] text-[#B5FF03]'
+                  ? 'border-[#CDFF00] text-[#CDFF00]'
                   : 'border-transparent text-[#aaaaaa] hover:text-white'
               }`}
             >
@@ -1123,7 +1126,7 @@ const Financeiro = () => {
                       <td className="table-cell text-[#A0A0A0]">{paymentMethodLabel(invoice.paymentMethod, invoice.installments)}</td>
                       <td className="table-cell text-white">{invoice.amount}</td>
                       <td className="table-cell text-[#A0A0A0]">{invoice.totalExpenses || '—'}</td>
-                      <td className={`table-cell ${(parseBRL(invoice.profit || '0') || 0) >= 0 ? 'text-[#CCFF00]' : 'text-red-400'}`}>{invoice.profit || '—'}</td>
+                      <td className={`table-cell ${(parseBRL(invoice.profit || '0') || 0) >= 0 ? 'text-[#CDFF00]' : 'text-red-400'}`}>{invoice.profit || '—'}</td>
                       <td className="table-cell text-right">
                         <button
                           onClick={() => handleOpenInvoiceModal(invoice)}
@@ -1161,7 +1164,7 @@ const Financeiro = () => {
                     <div><span className="text-[#606060]">Pagamento:</span> <span className="text-white">{paymentMethodLabel(invoice.paymentMethod, invoice.installments)}</span></div>
                   </div>
                   <div className="flex justify-end gap-2 pt-2 border-t border-[rgba(255,255,255,0.05)]">
-                    <button onClick={() => handleOpenInvoiceModal(invoice)} className="text-[#CCFF00] p-2 min-h-[44px]"><Pencil size={18} /></button>
+                    <button onClick={() => handleOpenInvoiceModal(invoice)} className="text-[#CDFF00] p-2 min-h-[44px]"><Pencil size={18} /></button>
                   </div>
                 </div>
               ))}
@@ -1179,9 +1182,9 @@ const Financeiro = () => {
               <div className="card p-6">
                 <div className="flex justify-between items-center mb-3">
                   <span className="card-label">Entradas Realizadas</span>
-                  <TrendingUp size={16} className="text-[#CCFF00]" />
+                  <TrendingUp size={16} className="text-[#CDFF00]" />
                 </div>
-                <p className="card-value text-[#CCFF00]">{formatCurrency(displayData.fluxo.entradaRealizada)}</p>
+                <p className="card-value text-[#CDFF00]">{formatCurrency(displayData.fluxo.entradaRealizada)}</p>
               </div>
               <div className="card p-6">
                 <div className="flex justify-between items-center mb-3">
@@ -1224,7 +1227,7 @@ const Financeiro = () => {
                       return (
                         <tr key={item.id} className="table-row">
                           <td className="table-cell">
-                            <span className={isInvoice ? 'text-[#CCFF00]' : 'text-[#FF4444]'}>
+                            <span className={isInvoice ? 'text-[#CDFF00]' : 'text-[#FF4444]'}>
                               {isInvoice ? 'Receita' : 'Despesa'}
                             </span>
                           </td>
@@ -1258,7 +1261,7 @@ const Financeiro = () => {
                   return (
                     <div key={item.id} className="card p-4 space-y-2">
                       <div className="flex justify-between items-start">
-                        <span className={`font-bold text-sm ${isInvoice ? 'text-[#CCFF00]' : 'text-[#FF4444]'}`}>
+                        <span className={`font-bold text-sm ${isInvoice ? 'text-[#CDFF00]' : 'text-[#FF4444]'}`}>
                           {isInvoice ? 'Receita' : 'Despesa'}
                         </span>
                         <span className={statusStyle[item.status]}>{item.status}</span>
@@ -1303,7 +1306,7 @@ const Financeiro = () => {
                       <div className="card-label mb-2">
                         {monthNames[parseInt(m) - 1]} {y}
                       </div>
-                      <div className="card-value text-[#CCFF00]">{formatCurrency(total)}</div>
+                      <div className="card-value text-[#CDFF00]">{formatCurrency(total)}</div>
                       <div className="text-[11px] text-[#606060] mt-1">{projectedInvoices.filter(inv => inv.date?.startsWith(month)).length} parcela(s)</div>
                     </div>
                   );
@@ -1435,7 +1438,7 @@ const Financeiro = () => {
                     <div><span className="text-[#606060]">Forma Pagto.:</span> <span className="text-white">{paymentMethodLabel(expense.paymentMethod)}</span></div>
                   </div>
                   <div className="flex justify-end gap-2 pt-2 border-t border-[rgba(255,255,255,0.05)]">
-                    <button onClick={() => handleOpenExpenseModal(expense)} className="text-[#CCFF00] p-2 min-h-[44px]"><Pencil size={18} /></button>
+                    <button onClick={() => handleOpenExpenseModal(expense)} className="text-[#CDFF00] p-2 min-h-[44px]"><Pencil size={18} /></button>
                     <button onClick={() => handleDeleteExpense(expense)} className="text-[#FF4444] p-2 min-h-[44px]"><Trash2 size={18} /></button>
                   </div>
                 </div>
@@ -1481,7 +1484,7 @@ const Financeiro = () => {
                       <td className="table-cell text-[#A0A0A0]">{paymentMethodLabel(expense.paymentMethod)}</td>
                       <td className="table-cell text-white">{expense.amount}</td>
                       <td className="table-cell text-[#A0A0A0]">{expense.receivedAmount || '—'}</td>
-                      <td className={`table-cell ${(parseBRL(expense.eventProfit || '0') || 0) >= 0 ? 'text-[#CCFF00]' : 'text-red-400'}`}>{expense.eventProfit || '—'}</td>
+                      <td className={`table-cell ${(parseBRL(expense.eventProfit || '0') || 0) >= 0 ? 'text-[#CDFF00]' : 'text-red-400'}`}>{expense.eventProfit || '—'}</td>
                       <td className="table-cell text-right">
                         <button
                           onClick={() => handleOpenExpenseModal(expense)}
@@ -1525,7 +1528,7 @@ const Financeiro = () => {
                     <div><span className="text-[#606060]">Pagamento:</span> <span className="text-white">{paymentMethodLabel(expense.paymentMethod)}</span></div>
                   </div>
                   <div className="flex justify-end gap-2 pt-2 border-t border-[rgba(255,255,255,0.05)]">
-                    <button onClick={() => handleOpenExpenseModal(expense)} className="text-[#CCFF00] p-2 min-h-[44px]"><Pencil size={18} /></button>
+                    <button onClick={() => handleOpenExpenseModal(expense)} className="text-[#CDFF00] p-2 min-h-[44px]"><Pencil size={18} /></button>
                     <button onClick={() => handleDeleteExpense(expense)} className="text-[#FF4444] p-2 min-h-[44px]"><Trash2 size={18} /></button>
                   </div>
                 </div>

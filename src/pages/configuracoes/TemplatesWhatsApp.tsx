@@ -170,7 +170,7 @@ const TemplatesWhatsApp = () => {
       {toast && (
         <div className={`fixed top-6 right-6 z-[200] flex items-center gap-3 px-5 py-3 rounded-2xl shadow-2xl border animate-in slide-in-from-top-4 duration-300 ${
           toast.type === 'success'
-            ? 'bg-[#0a0a0a] border-[#B5FF03]/30 text-[#B5FF03]'
+            ? 'bg-[#0a0a0a] border-[#CDFF00]/30 text-[#CDFF00]'
             : 'bg-[#0a0a0a] border-red-500/30 text-red-400'
         }`}>
           {toast.type === 'success' ? <CheckCircle2 size={18} /> : <AlertCircle size={18} />}
@@ -180,19 +180,22 @@ const TemplatesWhatsApp = () => {
 
       <div className="mb-10 flex justify-between items-end">
         <div>
-          <h1 className="text-4xl font-black text-[#ffffff] tracking-tighter mb-1">Templates de WhatsApp</h1>
-          <p className="text-[#aaaaaa] text-sm font-medium">Gerencie seus modelos de mensagens rápidas para WhatsApp.</p>
+          <h1 className="text-[32px] font-black text-white tracking-[0.5px] mb-2 flex items-center gap-3">
+            <MessageCircle className="text-[#CDFF00]" size={32} />
+            Templates de WhatsApp
+          </h1>
+          <p className="text-sm font-medium text-white/70">Gerencie seus modelos de mensagens rápidas para WhatsApp.</p>
         </div>
         <button
           onClick={openCreate}
-          className="flex items-center gap-2 px-5 py-3 bg-[#B5FF03] text-black font-bold text-xs uppercase tracking-widest rounded-xl hover:bg-[#a1e600] transition-all active:scale-[0.97]"
+          className="flex items-center gap-2 px-5 py-3 bg-[#CDFF00] text-black font-bold text-xs uppercase tracking-widest rounded-xl hover:bg-[#a1e600] transition-all active:scale-[0.97]"
         >
           <Plus size={16} /> Novo Template
         </button>
       </div>
 
       {templates.length === 0 ? (
-        <div className="bg-[#111] border border-[#333] rounded-3xl p-12 text-center">
+        <div className="bg-[#1a1a1a] border border-[#2d2d2d] rounded-xl p-12 text-center shadow-[0_4px_12px_rgba(0,0,0,0.3)]">
           <div className="w-16 h-16 bg-[#1a1a1a] rounded-2xl flex items-center justify-center mx-auto mb-4">
             <MessageCircle size={28} className="text-neutral-500" />
           </div>
@@ -200,16 +203,16 @@ const TemplatesWhatsApp = () => {
           <p className="text-neutral-400 text-sm">Clique em "Novo Template" para criar o primeiro modelo.</p>
         </div>
       ) : (
-        <div className="bg-[#0a0a0a] border border-[#333] rounded-2xl overflow-hidden">
+        <div className="bg-[#1a1a1a] border border-[#2d2d2d] rounded-xl overflow-hidden shadow-[0_4px_12px_rgba(0,0,0,0.3)]">
           <div className="hidden md:block">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-[#222] bg-[#111]">
-                  <th className="w-16 px-4 py-3.5 text-[10px] text-[#B5FF03] font-black uppercase tracking-widest text-center">#</th>
-                  <th className="px-4 py-3.5 text-[10px] text-[#B5FF03] font-black uppercase tracking-widest text-left">Nome</th>
-                  <th className="px-4 py-3.5 text-[10px] text-[#B5FF03] font-black uppercase tracking-widest text-left">Preview</th>
-                  <th className="w-24 px-4 py-3.5 text-[10px] text-[#B5FF03] font-black uppercase tracking-widest text-center">Status</th>
-                  <th className="w-48 px-4 py-3.5 text-[10px] text-[#B5FF03] font-black uppercase tracking-widest text-center">Ações</th>
+                <tr className="border-b border-[#2d2d2d] bg-[#0a0a0a]">
+                  <th className="w-16 px-4 py-3.5 text-[10px] text-[#CDFF00] font-black uppercase tracking-widest text-center">#</th>
+                  <th className="px-4 py-3.5 text-[10px] text-[#CDFF00] font-black uppercase tracking-widest text-left">Nome</th>
+                  <th className="px-4 py-3.5 text-[10px] text-[#CDFF00] font-black uppercase tracking-widest text-left">Preview</th>
+                  <th className="w-24 px-4 py-3.5 text-[10px] text-[#CDFF00] font-black uppercase tracking-widest text-center">Status</th>
+                  <th className="w-48 px-4 py-3.5 text-[10px] text-[#CDFF00] font-black uppercase tracking-widest text-center">Ações</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-[#222]">
@@ -244,7 +247,7 @@ const TemplatesWhatsApp = () => {
                     <td className="px-4 py-3 text-center">
                       <span className={`inline-block px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
                         tpl.active
-                          ? 'bg-[#B5FF03]/10 text-[#B5FF03]'
+                          ? 'bg-[#CDFF00]/10 text-[#CDFF00]'
                           : 'bg-neutral-800 text-neutral-400'
                       }`}>
                         {tpl.active ? 'Ativo' : 'Inativo'}
@@ -258,7 +261,7 @@ const TemplatesWhatsApp = () => {
                         <button onClick={() => handleDuplicate(tpl.id)} className="p-1.5 text-neutral-400 hover:text-white hover:bg-[#222] rounded-lg transition-all" title="Duplicar">
                           <Copy size={14} />
                         </button>
-                        <button onClick={() => handleToggleActive(tpl)} className={`p-1.5 rounded-lg transition-all ${tpl.active ? 'text-neutral-400 hover:text-[#B5FF03] hover:bg-[#222]' : 'text-[#B5FF03] hover:bg-[#222]'}`} title={tpl.active ? 'Desativar' : 'Ativar'}>
+                        <button onClick={() => handleToggleActive(tpl)} className={`p-1.5 rounded-lg transition-all ${tpl.active ? 'text-neutral-400 hover:text-[#CDFF00] hover:bg-[#222]' : 'text-[#CDFF00] hover:bg-[#222]'}`} title={tpl.active ? 'Desativar' : 'Ativar'}>
                           {tpl.active ? <ToggleRight size={14} /> : <ToggleLeft size={14} />}
                         </button>
                         <button onClick={() => handleDelete(tpl.id, tpl.name)} className="p-1.5 text-neutral-400 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all" title="Excluir">
@@ -279,7 +282,7 @@ const TemplatesWhatsApp = () => {
                   <span className="font-bold text-white text-sm">{tpl.name}</span>
                   <span className={`inline-block px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider ${
                     tpl.active
-                      ? 'bg-[#B5FF03]/10 text-[#B5FF03]'
+                      ? 'bg-[#CDFF00]/10 text-[#CDFF00]'
                       : 'bg-neutral-800 text-neutral-400'
                   }`}>
                     {tpl.active ? 'Ativo' : 'Inativo'}
@@ -302,7 +305,7 @@ const TemplatesWhatsApp = () => {
                   <button onClick={() => handleDuplicate(tpl.id)} className="p-2 text-neutral-400 hover:text-white hover:bg-[#222] rounded-lg transition-all">
                     <Copy size={14} />
                   </button>
-                  <button onClick={() => handleToggleActive(tpl)} className={`p-2 rounded-lg ${tpl.active ? 'text-neutral-400' : 'text-[#B5FF03]'}`}>
+                  <button onClick={() => handleToggleActive(tpl)} className={`p-2 rounded-lg ${tpl.active ? 'text-neutral-400' : 'text-[#CDFF00]'}`}>
                     {tpl.active ? <ToggleRight size={14} /> : <ToggleLeft size={14} />}
                   </button>
                   <button onClick={() => handleDelete(tpl.id, tpl.name)} className="p-2 text-neutral-400 hover:text-red-500 rounded-lg transition-all">
@@ -344,7 +347,7 @@ const TemplatesWhatsApp = () => {
                   onChange={(e) => { setFormName(e.target.value); setFormErrors(prev => ({ ...prev, name: undefined })); }}
                   placeholder="Ex: Saudação inicial, Envio de proposta..."
                   className={`w-full bg-[#1a1a1a] border rounded-xl px-4 py-3 font-bold text-white placeholder-neutral-600 focus:outline-none transition-colors ${
-                    formErrors.name ? 'border-red-500/50' : 'border-[#333] focus:border-[#B5FF03]'
+                    formErrors.name ? 'border-red-500/50' : 'border-[#333] focus:border-[#CDFF00]'
                   }`}
                 />
                 {formErrors.name && <p className="text-[10px] text-red-400 font-medium ml-1">{formErrors.name}</p>}
@@ -361,7 +364,7 @@ const TemplatesWhatsApp = () => {
                   placeholder="Digite a mensagem do template... Use as variáveis abaixo para personalizar."
                   rows={8}
                   className={`w-full bg-[#1a1a1a] border rounded-xl px-4 py-3 font-bold text-white placeholder-neutral-600 focus:outline-none transition-colors resize-none ${
-                    formErrors.message ? 'border-red-500/50' : 'border-[#333] focus:border-[#B5FF03]'
+                    formErrors.message ? 'border-red-500/50' : 'border-[#333] focus:border-[#CDFF00]'
                   }`}
                 />
                 {formErrors.message && <p className="text-[10px] text-red-400 font-medium ml-1">{formErrors.message}</p>}
@@ -375,7 +378,7 @@ const TemplatesWhatsApp = () => {
                       key={v.key}
                       type="button"
                       onClick={() => handleInsertVariable(v.key)}
-                      className="px-3 py-1.5 bg-[#222] border border-[#444] rounded-lg text-[11px] font-bold text-[#B5FF03] hover:bg-[#333] hover:border-[#B5FF03] transition-all"
+                      className="px-3 py-1.5 bg-[#222] border border-[#444] rounded-lg text-[11px] font-bold text-[#CDFF00] hover:bg-[#333] hover:border-[#CDFF00] transition-all"
                       title={v.label}
                     >
                       {v.key}
@@ -401,11 +404,11 @@ const TemplatesWhatsApp = () => {
                 <button
                   type="button"
                   onClick={() => setFormActive(!formActive)}
-                  className={`relative w-12 h-6 rounded-full transition-colors ${formActive ? 'bg-[#B5FF03]' : 'bg-[#333]'}`}
+                  className={`relative w-12 h-6 rounded-full transition-colors ${formActive ? 'bg-[#CDFF00]' : 'bg-[#333]'}`}
                 >
                   <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${formActive ? 'translate-x-6' : 'translate-x-0.5'}`} />
                 </button>
-                <span className={`text-xs font-bold ${formActive ? 'text-[#B5FF03]' : 'text-neutral-500'}`}>
+                <span className={`text-xs font-bold ${formActive ? 'text-[#CDFF00]' : 'text-neutral-500'}`}>
                   {formActive ? 'Ativo' : 'Inativo'}
                 </span>
               </div>
@@ -421,7 +424,7 @@ const TemplatesWhatsApp = () => {
               <div className="flex-1" />
               <button
                 onClick={handleSave}
-                className="flex items-center gap-2 px-6 py-2.5 bg-[#B5FF03] text-black font-bold text-xs uppercase tracking-widest rounded-xl hover:bg-[#a1e600] transition-all active:scale-[0.97]"
+                className="flex items-center gap-2 px-6 py-2.5 bg-[#CDFF00] text-black font-bold text-xs uppercase tracking-widest rounded-xl hover:bg-[#a1e600] transition-all active:scale-[0.97]"
               >
                 <Save size={15} />
                 Salvar

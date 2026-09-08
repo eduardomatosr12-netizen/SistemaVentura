@@ -4,7 +4,7 @@ import {
   Save, CheckCircle2,
   User, UserCircle,
   RefreshCw, Users,
-  AlertCircle, MessageCircle
+  AlertCircle, MessageCircle, Settings
 } from 'lucide-react';
 import { doc, onSnapshot, setDoc, collection, addDoc, deleteDoc, query, orderBy, Timestamp } from 'firebase/firestore';
 import { db } from '../../services/firebase';
@@ -282,8 +282,11 @@ const Configuracoes = () => {
     <div className="min-h-screen pb-bottom-nav md:pb-0 relative">
       <div className="mb-10 flex justify-between items-end">
         <div>
-          <h1 className="text-4xl font-black text-[#ffffff] tracking-tighter mb-1">Configurações</h1>
-          <p className="text-[#aaaaaa] text-sm font-medium">Controle central de perfil e preferências.</p>
+          <h1 className="text-[32px] font-black text-white tracking-[0.5px] mb-2 flex items-center gap-3">
+            <Settings className="text-[#CDFF00]" size={32} />
+            Configurações
+          </h1>
+          <p className="text-sm font-medium text-white/70">Controle central de perfil e preferências.</p>
         </div>
       </div>
 
@@ -291,11 +294,11 @@ const Configuracoes = () => {
         {sections.map((section) => {
           const Icon = section.icon;
           return (
-            <div key={section.id} className="bg-[#111111] border border-[#222222] rounded-3xl p-8 hover:border-[#b5ff03] transition-all group relative overflow-hidden">
+            <div key={section.id} className="bg-[#1a1a1a] border border-[#2d2d2d] rounded-xl p-8 shadow-[0_4px_12px_rgba(0,0,0,0.3)] hover:border-[#CDFF00] transition-all group relative overflow-hidden">
               <div className="flex items-center justify-between relative z-10">
                 <div className="flex items-center gap-6">
                   <div className="w-16 h-16 bg-[#1a1a1a] rounded-2xl flex items-center justify-center shrink-0 group-hover:bg-[#1a1a1a] transition-colors">
-                    <Icon className="w-8 h-8 text-[#b5ff03] group-hover:text-[#b5ff03] transition-colors" strokeWidth={2.5} />
+                    <Icon className="w-8 h-8 text-[#CDFF00] group-hover:text-[#CDFF00] transition-colors" strokeWidth={2.5} />
                   </div>
                   <div>
                     <h3 className="font-black text-[#ffffff] text-lg tracking-tight">{section.title}</h3>
@@ -304,14 +307,14 @@ const Configuracoes = () => {
                 </div>
                 <button 
                   onClick={() => setActiveModal(section.id)}
-                  className="bg-[#b5ff03] text-black font-bold px-6 py-3 rounded-md text-[11px] uppercase tracking-widest hover:bg-[#b5ff03]/90 transition-all active:scale-[0.95] shadow-lg shadow-black/10"
+                  className="bg-[#CDFF00] text-black font-bold px-6 py-3 rounded-md text-[11px] uppercase tracking-widest hover:bg-[#CDFF00]/90 transition-all active:scale-[0.95] shadow-lg shadow-black/10"
                 >
                   Configurar
                 </button>
               </div>
-              <div className="flex gap-2 flex-wrap mt-8 pt-8 border-t border-[#222222]">
+              <div className="flex gap-2 flex-wrap mt-8 pt-8 border-t border-[#2d2d2d]">
                 {section.items.map((item, itemIdx) => (
-                  <span key={itemIdx} className="px-4 py-2 bg-[#111111] text-[#aaaaaa] text-[10px] font-black uppercase tracking-[1.5px] rounded-md border border-[#222222]">
+                  <span key={itemIdx} className="px-4 py-2 bg-[#111111] text-[#aaaaaa] text-[10px] font-black uppercase tracking-[1.5px] rounded-md border border-[#2d2d2d]">
                     {item}
                   </span>
                 ))}
@@ -325,19 +328,19 @@ const Configuracoes = () => {
       <div className="mt-6 max-w-2xl">
         <Link
           to="/configuracoes/templates-whatsapp"
-          className="block bg-[#111111] border border-[#222222] rounded-3xl p-8 hover:border-[#b5ff03] transition-all group relative overflow-hidden"
+          className="block bg-[#1a1a1a] border border-[#2d2d2d] rounded-xl p-8 shadow-[0_4px_12px_rgba(0,0,0,0.3)] hover:border-[#CDFF00] transition-all group relative overflow-hidden"
         >
           <div className="flex items-center justify-between relative z-10">
             <div className="flex items-center gap-6">
               <div className="w-16 h-16 bg-[#1a1a1a] rounded-2xl flex items-center justify-center shrink-0 group-hover:bg-[#1a1a1a] transition-colors">
-                <MessageCircle className="w-8 h-8 text-[#b5ff03] group-hover:text-[#b5ff03] transition-colors" strokeWidth={2.5} />
+                <MessageCircle className="w-8 h-8 text-[#CDFF00] group-hover:text-[#CDFF00] transition-colors" strokeWidth={2.5} />
               </div>
               <div>
                 <h3 className="font-black text-[#ffffff] text-lg tracking-tight">Templates WhatsApp</h3>
                 <p className="text-xs text-[#aaaaaa] font-bold uppercase tracking-widest mt-1">Crie e gerencie modelos de mensagens para envio rápido</p>
               </div>
             </div>
-            <span className="bg-[#b5ff03] text-black font-bold px-6 py-3 rounded-md text-[11px] uppercase tracking-widest hover:bg-[#b5ff03]/90 transition-all active:scale-[0.95] shadow-lg shadow-black/10">
+            <span className="bg-[#CDFF00] text-black font-bold px-6 py-3 rounded-md text-[11px] uppercase tracking-widest hover:bg-[#CDFF00]/90 transition-all active:scale-[0.95] shadow-lg shadow-black/10">
               Gerenciar
             </span>
           </div>
@@ -385,7 +388,7 @@ const Configuracoes = () => {
                     </div>
                   )}
                   {profileSuccess && (
-                    <div className="p-4 bg-[#111111] border border-[#B5FF03]/30 rounded-2xl flex items-center gap-3 text-[#B5FF03] text-sm font-medium">
+                    <div className="p-4 bg-[#111111] border border-[#CDFF00]/30 rounded-2xl flex items-center gap-3 text-[#CDFF00] text-sm font-medium">
                       <CheckCircle2 size={20} />
                       {profileSuccess}
                     </div>
@@ -411,18 +414,18 @@ const Configuracoes = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                       <div className="space-y-3">
                         <label className="text-[10px] font-black text-[#aaaaaa] uppercase tracking-widest ml-1">Nome Completo</label>
-                        <input type="text" value={profileData.name} onChange={(e) => setProfileData({...profileData, name: e.target.value})} className="w-full bg-[#1a1a1a] border border-[#222222] rounded-xl px-4 py-3.5 font-bold text-white placeholder-[#555555] focus:border-[#B5FF03] outline-none transition-all" placeholder="Seu nome completo" />
+                        <input type="text" value={profileData.name} onChange={(e) => setProfileData({...profileData, name: e.target.value})} className="w-full bg-[#1a1a1a] border border-[#222222] rounded-xl px-4 py-3.5 font-bold text-white placeholder-[#555555] focus:border-[#CDFF00] outline-none transition-all" placeholder="Seu nome completo" />
                       </div>
                       <div className="space-y-3">
                         <label className="text-[10px] font-black text-[#aaaaaa] uppercase tracking-widest ml-1">Email Profissional</label>
-                        <input type="email" value={profileData.email} onChange={(e) => setProfileData({...profileData, email: e.target.value})} className="w-full bg-[#1a1a1a] border border-[#222222] rounded-xl px-4 py-3.5 font-bold text-white placeholder-[#555555] focus:border-[#B5FF03] outline-none transition-all" placeholder="seu@email.com" />
+                        <input type="email" value={profileData.email} onChange={(e) => setProfileData({...profileData, email: e.target.value})} className="w-full bg-[#1a1a1a] border border-[#222222] rounded-xl px-4 py-3.5 font-bold text-white placeholder-[#555555] focus:border-[#CDFF00] outline-none transition-all" placeholder="seu@email.com" />
                       </div>
                     </div>
                   </div>
                 </div>
                 <div className="px-4 md:px-12 py-10 border-t border-[#222222] flex gap-4 shrink-0">
                   <button type="button" onClick={() => setActiveModal(null)} className="flex-1 py-4 rounded-[20px] font-black text-[11px] uppercase tracking-widest text-[#aaaaaa] hover:text-white hover:bg-[#111111] transition-all border border-transparent hover:border-[#222222]">Cancelar</button>
-                  <button type="submit" disabled={isSavingProfile} className="flex-[2] py-4 rounded-[20px] bg-[#B5FF03] text-black font-black text-[11px] uppercase tracking-widest hover:bg-[#a1e600] transition-all active:scale-[0.98] flex items-center justify-center gap-3">
+                  <button type="submit" disabled={isSavingProfile} className="flex-[2] py-4 rounded-[20px] bg-[#CDFF00] text-black font-black text-[11px] uppercase tracking-widest hover:bg-[#a1e600] transition-all active:scale-[0.98] flex items-center justify-center gap-3">
                     {isSavingProfile ? <><RefreshCw size={18} className="animate-spin" /> Salvando...</> : <><Save size={18} /> Salvar Perfil</>}
                   </button>
                 </div>
@@ -446,7 +449,7 @@ const Configuracoes = () => {
                     </div>
                   )}
                   {inviteSuccess && (
-                    <div className="p-4 bg-[#111111] border border-[#B5FF03]/30 rounded-2xl flex items-center gap-3 text-[#B5FF03] text-sm font-medium">
+                    <div className="p-4 bg-[#111111] border border-[#CDFF00]/30 rounded-2xl flex items-center gap-3 text-[#CDFF00] text-sm font-medium">
                       <CheckCircle2 size={20} />
                       {inviteSuccess}
                     </div>
@@ -455,18 +458,18 @@ const Configuracoes = () => {
                     <div className="bg-[#111111] border border-[#222222] rounded-2xl p-6 space-y-4">
                       <div className="space-y-3">
                         <label className="text-[10px] font-black text-white uppercase tracking-widest ml-1">Nome Completo</label>
-                        <input type="text" value={newEmployee.name} onChange={(e) => setNewEmployee({...newEmployee, name: e.target.value})} placeholder="João Silva" className="w-full bg-[#1a1a1a] border border-[#222222] rounded-xl px-4 py-3 font-bold text-white focus:border-[#B5FF03] outline-none transition-all" />
+                        <input type="text" value={newEmployee.name} onChange={(e) => setNewEmployee({...newEmployee, name: e.target.value})} placeholder="João Silva" className="w-full bg-[#1a1a1a] border border-[#222222] rounded-xl px-4 py-3 font-bold text-white focus:border-[#CDFF00] outline-none transition-all" />
                       </div>
                       <div className="space-y-3">
                         <label className="text-[10px] font-black text-white uppercase tracking-widest ml-1">Cargo</label>
-                        <select value={newEmployee.role} onChange={(e) => setNewEmployee({...newEmployee, role: e.target.value as 'tecnico' | 'motorista' | 'decorador' | 'administrativo'})} className="w-full bg-[#1a1a1a] border border-[#222222] rounded-xl px-4 py-3 font-bold text-white focus:border-[#B5FF03] outline-none transition-all">
+                        <select value={newEmployee.role} onChange={(e) => setNewEmployee({...newEmployee, role: e.target.value as 'tecnico' | 'motorista' | 'decorador' | 'administrativo'})} className="w-full bg-[#1a1a1a] border border-[#222222] rounded-xl px-4 py-3 font-bold text-white focus:border-[#CDFF00] outline-none transition-all">
                           <option value="tecnico">Técnico</option>
                           <option value="motorista">Motorista</option>
                           <option value="decorador">Decorador</option>
                           <option value="administrativo">Administrativo</option>
                         </select>
                       </div>
-                      <button type="button" onClick={handleAddEmployee} className="w-full py-4 bg-[#B5FF03] text-black rounded-xl font-black text-xs uppercase tracking-widest hover:bg-[#a1e600] transition-all flex items-center justify-center gap-2">
+                      <button type="button" onClick={handleAddEmployee} className="w-full py-4 bg-[#CDFF00] text-black rounded-xl font-black text-xs uppercase tracking-widest hover:bg-[#a1e600] transition-all flex items-center justify-center gap-2">
                         <Users size={16} /> Adicionar Funcionário
                       </button>
                     </div>

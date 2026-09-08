@@ -7,10 +7,10 @@ import {
   ResponsiveContainer, Legend,
 } from 'recharts';
 import {
-  ArrowLeft, ChevronLeft, ChevronRight, TrendingUp, TrendingDown, Clock, DollarSign,
+  ArrowLeft, ChevronLeft, ChevronRight, TrendingUp, TrendingDown, Clock, DollarSign, BarChart2,
 } from 'lucide-react';
 import { eventTypeLabel } from '../../lib/eventTypeLabel';
-const C_GREEN = '#B5FF03';
+const C_GREEN = '#CDFF00';
 const C_GREEN_DARK = '#77AA00';
 const C_RED = '#FF4444';
 const C_YELLOW = '#FFB800';
@@ -18,7 +18,7 @@ const C_BLUE = '#4488FF';
 const C_ORANGE = '#FF8C00';
 
 const CATEGORY_COLORS = [
-  '#B5FF03',
+  '#CDFF00',
   '#4488FF',
   '#FF8C00',
   '#FF4444',
@@ -289,19 +289,22 @@ export default function DashboardFinanceiro() {
       <div className="flex items-center gap-3 sm:gap-4">
         <button
           onClick={() => navigate('/financeiro')}
-          className="p-2 rounded-lg bg-[#111] border border-[#222] text-neutral-400 hover:text-white hover:border-[#B5FF03] transition-colors"
+          className="p-2 rounded-lg bg-[#1a1a1a] border border-[#2d2d2d] text-neutral-400 hover:text-white hover:border-[#CDFF00] transition-colors"
           title="Voltar ao Financeiro"
         >
           <ArrowLeft size={18} />
         </button>
         <div className="min-w-0">
-          <h1 className="text-lg sm:text-2xl md:text-3xl font-black text-white tracking-tight truncate">DASHBOARD FINANCEIRO</h1>
-          <p className="text-xs sm:text-sm text-neutral-400 font-medium">Visão geral do período</p>
+          <h1 className="flex items-center gap-3 text-[32px] font-black text-white tracking-[0.5px]">
+            <BarChart2 className="text-[#CDFF00]" size={32} />
+            Dashboard Financeiro
+          </h1>
+          <p className="text-sm font-medium text-white/70">Visão geral do período</p>
         </div>
       </div>
 
       <div className="flex justify-center">
-        <div className="inline-flex items-center gap-2 sm:gap-4 bg-[#111] border border-[#222] rounded-full px-3 sm:px-5 py-2">
+        <div className="inline-flex items-center gap-2 sm:gap-4 bg-[#1a1a1a] border border-[#2d2d2d] rounded-full px-3 sm:px-5 py-2 shadow-[0_4px_12px_rgba(0,0,0,0.3)]">
           <button
             onClick={goPrevMonth}
             className="p-2 rounded-full text-neutral-400 hover:text-white hover:bg-[#222] transition-colors min-w-[36px] min-h-[36px] sm:min-w-[44px] sm:min-h-[44px] flex items-center justify-center"
@@ -348,7 +351,7 @@ export default function DashboardFinanceiro() {
       </div>
 
       {!hasChartData ? (
-        <div className="bg-[#111] border border-[#222] rounded-xl p-8 text-center">
+        <div className="bg-[#1a1a1a] border border-[#2d2d2d] rounded-xl p-8 text-center shadow-[0_4px_12px_rgba(0,0,0,0.3)]">
           <DollarSign size={32} className="mx-auto mb-3 text-neutral-600" />
           <p className="text-sm text-neutral-500 font-medium">Nenhum dado no período</p>
           <p className="text-[10px] text-neutral-600 mt-1">Tente selecionar outro período ou cadastre receitas e despesas</p>
@@ -356,7 +359,7 @@ export default function DashboardFinanceiro() {
       ) : (
         <>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="bg-[#111] border border-[#222] rounded-xl p-4">
+            <div className="bg-[#1a1a1a] border border-[#2d2d2d] rounded-xl p-4 shadow-[0_4px_12px_rgba(0,0,0,0.3)]">
               <h3 className="text-xs font-black uppercase tracking-widest text-neutral-400 mb-2">Receitas vs Despesas</h3>
               {chart1Data.length === 0 ? (
                 <EmptyChart />
@@ -376,7 +379,7 @@ export default function DashboardFinanceiro() {
               )}
             </div>
 
-            <div className="bg-[#111] border border-[#222] rounded-xl p-4">
+            <div className="bg-[#1a1a1a] border border-[#2d2d2d] rounded-xl p-4 shadow-[0_4px_12px_rgba(0,0,0,0.3)]">
               <h3 className="text-xs font-black uppercase tracking-widest text-neutral-400 mb-2">Fixas vs Variáveis</h3>
               {chart2Data.length === 0 ? (
                 <EmptyChart />
@@ -409,7 +412,7 @@ export default function DashboardFinanceiro() {
               )}
             </div>
 
-            <div className="bg-[#111] border border-[#222] rounded-xl p-4">
+            <div className="bg-[#1a1a1a] border border-[#2d2d2d] rounded-xl p-4 shadow-[0_4px_12px_rgba(0,0,0,0.3)]">
               <h3 className="text-xs font-black uppercase tracking-widest text-neutral-400 mb-2">Top Categorias de Receitas</h3>
               {chart3Data.length === 0 ? (
                 <EmptyChart />
@@ -430,7 +433,7 @@ export default function DashboardFinanceiro() {
             </div>
           </div>
 
-          <div className="bg-[#111] border border-[#222] rounded-xl p-4 md:p-6">
+          <div className="bg-[#1a1a1a] border border-[#2d2d2d] rounded-xl p-4 md:p-6 shadow-[0_4px_12px_rgba(0,0,0,0.3)]">
             <h3 className="text-xs font-black uppercase tracking-widest text-neutral-400 mb-4">Evolução Mensal</h3>
             <ResponsiveContainer width="100%" height={280}>
               <BarChart data={monthlyData} barGap={4} barCategoryGap="20%">
