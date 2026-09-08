@@ -3,8 +3,9 @@ import {
   Plus, Search, Pencil, Trash2, Package, ShoppingBag, X, FileText, ChevronDown, ChevronLeft, ChevronRight, BarChart3, TrendingUp, RefreshCw,
 } from 'lucide-react';
 import {
-  PieChart, Pie, Cell, Tooltip, ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Legend,
+  ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, LabelList,
 } from 'recharts';
+import { DonutChart, ChartCard, ChartTooltipContent, formatCompact } from './charts';
 import { useCRM } from '../contexts/CRMContext';
 import { generateUUID } from '../lib/uuid';
 import { formatCurrency } from '../lib/crmHelpers';
@@ -201,14 +202,6 @@ const EstoqueDeEventos = ({ onMessage }: EstoqueDeEventosProps) => {
     return () => { cancelled = true; };
   }, [periodYear, periodMonth]);
 
-  const chartTooltipStyle = {
-    backgroundColor: '#111',
-    border: '1px solid #333',
-    borderRadius: 8,
-    fontSize: 12,
-    color: '#fff',
-  };
-
   const hasReportData = (report?.totalSaidas ?? 0) > 0;
   const topItemsData = hasReportData && report ? report.topItems : [];
   const monthlyData = useMemo(() => {
@@ -344,46 +337,33 @@ const EstoqueDeEventos = ({ onMessage }: EstoqueDeEventosProps) => {
         )}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {/* Doughnut — Top itens */}
-          <div className="bg-[#0a0a0a] border border-[#333] rounded-xl p-4">
-            <p className="text-[10px] font-black uppercase tracking-widest text-white mb-1">Top Itens Mais Usados</p>
-            <p className="text-[10px] text-neutral-500 mb-2">
+          <ChartCard title="Top Itens Mais Usados">
+            <p className="text-[10px] text-neutral-500 mb-2 -mt-1">
               {periodLabel} {periodYear} — {report ? `${report.eventsCount} eventos` : 'carregando...'}
             </p>
-            <ResponsiveContainer width="100%" height={260}>
-              <PieChart>
-                <Pie
-                  data={topItemsData}
-                  dataKey="qty"
-                  nameKey="name"
-                  innerRadius={60}
-                  outerRadius={95}
-                  paddingAngle={3}
-                  stroke="#0a0a0a"
-                >
-                  {topItemsData.map((entry, i) => (
-                    <Cell key={entry.key} fill={CHART_COLORS[i % CHART_COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip
-                  contentStyle={chartTooltipStyle}
-                  formatter={(value, _name, props) => [`${value} saídas`, props.payload?.name]}
-                />
-                <Legend
-                  verticalAlign="bottom"
-                  iconSize={8}
-                  wrapperStyle={{ fontSize: 10, color: '#a3a3a3' }}
-                />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
+            {topItemsData.length === 0 ? (
+              <div className="flex items-center justify-center h-[230px] text-neutral-500 text-xs italic">
+                Nenhuma saída no período
+              </div>
+            ) : (
+              <DonutChart
+                data={topItemsData.map(entry => ({
+                  name: entry.name,
+                  value: entry.qty,
+                  color: CHART_COLORS[topItemsData.findIndex(e => e.key === entry.key) % CHART_COLORS.length],
+                }))}
+                centerTop={`${report?.totalSaidas ?? 0}`}
+                centerBottom="Itens Usados"
+              />
+            )}
+          </ChartCard>
 
           {/* Área — Saídas por mês */}
-          <div className="bg-[#0a0a0a] border border-[#333] rounded-xl p-4">
-            <p className="text-[10px] font-black uppercase tracking-widest text-white mb-1">Saídas por Mês</p>
-            <p className="text-[10px] text-neutral-500 mb-2">
+          <ChartCard title="Saídas por Mês">
+            <p className="text-[10px] text-neutral-500 mb-2 -mt-1">
               {periodLabel} {periodYear} — {report ? `${report.totalSaidas} itens no total` : 'carregando...'}
             </p>
-            <ResponsiveContainer width="100%" height={260}>
+            <ResponsiveContainer width="100%" height={230}>
               <AreaChart data={monthlyData} margin={{ top: 8, right: 8, bottom: 0, left: -16 }}>
                 <defs>
                   <linearGradient id="saidasGrad" x1="0" y1="0" x2="0" y2="1">
@@ -391,22 +371,32 @@ const EstoqueDeEventos = ({ onMessage }: EstoqueDeEventosProps) => {
                     <stop offset="100%" stopColor="#CDFF00" stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#222" />
-                <XAxis dataKey="label" stroke="#555" fontSize={10} tickLine={false} axisLine={{ stroke: '#333' }} />
-                <YAxis stroke="#555" fontSize={10} tickLine={false} axisLine={{ stroke: '#333' }} allowDecimals={false} />
-                <Tooltip contentStyle={chartTooltipStyle} formatter={value => [`${value} itens`, 'Saídas']} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#2d2d2d" />
+                <XAxis dataKey="label" stroke="#999" fontSize={10} tickLine={false} axisLine={{ stroke: '#333' }} />
+                <YAxis stroke="#777" fontSize={10} tickLine={false} axisLine={false} allowDecimals={false} tickFormatter={v => `${v}`} />
+                <Tooltip cursor={{ stroke: 'rgba(205,255,0,0.3)', strokeDasharray: '3 3' }} content={<ChartTooltipContent formatter={v => `${v} itens`} />} />
                 <Area
                   type="monotone"
                   dataKey="total"
+                  name="Saídas"
                   stroke="#CDFF00"
-                  strokeWidth={2}
+                  strokeWidth={2.5}
                   fill="url(#saidasGrad)"
+                  isAnimationActive
+                  animationDuration={500}
                   dot={{ fill: '#CDFF00', r: 2.5, strokeWidth: 0 }}
-                  activeDot={{ r: 4 }}
+                  activeDot={{ r: 5, fill: '#CDFF00', stroke: '#0a0a0a', strokeWidth: 2 }}
+                />
+                <LabelList
+                  dataKey="total"
+                  position="top"
+                  formatter={(v: number) => (v > 0 ? formatCompact(v) : '')}
+                  style={{ fill: '#CDFF00', fontSize: 10, fontWeight: 800 }}
+                  offset={6}
                 />
               </AreaChart>
             </ResponsiveContainer>
-          </div>
+          </ChartCard>
         </div>
       </div>
 

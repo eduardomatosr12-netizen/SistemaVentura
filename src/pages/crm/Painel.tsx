@@ -1,7 +1,8 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
 import { Calendar, UserPlus, ArrowRight, CheckSquare, Activity, AlertCircle, LayoutDashboard, X, ChevronLeft, ChevronRight, ChevronDown, Search, User, Phone, Mail, CreditCard, CalendarDays, Clock, Plus, Trash2, MapPin, Pencil, FileText, MessageCircle, Lock, Package, History, BadgeDollarSign } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell, LabelList } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell, LabelList, CartesianGrid, Tooltip } from 'recharts';
+import { ChartTooltipContent } from '../../components/charts';
 import { useCRM } from '../../contexts/CRMContext';
 import type { CalendarEvent, Lead, OrcamentoItem } from '../../types/crm';
 import { parseMonetaryValue, formatCurrency, generatePDF } from '../../lib/crmHelpers';
@@ -902,6 +903,13 @@ const CRMDashboard = () => {
           <div className="bg-[#1a1a1a] border border-[#2d2d2d] rounded-xl p-4 md:p-6 shadow-[0_4px_12px_rgba(0,0,0,0.3)]">
             <ResponsiveContainer width="100%" height={260}>
               <BarChart key={`chart-${viewMonth}-${viewYear}`} data={eventCountsByStatus} margin={{ top: 20, right: 20, left: 0, bottom: 10 }} barCategoryGap="30%">
+                <defs>
+                  <linearGradient id="statusBarGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#ffffff" stopOpacity={0.9} />
+                    <stop offset="100%" stopColor="#CDFF00" stopOpacity={0.75} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#2d2d2d" vertical={false} />
                 <XAxis
                   dataKey="name"
                   axisLine={false}
@@ -910,17 +918,18 @@ const CRMDashboard = () => {
                   dy={8}
                 />
                 <YAxis hide />
-                <Bar dataKey="value" radius={[6, 6, 0, 0]} background={{ fill: '#2d2d2d', radius: 6 }}>
+                <Tooltip cursor={{ fill: 'rgba(255,255,255,0.04)' }} content={<ChartTooltipContent formatter={(v: number) => `${v} evento(s)`} />} />
+                <Bar dataKey="value" radius={[8, 8, 0, 0]} background={{ fill: '#2d2d2d', radius: 8 }} isAnimationActive animationDuration={500}>
                   <LabelList
                     dataKey="value"
                     position="inside"
-                    fill="#fff"
-                    fontSize={20}
+                    fill="#000"
+                    fontSize={18}
                     fontWeight={900}
                     offset={-8}
                   />
                   {eventCountsByStatus.map((entry, index) => (
-                    <Cell key={index} fill={entry.color} />
+                    <Cell key={index} fill={entry.color} fillOpacity={entry.value > 0 ? 1 : 0.25} />
                   ))}
                 </Bar>
               </BarChart>
