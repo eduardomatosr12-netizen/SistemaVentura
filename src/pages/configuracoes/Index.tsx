@@ -24,7 +24,7 @@ type ModalType = 'perfil' | 'equipe';
 
 
 const Configuracoes = () => {
-  const { user, logout } = useAuth();
+  const { user, logout, updateProfile } = useAuth();
   const navigate = useNavigate();
   const avatarInputRef = useRef<HTMLInputElement>(null);
   
@@ -39,7 +39,7 @@ const Configuracoes = () => {
   const [inviteError, setInviteError] = useState('');
   const [inviteSuccess, setInviteSuccess] = useState('');
 
-  const [profileData, setProfileData] = useState({ name: '', email: '', phone: '', avatar: '' });
+  const [profileData, setProfileData] = useState({ name: user?.name || '', email: user?.email || '', phone: '', avatar: '' });
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
 
@@ -67,7 +67,7 @@ const Configuracoes = () => {
         const data = snap.data();
         setProfileData({
           name: data.nome || '',
-          email: user.email || '',
+          email: data.email || user.email || '',
           phone: data.telefone || '',
           avatar: data.avatar || ''
         });
@@ -163,6 +163,15 @@ const Configuracoes = () => {
     const finalAvatar = avatarPreview || profileData.avatar;
 
     try {
+      const res = await updateProfile(profileData.name.trim());
+      if (!res.success) {
+        console.warn('[CONFIG] Nome não sincronizado no backend:', res.error);
+      }
+    } catch {
+      console.warn('[CONFIG] Falha ao sincronizar nome no backend');
+    }
+
+    try {
       await setDoc(doc(db, 'profiles', user.id), {
         nome: profileData.name.trim(),
         telefone: profileData.phone.trim(),
@@ -178,7 +187,7 @@ const Configuracoes = () => {
     }
 
     setProfileSuccess('Perfil atualizado com sucesso!');
-    setProfileData(prev => ({ ...prev, avatar: finalAvatar, email: profileData.email.trim() || prev.email }));
+    setProfileData(prev => ({ ...prev, avatar: finalAvatar, name: profileData.name.trim(), email: profileData.email.trim() || prev.email }));
     if (toastTimerRef.current !== null) window.clearTimeout(toastTimerRef.current);
     toastTimerRef.current = window.setTimeout(() => {
       setProfileSuccess('');
@@ -188,12 +197,44 @@ const Configuracoes = () => {
     setIsSavingProfile(false);
   };
 
+  const resizeAvatar = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => {
+        const img = new Image();
+        img.onload = () => {
+          const maxDim = 640;
+          let { width, height } = img;
+          if (width > maxDim || height > maxDim) {
+            const scale = maxDim / Math.max(width, height);
+            width = Math.round(width * scale);
+            height = Math.round(height * scale);
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          if (!ctx) {
+            reject(new Error('Canvas não suportado'));
+            return;
+          }
+          ctx.drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL('image/jpeg', 0.85));
+        };
+        img.onerror = () => reject(new Error('Erro ao ler imagem'));
+        img.src = reader.result as string;
+      };
+      reader.onerror = () => reject(new Error('Erro ao ler arquivo'));
+      reader.readAsDataURL(file);
+    });
+  };
+
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     
     const validTypes = ['image/jpeg', 'image/png'];
-    const maxSize = 2 * 1024 * 1024;
+    const maxSize = 5 * 1024 * 1024;
 
     if (!validTypes.includes(file.type)) {
       setProfileError('Apenas arquivos PNG ou JPG são aceitos.');
@@ -201,7 +242,7 @@ const Configuracoes = () => {
     }
 
     if (file.size > maxSize) {
-      setProfileError('A imagem deve ter no máximo 2MB.');
+      setProfileError('A imagem deve ter no máximo 5MB.');
       return;
     }
     
@@ -209,13 +250,8 @@ const Configuracoes = () => {
     setProfileError('');
     
     try {
-      const base64 = await new Promise<string>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result as string);
-        reader.onerror = () => reject(new Error('Erro ao ler arquivo'));
-        reader.readAsDataURL(file);
-      });
-      setAvatarPreview(base64);
+      const resized = await resizeAvatar(file);
+      setAvatarPreview(resized);
       setProfileSuccess('Avatar carregado! Clique em Salvar para confirmar.');
       if (toastTimerRef.current !== null) window.clearTimeout(toastTimerRef.current);
       toastTimerRef.current = window.setTimeout(() => {

@@ -27,6 +27,7 @@ interface AuthContextType {
   hasPermission: (allowedRoles: UserRole[]) => boolean;
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   selectEmployee: (name: string) => void;
+  updateProfile: (nome: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
 }
 
@@ -144,6 +145,34 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setUser((prev) => (prev ? { ...prev, name } : null));
   }, []);
 
+  const updateProfile = useCallback(async (nome: string): Promise<{ success: boolean; error?: string }> => {
+    const token = getToken();
+    if (!token) {
+      return { success: false, error: 'Sessão inválida. Faça login novamente.' };
+    }
+
+    try {
+      const res = await fetch(`${API_BASE}/auth/profile`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ nome }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        return { success: false, error: data.error || 'Erro ao atualizar nome.' };
+      }
+
+      const data = await res.json();
+      const updatedName = data.nome || nome;
+      setUser((prev) => (prev ? { ...prev, name: updatedName, email: data.email || prev.email } : prev));
+      setEmployeeName(updatedName);
+      return { success: true };
+    } catch {
+      return { success: false, error: 'Erro ao conectar com o servidor' };
+    }
+  }, []);
+
   const logout = async () => {
     removeToken();
     setUser(null);
@@ -164,6 +193,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         hasPermission,
         login,
         selectEmployee,
+        updateProfile,
         logout,
       }}
     >

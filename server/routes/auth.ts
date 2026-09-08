@@ -54,6 +54,34 @@ router.post('/login', async (req, res) => {
   }
 });
 
+router.patch('/profile', authMiddleware, async (req, res) => {
+  try {
+    const { nome } = req.body || {};
+
+    if (!nome || typeof nome !== 'string' || !nome.trim()) {
+      return res.status(400).json({ error: 'Nome é obrigatório' });
+    }
+
+    const user = await prisma.user.update({
+      where: { id: req.user!.id },
+      data: { nome: nome.trim() },
+      select: {
+        id: true,
+        nome: true,
+        email: true,
+        perfil: true,
+        ativo: true,
+        createdAt: true,
+      },
+    });
+
+    return res.status(200).json(user);
+  } catch (error) {
+    console.error('[AUTH] Erro ao atualizar nome:', error);
+    return res.status(500).json({ error: 'Erro interno do servidor' });
+  }
+});
+
 router.get('/me', authMiddleware, async (req, res) => {
   try {
     const user = await prisma.user.findUnique({
