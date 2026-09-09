@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import type { ReactNode } from 'react';
-import { collection, onSnapshot, query, orderBy } from 'firebase/firestore';
+import { collection, onSnapshot, query, orderBy, doc } from 'firebase/firestore';
 import { db } from '../services/firebase';
 
 type UserRole = 'admin' | 'manager' | 'user';
@@ -11,6 +11,7 @@ export interface User {
   email: string;
   name: string;
   role: UserRole;
+  avatar?: string;
 }
 
 export interface AuthUser extends User {
@@ -28,6 +29,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
   selectEmployee: (name: string) => void;
   updateProfile: (nome: string) => Promise<{ success: boolean; error?: string }>;
+  updateAvatar: (avatar: string) => void;
   logout: () => Promise<void>;
 }
 
@@ -68,6 +70,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     });
     return () => unsub();
   }, []);
+
+  useEffect(() => {
+    if (!user?.id) return;
+    const unsub = onSnapshot(doc(db, 'profiles', user.id), snap => {
+      if (snap.exists()) {
+        const data = snap.data();
+        const profileAvatar = data.avatar || '';
+        setUser(prev => {
+          if (!prev) return prev;
+          if (prev.avatar === profileAvatar) return prev;
+          return { ...prev, avatar: profileAvatar };
+        });
+      }
+    }, err => {
+      console.warn('[Auth] Erro ao sincronizar avatar:', err);
+    });
+    return () => unsub();
+  }, [user?.id]);
 
   const hasPermission = useCallback((allowedRoles: UserRole[]): boolean => {
     if (!isAuthenticated || !user) return false;
@@ -173,6 +193,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   }, []);
 
+  const updateAvatar = useCallback((avatar: string) => {
+    setUser(prev => prev ? { ...prev, avatar } : null);
+  }, []);
+
   const logout = async () => {
     removeToken();
     setUser(null);
@@ -194,6 +218,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         login,
         selectEmployee,
         updateProfile,
+        updateAvatar,
         logout,
       }}
     >

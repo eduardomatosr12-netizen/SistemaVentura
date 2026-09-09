@@ -212,10 +212,12 @@ const TopHeader = ({ onMenuClick }: TopHeaderProps) => {
         <div className="relative" ref={userMenuRef}>
           <button
             onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-            className="w-10 h-10 rounded-full bg-[#CDFF00] text-black flex items-center justify-center text-xs font-bold hover:scale-105 transition-transform shadow-sm shrink-0 min-w-[44px] min-h-[44px]"
+            className="w-10 h-10 rounded-full bg-[#CDFF00] text-black flex items-center justify-center text-xs font-bold hover:scale-105 transition-transform shadow-sm shrink-0 min-w-[44px] min-h-[44px] overflow-hidden"
             title={user?.email}
           >
-            {initials}
+            {user?.avatar ? (
+              <img src={user.avatar} alt={userDisplayName} className="w-full h-full object-cover" />
+            ) : initials}
           </button>
 
           {isUserMenuOpen && (

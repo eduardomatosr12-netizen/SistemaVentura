@@ -24,7 +24,7 @@ type ModalType = 'perfil' | 'equipe';
 
 
 const Configuracoes = () => {
-  const { user, logout, updateProfile } = useAuth();
+  const { user, logout, updateProfile, updateAvatar } = useAuth();
   const navigate = useNavigate();
   const avatarInputRef = useRef<HTMLInputElement>(null);
   
@@ -188,6 +188,7 @@ const Configuracoes = () => {
 
     setProfileSuccess('Perfil atualizado com sucesso!');
     setProfileData(prev => ({ ...prev, avatar: finalAvatar, name: profileData.name.trim(), email: profileData.email.trim() || prev.email }));
+    updateAvatar(finalAvatar);
     if (toastTimerRef.current !== null) window.clearTimeout(toastTimerRef.current);
     toastTimerRef.current = window.setTimeout(() => {
       setProfileSuccess('');

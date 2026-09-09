@@ -44,8 +44,10 @@ const Sidebar = ({ isOpen = false, onClose }: SidebarProps) => {
       {/* Avatar + User */}
       <div className="px-4 pt-5 pb-5 border-b border-[#2d2d2d]">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-[#CDFF00] text-black flex items-center justify-center text-sm font-bold shrink-0">
-            {initials}
+          <div className="w-10 h-10 rounded-full bg-[#CDFF00] text-black flex items-center justify-center text-sm font-bold shrink-0 overflow-hidden">
+            {user?.avatar ? (
+              <img src={user.avatar} alt={displayName} className="w-full h-full object-cover" />
+            ) : initials}
           </div>
           <div className="min-w-0">
             <p className="text-sm text-white font-bold truncate">{displayName}</p>
