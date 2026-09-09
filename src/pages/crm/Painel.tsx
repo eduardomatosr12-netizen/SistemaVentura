@@ -1,4 +1,5 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
+import { useScrollLock } from '../../hooks/useScrollLock';
 import { Calendar, UserPlus, ArrowRight, CheckSquare, Activity, AlertCircle, LayoutDashboard, X, ChevronLeft, ChevronRight, ChevronDown, Search, User, Phone, Mail, CreditCard, CalendarDays, Clock, Plus, Trash2, MapPin, Pencil, FileText, MessageCircle, Lock, Package, History, BadgeDollarSign } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell, LabelList, CartesianGrid, Tooltip } from 'recharts';
@@ -84,6 +85,8 @@ const CRMDashboard = () => {
   const ROWS_PER_PAGE = 15;
   const [toast, setToast] = useState<string | null>(null);
   const toastTimerRef = useRef<number | null>(null);
+
+  useScrollLock(!!selectedDayEvents || isCreateOpen);
 
   const showToast = (msg: string) => {
     setToast(msg);
@@ -665,7 +668,7 @@ const CRMDashboard = () => {
       </div>
 
       {/* 4-tab navigation (card style) */}
-      <div className="bg-[#1a1a1a] border border-[#2d2d2d] rounded-xl px-6 py-3 flex gap-4 sm:gap-6 mb-6 overflow-x-auto scrollbar-hide w-full">
+      <div className="bg-[#1a1a1a] border border-[#2d2d2d] rounded-xl px-3 sm:px-6 py-3 flex gap-2 sm:gap-6 mb-6 overflow-x-auto scrollbar-hide w-full">
         <button
           onClick={() => handleTabChange('calendario')}
           className={`flex items-center gap-2 px-5 py-3 rounded-lg font-semibold cursor-pointer transition-all duration-150 whitespace-nowrap ${
@@ -686,7 +689,8 @@ const CRMDashboard = () => {
           }`}
         >
           <History size={18} />
-          HISTÓRICO DE EVENTOS
+          <span className="hidden sm:inline">HISTÓRICO DE EVENTOS</span>
+          <span className="sm:hidden">EVENTOS</span>
         </button>
         <button
           onClick={() => handleTabChange('orcamentos')}
@@ -769,7 +773,7 @@ const CRMDashboard = () => {
           <div className="flex flex-col lg:flex-row">
             {/* Left - Calendar Grid */}
             <div className="flex-1 p-4 md:p-6">
-              <div className="grid grid-cols-7 gap-1.5 md:gap-3">
+              <div className="grid grid-cols-7 gap-1 sm:gap-1.5 md:gap-3">
                 {dayHeaders.map(d => (
                   <div key={d} className="text-center text-xs font-bold uppercase tracking-widest text-white/60 py-1 pb-2 shrink-0">
                     {d}
@@ -799,7 +803,7 @@ const CRMDashboard = () => {
                           ? 'bg-[#CDFF00] border-[#CDFF00] text-black font-black shadow-[0_4px_12px_rgba(205,255,0,0.3)] scale-105'
                           : 'bg-[#1a1a1a] border-[#2d2d2d] text-white/80 hover:border-[#CDFF00] hover:bg-[#2a2a2a] hover:scale-105'
                         }`}
-                      style={{ minHeight: 52 }}
+                      style={{ minHeight: 44 }}
                     >
                       <span className={`text-base font-bold leading-none ${isToday ? 'text-black font-black' : 'font-semibold'}`}>
                         {day}

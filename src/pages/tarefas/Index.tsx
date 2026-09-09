@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { Plus, Trash2, X, Edit3, MessageCircle, Package, Building2, Search, Calendar, Filter as FilterIcon, CheckCircle2, AlertCircle, AlertTriangle, Database } from 'lucide-react';
+import { useScrollLock } from '../../hooks/useScrollLock';
+import { Plus, Trash2, X, Edit3, MessageCircle, Package, Building2, Search, Calendar, Filter as FilterIcon, CheckCircle2, AlertCircle, AlertTriangle, Database, FileText } from 'lucide-react';
 import { collection, getDocs, deleteDoc, doc, writeBatch, Timestamp } from 'firebase/firestore';
 import { db } from '../../services/firebase';
 import { useAuth } from '../../contexts/AuthContext';
@@ -746,14 +747,34 @@ const Board = ({
                   <span className="text-[10px] text-neutral-400 font-medium uppercase tracking-wider">{String(row.values['col-2'])}</span>
                 )}
               </div>
-              <button onClick={() => handleDeleteRow(row.id)} className="text-neutral-400 hover:text-red-400 p-2 min-h-[44px] shrink-0">
-                <Trash2 size={16} />
-              </button>
+              <div className="flex items-center gap-1 shrink-0">
+                <button
+                  onClick={() => {
+                    window.dispatchEvent(new CustomEvent('openNoteEditor', { detail: { rowId: row.id, colId: 'col-10', boardId: board.id, value: '' } }));
+                  }}
+                  className="text-neutral-400 hover:text-[#CDFF00] p-2 min-h-[44px]"
+                >
+                  <FileText size={16} />
+                </button>
+                <button onClick={() => handleDeleteRow(row.id)} className="text-neutral-400 hover:text-red-400 p-2 min-h-[44px]">
+                  <Trash2 size={16} />
+                </button>
+              </div>
             </div>
             <div className="grid grid-cols-2 gap-2 text-xs">
               <div className="bg-[#1a1a1a] rounded-lg px-3 py-2">
                 <span className="text-neutral-500 block">Qtd. Atual</span>
-                <span className="text-white font-bold">{String(row.values['col-3'] ?? '0')}</span>
+                <div className="flex items-center gap-2 mt-1">
+                  <button
+                    onClick={() => handleCellChange(row.id, 'col-3', Math.max(0, Number(row.values['col-3'] || 0) - 1))}
+                    className="w-7 h-7 rounded-full bg-[#333] text-white flex items-center justify-center font-bold text-sm active:bg-[#555] min-h-[44px] min-w-[44px] -ml-2"
+                  >-</button>
+                  <span className="text-white font-bold text-base min-w-[24px] text-center">{String(row.values['col-3'] ?? '0')}</span>
+                  <button
+                    onClick={() => handleCellChange(row.id, 'col-3', Number(row.values['col-3'] || 0) + 1)}
+                    className="w-7 h-7 rounded-full bg-[#333] text-white flex items-center justify-center font-bold text-sm active:bg-[#555] min-h-[44px] min-w-[44px] -mr-2"
+                  >+</button>
+                </div>
               </div>
               <div className="bg-[#1a1a1a] rounded-lg px-3 py-2">
                 <span className="text-neutral-500 block">Estoque</span>
@@ -898,6 +919,8 @@ const Tarefas = () => {
   const [showCreateTaskModal, setShowCreateTaskModal] = useState(false);
   const [editingNote, setEditingNote] = useState<{ rowId: string; colId: string; boardId: string } | null>(null);
   const [noteContent, setNoteContent] = useState('');
+
+  useScrollLock(showRentalModal || showCreateTaskModal || showSeedModal || !!editingNote);
 
   useEffect(() => {
     const current = getBoards();
@@ -1374,8 +1397,8 @@ const Tarefas = () => {
       )}
 
       {showRentalModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="bg-[#1a1a1a] border border-[#2d2d2d] rounded-xl p-4 md:p-8 max-w-full md:max-w-2xl w-full shadow-[0_20px_40px_rgba(0,0,0,0.5)] max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-sm">
+          <div className="bg-[#1a1a1a] border border-[#2d2d2d] rounded-t-2xl sm:rounded-xl p-4 md:p-8 max-w-full md:max-w-2xl w-full shadow-[0_20px_40px_rgba(0,0,0,0.5)] max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xl font-black text-white">{isNewRental ? 'Novo Aluguel' : 'Editar Aluguel'}</h3>
               <button onClick={() => setShowRentalModal(false)} className="text-neutral-400 hover:text-white p-2 min-h-[44px]">
@@ -1549,8 +1572,8 @@ const Tarefas = () => {
       )}
 
       {showCreateTaskModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="bg-[#1a1a1a] border border-[#2d2d2d] rounded-xl p-4 md:p-8 max-w-full md:max-w-md w-full shadow-[0_20px_40px_rgba(0,0,0,0.5)]">
+        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-sm">
+          <div className="bg-[#1a1a1a] border border-[#2d2d2d] rounded-t-2xl sm:rounded-xl p-4 md:p-8 max-w-full md:max-w-md w-full shadow-[0_20px_40px_rgba(0,0,0,0.5)]" onClick={e => e.stopPropagation()}>
             <h3 className="text-xl font-black text-white mb-6">Qual categoria deseja adicionar o item?</h3>
             <div className="space-y-3">
               {boards.map(board => (
@@ -1575,8 +1598,8 @@ const Tarefas = () => {
       )}
 
       {showSeedModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={() => { if (!seedLoading) setShowSeedModal(false); }}>
-          <div className="bg-[#1a1a1a] border border-[#2d2d2d] rounded-xl p-6 md:p-8 max-w-full md:max-w-md w-full shadow-[0_20px_40px_rgba(0,0,0,0.5)]" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-sm" onClick={() => { if (!seedLoading) setShowSeedModal(false); }}>
+          <div className="bg-[#1a1a1a] border border-[#2d2d2d] rounded-t-2xl sm:rounded-xl p-6 md:p-8 max-w-full md:max-w-md w-full shadow-[0_20px_40px_rgba(0,0,0,0.5)]" onClick={e => e.stopPropagation()}>
             <div className="w-12 h-12 bg-yellow-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
               <AlertTriangle size={24} className="text-yellow-500" />
             </div>
@@ -1620,8 +1643,8 @@ const Tarefas = () => {
       )}
 
       {editingNote && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-          <div className="bg-[#1a1a1a] border border-[#2d2d2d] rounded-xl p-4 md:p-8 max-w-full md:max-w-2xl w-full shadow-[0_20px_40px_rgba(0,0,0,0.5)] flex flex-col max-h-[90dvh] overflow-y-auto">
+        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-sm">
+          <div className="bg-[#1a1a1a] border border-[#2d2d2d] rounded-t-2xl sm:rounded-xl p-4 md:p-8 max-w-full md:max-w-2xl w-full shadow-[0_20px_40px_rgba(0,0,0,0.5)] flex flex-col max-h-[90dvh] overflow-y-auto" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-6 shrink-0">
               <h3 className="text-xl font-black text-white">Editar Notas</h3>
               <button onClick={() => { setEditingNote(null); setNoteContent(''); }} className="text-neutral-400 hover:text-white p-2 min-h-[44px]">

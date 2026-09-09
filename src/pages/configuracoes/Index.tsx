@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { useScrollLock } from '../../hooks/useScrollLock';
 import {
   AlertTriangle, X, ShieldAlert, Trash2,
   Save, CheckCircle2,
@@ -52,6 +53,8 @@ const Configuracoes = () => {
   });
 
   const toastTimerRef = useRef<number | null>(null);
+
+  useScrollLock(!!activeModal);
 
   useEffect(() => {
     return () => {

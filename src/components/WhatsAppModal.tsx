@@ -1,4 +1,5 @@
 import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
+import { useScrollLock } from '../hooks/useScrollLock';
 import { X, MessageCircle, Edit3, Send, ChevronDown, ChevronUp, AlertCircle, ExternalLink } from 'lucide-react';
 import { cleanPhoneNumber, generateWhatsAppLink } from '../lib/whatsapp';
 import { subscribeTemplates } from '../services/whatsappTemplateService';
@@ -43,6 +44,8 @@ const WhatsAppModal = ({
   const [expandedTemplates, setExpandedTemplates] = useState(true);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const modalRef = useRef<HTMLDivElement>(null);
+
+  useScrollLock(isOpen);
 
   const [allTemplates, setAllTemplates] = useState<WhatsAppTemplate[]>([]);
 
