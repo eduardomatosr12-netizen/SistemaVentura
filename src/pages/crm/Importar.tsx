@@ -333,11 +333,11 @@ const Importar = () => {
   return (
     <div className="min-h-screen bg-black p-2 md:p-8 pb-bottom-nav md:pb-8">
       <div className="mb-4 md:mb-8">
-        <h1 className="text-[32px] font-black text-white tracking-[0.5px] mb-2 flex items-center gap-3">
-          <Upload className="text-[#CDFF00]" size={32} />
+        <h1 className="text-2xl md:text-[32px] font-black text-white tracking-[0.5px] mb-2 flex items-center gap-3">
+          <Upload className="text-[#CDFF00]" size={28} />
           Importar Dados
         </h1>
-        <p className="text-sm font-medium text-white/70">Selecione o tipo de importação e envie seu arquivo.</p>
+        <p className="text-xs md:text-sm font-medium text-white/70">Selecione o tipo de importação e envie seu arquivo.</p>
       </div>
 
       {toast && (

@@ -105,7 +105,7 @@ const TopHeader = ({ onMenuClick }: TopHeaderProps) => {
   }, [notifications, dismissAll]);
 
   return (
-    <header className="sticky top-0 z-40 bg-black border-b border-[#2d2d2d] px-6 py-4 flex items-center justify-between transition-all duration-300 shadow-[0_1px_3px_rgba(0,0,0,0.3)]">
+    <header className="sticky top-0 z-40 bg-black border-b border-[#2d2d2d] px-3 md:px-6 py-3 md:py-4 flex items-center justify-between transition-all duration-300 shadow-[0_1px_3px_rgba(0,0,0,0.3)]">
       {/* Mobile Menu Button */}
       <button
         onClick={onMenuClick}

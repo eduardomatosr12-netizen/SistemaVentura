@@ -657,11 +657,11 @@ const CRMOrçamentos = () => {
                 </span>
               </div>
               <div>
-                <h1 className="text-[32px] font-black text-white tracking-[0.5px] mb-2 flex items-center gap-3">
-                  <Users size={32} className="text-[#CDFF00]" />
+                <h1 className="text-2xl md:text-[32px] font-black text-white tracking-[0.5px] mb-2 flex items-center gap-3">
+                  <Users size={28} className="text-[#CDFF00]" />
                   Contatos
                 </h1>
-                <p className="text-sm font-medium text-white/70">
+                <p className="text-xs md:text-sm font-medium text-white/70">
                   {filteredOrçamentos.length} contato{filteredOrçamentos.length !== 1 ? 's' : ''} encontrado{filteredOrçamentos.length !== 1 ? 's' : ''}
                   {hasActiveFilters && <span className="text-[#CDFF00]"> (filtrado{filteredOrçamentos.length !== 1 ? 's' : ''})</span>}
                 </p>

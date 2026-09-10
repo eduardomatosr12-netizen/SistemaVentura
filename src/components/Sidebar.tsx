@@ -102,7 +102,7 @@ const Sidebar = ({ isOpen = false, onClose }: SidebarProps) => {
       <aside className={`fixed md:hidden left-0 top-0 h-dvh w-[220px] bg-black border-r border-[#2d2d2d] flex flex-col overflow-y-auto overflow-x-hidden z-[70] transform transition-transform duration-300 ease-out ${isOpen ? 'translate-x-0' : '-translate-x-full'}`} style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}>
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 p-2 rounded-md hover:bg-[#222]"
+          className="absolute top-4 right-4 p-2 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-md hover:bg-[#222]"
           aria-label="Fechar menu"
         >
           <X className="w-5 h-5 text-[#A0A0A0] hover:text-[#CDFF00]" />

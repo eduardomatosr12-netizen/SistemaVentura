@@ -168,7 +168,7 @@ const TemplatesWhatsApp = () => {
   return (
     <div className="min-h-screen pb-bottom-nav md:pb-0 relative">
       {toast && (
-        <div className={`fixed top-6 right-6 z-[200] flex items-center gap-3 px-5 py-3 rounded-2xl shadow-2xl border animate-in slide-in-from-top-4 duration-300 ${
+        <div className={`fixed top-6 left-4 right-4 sm:left-auto sm:right-6 z-[200] flex items-center gap-3 px-5 py-3 rounded-2xl shadow-2xl border animate-in slide-in-from-top-4 duration-300 sm:w-auto ${
           toast.type === 'success'
             ? 'bg-[#0a0a0a] border-[#CDFF00]/30 text-[#CDFF00]'
             : 'bg-[#0a0a0a] border-red-500/30 text-red-400'
@@ -180,17 +180,17 @@ const TemplatesWhatsApp = () => {
 
       <div className="mb-10 flex justify-between items-end">
         <div>
-          <h1 className="text-[32px] font-black text-white tracking-[0.5px] mb-2 flex items-center gap-3">
-            <MessageCircle className="text-[#CDFF00]" size={32} />
+          <h1 className="text-2xl md:text-[32px] font-black text-white tracking-[0.5px] mb-2 flex items-center gap-3">
+            <MessageCircle className="text-[#CDFF00]" size={28} />
             Templates de WhatsApp
           </h1>
-          <p className="text-sm font-medium text-white/70">Gerencie seus modelos de mensagens rápidas para WhatsApp.</p>
+          <p className="text-xs md:text-sm font-medium text-white/70">Gerencie seus modelos de mensagens rápidas para WhatsApp.</p>
         </div>
         <button
           onClick={openCreate}
-          className="flex items-center gap-2 px-5 py-3 bg-[#CDFF00] text-black font-bold text-xs uppercase tracking-widest rounded-xl hover:bg-[#a1e600] transition-all active:scale-[0.97]"
+          className="flex items-center gap-2 px-4 md:px-5 py-2.5 md:py-3 bg-[#CDFF00] text-black font-bold text-[10px] md:text-xs uppercase tracking-widest rounded-xl hover:bg-[#a1e600] transition-all active:scale-[0.97] min-h-[44px] shrink-0"
         >
-          <Plus size={16} /> Novo Template
+          <Plus size={14} /> Novo Template
         </button>
       </div>
 
@@ -319,24 +319,24 @@ const TemplatesWhatsApp = () => {
       )}
 
       {formOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 md:p-6 bg-black/60 backdrop-blur-md" onClick={closeForm}>
+        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-3 md:p-6 bg-black/60 backdrop-blur-md" onClick={closeForm}>
           <div
-            className="bg-[#1a1a1a] border border-[#2d2d2d] rounded-xl shadow-[0_20px_40px_rgba(0,0,0,0.5)] w-full max-w-2xl max-h-[90vh] flex flex-col"
+            className="bg-[#1a1a1a] border border-[#2d2d2d] rounded-t-2xl sm:rounded-xl shadow-[0_20px_40px_rgba(0,0,0,0.5)] w-full max-w-2xl max-h-[90vh] flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between px-6 py-5 border-b border-[#333] shrink-0">
+            <div className="flex items-center justify-between px-4 sm:px-6 py-4 sm:py-5 border-b border-[#333] shrink-0">
               <div>
                 <span className="text-[10px] font-black text-neutral-500 uppercase tracking-[3px] mb-1 block">Gerenciamento de Templates</span>
-                <h2 className="text-xl font-black text-white tracking-tight">
+                <h2 className="text-lg sm:text-xl font-black text-white tracking-tight">
                   {formMode === 'create' ? 'Novo Template' : 'Editar Template'}
                 </h2>
               </div>
-              <button onClick={closeForm} className="p-2 hover:bg-[#222] rounded-xl transition-colors text-neutral-400 hover:text-white">
+              <button onClick={closeForm} className="p-2 min-w-[44px] min-h-[44px] flex items-center justify-center hover:bg-[#222] rounded-xl transition-colors text-neutral-400 hover:text-white">
                 <X size={20} />
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-6 space-y-6">
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5 sm:space-y-6">
               <div className="space-y-2">
                 <label className="text-[10px] font-black text-neutral-400 uppercase tracking-widest ml-1">
                   Nome do Template <span className="text-white">*</span>
@@ -378,7 +378,7 @@ const TemplatesWhatsApp = () => {
                       key={v.key}
                       type="button"
                       onClick={() => handleInsertVariable(v.key)}
-                      className="px-3 py-1.5 bg-[#222] border border-[#444] rounded-lg text-[11px] font-bold text-[#CDFF00] hover:bg-[#333] hover:border-[#CDFF00] transition-all"
+                      className="px-3 py-1.5 bg-[#222] border border-[#444] rounded-lg text-[11px] font-bold text-[#CDFF00] hover:bg-[#333] hover:border-[#CDFF00] transition-all min-h-[36px]"
                       title={v.label}
                     >
                       {v.key}
@@ -414,7 +414,7 @@ const TemplatesWhatsApp = () => {
               </div>
             </div>
 
-            <div className="px-6 py-4 border-t border-[#333] shrink-0 flex items-center gap-3">
+            <div className="px-4 sm:px-6 py-3 sm:py-4 border-t border-[#333] shrink-0 flex items-center gap-3">
               <button
                 onClick={closeForm}
                 className="px-5 py-2.5 text-xs font-bold text-neutral-400 hover:text-white transition-colors"
@@ -424,7 +424,7 @@ const TemplatesWhatsApp = () => {
               <div className="flex-1" />
               <button
                 onClick={handleSave}
-                className="flex items-center gap-2 px-6 py-2.5 bg-[#CDFF00] text-black font-bold text-xs uppercase tracking-widest rounded-xl hover:bg-[#a1e600] transition-all active:scale-[0.97]"
+                className="flex items-center gap-2 px-5 sm:px-6 py-2.5 bg-[#CDFF00] text-black font-bold text-xs uppercase tracking-widest rounded-xl hover:bg-[#a1e600] transition-all active:scale-[0.97] min-h-[44px]"
               >
                 <Save size={15} />
                 Salvar

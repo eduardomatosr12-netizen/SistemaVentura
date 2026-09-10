@@ -923,8 +923,8 @@ const Financeiro = () => {
       {/* Header */}
       <div className="p-6 md:p-8 border-b border-[rgba(255,255,255,0.08)]">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <h1 className="flex items-center gap-3 text-[32px] font-black text-white tracking-[0.5px]">
-            <DollarSign className="text-[#CDFF00]" size={32} />
+          <h1 className="flex items-center gap-3 text-2xl md:text-[32px] font-black text-white tracking-[0.5px]">
+            <DollarSign className="text-[#CDFF00]" size={28} />
             Financeiro
           </h1>
           <div className="flex flex-wrap gap-3">

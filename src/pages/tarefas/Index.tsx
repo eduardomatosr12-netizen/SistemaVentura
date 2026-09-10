@@ -1154,11 +1154,11 @@ const Tarefas = () => {
   return (
     <div className="p-4 md:p-6 pb-bottom-nav md:pb-6 space-y-4 md:space-y-8 min-h-screen bg-black">
       <div>
-        <h1 className="text-[32px] font-black text-white tracking-[0.5px] mb-2 flex items-center gap-3">
-          <Package className="text-[#CDFF00]" size={32} />
+        <h1 className="text-2xl md:text-[32px] font-black text-white tracking-[0.5px] mb-2 flex items-center gap-3">
+          <Package className="text-[#CDFF00]" size={28} />
           Controle de Estoque
         </h1>
-        <p className="text-sm font-medium text-white/70">Gerencie seus itens, categorias e fornecedores.</p>
+        <p className="text-xs md:text-sm font-medium text-white/70">Gerencie seus itens, categorias e fornecedores.</p>
       </div>
 
       <div className="flex gap-6 border-b border-[#2d2d2d] overflow-x-auto scrollbar-hide">

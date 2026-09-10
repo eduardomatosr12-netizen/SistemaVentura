@@ -478,11 +478,11 @@ const CRMCalendario = () => {
       <div className="mb-4 md:mb-8 flex flex-col md:flex-row justify-between items-start md:items-end gap-3 md:gap-0">
         <div className="flex items-center gap-4">
           <div>
-            <h1 className="text-[32px] font-black text-white tracking-[0.5px] mb-2 flex items-center gap-3">
-              <CalendarIcon className="text-[#CDFF00]" size={32} />
+            <h1 className="text-2xl md:text-[32px] font-black text-white tracking-[0.5px] mb-2 flex items-center gap-3">
+              <CalendarIcon className="text-[#CDFF00]" size={28} />
               Calendário de Eventos
             </h1>
-            <p className="text-sm font-medium text-white/70">Visualize e acompanhe seus compromissos agendados.</p>
+            <p className="text-xs md:text-sm font-medium text-white/70">Visualize e acompanhe seus compromissos agendados.</p>
           </div>
         </div>
         <div className="flex items-center gap-2">

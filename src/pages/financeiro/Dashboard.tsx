@@ -200,8 +200,8 @@ export default function DashboardFinanceiro() {
           <ArrowLeft size={18} />
         </button>
         <div className="min-w-0">
-          <h1 className="flex items-center gap-3 text-[32px] font-black text-white tracking-[0.5px]">
-            <BarChart2 className="text-[#CDFF00]" size={32} />
+          <h1 className="flex items-center gap-3 text-2xl md:text-[32px] font-black text-white tracking-[0.5px]">
+            <BarChart2 className="text-[#CDFF00]" size={28} />
             Dashboard Financeiro
           </h1>
           <p className="text-sm font-medium text-white/70">Visão geral do período</p>

@@ -661,11 +661,11 @@ const CRMDashboard = () => {
     <div className="relative min-h-screen bg-black pb-bottom-nav md:pb-0">
       {/* Header section */}
       <div className="mb-6">
-        <h1 className="text-[32px] font-black text-white tracking-[0.5px] mb-2 flex items-center gap-3">
-          <LayoutDashboard className="text-[#CDFF00]" size={32} />
+        <h1 className="text-2xl md:text-[32px] font-black text-white tracking-[0.5px] mb-2 flex items-center gap-3">
+          <LayoutDashboard className="text-[#CDFF00]" size={28} />
           Página Principal
         </h1>
-        <p className="text-sm font-medium text-white/70">Bem-vindo ao painel de controle da Ventura Luz e Efeitos.</p>
+        <p className="text-xs md:text-sm font-medium text-white/70">Bem-vindo ao painel de controle da Ventura Luz e Efeitos.</p>
       </div>
 
       {/* 4-tab navigation (card style) */}

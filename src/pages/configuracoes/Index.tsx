@@ -286,8 +286,8 @@ const Configuracoes = () => {
     <div className="min-h-screen pb-bottom-nav md:pb-0 relative">
       <div className="mb-10 flex justify-between items-end">
         <div>
-          <h1 className="text-[32px] font-black text-white tracking-[0.5px] mb-2 flex items-center gap-3">
-            <Settings className="text-[#CDFF00]" size={32} />
+          <h1 className="text-2xl md:text-[32px] font-black text-white tracking-[0.5px] mb-2 flex items-center gap-3">
+            <Settings className="text-[#CDFF00]" size={28} />
             Configurações
           </h1>
           <p className="text-sm font-medium text-white/70">Controle central de perfil e preferências.</p>
@@ -298,25 +298,25 @@ const Configuracoes = () => {
         {sections.map((section) => {
           const Icon = section.icon;
           return (
-            <div key={section.id} className="bg-[#1a1a1a] border border-[#2d2d2d] rounded-xl p-8 shadow-[0_4px_12px_rgba(0,0,0,0.3)] hover:border-[#CDFF00] transition-all group relative overflow-hidden">
+            <div key={section.id} className="bg-[#1a1a1a] border border-[#2d2d2d] rounded-xl p-5 md:p-8 shadow-[0_4px_12px_rgba(0,0,0,0.3)] hover:border-[#CDFF00] transition-all group relative overflow-hidden">
               <div className="flex items-center justify-between relative z-10">
-                <div className="flex items-center gap-6">
-                  <div className="w-16 h-16 bg-[#1a1a1a] rounded-2xl flex items-center justify-center shrink-0 group-hover:bg-[#1a1a1a] transition-colors">
-                    <Icon className="w-8 h-8 text-[#CDFF00] group-hover:text-[#CDFF00] transition-colors" strokeWidth={2.5} />
+                <div className="flex items-center gap-4 md:gap-6">
+                  <div className="w-12 h-12 md:w-16 md:h-16 bg-[#1a1a1a] rounded-xl md:rounded-2xl flex items-center justify-center shrink-0 group-hover:bg-[#1a1a1a] transition-colors">
+                    <Icon className="w-6 h-6 md:w-8 md:h-8 text-[#CDFF00] group-hover:text-[#CDFF00] transition-colors" strokeWidth={2.5} />
                   </div>
-                  <div>
-                    <h3 className="font-black text-[#ffffff] text-lg tracking-tight">{section.title}</h3>
-                    <p className="text-xs text-[#aaaaaa] font-bold uppercase tracking-widest mt-1">{section.description}</p>
+                  <div className="min-w-0">
+                    <h3 className="font-black text-[#ffffff] text-base md:text-lg tracking-tight">{section.title}</h3>
+                    <p className="text-[10px] md:text-xs text-[#aaaaaa] font-bold uppercase tracking-widest mt-1 truncate">{section.description}</p>
                   </div>
                 </div>
                 <button 
                   onClick={() => setActiveModal(section.id)}
-                  className="bg-[#CDFF00] text-black font-bold px-6 py-3 rounded-md text-[11px] uppercase tracking-widest hover:bg-[#CDFF00]/90 transition-all active:scale-[0.95] shadow-lg shadow-black/10"
+                  className="bg-[#CDFF00] text-black font-bold px-4 md:px-6 py-2.5 md:py-3 rounded-md text-[10px] md:text-[11px] uppercase tracking-widest hover:bg-[#CDFF00]/90 transition-all active:scale-[0.95] shadow-lg shadow-black/10 min-h-[44px] shrink-0"
                 >
                   Configurar
                 </button>
               </div>
-              <div className="flex gap-2 flex-wrap mt-8 pt-8 border-t border-[#2d2d2d]">
+              <div className="flex gap-2 flex-wrap mt-5 md:mt-8 pt-5 md:pt-8 border-t border-[#2d2d2d]">
                 {section.items.map((item, itemIdx) => (
                   <span key={itemIdx} className="px-4 py-2 bg-[#111111] text-[#aaaaaa] text-[10px] font-black uppercase tracking-[1.5px] rounded-md border border-[#2d2d2d]">
                     {item}
@@ -332,26 +332,26 @@ const Configuracoes = () => {
       <div className="mt-6 max-w-2xl">
         <Link
           to="/configuracoes/templates-whatsapp"
-          className="block bg-[#1a1a1a] border border-[#2d2d2d] rounded-xl p-8 shadow-[0_4px_12px_rgba(0,0,0,0.3)] hover:border-[#CDFF00] transition-all group relative overflow-hidden"
+          className="block bg-[#1a1a1a] border border-[#2d2d2d] rounded-xl p-5 md:p-8 shadow-[0_4px_12px_rgba(0,0,0,0.3)] hover:border-[#CDFF00] transition-all group relative overflow-hidden"
         >
           <div className="flex items-center justify-between relative z-10">
-            <div className="flex items-center gap-6">
-              <div className="w-16 h-16 bg-[#1a1a1a] rounded-2xl flex items-center justify-center shrink-0 group-hover:bg-[#1a1a1a] transition-colors">
-                <MessageCircle className="w-8 h-8 text-[#CDFF00] group-hover:text-[#CDFF00] transition-colors" strokeWidth={2.5} />
+            <div className="flex items-center gap-4 md:gap-6">
+              <div className="w-12 h-12 md:w-16 md:h-16 bg-[#1a1a1a] rounded-xl md:rounded-2xl flex items-center justify-center shrink-0 group-hover:bg-[#1a1a1a] transition-colors">
+                <MessageCircle className="w-6 h-6 md:w-8 md:h-8 text-[#CDFF00] group-hover:text-[#CDFF00] transition-colors" strokeWidth={2.5} />
               </div>
-              <div>
-                <h3 className="font-black text-[#ffffff] text-lg tracking-tight">Templates WhatsApp</h3>
-                <p className="text-xs text-[#aaaaaa] font-bold uppercase tracking-widest mt-1">Crie e gerencie modelos de mensagens para envio rápido</p>
+              <div className="min-w-0">
+                <h3 className="font-black text-[#ffffff] text-base md:text-lg tracking-tight">Templates WhatsApp</h3>
+                <p className="text-[10px] md:text-xs text-[#aaaaaa] font-bold uppercase tracking-widest mt-1 truncate">Crie e gerencie modelos de mensagens para envio rápido</p>
               </div>
             </div>
-            <span className="bg-[#CDFF00] text-black font-bold px-6 py-3 rounded-md text-[11px] uppercase tracking-widest hover:bg-[#CDFF00]/90 transition-all active:scale-[0.95] shadow-lg shadow-black/10">
+            <span className="bg-[#CDFF00] text-black font-bold px-4 md:px-6 py-2.5 md:py-3 rounded-md text-[10px] md:text-[11px] uppercase tracking-widest hover:bg-[#CDFF00]/90 transition-all active:scale-[0.95] shadow-lg shadow-black/10 shrink-0">
               Gerenciar
             </span>
           </div>
         </Link>
       </div>
 
-      <div className="mt-12 max-w-2xl bg-[#1a1a1a] border border-red-500/30 rounded-xl p-10 shadow-[0_4px_12px_rgba(0,0,0,0.3)] relative overflow-hidden group/danger">
+      <div className="mt-12 max-w-2xl bg-[#1a1a1a] border border-red-500/30 rounded-xl p-6 md:p-10 shadow-[0_4px_12px_rgba(0,0,0,0.3)] relative overflow-hidden group/danger">
         <div className="absolute -right-10 -bottom-10 opacity-5 group-hover/danger:opacity-10 transition-opacity">
           <ShieldAlert size={240} className="text-red-500" />
         </div>
