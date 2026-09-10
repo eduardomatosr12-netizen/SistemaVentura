@@ -919,6 +919,10 @@ const Tarefas = () => {
   const [showCreateTaskModal, setShowCreateTaskModal] = useState(false);
   const [editingNote, setEditingNote] = useState<{ rowId: string; colId: string; boardId: string } | null>(null);
   const [noteContent, setNoteContent] = useState('');
+  const [seedFeedback, setSeedFeedback] = useState<string | null>(null);
+  const [showSeedModal, setShowSeedModal] = useState(false);
+  const [seedLoading, setSeedLoading] = useState(false);
+  const [seedError, setSeedError] = useState<string | null>(null);
 
   useScrollLock(showRentalModal || showCreateTaskModal || showSeedModal || !!editingNote);
 
@@ -990,10 +994,6 @@ const Tarefas = () => {
 
 
 
-  const [seedFeedback, setSeedFeedback] = useState<string | null>(null);
-  const [showSeedModal, setShowSeedModal] = useState(false);
-  const [seedLoading, setSeedLoading] = useState(false);
-  const [seedError, setSeedError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!showSeedModal) return;

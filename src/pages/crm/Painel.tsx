@@ -86,6 +86,9 @@ const CRMDashboard = () => {
   const [toast, setToast] = useState<string | null>(null);
   const toastTimerRef = useRef<number | null>(null);
 
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [abaAtiva, setAbaAtiva] = useState<'cliente' | 'evento' | 'despesas'>('cliente');
+
   useScrollLock(!!selectedDayEvents || isCreateOpen);
 
   const showToast = (msg: string) => {
@@ -104,8 +107,6 @@ const CRMDashboard = () => {
   }, []);
 
   // Create modal state
-  const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [abaAtiva, setAbaAtiva] = useState<'cliente' | 'evento' | 'despesas'>('cliente');
   const [, setCreateDate] = useState('');
   const [formData, setFormData] = useState({
     name: '', whatsapp: '', email: '', cpf: '',
