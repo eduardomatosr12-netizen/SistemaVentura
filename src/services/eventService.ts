@@ -25,8 +25,6 @@ const mapEventDoc = (d: { id: string; data: () => Record<string, unknown> }): Ca
     clientPhone: data.clientPhone || '',
     clientCpf: data.clientCpf || '',
     status: data.status || 'orcamento',
-    dataMontagem: data.dataMontagem || '',
-    dataDesmontagem: data.dataDesmontagem || '',
     valorTotal: data.valorTotal ?? 0,
     desconto: data.desconto ?? 0,
     items: data.items ?? undefined,

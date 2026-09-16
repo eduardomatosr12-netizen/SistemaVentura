@@ -56,8 +56,6 @@ export interface CalendarEvent {
   clientPhone?: string;
   clientCpf?: string;
   status?: 'orcamento' | 'orcamento_cancelado' | 'evento_confirmado' | 'evento_concluido';
-  dataMontagem?: string;
-  dataDesmontagem?: string;
   valorTotal?: number;
   desconto?: number;
   despesasInternas?: EventExpense[];

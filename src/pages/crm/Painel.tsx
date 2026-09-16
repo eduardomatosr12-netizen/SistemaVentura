@@ -110,8 +110,8 @@ const CRMDashboard = () => {
   const [, setCreateDate] = useState('');
   const [formData, setFormData] = useState({
     name: '', whatsapp: '', email: '', cpf: '',
-    eventType: '', date: '', time: '', city: '', observacao: '',
-    dataMontagem: '', dataDesmontagem: '', status: '', outroEventoType: '',
+    eventType: '', date: '', dateEnd: '', time: '', city: '', observacao: '',
+    status: '', outroEventoType: '',
     orcamentoItems: [] as OrcamentoItem[], desconto: 0, valor: 0,
   });
   const [selectedClientId, setSelectedClientId] = useState('');
@@ -316,7 +316,7 @@ const CRMDashboard = () => {
   const openCreateModal = (dateStr: string) => {
     setEditingEventId(null);
     setCreateDate(dateStr);
-    setFormData(prev => ({ ...prev, date: dateStr, eventType: '', city: '', observacao: '', dataMontagem: '', dataDesmontagem: '', status: '', outroEventoType: '', orcamentoItems: [], desconto: 0, valor: 0 }));
+    setFormData(prev => ({ ...prev, date: dateStr, dateEnd: '', eventType: '', city: '', observacao: '', status: '', outroEventoType: '', orcamentoItems: [], desconto: 0, valor: 0 }));
     setSelectedClientId('');
     setClientSearch('');
     setOrcSearch('');
@@ -342,11 +342,10 @@ const CRMDashboard = () => {
       cpf: event.clientCpf || '',
       eventType: event.eventType || '',
       date: event.date || '',
+      dateEnd: event.dateEnd || '',
       time: event.time || '',
       city: event.city || '',
       observacao: event.description || '',
-      dataMontagem: event.dataMontagem || '',
-      dataDesmontagem: event.dataDesmontagem || '',
       status: event.status || '',
       outroEventoType: '',
       orcamentoItems: (lead?.items as OrcamentoItem[]) || [],
@@ -378,10 +377,9 @@ const CRMDashboard = () => {
           clientCpf: formData.cpf,
           eventType: formData.eventType,
           date: formData.date,
+          dateEnd: formData.dateEnd || '',
           time: formData.time,
           city: formData.city,
-          dataMontagem: formData.dataMontagem,
-          dataDesmontagem: formData.dataDesmontagem,
           description: formData.observacao,
           status: (formData.status as CalendarEvent['status']) || 'orcamento',
           valorTotal: total,
@@ -467,15 +465,14 @@ const CRMDashboard = () => {
             clientPhone: formData.whatsapp,
             clientEmail: formData.email,
             clientCpf: formData.cpf,
-            eventType: formData.eventType,
-            date: formData.date,
-            time: formData.time,
-            city: formData.city,
-            dataMontagem: formData.dataMontagem,
-            dataDesmontagem: formData.dataDesmontagem,
-            description: formData.observacao,
-            status: (formData.status as CalendarEvent['status']) || 'orcamento',
-            valorTotal: total,
+eventType: formData.eventType,
+          date: formData.date,
+          dateEnd: formData.dateEnd || '',
+          time: formData.time,
+          city: formData.city,
+          description: formData.observacao,
+          status: (formData.status as CalendarEvent['status']) || 'orcamento',
+          valorTotal: total,
             desconto: formData.desconto,
             items: formData.orcamentoItems,
           });
@@ -504,10 +501,9 @@ const CRMDashboard = () => {
           clientCpf: '',
           eventType: formData.eventType,
           date: formData.date,
+          dateEnd: formData.dateEnd || '',
           time: formData.time,
           city: formData.city,
-          dataMontagem: formData.dataMontagem,
-          dataDesmontagem: formData.dataDesmontagem,
           description: formData.observacao,
           status: (formData.status as CalendarEvent['status']) || 'orcamento',
           valorTotal: total,
@@ -554,7 +550,7 @@ const CRMDashboard = () => {
 
   type DayOccurrence = {
     event: CalendarEvent;
-    type: 'evento' | 'montagem' | 'desmontagem';
+    type: 'evento';
   };
 
   const getOccurrencesForDay = (day: number): DayOccurrence[] => {
@@ -567,8 +563,6 @@ const CRMDashboard = () => {
     };
     for (const event of safeEvents) {
       if (matchesDay(event.date)) result.push({ event, type: 'evento' });
-      if (matchesDay(event.dataMontagem)) result.push({ event, type: 'montagem' });
-      if (matchesDay(event.dataDesmontagem)) result.push({ event, type: 'desmontagem' });
     }
     return result;
   };
@@ -761,12 +755,8 @@ const CRMDashboard = () => {
               </div>
             ))}
             <div className="flex items-center gap-2 shrink-0">
-              <div className="w-2 h-2 rounded-full" style={{ backgroundColor: '#8B5CF6' }} />
-              <span className="text-xs text-white/60 font-medium">Montagem</span>
-            </div>
-            <div className="flex items-center gap-2 shrink-0">
-              <div className="w-2 h-2 rounded-full" style={{ backgroundColor: '#06B6D4' }} />
-              <span className="text-xs text-white/60 font-medium">Desmontagem</span>
+              <div className="w-2 h-2 rounded-full" style={{ backgroundColor: getStatusColor('evento_concluido') }} />
+              <span className="text-xs text-white/60 font-medium">Concluído</span>
             </div>
           </div>
 
@@ -788,8 +778,6 @@ const CRMDashboard = () => {
                   const dayOccurrences = getOccurrencesForDay(day);
                   const isToday = day === today.getDate() && isCurrentMonth;
                   const occurrenceColor = (type: DayOccurrence['type'], status?: string) => {
-                    if (type === 'montagem') return '#8B5CF6';
-                    if (type === 'desmontagem') return '#06B6D4';
                     return getStatusColor(status);
                   };
                   return (
@@ -1331,21 +1319,17 @@ const CRMDashboard = () => {
                     )}
                   </div>
 
-                  {/* Three milestones */}
+                  {/* Event milestones */}
                   <div className="border-t border-[#2d2d2d] pt-3">
                     <p className="text-[9px] font-black uppercase tracking-widest text-neutral-400 mb-2">Marcos do Evento</p>
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       <div className="bg-[#1a1a1a] rounded-md p-2 text-center">
-                        <p className="text-[8px] text-neutral-500 uppercase tracking-wider">Evento</p>
+                        <p className="text-[8px] text-neutral-500 uppercase tracking-wider">Início</p>
                         <p className="text-[11px] text-white font-bold mt-0.5 truncate">{formatDate(event.date)}</p>
                       </div>
                       <div className="bg-[#1a1a1a] rounded-md p-2 text-center">
-                        <p className="text-[8px] text-neutral-500 uppercase tracking-wider">Montagem</p>
-                        <p className="text-[11px] text-white font-bold mt-0.5 truncate">{formatDate(event.dataMontagem)}</p>
-                      </div>
-                      <div className="bg-[#1a1a1a] rounded-md p-2 text-center">
-                        <p className="text-[8px] text-neutral-500 uppercase tracking-wider">Desmontagem</p>
-                        <p className="text-[11px] text-white font-bold mt-0.5 truncate">{formatDate(event.dataDesmontagem)}</p>
+                        <p className="text-[8px] text-neutral-500 uppercase tracking-wider">Término</p>
+                        <p className="text-[11px] text-white font-bold mt-0.5 truncate">{event.dateEnd ? formatDate(event.dateEnd) : '—'}</p>
                       </div>
                     </div>
                   </div>
@@ -1393,8 +1377,6 @@ const CRMDashboard = () => {
                       date: formData.date || '',
                       time: formData.time || '',
                       city: formData.city || '',
-                      dataMontagem: formData.dataMontagem || '',
-                      dataDesmontagem: formData.dataDesmontagem || '',
                       description: formData.observacao || '',
                       status: 'orcamento' as const,
                     };
@@ -1580,22 +1562,12 @@ const CRMDashboard = () => {
                         className="w-full bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg px-3 py-2 text-sm text-white focus:border-[#CDFF00] outline-none" />
                     </div>
                   </div>
-                  {/* Data de Montagem e Desmontagem */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-1.5 flex items-center gap-1.5">
-                        <CalendarDays size={12} /> Data de Montagem
-                      </label>
-                      <input type="date" value={formData.dataMontagem} onChange={e => setFormData(prev => ({ ...prev, dataMontagem: e.target.value }))}
-                        className="w-full bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg px-3 py-2 text-sm text-white focus:border-[#CDFF00] outline-none" style={{ colorScheme: 'dark' }} />
-                    </div>
-                    <div>
-                      <label className="block text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-1.5 flex items-center gap-1.5">
-                        <CalendarDays size={12} /> Data de Desmontagem
-                      </label>
-                      <input type="date" value={formData.dataDesmontagem} onChange={e => setFormData(prev => ({ ...prev, dataDesmontagem: e.target.value }))}
-                        className="w-full bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg px-3 py-2 text-sm text-white focus:border-[#CDFF00] outline-none" style={{ colorScheme: 'dark' }} />
-                    </div>
+                  <div>
+                    <label className="block text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-1.5 flex items-center gap-1.5">
+                      <CalendarDays size={12} /> Data de Término
+                    </label>
+                    <input type="date" value={formData.dateEnd || ''} onChange={e => setFormData(prev => ({ ...prev, dateEnd: e.target.value }))}
+                      className="w-full bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg px-3 py-2 text-sm text-white focus:border-[#CDFF00] outline-none" style={{ colorScheme: 'dark' }} />
                   </div>
                   {/* Status do Evento */}
                   <div ref={statusRef}>

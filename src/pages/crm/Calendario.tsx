@@ -56,28 +56,13 @@ const getEventStatusBg = (status?: string): string => {
   }
 };
 
-type EventPhase = 'montagem' | 'evento' | 'desmontagem';
-
 interface CalendarOccurrence {
   event: CalendarEvent;
-  phase: EventPhase;
 }
 
-const PHASE_CONFIG: Record<EventPhase, { label: string; shortLabel: string; color: string; bg: string }> = {
-  montagem: { label: 'Montagem', shortLabel: 'M', color: '#f59e0b', bg: 'rgba(245,158,11,0.15)' },
-  evento: { label: 'Evento', shortLabel: 'E', color: '#CDFF00', bg: 'rgba(181,255,3,0.15)' },
-  desmontagem: { label: 'Desmontagem', shortLabel: 'D', color: '#ef4444', bg: 'rgba(239,68,68,0.15)' },
-};
+const getPhaseColor = (occ: CalendarOccurrence): string => getEventStatusColor(occ.event.status);
 
-const getPhaseColor = (occ: CalendarOccurrence): string => {
-  if (occ.phase === 'evento') return getEventStatusColor(occ.event.status);
-  return PHASE_CONFIG[occ.phase].color;
-};
-
-const getPhaseBg = (occ: CalendarOccurrence): string => {
-  if (occ.phase === 'evento') return getEventStatusBg(occ.event.status);
-  return PHASE_CONFIG[occ.phase].bg;
-};
+const getPhaseBg = (occ: CalendarOccurrence): string => getEventStatusBg(occ.event.status);
 
 const CRMCalendario = () => {
   const { events, addEvent, updateEvent, deleteEvent, Orçamentos } = useCRM();
@@ -109,8 +94,6 @@ const CRMCalendario = () => {
     decorator: '',
     description: '',
     equipe: '',
-    dataMontagem: '',
-    dataDesmontagem: '',
     valorTotal: 0,
   });
 
@@ -300,24 +283,10 @@ const CRMCalendario = () => {
         const startDate = parseDate(e.date);
         const endDate = e.dateEnd ? parseDate(e.dateEnd) : startDate;
         if (startDate && endDate && targetDate >= startDate && targetDate <= endDate) {
-          result.push({ event: e, phase: 'evento' });
-        }
-      }
-      if (e.dataMontagem) {
-        const d = parseDate(e.dataMontagem);
-        if (d && d.getDate() === day && d.getMonth() === currentMonth && d.getFullYear() === currentYear) {
-          result.push({ event: e, phase: 'montagem' });
-        }
-      }
-      if (e.dataDesmontagem) {
-        const d = parseDate(e.dataDesmontagem);
-        if (d && d.getDate() === day && d.getMonth() === currentMonth && d.getFullYear() === currentYear) {
-          result.push({ event: e, phase: 'desmontagem' });
+          result.push({ event: e });
         }
       }
     }
-    const phaseOrder: Record<EventPhase, number> = { montagem: 0, evento: 1, desmontagem: 2 };
-    result.sort((a, b) => phaseOrder[a.phase] - phaseOrder[b.phase]);
     return result;
   };
 
@@ -345,8 +314,6 @@ const CRMCalendario = () => {
       decorator: '',
       description: '',
       equipe: '',
-      dataMontagem: '',
-      dataDesmontagem: '',
       valorTotal: 0,
     });
     setDateDisplay(`${dd}/${mm}/${yyyy}`);
@@ -383,8 +350,6 @@ const CRMCalendario = () => {
       decorator: event.decorator || '',
       description: desc,
       equipe: event.equipe || '',
-      dataMontagem: event.dataMontagem || '',
-      dataDesmontagem: event.dataDesmontagem || '',
       valorTotal: event.valorTotal || 0,
     });
     setDateDisplay(brDate);
@@ -448,11 +413,7 @@ const CRMCalendario = () => {
   };
 
   const getOccurrenceDate = (occ: CalendarOccurrence): Date | null => {
-    switch (occ.phase) {
-      case 'evento': return parseDate(occ.event.date);
-      case 'montagem': return occ.event.dataMontagem ? parseDate(occ.event.dataMontagem) : null;
-      case 'desmontagem': return occ.event.dataDesmontagem ? parseDate(occ.event.dataDesmontagem) : null;
-    }
+    return parseDate(occ.event.date);
   };
 
   const upcomingOccurrences = useMemo(() => {
@@ -462,15 +423,7 @@ const CRMCalendario = () => {
       if (!e) continue;
       if (e.date) {
         const d = parseDate(e.date);
-        if (d && d >= todayStart) all.push({ event: e, phase: 'evento' });
-      }
-      if (e.dataMontagem) {
-        const d = parseDate(e.dataMontagem);
-        if (d && d >= todayStart) all.push({ event: e, phase: 'montagem' });
-      }
-      if (e.dataDesmontagem) {
-        const d = parseDate(e.dataDesmontagem);
-        if (d && d >= todayStart) all.push({ event: e, phase: 'desmontagem' });
+        if (d && d >= todayStart) all.push({ event: e });
       }
     }
     all.sort((a, b) => {
@@ -746,7 +699,7 @@ const CRMCalendario = () => {
                 </div>
               )}
 
-              {/* Três Marcos Temporais */}
+              {/* Marcos Temporais */}
               <div className="bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg p-4">
                 <label className="text-[9px] font-black text-[#CDFF00] uppercase tracking-widest block mb-3">MARCOS DO EVENTO</label>
                 <div className="space-y-3">
@@ -770,24 +723,6 @@ const CRMCalendario = () => {
                       </div>
                     </div>
                   )}
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-[#f59e0b]/20 flex items-center justify-center shrink-0">
-                      <Flag size={14} className="text-[#f59e0b]" />
-                    </div>
-                    <div>
-                      <p className="text-[10px] text-neutral-500 font-bold uppercase tracking-widest">Montagem</p>
-                      <p className="text-sm font-black text-white">{viewEvent.dataMontagem ? formatFullDate(viewEvent.dataMontagem) : '—'}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-[#ef4444]/20 flex items-center justify-center shrink-0">
-                      <Flag size={14} className="text-[#ef4444]" />
-                    </div>
-                    <div>
-                      <p className="text-[10px] text-neutral-500 font-bold uppercase tracking-widest">Desmontagem</p>
-                      <p className="text-sm font-black text-white">{viewEvent.dataDesmontagem ? formatFullDate(viewEvent.dataDesmontagem) : '—'}</p>
-                    </div>
-                  </div>
                 </div>
               </div>
 
@@ -994,31 +929,6 @@ const CRMCalendario = () => {
                         value={formData.time || ''}
                         onChange={(e) => setFormData({ ...formData, time: e.target.value })}
                         className="w-full bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg px-3 py-2 text-xs font-black text-white focus:ring-1 focus:ring-[#CDFF00] outline-none transition-all [color-scheme:dark]"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Marcos Temporais (Montagem / Desmontagem) */}
-                <div className="border border-[#1a1a1a] rounded-md p-4 space-y-3">
-                  <label className="text-[9px] font-black text-[#CDFF00] uppercase tracking-widest block">MARCOS DO EVENTO</label>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div className="space-y-1">
-                      <label className="text-[8px] font-bold text-neutral-500 uppercase tracking-widest">Montagem</label>
-                      <input
-                        type="date"
-                        value={formData.dataMontagem || ''}
-                        onChange={(e) => setFormData({ ...formData, dataMontagem: e.target.value })}
-                        className="w-full bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg px-2 py-2 text-xs font-black text-white focus:ring-1 focus:ring-[#CDFF00] outline-none transition-all [color-scheme:dark]"
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <label className="text-[8px] font-bold text-neutral-500 uppercase tracking-widest">Desmontagem</label>
-                      <input
-                        type="date"
-                        value={formData.dataDesmontagem || ''}
-                        onChange={(e) => setFormData({ ...formData, dataDesmontagem: e.target.value })}
-                        className="w-full bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg px-2 py-2 text-xs font-black text-white focus:ring-1 focus:ring-[#CDFF00] outline-none transition-all [color-scheme:dark]"
                       />
                     </div>
                   </div>

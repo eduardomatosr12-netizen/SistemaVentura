@@ -867,8 +867,8 @@ const Tarefas = () => {
         id: `event-${ev.id}`,
         eventId: ev.id,
         client: ev.client,
-        dataSaida: ev.dataMontagem || ev.date,
-        dataDevolucao: ev.dataDesmontagem || '',
+        dataSaida: ev.date,
+        dataDevolucao: ev.dateEnd || '',
         items: lead.items.map(invItem => ({
           id: `event-item-${invItem.id}`,
           item: invItem.item,
