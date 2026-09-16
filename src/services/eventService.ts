@@ -15,6 +15,7 @@ const mapEventDoc = (d: { id: string; data: () => Record<string, unknown> }): Ca
     clientId: data.clientId || '',
     eventType: data.eventType || '',
     date: data.date || '',
+    dateEnd: data.dateEnd || '',
     time: data.time || '',
     local: data.local || '',
     decorator: data.decorator || '',

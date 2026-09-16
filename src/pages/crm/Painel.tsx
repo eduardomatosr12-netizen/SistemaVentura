@@ -49,7 +49,7 @@ const statusLabel: Record<string, string> = {
 
 const getStatusColor = (status?: string) => {
   switch (status) {
-    case 'evento_confirmado': return '#f97316';
+    case 'evento_confirmado': return '#3b82f6';
     case 'orcamento': return '#eab308';
     case 'orcamento_cancelado': return '#ef4444';
     case 'evento_concluido': return '#22c55e';
@@ -60,7 +60,7 @@ const getStatusColor = (status?: string) => {
 const statusBg: Record<string, string> = {
   orcamento: 'bg-[#eab308]',
   orcamento_cancelado: 'bg-[#ef4444]',
-  evento_confirmado: 'bg-[#f97316]',
+  evento_confirmado: 'bg-[#3b82f6]',
   evento_concluido: 'bg-[#22c55e]',
 };
 
@@ -537,7 +537,7 @@ eventType: formData.eventType,
       if (status in counts) counts[status]++;
     });
     return [
-      { name: 'Evento Confirmado', value: counts.evento_confirmado, color: '#f97316' },
+      { name: 'Evento Confirmado', value: counts.evento_confirmado, color: '#3b82f6' },
       { name: 'Orçamento', value: counts.orcamento, color: '#eab308' },
       { name: 'Orçamento Cancelado', value: counts.orcamento_cancelado, color: '#ef4444' },
       { name: 'Evento Concluído', value: counts.evento_concluido, color: '#22c55e' },
@@ -754,10 +754,6 @@ eventType: formData.eventType,
                 <span className="text-xs text-white/60 font-medium">{label}</span>
               </div>
             ))}
-            <div className="flex items-center gap-2 shrink-0">
-              <div className="w-2 h-2 rounded-full" style={{ backgroundColor: getStatusColor('evento_concluido') }} />
-              <span className="text-xs text-white/60 font-medium">Concluído</span>
-            </div>
           </div>
 
           {/* Two-column layout */}
@@ -981,7 +977,7 @@ eventType: formData.eventType,
                       <td className="px-4 py-3">
                         {event.status ? (
                           <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                            event.status === 'evento_confirmado' ? 'bg-[#f97316] text-white' :
+event.status === 'evento_confirmado' ? 'bg-[#3b82f6] text-white' :
                             event.status === 'orcamento' ? 'bg-[#eab308] text-white' :
                             event.status === 'orcamento_cancelado' ? 'bg-[#ef4444] text-white' :
                             event.status === 'evento_concluido' ? 'bg-[#22c55e] text-white' :
@@ -1029,7 +1025,7 @@ eventType: formData.eventType,
                       </div>
                       {event.status ? (
                         <span className={`shrink-0 px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                          event.status === 'evento_confirmado' ? 'bg-[#f97316] text-white' :
+                          event.status === 'evento_confirmado' ? 'bg-[#3b82f6] text-white' :
                           event.status === 'orcamento' ? 'bg-[#eab308] text-white' :
                           event.status === 'orcamento_cancelado' ? 'bg-[#ef4444] text-white' :
                           event.status === 'evento_concluido' ? 'bg-[#22c55e] text-white' :
