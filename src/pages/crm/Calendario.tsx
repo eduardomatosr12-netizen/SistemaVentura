@@ -293,11 +293,13 @@ const CRMCalendario = () => {
 
   const getOccurrencesForDay = (day: number): CalendarOccurrence[] => {
     const result: CalendarOccurrence[] = [];
+    const targetDate = new Date(currentYear, currentMonth, day);
     for (const e of safeEvents) {
       if (!e) continue;
       if (e.date) {
-        const d = parseDate(e.date);
-        if (d && d.getDate() === day && d.getMonth() === currentMonth && d.getFullYear() === currentYear) {
+        const startDate = parseDate(e.date);
+        const endDate = e.dateEnd ? parseDate(e.dateEnd) : startDate;
+        if (startDate && endDate && targetDate >= startDate && targetDate <= endDate) {
           result.push({ event: e, phase: 'evento' });
         }
       }
