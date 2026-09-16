@@ -1085,6 +1085,7 @@ const CRMOrçamentos = () => {
         leadWhatsapp={whatsAppTarget.whatsapp}
         leadEvent={whatsAppTarget.niche}
         leadEventDate={whatsAppTarget.firstContact}
+        leadEventDateEnd={events.find(e => e.clientId === whatsAppTarget.id)?.dateEnd}
         leadValue={whatsAppTarget.value}
         leadItems={whatsAppTarget.items}
         onEditLead={() => {

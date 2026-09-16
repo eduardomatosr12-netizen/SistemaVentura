@@ -6,7 +6,7 @@ import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell, LabelList, Cart
 import { ChartTooltipContent } from '../../components/charts';
 import { useCRM } from '../../contexts/CRMContext';
 import type { CalendarEvent, Lead, OrcamentoItem } from '../../types/crm';
-import { parseMonetaryValue, formatCurrency, generatePDF } from '../../lib/crmHelpers';
+import { parseMonetaryValue, formatCurrency, generatePDF, formatEventDateRange } from '../../lib/crmHelpers';
 import { eventTypeLabel } from '../../lib/eventTypeLabel';
 import { useActivityLogs } from '../../contexts/ActivityContext';
 import { generateUUID } from '../../lib/uuid';
@@ -257,12 +257,13 @@ const CRMDashboard = () => {
       items: formData.orcamentoItems || [],
     };
 
-    generatePDF(leadData, formData.desconto > 0 ? { type: 'fixed', value: formData.desconto } : undefined, formData.valor);
+    generatePDF(leadData, formData.desconto > 0 ? { type: 'fixed', value: formData.desconto } : undefined, formData.valor, formData.dateEnd);
   };
 
   const handleSendWhatsApp = () => {
     if (!formData.whatsapp) return;
-    const msg = 'Olá, segue o seu orçamento em PDF.';
+    const dataEvento = formatEventDateRange(formData.date, formData.dateEnd);
+    const msg = `Olá ${formData.name || ''}! Segue o seu orçamento em PDF.\n\nData do evento: ${dataEvento}`;
     window.open(generateWhatsAppLink(formData.whatsapp, msg), '_blank');
   };
 

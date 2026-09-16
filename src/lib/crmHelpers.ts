@@ -83,6 +83,40 @@ export function formatCurrency(value: number): string {
   }).format(value);
 }
 
+interface DateParts {
+  day: number;
+  month: string;
+  year: number;
+}
+
+function parseDateParts(dateStr: string): DateParts | null {
+  const d = new Date(dateStr + 'T12:00:00');
+  if (isNaN(d.getTime())) return null;
+  return {
+    day: d.getDate(),
+    month: d.toLocaleDateString('pt-BR', { month: 'long' }),
+    year: d.getFullYear(),
+  };
+}
+
+export function formatEventDateRange(start?: string, end?: string): string {
+  if (!start) return '—';
+  const s = parseDateParts(start);
+  if (!s) return start;
+  const e = end ? parseDateParts(end) : null;
+
+  if (!e || (e.day === s.day && e.month === s.month && e.year === s.year)) {
+    return `${s.day} de ${s.month} de ${s.year}`;
+  }
+  if (e.month === s.month && e.year === s.year) {
+    return `${s.day} a ${e.day} de ${s.month} de ${e.year}`;
+  }
+  if (e.year === s.year) {
+    return `${s.day} de ${s.month} a ${e.day} de ${e.month} de ${e.year}`;
+  }
+  return `${s.day} de ${s.month} de ${s.year} a ${e.day} de ${e.month} de ${e.year}`;
+}
+
 export function calculateTotalValue(Orçamentos: Lead[]): number {
   return Orçamentos.reduce((acc, lead) => acc + parseMonetaryValue(lead.value), 0);
 }
@@ -116,7 +150,7 @@ export function groupOrçamentosByStage(Orçamentos: Lead[]): Record<Stage, Lead
   return grouped;
 }
 
-export function generatePDF(lead: Lead, discountData?: { type: 'percent' | 'fixed'; value: number }, grossTotal?: number): void {
+export function generatePDF(lead: Lead, discountData?: { type: 'percent' | 'fixed'; value: number }, grossTotal?: number, dateEnd?: string): void {
   const win = window.open('', '_blank');
   if (!win) return;
 
@@ -408,7 +442,7 @@ export function generatePDF(lead: Lead, discountData?: { type: 'percent' | 'fixe
           <div class="col" style="text-align: right;">
             <h3>Evento</h3>
             <p><strong>${eventTypeLabel(lead.niche)}</strong></p>
-            <p>Data: ${lead.firstContact ? new Date(lead.firstContact + 'T12:00:00').toLocaleDateString('pt-BR') : '—'}</p>
+            <p>Data: ${formatEventDateRange(lead.firstContact, dateEnd)}</p>
             ${lead.address ? `<p>Local: ${safeAddress}</p>` : ''}
             <p style="margin-top: 6px;"><span class="badge">${safeStage}</span></p>
           </div>

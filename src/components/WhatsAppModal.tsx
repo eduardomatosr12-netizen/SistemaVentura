@@ -4,7 +4,7 @@ import { X, MessageCircle, Edit3, Send, ChevronDown, ChevronUp, AlertCircle, Ext
 import { cleanPhoneNumber, generateWhatsAppLink } from '../lib/whatsapp';
 import { subscribeTemplates } from '../services/whatsappTemplateService';
 import { fillTemplate, type WhatsAppTemplate } from '../lib/whatsappTemplates';
-import { parseMonetaryValue, formatCurrency } from '../lib/crmHelpers';
+import { parseMonetaryValue, formatCurrency, formatEventDateRange } from '../lib/crmHelpers';
 import { useAuth } from '../contexts/AuthContext';
 
 interface WhatsAppModalProps {
@@ -14,16 +14,10 @@ interface WhatsAppModalProps {
   leadWhatsapp: string;
   leadEvent?: string;
   leadEventDate?: string;
+  leadEventDateEnd?: string;
   leadValue?: string;
   leadItems?: { item?: string; qtdAtual: number; valorUnit: number; semPreco?: boolean }[];
   onEditLead?: () => void;
-}
-
-function formatDateBR(dateStr?: string): string {
-  if (!dateStr) return '';
-  const d = new Date(dateStr + 'T12:00:00');
-  if (isNaN(d.getTime())) return dateStr;
-  return d.toLocaleDateString('pt-BR');
 }
 
 const WhatsAppModal = ({
@@ -33,6 +27,7 @@ const WhatsAppModal = ({
   leadWhatsapp,
   leadEvent,
   leadEventDate,
+  leadEventDateEnd,
   leadValue,
   leadItems,
   onEditLead,
@@ -92,7 +87,7 @@ const WhatsAppModal = ({
   const variableValues = useMemo(() => ({
     nome: leadName,
     evento: leadEvent || 'evento',
-    data_evento: formatDateBR(leadEventDate),
+    data_evento: formatEventDateRange(leadEventDate, leadEventDateEnd),
     valor: valueInfo.final,
     valor_bruto: valueInfo.bruto,
     desconto: valueInfo.desconto,
