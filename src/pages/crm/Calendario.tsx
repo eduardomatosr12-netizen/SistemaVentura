@@ -277,13 +277,18 @@ const CRMCalendario = () => {
   const getOccurrencesForDay = (day: number): CalendarOccurrence[] => {
     const result: CalendarOccurrence[] = [];
     const targetDate = new Date(currentYear, currentMonth, day);
+    targetDate.setHours(0, 0, 0, 0);
     for (const e of safeEvents) {
       if (!e) continue;
       if (e.date) {
         const startDate = parseDate(e.date);
         const endDate = e.dateEnd ? parseDate(e.dateEnd) : startDate;
-        if (startDate && endDate && targetDate >= startDate && targetDate <= endDate) {
-          result.push({ event: e });
+        if (startDate && endDate) {
+          startDate.setHours(0, 0, 0, 0);
+          endDate.setHours(23, 59, 59, 999);
+          if (targetDate >= startDate && targetDate <= endDate) {
+            result.push({ event: e });
+          }
         }
       }
     }

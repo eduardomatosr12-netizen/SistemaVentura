@@ -556,14 +556,20 @@ eventType: formData.eventType,
 
   const getOccurrencesForDay = (day: number): DayOccurrence[] => {
     const result: DayOccurrence[] = [];
-    const matchesDay = (dateStr: string | undefined) => {
-      if (!dateStr) return false;
-      const d = new Date(dateStr + 'T12:00:00');
-      if (isNaN(d.getTime())) return false;
-      return d.getDate() === day && d.getMonth() === viewMonth && d.getFullYear() === viewYear;
+    const inRange = (day: number, start: Date, end: Date): boolean => {
+      start.setHours(0, 0, 0, 0);
+      end.setHours(23, 59, 59, 999);
+      const target = new Date(viewYear, viewMonth, day);
+      target.setHours(0, 0, 0, 0);
+      return target >= start && target <= end;
     };
     for (const event of safeEvents) {
-      if (matchesDay(event.date)) result.push({ event, type: 'evento' });
+      if (!event?.date) continue;
+      const start = new Date(event.date + 'T12:00:00');
+      if (isNaN(start.getTime())) continue;
+      const end = event.dateEnd ? new Date(event.dateEnd + 'T12:00:00') : start;
+      if (isNaN(end.getTime())) continue;
+      if (inRange(day, start, end)) result.push({ event, type: 'evento' });
     }
     return result;
   };
