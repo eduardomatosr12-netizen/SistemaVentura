@@ -45,6 +45,7 @@ export interface CalendarEvent {
   clientId?: string;
   eventType?: string;
   date: string;
+  dateEnd?: string;
   time?: string;
   local?: string;
   decorator?: string;

@@ -96,6 +96,7 @@ const CRMCalendario = () => {
     title: '',
     eventType: '',
     date: '',
+    dateEnd: '',
     time: '',
     local: '',
     client: '',
@@ -123,6 +124,7 @@ const CRMCalendario = () => {
   const equipeDropdownRef = useRef<HTMLDivElement>(null);
 
   const [dateDisplay, setDateDisplay] = useState('');
+  const [dateEndDisplay, setDateEndDisplay] = useState('');
 
   const [eventItemOptions, setEventItemOptions] = useState<EventStockItem[]>([]);
   const [itemSearch, setItemSearch] = useState('');
@@ -328,6 +330,7 @@ const CRMCalendario = () => {
       title: '',
       eventType: '',
       date: iso,
+      dateEnd: '',
       time: '',
       local: '',
       client: '',
@@ -345,6 +348,7 @@ const CRMCalendario = () => {
       valorTotal: 0,
     });
     setDateDisplay(`${dd}/${mm}/${yyyy}`);
+    setDateEndDisplay('');
     setClientSearch('');
     setSelectedEvent(null);
     setEventItems([]);
@@ -358,11 +362,13 @@ const CRMCalendario = () => {
     setModalMode('edit');
     setSelectedEvent(event);
     const brDate = toBR(event.date || '');
+    const brDateEnd = toBR(event.dateEnd || '');
     const desc = (event.description || '').replace(/\n\nItens do Evento:\n[\s\S]*$/, '');
     setFormData({
       title: event.title || '',
       eventType: event.eventType || '',
       date: toISO(brDate) || event.date || '',
+      dateEnd: toISO(brDateEnd) || event.dateEnd || '',
       time: event.time || '',
       local: event.local || '',
       client: event.client || '',
@@ -380,6 +386,7 @@ const CRMCalendario = () => {
       valorTotal: event.valorTotal || 0,
     });
     setDateDisplay(brDate);
+    setDateEndDisplay(brDateEnd);
     setClientSearch(event.client || '');
     setEventItems((event.items || []).map(i => ({
       id: generateUUID(),
@@ -746,10 +753,21 @@ const CRMCalendario = () => {
                       <CalendarIcon size={14} className="text-[#CDFF00]" />
                     </div>
                     <div>
-                      <p className="text-[10px] text-neutral-500 font-bold uppercase tracking-widest">Data do Evento</p>
+                      <p className="text-[10px] text-neutral-500 font-bold uppercase tracking-widest">Data de Início</p>
                       <p className="text-sm font-black text-white">{formatFullDate(viewEvent.date)}</p>
                     </div>
                   </div>
+                  {viewEvent.dateEnd && (
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-[#3b82f6]/20 flex items-center justify-center shrink-0">
+                        <CalendarIcon size={14} className="text-[#3b82f6]" />
+                      </div>
+                      <div>
+                        <p className="text-[10px] text-neutral-500 font-bold uppercase tracking-widest">Data de Término</p>
+                        <p className="text-sm font-black text-white">{formatFullDate(viewEvent.dateEnd)}</p>
+                      </div>
+                    </div>
+                  )}
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-full bg-[#f59e0b]/20 flex items-center justify-center shrink-0">
                       <Flag size={14} className="text-[#f59e0b]" />
@@ -888,49 +906,46 @@ const CRMCalendario = () => {
                       <MessageSquare size={12} strokeWidth={3} className="text-[#CDFF00]" />
                       TIPO DE EVENTO
                     </label>
-                    {(() => {
-                      const predefined = ['Aniver', 'Casam', 'Corporativo', 'Privado', 'Outros'];
-                      const isCustom = formData.eventType && !predefined.includes(formData.eventType);
-                      return (
-                        <>
-                          <select
-                            value={isCustom ? 'Outros' : (formData.eventType || '')}
-                            onChange={(e) => {
-                              const val = e.target.value;
-                              if (val === 'Outros') {
-                                setFormData({ ...formData, eventType: '' });
-                              } else {
-                                setFormData({ ...formData, eventType: val });
-                              }
-                            }}
-                            className="w-full bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg px-3 py-2 text-xs font-black text-white focus:ring-1 focus:ring-[#CDFF00] outline-none transition-all"
-                          >
-                            <option value="">Selecione...</option>
-                            <option value="Aniver">Aniver (Aniversário)</option>
-                            <option value="Casam">Casam (Casamento)</option>
-                            <option value="Corporativo">Corporativo</option>
-                            <option value="Privado">Privado</option>
-                            <option value="Outros">Outros</option>
-                          </select>
-                          {(formData.eventType === '' || isCustom) && (
-                            <input
-                              type="text"
-                              value={isCustom ? formData.eventType : ''}
-                              onChange={(e) => setFormData({ ...formData, eventType: e.target.value })}
-                              className="w-full bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg px-3 py-2 mt-2 text-xs font-black text-white focus:ring-1 focus:ring-[#CDFF00] outline-none transition-all"
-                              placeholder="Especifique o tipo de evento"
-                              required
-                            />
-                          )}
-                        </>
-                      );
-                    })()}
+{(() => {
+                       const predefined = ['Aniver', 'Casam', 'Corporativo', 'Privado', 'Outros'];
+                       const isOutrosSelected = formData.eventType === 'Outros';
+                       const isCustom = formData.eventType && !predefined.includes(formData.eventType);
+                       return (
+                         <>
+                           <select
+                             value={formData.eventType || ''}
+                             onChange={(e) => {
+                               const val = e.target.value;
+                               setFormData({ ...formData, eventType: val });
+                             }}
+                             className="w-full bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg px-3 py-2 text-xs font-black text-white focus:ring-1 focus:ring-[#CDFF00] outline-none transition-all"
+                           >
+                             <option value="">Selecione...</option>
+                             <option value="Aniver">Aniver (Aniversário)</option>
+                             <option value="Casam">Casam (Casamento)</option>
+                             <option value="Corporativo">Corporativo</option>
+                             <option value="Privado">Privado</option>
+                             <option value="Outros">Outros</option>
+                           </select>
+                           {(isOutrosSelected || isCustom) && (
+                             <input
+                               type="text"
+                               value={isCustom ? formData.eventType : ''}
+                               onChange={(e) => setFormData({ ...formData, eventType: e.target.value })}
+                               className="w-full bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg px-3 py-2 mt-2 text-xs font-black text-white focus:ring-1 focus:ring-[#CDFF00] outline-none transition-all"
+                               placeholder="Especifique o tipo de evento"
+                               required
+                             />
+                           )}
+                         </>
+                       );
+                     })()}
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
                     <div className="space-y-2">
                       <label className="flex items-center gap-2 text-[9px] font-black text-[#CDFF00] uppercase tracking-widest">
                         <CalendarIcon size={12} strokeWidth={3} className="text-[#CDFF00]" />
-                        DATA
+                        DATA INÍCIO
                       </label>
                       <input
                         required
@@ -942,6 +957,26 @@ const CRMCalendario = () => {
                           setDateDisplay(masked);
                           const iso = toISO(masked);
                           if (iso) setFormData(prev => ({ ...prev, date: iso }));
+                        }}
+                        placeholder="DD/MM/AAAA"
+                        className="w-full bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg px-3 py-2.5 text-xs font-black text-white focus:ring-1 focus:ring-[#CDFF00] outline-none transition-all tracking-wider"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="flex items-center gap-2 text-[9px] font-black text-[#CDFF00] uppercase tracking-widest">
+                        <CalendarIcon size={12} strokeWidth={3} className="text-[#CDFF00]" />
+                        DATA TÉRMINO
+                      </label>
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        value={dateEndDisplay}
+                        onChange={(e) => {
+                          const masked = maskDate(e.target.value);
+                          setDateEndDisplay(masked);
+                          const iso = toISO(masked);
+                          if (iso) setFormData(prev => ({ ...prev, dateEnd: iso }));
+                          else setFormData(prev => ({ ...prev, dateEnd: '' }));
                         }}
                         placeholder="DD/MM/AAAA"
                         className="w-full bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg px-3 py-2.5 text-xs font-black text-white focus:ring-1 focus:ring-[#CDFF00] outline-none transition-all tracking-wider"
