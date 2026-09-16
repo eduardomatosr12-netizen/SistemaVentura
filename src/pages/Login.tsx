@@ -41,7 +41,7 @@ const Login = () => {
         <img src="/logo.jpg" alt="VENTURA" className="w-full max-w-[160px] object-contain" />
         <div>
           <h1 className="text-5xl font-black text-white leading-tight tracking-tight mb-4">
-            Transformando Ambientes,<br />Criando Experiências.
+            Apague o comum,<br />Acenda o extraordinário.
           </h1>
             <p className="text-white text-lg font-medium">
              Gestão inteligente de iluminação e efeitos especiais.
