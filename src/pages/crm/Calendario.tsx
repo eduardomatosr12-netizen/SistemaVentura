@@ -30,28 +30,28 @@ const maskDate = (raw: string): string => {
 };
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; bg: string }> = {
-  orcamento: { label: 'Orçamento', color: 'text-[#f59e0b]', bg: 'bg-[#f59e0b]/10 border-[#f59e0b]' },
+  orcamento: { label: 'Orçamento', color: 'text-[#eab308]', bg: 'bg-[#eab308]/10 border-[#eab308]' },
   orcamento_cancelado: { label: 'Orçamento Cancelado', color: 'text-[#ef4444]', bg: 'bg-[#ef4444]/10 border-[#ef4444]' },
-  evento_confirmado: { label: 'Evento Confirmado', color: 'text-[#CDFF00]', bg: 'bg-[#CDFF00]/10 border-[#CDFF00]' },
-  evento_concluido: { label: 'Evento Concluído', color: 'text-[#3b82f6]', bg: 'bg-[#3b82f6]/10 border-[#3b82f6]' },
+  evento_confirmado: { label: 'Evento Confirmado', color: 'text-[#f97316]', bg: 'bg-[#f97316]/10 border-[#f97316]' },
+  evento_concluido: { label: 'Evento Concluído', color: 'text-[#22c55e]', bg: 'bg-[#22c55e]/10 border-[#22c55e]' },
 };
 
 const getEventStatusColor = (status?: string): string => {
   switch (status) {
-    case 'evento_confirmado': return '#CDFF00';
-    case 'orcamento': return '#f59e0b';
+    case 'evento_confirmado': return '#f97316';
+    case 'orcamento': return '#eab308';
     case 'orcamento_cancelado': return '#ef4444';
-    case 'evento_concluido': return '#3b82f6';
+    case 'evento_concluido': return '#22c55e';
     default: return '#6b7280';
   }
 };
 
 const getEventStatusBg = (status?: string): string => {
   switch (status) {
-    case 'evento_confirmado': return 'rgba(181,255,3,0.15)';
-    case 'orcamento': return 'rgba(245,158,11,0.15)';
+    case 'evento_confirmado': return 'rgba(249,115,22,0.15)';
+    case 'orcamento': return 'rgba(234,179,8,0.15)';
     case 'orcamento_cancelado': return 'rgba(239,68,68,0.15)';
-    case 'evento_concluido': return 'rgba(59,130,246,0.15)';
+    case 'evento_concluido': return 'rgba(34,197,94,0.15)';
     default: return 'rgba(107,114,128,0.15)';
   }
 };

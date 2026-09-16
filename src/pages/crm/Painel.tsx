@@ -49,19 +49,19 @@ const statusLabel: Record<string, string> = {
 
 const getStatusColor = (status?: string) => {
   switch (status) {
-    case 'evento_confirmado': return '#00cc00';
-    case 'orcamento': return '#ff9900';
-    case 'orcamento_cancelado': return '#ff4444';
-    case 'evento_concluido': return '#FFB800';
+    case 'evento_confirmado': return '#f97316';
+    case 'orcamento': return '#eab308';
+    case 'orcamento_cancelado': return '#ef4444';
+    case 'evento_concluido': return '#22c55e';
     default: return '#6b7280';
   }
 };
 
 const statusBg: Record<string, string> = {
-  orcamento: 'bg-[#ff9900]',
-  orcamento_cancelado: 'bg-[#ff4444]',
-  evento_confirmado: 'bg-[#00cc00]',
-  evento_concluido: 'bg-[#FFB800]',
+  orcamento: 'bg-[#eab308]',
+  orcamento_cancelado: 'bg-[#ef4444]',
+  evento_confirmado: 'bg-[#f97316]',
+  evento_concluido: 'bg-[#22c55e]',
 };
 
 const EVENT_TYPES = [
@@ -541,10 +541,10 @@ const CRMDashboard = () => {
       if (status in counts) counts[status]++;
     });
     return [
-      { name: 'Evento Confirmado', value: counts.evento_confirmado, color: '#00cc00' },
-      { name: 'Orçamento', value: counts.orcamento, color: '#ff9900' },
-      { name: 'Orçamento Cancelado', value: counts.orcamento_cancelado, color: '#ff4444' },
-      { name: 'Evento Concluído', value: counts.evento_concluido, color: '#FFB800' },
+      { name: 'Evento Confirmado', value: counts.evento_confirmado, color: '#f97316' },
+      { name: 'Orçamento', value: counts.orcamento, color: '#eab308' },
+      { name: 'Orçamento Cancelado', value: counts.orcamento_cancelado, color: '#ef4444' },
+      { name: 'Evento Concluído', value: counts.evento_concluido, color: '#22c55e' },
     ];
   }, [safeEvents, viewMonth, viewYear]);
 
@@ -993,10 +993,10 @@ const CRMDashboard = () => {
                       <td className="px-4 py-3">
                         {event.status ? (
                           <span className={`inline-block px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                            event.status === 'evento_confirmado' ? 'bg-[#00cc00] text-black' :
-                            event.status === 'orcamento' ? 'bg-[#ff9900] text-white' :
-                            event.status === 'orcamento_cancelado' ? 'bg-[#ff4444] text-white' :
-                            event.status === 'evento_concluido' ? 'bg-[#FFB800] text-black' :
+                            event.status === 'evento_confirmado' ? 'bg-[#f97316] text-white' :
+                            event.status === 'orcamento' ? 'bg-[#eab308] text-white' :
+                            event.status === 'orcamento_cancelado' ? 'bg-[#ef4444] text-white' :
+                            event.status === 'evento_concluido' ? 'bg-[#22c55e] text-white' :
                             'bg-[#2a2a2a] text-white'
                           }`}>
                             {statusLabel[event.status] || event.status}
@@ -1041,10 +1041,10 @@ const CRMDashboard = () => {
                       </div>
                       {event.status ? (
                         <span className={`shrink-0 px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                          event.status === 'evento_confirmado' ? 'bg-[#00cc00] text-black' :
-                          event.status === 'orcamento' ? 'bg-[#ff9900] text-white' :
-                          event.status === 'orcamento_cancelado' ? 'bg-[#ff4444] text-white' :
-                          event.status === 'evento_concluido' ? 'bg-[#FFB800] text-black' :
+                          event.status === 'evento_confirmado' ? 'bg-[#f97316] text-white' :
+                          event.status === 'orcamento' ? 'bg-[#eab308] text-white' :
+                          event.status === 'orcamento_cancelado' ? 'bg-[#ef4444] text-white' :
+                          event.status === 'evento_concluido' ? 'bg-[#22c55e] text-white' :
                           'bg-[#2a2a2a] text-white'
                         }`}>
                           {statusLabel[event.status] || event.status}
@@ -1261,7 +1261,7 @@ const CRMDashboard = () => {
                         <Pencil size={11} />
                         Editar
                       </button>
-                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${event.status ? statusBg[event.status] : 'bg-[#2a2a2a]'} ${event.status === 'evento_confirmado' ? 'text-black' : 'text-white'}`}>
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${event.status ? statusBg[event.status] : 'bg-[#2a2a2a]'} text-white`}>
                         {event.status ? statusLabel[event.status] : '—'}
                       </span>
                     </div>
