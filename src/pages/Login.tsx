@@ -1,15 +1,8 @@
 import { useState, useEffect } from 'react';
 import type { FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Mail, Lock, Eye, EyeOff, Loader2, Zap, Target, Lightbulb, Activity } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, Loader2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-
-const features = [
-  { icon: Zap, label: 'Dashboard em tempo real' },
-  { icon: Target, label: 'Controle total de eventos' },
-  { icon: Lightbulb, label: 'Análise de dados' },
-  { icon: Activity, label: 'Integração com sistemas' },
-];
 
 const Login = () => {
   const navigate = useNavigate();
@@ -80,21 +73,6 @@ const Login = () => {
           <p className="text-white/50 text-base xl:text-lg font-medium max-w-md leading-relaxed mb-10">
             Gestão inteligente de iluminação e efeitos especiais para sua empresa.
           </p>
-
-          <div className="space-y-4">
-            {features.map((f, i) => (
-              <div
-                key={f.label}
-                className={`flex items-center gap-3 transition-all duration-500 ease-out ${mounted ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-4'}`}
-                style={{ transitionDelay: `${500 + i * 100}ms` }}
-              >
-                <div className="w-10 h-10 rounded-lg bg-[#CDFF00]/10 border border-[#CDFF00]/20 flex items-center justify-center shrink-0">
-                  <f.icon size={18} className="text-[#CDFF00]" />
-                </div>
-                <span className="text-sm text-white/70 font-medium">{f.label}</span>
-              </div>
-            ))}
-          </div>
         </div>
 
         <p
