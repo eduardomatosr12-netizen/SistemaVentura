@@ -145,9 +145,11 @@ button, a, select, input, textarea {
   --bottom-nav-pb: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom, 0px));
 }
 
-/* Utility for bottom nav safe area */
-.pb-bottom-nav {
-  padding-bottom: var(--bottom-nav-pb);
+/* Utility for bottom nav safe area - mobile only (desktop has no bottom nav and uses md:pb-* overrides) */
+@media (max-width: 767px) {
+  .pb-bottom-nav {
+    padding-bottom: var(--bottom-nav-pb);
+  }
 }
 
 /* PWA standalone: adjust bottom nav for no browser chrome */
@@ -158,8 +160,10 @@ button, a, select, input, textarea {
   }
 
   /* Extra bottom padding on standalone so content isn't hidden behind nav */
-  .pb-bottom-nav {
-    padding-bottom: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom, 16px));
+  @media (max-width: 767px) {
+    .pb-bottom-nav {
+      padding-bottom: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom, 16px));
+    }
   }
 }
 

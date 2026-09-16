@@ -493,7 +493,7 @@ const CRMCalendario = () => {
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-3 md:gap-6">
         <div className="lg:col-span-3 bg-[#1a1a1a] border border-[#2d2d2d] rounded-xl p-6 shadow-[0_4px_12px_rgba(0,0,0,0.3)] overflow-x-auto transition-all duration-200">
           {/* Calendar Grid Header */}
-          <div className="grid grid-cols-7 gap-1 mb-4">
+          <div className="grid grid-cols-7 gap-1 mb-4 min-w-[420px]">
             {days.map((day) => (
               <div key={day} className="text-center text-[10px] text-white font-black uppercase tracking-widest py-2">
                 {day}
@@ -502,7 +502,7 @@ const CRMCalendario = () => {
           </div>
 
           {/* Calendar Grid Body */}
-          <div className="grid grid-cols-7 gap-1">
+          <div className="grid grid-cols-7 gap-1 min-w-[420px]">
             {(() => {
               const firstDay = new Date(currentYear, currentMonth, 1).getDay();
               const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
@@ -1308,7 +1308,7 @@ const CRMCalendario = () => {
                 </div>
               )}
 
-            <div className="px-4 sm:px-8 py-4 sm:py-5 bg-[#0a0a0a] flex justify-between items-center border-t border-[#2d2d2d] shrink-0">
+            <div className="px-4 sm:px-8 py-4 sm:py-5 bg-[#0a0a0a] flex flex-wrap justify-between items-center gap-2 border-t border-[#2d2d2d] shrink-0">
                 <div className="flex items-center gap-2">
                   {modalMode === 'edit' && (
                     <button
@@ -1321,17 +1321,17 @@ const CRMCalendario = () => {
                     </button>
                   )}
                 </div>
-                <div className="flex gap-3">
+                <div className="flex flex-wrap justify-end gap-2 sm:gap-3">
                   <button
                     type="button"
                     onClick={() => setIsModalOpen(false)}
-                    className="px-6 py-2.5 rounded-md font-black text-[10px] uppercase tracking-widest text-neutral-500 hover:text-white transition-all"
+                    className="px-5 sm:px-6 py-2.5 rounded-md font-black text-[10px] uppercase tracking-widest text-neutral-500 hover:text-white transition-all whitespace-nowrap"
                   >
                     Cancelar
                   </button>
                   <button
                     type="submit"
-                    className="bg-[#CDFF00] text-black px-8 py-2.5 rounded-md font-black text-[10px] uppercase tracking-widest hover:bg-[#a1e600] transition-all active:scale-[0.98] shadow-sm"
+                    className="bg-[#CDFF00] text-black px-6 sm:px-8 py-2.5 rounded-md font-black text-[10px] uppercase tracking-widest hover:bg-[#a1e600] transition-all active:scale-[0.98] shadow-sm whitespace-nowrap"
                   >
                     {modalMode === 'create' ? 'SALVAR EVENTO' : 'ATUALIZAR'}
                   </button>

@@ -160,9 +160,8 @@ const Login = () => {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-white/30 hover:text-[#CDFF00] transition-colors"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-white/30 hover:text-[#CDFF00] focus:text-[#CDFF00] focus:outline-none transition-colors"
                     disabled={isLoading}
-                    tabIndex={-1}
                   >
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>

@@ -94,7 +94,7 @@ export function KpiCard({
           <Icon size={16} strokeWidth={2.5} />
         </span>
       </div>
-      <p className="mt-3 text-2xl md:text-3xl font-black text-white tracking-tight leading-none tabular-nums">
+      <p className="mt-3 text-lg sm:text-xl md:text-3xl font-black text-white tracking-tight leading-none tabular-nums">
         {formatter(Math.round(animated))}
       </p>
       {delta && (

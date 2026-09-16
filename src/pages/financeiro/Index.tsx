@@ -988,7 +988,7 @@ const Financeiro = () => {
       </div>
 
       {/* KPI Cards */}
-      <div className={`p-6 md:px-8 grid grid-cols-1 gap-4 ${viewMode === 'receitas' ? 'md:grid-cols-2' : 'md:grid-cols-4'}`}>
+      <div className={`p-6 md:px-8 grid grid-cols-1 gap-4 ${viewMode === 'receitas' ? 'md:grid-cols-2' : 'lg:grid-cols-4'}`}>
         {Object.values(displayData.cards).map((card, idx) => {
           const Icon = card.icon;
           return (

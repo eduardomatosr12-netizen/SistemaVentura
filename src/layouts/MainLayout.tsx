@@ -197,7 +197,7 @@ className="w-full bg-[#1a1a1a] border-2 border-[#2d2d2d] rounded-xl px-4 py-3 fo
         </div>
       </main>
 
-      <nav className="bottom-nav fixed bottom-0 left-0 right-0 z-50 bg-black border-t border-[#2d2d2d] flex md:hidden justify-around items-center h-16" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)', height: 'var(--bottom-nav-height, 64px)' }}>
+      <nav className="bottom-nav fixed bottom-0 left-0 right-0 z-50 bg-black border-t border-[#2d2d2d] flex md:hidden justify-around items-center h-16" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)', height: 'calc(var(--bottom-nav-height, 64px) + env(safe-area-inset-bottom, 0px))' }}>
         <Link to="/home" className={`flex flex-col items-center gap-0.5 px-3 py-1 min-w-[56px] min-h-[48px] justify-center ${location.pathname === '/home' ? 'text-[#CDFF00]' : 'text-neutral-400'}`}>
           <LayoutDashboard size={20} />
           <span className="text-[9px] font-bold uppercase tracking-wider">Home</span>
