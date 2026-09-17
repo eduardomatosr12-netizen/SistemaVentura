@@ -240,10 +240,13 @@ const CRMDashboard = () => {
   const total = useMemo(() => Math.max(0, (formData.valor || 0) - formData.desconto), [formData.valor, formData.desconto]);
 
   const handleExportPDF = () => {
+    const effectiveEventType = formData.eventType === 'Outros' && formData.outroEventoType?.trim()
+      ? formData.outroEventoType.trim()
+      : formData.eventType;
     const leadData: Lead = {
       id: '',
       name: formData.name || 'Orçamento',
-      niche: formData.eventType || '',
+      niche: effectiveEventType || '',
       whatsapp: formData.whatsapp || '',
       email: formData.email || '',
       instagram: '',
@@ -334,6 +337,9 @@ const CRMDashboard = () => {
       : null;
     const lead = leadFromId || leadFromName;
     const leadId = lead?.id || event.clientId || '';
+    const predefinedTypes = ['Aniver', 'Casam', 'Corporativo', 'Privado', 'Outros'];
+    const eventTypeValue = event.eventType || '';
+    const isCustomType = eventTypeValue && !predefinedTypes.includes(eventTypeValue);
     setEditingEventId(event.id);
     setCreateDate(event.date || '');
     setFormData({
@@ -341,14 +347,14 @@ const CRMDashboard = () => {
       whatsapp: event.clientPhone || '',
       email: event.clientEmail || '',
       cpf: event.clientCpf || '',
-      eventType: event.eventType || '',
+      eventType: isCustomType ? 'Outros' : eventTypeValue,
       date: event.date || '',
       dateEnd: event.dateEnd || '',
       time: event.time || '',
       city: event.city || '',
       observacao: event.description || '',
       status: event.status || '',
-      outroEventoType: '',
+      outroEventoType: isCustomType ? eventTypeValue : '',
       orcamentoItems: (lead?.items as OrcamentoItem[]) || [],
       desconto: event.desconto || 0,
       valor: (event.valorTotal || 0) + (event.desconto || 0),
@@ -368,15 +374,18 @@ const CRMDashboard = () => {
   const handleCreateSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitError(null);
+    const effectiveEventType = formData.eventType === 'Outros' && formData.outroEventoType?.trim()
+      ? formData.outroEventoType.trim()
+      : formData.eventType;
     try {
       if (editingEventId) {
         const eventFields: Partial<CalendarEvent> = {
-          title: formData.eventType ? `${formData.eventType} - ${formData.name}` : formData.name,
+          title: effectiveEventType ? `${effectiveEventType} - ${formData.name}` : formData.name,
           client: formData.name,
           clientPhone: formData.whatsapp,
           clientEmail: formData.email,
           clientCpf: formData.cpf,
-          eventType: formData.eventType,
+          eventType: effectiveEventType,
           date: formData.date,
           dateEnd: formData.dateEnd || '',
           time: formData.time,
@@ -391,7 +400,7 @@ const CRMDashboard = () => {
         if (abaAtiva === 'cliente' && !selectedClientId) {
           const leadInput: Partial<Omit<Lead, 'id'>> = {
             name: formData.name,
-            niche: formData.eventType || 'Evento',
+            niche: effectiveEventType || 'Evento',
             whatsapp: formData.whatsapp,
             email: formData.email,
             instagram: '',
@@ -413,7 +422,7 @@ const CRMDashboard = () => {
           }
           await addTransaction({
             client: formData.name,
-            description: `Evento: ${formData.eventType || 'Evento'} - ${formData.name}${formData.observacao ? ' • ' + formData.observacao : ''}`,
+            description: `Evento: ${effectiveEventType || 'Evento'} - ${formData.name}${formData.observacao ? ' • ' + formData.observacao : ''}`,
             amount: total,
             date: formData.date || new Date().toISOString().split('T')[0],
             status: 'Pendente',
@@ -439,9 +448,12 @@ const CRMDashboard = () => {
         }
         setEditingEventId(null);
       } else if (abaAtiva === 'cliente') {
+        const effectiveEventType = formData.eventType === 'Outros' && formData.outroEventoType?.trim()
+          ? formData.outroEventoType.trim()
+          : formData.eventType;
         const leadInput: Partial<Omit<Lead, 'id'>> = {
           name: formData.name,
-          niche: formData.eventType || 'Evento',
+          niche: effectiveEventType || 'Evento',
           whatsapp: formData.whatsapp,
           email: formData.email,
           instagram: '',
@@ -457,36 +469,36 @@ const CRMDashboard = () => {
           leadInput.value = total.toString();
           leadInput.items = formData.orcamentoItems;
         }
-        const newLeadId = await addLead(leadInput as Omit<Lead, 'id'>);
+const newLeadId = await addLead(leadInput as Omit<Lead, 'id'>);
         if (newLeadId) {
           await addEvent({
-            title: formData.eventType ? `${formData.eventType} - ${formData.name}` : formData.name,
+            title: effectiveEventType ? `${effectiveEventType} - ${formData.name}` : formData.name,
             client: formData.name,
             clientId: newLeadId,
             clientPhone: formData.whatsapp,
             clientEmail: formData.email,
             clientCpf: formData.cpf,
-eventType: formData.eventType,
-          date: formData.date,
-          dateEnd: formData.dateEnd || '',
-          time: formData.time,
-          city: formData.city,
-          description: formData.observacao,
-          status: (formData.status as CalendarEvent['status']) || 'orcamento',
-          valorTotal: total,
+            eventType: effectiveEventType,
+            date: formData.date,
+            dateEnd: formData.dateEnd || '',
+            time: formData.time,
+            city: formData.city,
+            description: formData.observacao,
+            status: (formData.status as CalendarEvent['status']) || 'orcamento',
+            valorTotal: total,
             desconto: formData.desconto,
             items: formData.orcamentoItems,
           });
         }
-        await addTransaction({
-          client: formData.name,
-          description: `Evento: ${formData.eventType || 'Evento'} - ${formData.name}${formData.observacao ? ' • ' + formData.observacao : ''}`,
-          amount: total,
-          date: formData.date || new Date().toISOString().split('T')[0],
-          status: 'Pendente',
-          type: 'receita',
-          source: 'evento',
-        });
+await addTransaction({
+            client: formData.name,
+            description: `Evento: ${effectiveEventType || 'Evento'} - ${formData.name}${formData.observacao ? ' • ' + formData.observacao : ''}`,
+            amount: total,
+            date: formData.date || new Date().toISOString().split('T')[0],
+            status: 'Pendente',
+            type: 'receita',
+            source: 'evento',
+          });
       } else {
         const client = Orçamentos.find(l => l.id === selectedClientId);
         if (!client) {
@@ -494,13 +506,13 @@ eventType: formData.eventType,
           return;
         }
         await addEvent({
-          title: formData.eventType ? `${formData.eventType} - ${client.name}` : client.name,
+          title: effectiveEventType ? `${effectiveEventType} - ${client.name}` : client.name,
           client: client.name,
           clientId: client.id,
           clientPhone: client.whatsapp,
           clientEmail: client.email,
           clientCpf: '',
-          eventType: formData.eventType,
+          eventType: effectiveEventType,
           date: formData.date,
           dateEnd: formData.dateEnd || '',
           time: formData.time,
@@ -1370,13 +1382,16 @@ event.status === 'evento_confirmado' ? 'bg-[#3b82f6] text-white' :
               <button
                 onClick={async () => {
                   if (!editingEventId) {
+                    const effectiveEventType = formData.eventType === 'Outros' && formData.outroEventoType?.trim()
+                      ? formData.outroEventoType.trim()
+                      : formData.eventType;
                     const draftData = {
-                      title: formData.eventType ? `${formData.eventType} - ${(formData.name || 'Novo Evento')}` : (formData.name || 'Novo Evento'),
+                      title: effectiveEventType ? `${effectiveEventType} - ${(formData.name || 'Novo Evento')}` : (formData.name || 'Novo Evento'),
                       client: formData.name || '',
                       clientPhone: formData.whatsapp || '',
                       clientEmail: formData.email || '',
                       clientCpf: formData.cpf || '',
-                      eventType: formData.eventType || '',
+                      eventType: effectiveEventType || '',
                       date: formData.date || '',
                       time: formData.time || '',
                       city: formData.city || '',
