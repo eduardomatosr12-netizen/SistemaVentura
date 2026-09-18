@@ -128,6 +128,7 @@ const Financeiro = () => {
   const [syncCounter, setSyncCounter] = useState(0);
   const [viewMode, setViewMode] = useState<'receitas' | 'despesas'>('receitas');
   const [activeTab, setActiveTab] = useState<'receitas' | 'fixas' | 'variaveis' | 'despesas' | 'fluxo' | 'projecao'>('receitas');
+  const [subAbaVariavel, setSubAbaVariavel] = useState<'gerais' | 'evento' | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const initialFilterState = {
@@ -397,10 +398,32 @@ const Financeiro = () => {
         };
       });
 
+    // Sub-abas para Variáveis: Gerais (sem origemEventoId) e Evento (com origemEventoId)
+    const variaveisGerais = allExpenses.filter(exp => exp.expenseType === 'variavel' && !exp.origemEventoId);
+    const variaveisEvento = allExpenses.filter(exp => exp.expenseType === 'variavel' && !!exp.origemEventoId);
+
+    const variaveisGeraisPagas = variaveisGerais
+      .filter(e => (e.status || '').toLowerCase() === 'pago')
+      .reduce((acc, e) => acc + parseBRL(e.amount), 0);
+    const variaveisGeraisPendentes = variaveisGerais
+      .filter(e => (e.status || '').toLowerCase() === 'pendente')
+      .reduce((acc, e) => acc + parseBRL(e.amount), 0);
+    const variaveisEventoPagas = variaveisEvento
+      .filter(e => (e.status || '').toLowerCase() === 'pago')
+      .reduce((acc, e) => acc + parseBRL(e.amount), 0);
+    const variaveisEventoPendentes = variaveisEvento
+      .filter(e => (e.status || '').toLowerCase() === 'pendente')
+      .reduce((acc, e) => acc + parseBRL(e.amount), 0);
+
     const filteredExpenses = allExpenses.filter(exp => {
       if (viewMode === 'despesas' && (activeTab === 'fixas' || activeTab === 'variaveis')) {
         const expenseTypeMap: Record<string, string> = { fixas: 'fixa', variaveis: 'variavel' };
         if (exp.expenseType !== expenseTypeMap[activeTab]) return false;
+      }
+      // Sub-aba filter for variaveis
+      if (activeTab === 'variaveis') {
+        if (subAbaVariavel === 'gerais' && exp.origemEventoId) return false;
+        if (subAbaVariavel === 'evento' && !exp.origemEventoId) return false;
       }
       if (activeFilters.categories?.length > 0) {
         if (!activeFilters.categories.includes(exp.category)) return false;
@@ -421,6 +444,11 @@ const Financeiro = () => {
       return true;
     });
 
+    // Cards: quando sub-aba ativa, mostrar valores da sub-aba; senão, mostrar total
+    const showVariaveisGerais = subAbaVariavel === 'gerais';
+    const showVariaveisEvento = subAbaVariavel === 'evento';
+    const showVariaveisTotal = !subAbaVariavel;
+
     const cards = viewMode === 'receitas'
       ? [
           { label: 'Total Recebido', icon: TrendingUp, iconColor: 'text-[#CDFF00]', value: totalRecebido, dimmed: false },
@@ -429,8 +457,20 @@ const Financeiro = () => {
       : [
           { label: 'Fixas Pagas', icon: TrendingDown, iconColor: 'text-[#22c55e]', value: fixasPagas, dimmed: isVariaveisTab },
           { label: 'Fixas Pendentes', icon: Clock, iconColor: 'text-[#aaaaaa]', value: fixasPendentes, dimmed: isVariaveisTab },
-          { label: 'Variáveis Pagas', icon: TrendingDown, iconColor: 'text-[#f97316]', value: variaveisPagas, dimmed: isFixasTab },
-          { label: 'Variáveis Pendentes', icon: AlertTriangle, iconColor: 'text-[#f97316]', value: variaveisPendentes, dimmed: isFixasTab },
+          { 
+            label: 'Variáveis Pagas', 
+            icon: TrendingDown, 
+            iconColor: 'text-[#f97316]', 
+            value: showVariaveisGerais ? variaveisGeraisPagas : showVariaveisEvento ? variaveisEventoPagas : variaveisPagas, 
+            dimmed: isFixasTab 
+          },
+          { 
+            label: 'Variáveis Pendentes', 
+            icon: AlertTriangle, 
+            iconColor: 'text-[#f97316]', 
+            value: showVariaveisGerais ? variaveisGeraisPendentes : showVariaveisEvento ? variaveisEventoPendentes : variaveisPendentes, 
+            dimmed: isFixasTab 
+          },
         ];
 
     const fluxo = {
@@ -440,8 +480,22 @@ const Financeiro = () => {
       saidaPendente: filteredExpenses.filter(exp => isPending(exp.status)).reduce((acc, exp) => acc + parseBRL(exp.amount), 0),
     };
 
-    return { rawInvoices, allInvoices, filteredInvoices, allExpenses, filteredExpenses, cards, fluxo };
-  }, [transactions, events, Orçamentos, activeFilters, viewMode, activeTab, isInDateRange, syncCounter]);
+    return { 
+      rawInvoices, 
+      allInvoices, 
+      filteredInvoices, 
+      allExpenses, 
+      filteredExpenses, 
+      cards, 
+      fluxo,
+      variaveisGerais,
+      variaveisEvento,
+      variaveisGeraisPagas,
+      variaveisGeraisPendentes,
+      variaveisEventoPagas,
+      variaveisEventoPendentes,
+    };
+  }, [transactions, events, Orçamentos, activeFilters, viewMode, activeTab, subAbaVariavel, isInDateRange, syncCounter]);
 
   const hasActiveFilters = activeFilters.period !== '' || activeFilters.statuses.length > 0 || 
     activeFilters.categories.length > 0 || activeFilters.origins.length > 0 || 
@@ -965,7 +1019,7 @@ const Financeiro = () => {
             DASHBOARD
           </button>
           <button
-            onClick={() => { setViewMode('receitas'); setActiveTab('receitas'); }}
+            onClick={() => { setViewMode('receitas'); setActiveTab('receitas'); setSubAbaVariavel(null); }}
             className={`rounded-full px-5 py-2.5 font-bold text-xs uppercase tracking-widest transition-all duration-150 ${
               viewMode === 'receitas'
                 ? 'bg-[#CDFF00] text-black'
@@ -975,7 +1029,7 @@ const Financeiro = () => {
             RECEITAS
           </button>
           <button
-            onClick={() => { setViewMode('despesas'); setActiveTab('fixas'); }}
+            onClick={() => { setViewMode('despesas'); setActiveTab('fixas'); setSubAbaVariavel(null); }}
             className={`rounded-full px-5 py-2.5 font-bold text-xs uppercase tracking-widest transition-all duration-150 ${
               viewMode === 'despesas'
                 ? 'bg-[#CDFF00] text-black'
@@ -1046,7 +1100,7 @@ const Financeiro = () => {
         ) : (
           <div className="flex gap-6 whitespace-nowrap">
             <button
-              onClick={() => setActiveTab('fixas')}
+              onClick={() => { setActiveTab('fixas'); setSubAbaVariavel(null); }}
               className={`py-3.5 px-1 border-b-2 font-bold text-xs uppercase tracking-widest transition-colors ${
                 activeTab === 'fixas'
                   ? 'border-[#CDFF00] text-[#CDFF00]'
@@ -1056,7 +1110,7 @@ const Financeiro = () => {
               Fixas ({displayData.allExpenses.filter(e => e.expenseType === 'fixa').length})
             </button>
             <button
-              onClick={() => setActiveTab('variaveis')}
+              onClick={() => { setActiveTab('variaveis'); setSubAbaVariavel(null); }}
               className={`py-3.5 px-1 border-b-2 font-bold text-xs uppercase tracking-widest transition-colors ${
                 activeTab === 'variaveis'
                   ? 'border-[#CDFF00] text-[#CDFF00]'
@@ -1066,7 +1120,7 @@ const Financeiro = () => {
               Variáveis ({displayData.allExpenses.filter(e => e.expenseType === 'variavel').length})
             </button>
             <button
-              onClick={() => setActiveTab('fluxo')}
+              onClick={() => { setActiveTab('fluxo'); setSubAbaVariavel(null); }}
               className={`py-3 px-1 border-b-2 font-bold text-xs uppercase tracking-widest transition-colors ${
                 activeTab === 'fluxo'
                   ? 'border-[#CDFF00] text-[#CDFF00]'
@@ -1076,7 +1130,7 @@ const Financeiro = () => {
               Fluxo de Saídas ({displayData.filteredExpenses.length})
             </button>
             <button
-              onClick={() => setActiveTab('projecao')}
+              onClick={() => { setActiveTab('projecao'); setSubAbaVariavel(null); }}
               className={`py-3 px-1 border-b-2 font-bold text-xs uppercase tracking-widest transition-colors ${
                 activeTab === 'projecao'
                   ? 'border-[#CDFF00] text-[#CDFF00]'
@@ -1088,6 +1142,44 @@ const Financeiro = () => {
           </div>
         )}
       </div>
+
+      {/* Sub-sub-tabs for Variáveis */}
+      {viewMode === 'despesas' && activeTab === 'variaveis' && (
+        <div className="px-6 md:px-8 border-b border-[rgba(255,255,255,0.04)] overflow-x-auto bg-[#0a0a0a]/50">
+          <div className="flex gap-4 whitespace-nowrap py-2">
+            <button
+              onClick={() => setSubAbaVariavel('gerais')}
+              className={`px-2 py-1.5 border-b-2 font-medium text-xs uppercase tracking-widest transition-all duration-150 ${
+                subAbaVariavel === 'gerais'
+                  ? 'border-[#CDFF00] text-[#CDFF00]'
+                  : 'border-transparent text-[#A0A0A0]/80 hover:text-white'
+              }`}
+            >
+              Variáveis Gerais ({displayData.variaveisGerais.length})
+            </button>
+            <button
+              onClick={() => setSubAbaVariavel('evento')}
+              className={`px-2 py-1.5 border-b-2 font-medium text-xs uppercase tracking-widest transition-all duration-150 ${
+                subAbaVariavel === 'evento'
+                  ? 'border-[#CDFF00] text-[#CDFF00]'
+                  : 'border-transparent text-[#A0A0A0]/80 hover:text-white'
+              }`}
+            >
+              Variáveis de Evento ({displayData.variaveisEvento.length})
+            </button>
+            <button
+              onClick={() => setSubAbaVariavel(null)}
+              className={`px-2 py-1.5 border-b-2 font-medium text-xs uppercase tracking-widest transition-all duration-150 ${
+                subAbaVariavel === null
+                  ? 'border-[#CDFF00] text-[#CDFF00]'
+                  : 'border-transparent text-[#A0A0A0]/80 hover:text-white'
+              }`}
+            >
+              Todas ({displayData.variaveisGerais.length + displayData.variaveisEvento.length})
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Main Content */}
       <div className="flex relative">
@@ -1459,6 +1551,7 @@ const Financeiro = () => {
                   <tr>
                     <th className="table-header">Cliente</th>
                     <th className="table-header">Cidade</th>
+                    {subAbaVariavel === 'evento' && <th className="table-header">Evento Vinculado</th>}
                     <th className="table-header">Tipo de Evento</th>
                     <th className="table-header">Data</th>
                     <th className="table-header">Status</th>
@@ -1474,6 +1567,11 @@ const Financeiro = () => {
                     <tr key={expense.id} className="table-row">
                       <td className="table-cell text-white">{expense.client || '—'}</td>
                       <td className="table-cell text-[#A0A0A0]">{expense.city || '—'}</td>
+                      {subAbaVariavel === 'evento' && (
+                        <td className="table-cell text-[#A0A0A0]">
+                          {expense.origemEventoId ? expense.eventType ? eventTypeLabel(expense.eventType) : 'Evento' : '—'}
+                        </td>
+                      )}
                       <td className="table-cell text-[#A0A0A0]">{expense.eventType ? eventTypeLabel(expense.eventType) : expense.category ? categoryLabel(expense.category) : '—'}</td>
                       <td className="table-cell text-[#A0A0A0]">{expense.date}</td>
                       <td className="table-cell">
@@ -1503,7 +1601,7 @@ const Financeiro = () => {
                   ))}
                   {displayData.filteredExpenses.length === 0 && (
                     <tr>
-                      <td colSpan={10} className="table-cell text-center text-[#606060] py-8">
+                      <td colSpan={subAbaVariavel === 'evento' ? 11 : 10} className="table-cell text-center text-[#606060] py-8">
                         Nenhuma despesa variável encontrada
                       </td>
                     </tr>
@@ -1520,6 +1618,9 @@ const Financeiro = () => {
                   </div>
                   <div className="grid grid-cols-2 gap-2 text-xs">
                     <div><span className="text-[#606060]">Cidade:</span> <span className="text-white">{expense.city || '—'}</span></div>
+                    {subAbaVariavel === 'evento' && expense.origemEventoId && (
+                      <div><span className="text-[#606060]">Evento Vinculado:</span> <span className="text-white">{expense.eventType ? eventTypeLabel(expense.eventType) : 'Evento'}</span></div>
+                    )}
                     <div><span className="text-[#606060]">Evento:</span> <span className="text-white">{eventTypeLabel(expense.eventType)}</span></div>
                     <div><span className="text-[#606060]">Data:</span> <span className="text-white">{expense.date}</span></div>
                     <div><span className="text-[#606060]">Valor:</span> <span className="text-white">{expense.amount}</span></div>
