@@ -30,12 +30,14 @@ export interface EventExpense {
   id: string;
   description: string;
   category: 'Transporte' | 'Alimentação' | 'Hospedagem' | 'Material' | 'Equipe' | 'Outros';
+  customName?: string;
   valor: number;
   status: 'Pendente' | 'Pago';
   paymentMethod?: 'Pix' | 'Dinheiro' | 'Cartão' | 'Boleto';
   tipo: 'variavel';
   interno: true;
   financeiroId?: string;
+  date: string;
 }
 
 export interface CalendarEvent {

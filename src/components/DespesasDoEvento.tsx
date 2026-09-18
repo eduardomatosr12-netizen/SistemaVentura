@@ -29,10 +29,12 @@ export default function DespesasDoEvento({ eventId, eventDate }: Props) {
   const [showForm, setShowForm] = useState(false);
 
   const [formDesc, setFormDesc] = useState('');
+  const [formCustomName, setFormCustomName] = useState('');
   const [formCat, setFormCat] = useState<EventExpense['category']>('Outros');
   const [formValor, setFormValor] = useState('');
   const [formStatus, setFormStatus] = useState<EventExpense['status']>('Pendente');
   const [formPayment, setFormPayment] = useState<EventExpense['paymentMethod'] | ''>('');
+  const [formDate, setFormDate] = useState(() => new Date().toISOString().split('T')[0]);
 
   useEffect(() => {
     if (!eventId) return;
@@ -63,12 +65,13 @@ export default function DespesasDoEvento({ eventId, eventDate }: Props) {
 
   const syncExpenseToFirestore = async (evId: string, exp: EventExpense): Promise<string | null> => {
     try {
+      const syncDescription = exp.category === 'Outros' && exp.customName ? exp.customName : exp.description;
       const id = await addTransaction({
         type: 'despesa',
-        description: exp.description,
+        description: syncDescription,
         category: exp.category,
         amount: exp.valor,
-        date: eventDate || new Date().toISOString().split('T')[0],
+        date: exp.date,
         status: exp.status === 'Pago' ? 'Pago' : 'Pendente',
         paymentMethod: exp.paymentMethod,
         expenseType: 'variavel',
@@ -84,10 +87,12 @@ export default function DespesasDoEvento({ eventId, eventDate }: Props) {
 
   const resetForm = () => {
     setFormDesc('');
+    setFormCustomName('');
     setFormCat('Outros');
     setFormValor('');
     setFormStatus('Pendente');
     setFormPayment('');
+    setFormDate(new Date().toISOString().split('T')[0]);
     setShowForm(false);
   };
 
@@ -97,11 +102,13 @@ export default function DespesasDoEvento({ eventId, eventDate }: Props) {
     const expenseData = {
       description: formDesc.trim(),
       category: formCat,
+      customName: formCat === 'Outros' ? formCustomName.trim() : undefined,
       valor,
       status: formStatus,
       paymentMethod: formPayment ? (formPayment as EventExpense['paymentMethod']) : undefined,
       tipo: 'variavel' as const,
       interno: true as const,
+      date: formDate,
     };
 
     try {
@@ -191,7 +198,9 @@ export default function DespesasDoEvento({ eventId, eventDate }: Props) {
             </button>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
-                <span className="text-sm text-white font-medium truncate">{exp.description}</span>
+                <span className="text-sm text-white font-medium truncate">
+                  {exp.category === 'Outros' && exp.customName ? exp.customName : exp.description}
+                </span>
                 <span className="px-1.5 py-0.5 rounded text-[8px] font-bold bg-[#222] text-[#A0A0A0] shrink-0">
                   {exp.category}
                 </span>
@@ -229,6 +238,19 @@ export default function DespesasDoEvento({ eventId, eventDate }: Props) {
               placeholder="Ex: Combustível"
             />
           </div>
+          {formCat === 'Outros' && (
+            <div>
+              <label className="section-label mb-1 block">Nome Personalizado *</label>
+              <input
+                type="text"
+                value={formCustomName}
+                onChange={e => setFormCustomName(e.target.value)}
+                className="input-field w-full"
+                placeholder="Ex: Pedágio, Estacionamento..."
+                required
+              />
+            </div>
+          )}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="section-label mb-1 block">Categoria</label>
@@ -256,6 +278,16 @@ export default function DespesasDoEvento({ eventId, eventDate }: Props) {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
+              <label className="section-label mb-1 block">Data *</label>
+              <input
+                type="date"
+                value={formDate}
+                onChange={e => setFormDate(e.target.value)}
+                className="input-field w-full"
+                required
+              />
+            </div>
+            <div>
               <label className="section-label mb-1 block">Status</label>
               <select
                 value={formStatus}
@@ -266,6 +298,8 @@ export default function DespesasDoEvento({ eventId, eventDate }: Props) {
                 <option value="Pago">Pago</option>
               </select>
             </div>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="section-label mb-1 block">Forma de Pagamento</label>
               <select
@@ -284,7 +318,7 @@ export default function DespesasDoEvento({ eventId, eventDate }: Props) {
             <button
               type="button"
               onClick={handleAdd}
-              disabled={!formDesc.trim() || !formValor}
+              disabled={!formDesc.trim() || !formValor || (formCat === 'Outros' && !formCustomName.trim())}
               className="btn-primary px-4 py-3 min-h-[44px] text-[10px] disabled:opacity-40 disabled:cursor-not-allowed"
             >
               Adicionar
