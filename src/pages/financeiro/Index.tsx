@@ -1549,30 +1549,38 @@ const Financeiro = () => {
               <table className="w-full min-w-[800px]">
                 <thead>
                   <tr>
-                    <th className="table-header">Cliente</th>
-                    <th className="table-header">Cidade</th>
+                    {subAbaVariavel !== 'gerais' && <>
+                      <th className="table-header">Cliente</th>
+                      <th className="table-header">Cidade</th>
+                    </>}
                     {subAbaVariavel === 'evento' && <th className="table-header">Evento Vinculado</th>}
-                    <th className="table-header">Tipo de Evento</th>
+                    {subAbaVariavel !== 'gerais' && <th className="table-header">Tipo de Evento</th>}
                     <th className="table-header">Data</th>
                     <th className="table-header">Status</th>
                     <th className="table-header">Pagamento</th>
                     <th className="table-header">Valor da Despesa</th>
-                    <th className="table-header">Valor Recebido</th>
-                    <th className="table-header">Lucro do Evento</th>
+                    {subAbaVariavel !== 'gerais' && <>
+                      <th className="table-header">Valor Recebido</th>
+                      <th className="table-header">Lucro do Evento</th>
+                    </>}
                     <th className="table-header text-right">Ações</th>
                   </tr>
                 </thead>
                 <tbody>
                   {displayData.filteredExpenses.map(expense => (
                     <tr key={expense.id} className="table-row">
-                      <td className="table-cell text-white">{expense.client || '—'}</td>
-                      <td className="table-cell text-[#A0A0A0]">{expense.city || '—'}</td>
+                      {subAbaVariavel !== 'gerais' && <>
+                        <td className="table-cell text-white">{expense.client || '—'}</td>
+                        <td className="table-cell text-[#A0A0A0]">{expense.city || '—'}</td>
+                      </>}
                       {subAbaVariavel === 'evento' && (
                         <td className="table-cell text-[#A0A0A0]">
                           {expense.origemEventoId ? expense.eventType ? eventTypeLabel(expense.eventType) : 'Evento' : '—'}
                         </td>
                       )}
-                      <td className="table-cell text-[#A0A0A0]">{expense.eventType ? eventTypeLabel(expense.eventType) : expense.category ? categoryLabel(expense.category) : '—'}</td>
+                      {subAbaVariavel !== 'gerais' && (
+                        <td className="table-cell text-[#A0A0A0]">{expense.eventType ? eventTypeLabel(expense.eventType) : expense.category ? categoryLabel(expense.category) : '—'}</td>
+                      )}
                       <td className="table-cell text-[#A0A0A0]">{expense.date}</td>
                       <td className="table-cell">
                         <span className={statusStyle[expense.status]}>
@@ -1581,8 +1589,10 @@ const Financeiro = () => {
                       </td>
                       <td className="table-cell text-[#A0A0A0]">{paymentMethodLabel(expense.paymentMethod)}</td>
                       <td className="table-cell text-white">{expense.amount}</td>
-                      <td className="table-cell text-[#A0A0A0]">{expense.receivedAmount || '—'}</td>
-                      <td className={`table-cell ${(parseBRL(expense.eventProfit || '0') || 0) >= 0 ? 'text-[#CDFF00]' : 'text-red-400'}`}>{expense.eventProfit || '—'}</td>
+                      {subAbaVariavel !== 'gerais' && <>
+                        <td className="table-cell text-[#A0A0A0]">{expense.receivedAmount || '—'}</td>
+                        <td className={`table-cell ${(parseBRL(expense.eventProfit || '0') || 0) >= 0 ? 'text-[#CDFF00]' : 'text-red-400'}`}>{expense.eventProfit || '—'}</td>
+                      </>}
                       <td className="table-cell text-right">
                         <button
                           onClick={() => handleOpenExpenseModal(expense)}
@@ -1601,7 +1611,7 @@ const Financeiro = () => {
                   ))}
                   {displayData.filteredExpenses.length === 0 && (
                     <tr>
-                      <td colSpan={subAbaVariavel === 'evento' ? 11 : 10} className="table-cell text-center text-[#606060] py-8">
+                      <td colSpan={subAbaVariavel === 'gerais' ? 5 : subAbaVariavel === 'evento' ? 11 : 10} className="table-cell text-center text-[#606060] py-8">
                         Nenhuma despesa variável encontrada
                       </td>
                     </tr>
@@ -1613,19 +1623,26 @@ const Financeiro = () => {
               {displayData.filteredExpenses.map(expense => (
                 <div key={expense.id} className="card p-4 space-y-2">
                   <div className="flex justify-between items-start">
-                    <span className="text-white font-bold text-sm">{expense.client || expense.description}</span>
+                    <span className="text-white font-bold text-sm">{subAbaVariavel === 'gerais' ? expense.description : (expense.client || expense.description)}</span>
                     <span className={statusStyle[expense.status]}>{expense.status}</span>
                   </div>
                   <div className="grid grid-cols-2 gap-2 text-xs">
-                    <div><span className="text-[#606060]">Cidade:</span> <span className="text-white">{expense.city || '—'}</span></div>
+                    {subAbaVariavel !== 'gerais' && <>
+                      <div><span className="text-[#606060]">Cliente:</span> <span className="text-white">{expense.client || '—'}</span></div>
+                      <div><span className="text-[#606060]">Cidade:</span> <span className="text-white">{expense.city || '—'}</span></div>
+                    </>}
                     {subAbaVariavel === 'evento' && expense.origemEventoId && (
                       <div><span className="text-[#606060]">Evento Vinculado:</span> <span className="text-white">{expense.eventType ? eventTypeLabel(expense.eventType) : 'Evento'}</span></div>
                     )}
-                    <div><span className="text-[#606060]">Evento:</span> <span className="text-white">{eventTypeLabel(expense.eventType)}</span></div>
+                    {subAbaVariavel !== 'gerais' && (
+                      <div><span className="text-[#606060]">Evento:</span> <span className="text-white">{eventTypeLabel(expense.eventType)}</span></div>
+                    )}
                     <div><span className="text-[#606060]">Data:</span> <span className="text-white">{expense.date}</span></div>
                     <div><span className="text-[#606060]">Valor:</span> <span className="text-white">{expense.amount}</span></div>
-                    <div><span className="text-[#606060]">Recebido:</span> <span className="text-white">{expense.receivedAmount || '—'}</span></div>
-                    <div><span className="text-[#606060]">Lucro:</span> <span className="text-white">{expense.eventProfit || '—'}</span></div>
+                    {subAbaVariavel !== 'gerais' && <>
+                      <div><span className="text-[#606060]">Recebido:</span> <span className="text-white">{expense.receivedAmount || '—'}</span></div>
+                      <div><span className="text-[#606060]">Lucro:</span> <span className="text-white">{expense.eventProfit || '—'}</span></div>
+                    </>}
                     <div><span className="text-[#606060]">Pagamento:</span> <span className="text-white">{paymentMethodLabel(expense.paymentMethod)}</span></div>
                   </div>
                   <div className="flex justify-end gap-2 pt-2 border-t border-[rgba(255,255,255,0.05)]">
