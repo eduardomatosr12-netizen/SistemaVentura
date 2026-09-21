@@ -1555,6 +1555,7 @@ const Financeiro = () => {
                     </>}
                     {subAbaVariavel === 'evento' && <th className="table-header">Evento Vinculado</th>}
                     {subAbaVariavel !== 'gerais' && <th className="table-header">Tipo de Evento</th>}
+                    <th className="table-header">Descrição</th>
                     <th className="table-header">Data</th>
                     <th className="table-header">Status</th>
                     <th className="table-header">Pagamento</th>
@@ -1581,6 +1582,7 @@ const Financeiro = () => {
                       {subAbaVariavel !== 'gerais' && (
                         <td className="table-cell text-[#A0A0A0]">{expense.eventType ? eventTypeLabel(expense.eventType) : expense.category ? categoryLabel(expense.category) : '—'}</td>
                       )}
+                      <td className="table-cell text-white">{expense.description}</td>
                       <td className="table-cell text-[#A0A0A0]">{expense.date}</td>
                       <td className="table-cell">
                         <span className={statusStyle[expense.status]}>
@@ -1611,7 +1613,7 @@ const Financeiro = () => {
                   ))}
                   {displayData.filteredExpenses.length === 0 && (
                     <tr>
-                      <td colSpan={subAbaVariavel === 'gerais' ? 5 : subAbaVariavel === 'evento' ? 11 : 10} className="table-cell text-center text-[#606060] py-8">
+                      <td colSpan={subAbaVariavel === 'gerais' ? 6 : subAbaVariavel === 'evento' ? 12 : 11} className="table-cell text-center text-[#606060] py-8">
                         Nenhuma despesa variável encontrada
                       </td>
                     </tr>
