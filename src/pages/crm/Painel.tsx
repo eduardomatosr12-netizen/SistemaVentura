@@ -405,6 +405,41 @@ const CRMDashboard = () => {
     setIsCreateOpen(true);
   };
 
+  // Abas de Despesas e Contrato dependem do ID do evento: cria o rascunho se ainda não existir.
+  const openLinkedTab = async (target: 'despesas' | 'contrato') => {
+    if (editingEventId) {
+      setAbaAtiva(target);
+      return;
+    }
+    const effectiveEventType = formData.eventType === 'Outros' && formData.outroEventoType?.trim()
+      ? formData.outroEventoType.trim()
+      : formData.eventType;
+    try {
+      const newId = await addEvent({
+        title: effectiveEventType ? `${effectiveEventType} - ${(formData.name || 'Novo Evento')}` : (formData.name || 'Novo Evento'),
+        client: formData.name || '',
+        clientPhone: formData.whatsapp || '',
+        clientEmail: formData.email || '',
+        clientCpf: formData.cpf || '',
+        eventType: effectiveEventType || '',
+        date: formData.date || '',
+        time: formData.time || '',
+        city: formData.city || '',
+        description: formData.observacao || '',
+        status: 'orcamento' as const,
+      });
+      if (newId) {
+        setEditingEventId(newId);
+        setAbaAtiva(target);
+      } else {
+        setSubmitError('Erro ao criar rascunho do evento.');
+      }
+    } catch (err) {
+      console.error('[Painel] Erro ao criar rascunho:', err);
+      setSubmitError('Erro ao criar rascunho. Tente novamente.');
+    }
+  };
+
   const handleEditEvent = (event: CalendarEvent) => {
     const leadFromId = event.clientId ? Orçamentos.find(l => l.id === event.clientId) : null;
     const leadFromName = !leadFromId && event.client
@@ -1445,118 +1480,56 @@ event.status === 'evento_confirmado' ? 'bg-[#3b82f6] text-white' :
       {/* Create Event/Client Modal */}
       {isCreateOpen && (
         <div className="fixed inset-0 bg-black/80 flex items-end sm:items-center justify-center z-[100] p-0 sm:p-4" onClick={() => { setEditingEventId(null); setIsCreateOpen(false); }}>
-          <div className="bg-[#1a1a1a] border border-[#2d2d2d] rounded-t-2xl sm:rounded-lg w-full max-w-md max-h-[95vh] sm:max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}>
+          <div className="bg-[#1a1a1a] border border-[#2d2d2d] rounded-t-2xl sm:rounded-lg w-full sm:max-w-4xl max-h-[95vh] sm:max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between p-4 border-b border-[#2d2d2d] shrink-0">
               <h3 className="text-sm font-black uppercase tracking-widest text-[#CDFF00]">{editingEventId ? 'Editar Evento' : 'Novo Evento'}</h3>
               <button onClick={() => { setEditingEventId(null); setIsCreateOpen(false); }} className="min-w-[44px] min-h-[44px] flex items-center justify-center hover:bg-[#2a2a2a] rounded-md transition-colors">
                 <X size={16} className="text-neutral-400" />
               </button>
             </div>
-            {/* Mode toggle */}
-            <div className="flex border-b border-[#2d2d2d] shrink-0 overflow-x-auto">
+            {/* Mode toggle — 2x2 no mobile, 4 colunas a partir de sm */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 shrink-0 border-b border-[#2d2d2d]">
               <button
                 onClick={() => setAbaAtiva('cliente')}
-                className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest transition-colors whitespace-nowrap ${abaAtiva === 'cliente' ? 'text-[#CDFF00] border-b-2 border-[#CDFF00]' : 'text-neutral-500 hover:text-white'}`}
+                className={`px-3 py-3 text-[10px] font-black uppercase leading-tight transition-colors min-w-0 ${abaAtiva === 'cliente' ? 'text-[#CDFF00] bg-[#1f1f1f] shadow-[inset_0_-2px_0_0_#CDFF00]' : 'text-neutral-500 hover:text-white'}`}
               >
                 Novo Cliente
               </button>
               <button
                 onClick={() => setAbaAtiva('evento')}
-                className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest transition-colors whitespace-nowrap ${abaAtiva === 'evento' ? 'text-[#CDFF00] border-b-2 border-[#CDFF00]' : 'text-neutral-500 hover:text-white'}`}
+                className={`px-3 py-3 text-[10px] font-black uppercase leading-tight transition-colors min-w-0 border-l border-[#2d2d2d] ${abaAtiva === 'evento' ? 'text-[#CDFF00] bg-[#1f1f1f] shadow-[inset_0_-2px_0_0_#CDFF00]' : 'text-neutral-500 hover:text-white'}`}
               >
                 Novo Evento
               </button>
               <button
-                onClick={async () => {
-                  if (!editingEventId) {
-                    const effectiveEventType = formData.eventType === 'Outros' && formData.outroEventoType?.trim()
-                      ? formData.outroEventoType.trim()
-                      : formData.eventType;
-                    const draftData = {
-                      title: effectiveEventType ? `${effectiveEventType} - ${(formData.name || 'Novo Evento')}` : (formData.name || 'Novo Evento'),
-                      client: formData.name || '',
-                      clientPhone: formData.whatsapp || '',
-                      clientEmail: formData.email || '',
-                      clientCpf: formData.cpf || '',
-                      eventType: effectiveEventType || '',
-                      date: formData.date || '',
-                      time: formData.time || '',
-                      city: formData.city || '',
-                      description: formData.observacao || '',
-                      status: 'orcamento' as const,
-                    };
-                    try {
-                      const newId = await addEvent(draftData);
-                      if (newId) {
-                        setEditingEventId(newId);
-                        setAbaAtiva('despesas');
-                      } else {
-                        setSubmitError('Erro ao criar rascunho do evento.');
-                      }
-                    } catch (err) {
-                      console.error('[Painel] Erro ao criar rascunho:', err);
-                      setSubmitError('Erro ao criar rascunho. Tente novamente.');
-                    }
-                  } else {
-                    setAbaAtiva('despesas');
-                  }
-                }}
-                className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest transition-colors flex items-center justify-center gap-1.5 whitespace-nowrap ${abaAtiva === 'despesas' ? 'text-[#CDFF00] border-b-2 border-[#CDFF00]' : 'text-neutral-500 hover:text-white'}`}
+                onClick={() => openLinkedTab('despesas')}
+                className={`px-3 py-3 text-[10px] font-black uppercase leading-tight transition-colors min-w-0 flex items-center justify-center gap-1.5 border-t sm:border-t-0 border-l border-[#2d2d2d] ${abaAtiva === 'despesas' ? 'text-[#CDFF00] bg-[#1f1f1f] shadow-[inset_0_-2px_0_0_#CDFF00]' : 'text-neutral-500 hover:text-white'}`}
               >
-                {!editingEventId && <Lock size={10} />}
-                Despesas do Evento
+                {!editingEventId && <Lock size={10} className="shrink-0" />}
+                <span className="min-w-0"><span className="sm:hidden">Despesas</span><span className="hidden sm:inline">Despesas do Evento</span></span>
               </button>
               <button
-                onClick={async () => {
-                  if (!editingEventId) {
-                    const effectiveEventType = formData.eventType === 'Outros' && formData.outroEventoType?.trim()
-                      ? formData.outroEventoType.trim()
-                      : formData.eventType;
-                    const draftData = {
-                      title: effectiveEventType ? `${effectiveEventType} - ${(formData.name || 'Novo Evento')}` : (formData.name || 'Novo Evento'),
-                      client: formData.name || '',
-                      clientPhone: formData.whatsapp || '',
-                      clientEmail: formData.email || '',
-                      clientCpf: formData.cpf || '',
-                      eventType: effectiveEventType || '',
-                      date: formData.date || '',
-                      time: formData.time || '',
-                      city: formData.city || '',
-                      description: formData.observacao || '',
-                      status: 'orcamento' as const,
-                    };
-                    try {
-                      const newId = await addEvent(draftData);
-                      if (newId) {
-                        setEditingEventId(newId);
-                        setAbaAtiva('contrato');
-                      } else {
-                        setSubmitError('Erro ao criar rascunho do evento.');
-                      }
-                    } catch (err) {
-                      console.error('[Painel] Erro ao criar rascunho:', err);
-                      setSubmitError('Erro ao criar rascunho. Tente novamente.');
-                    }
-                  } else {
-                    setAbaAtiva('contrato');
-                  }
-                }}
-                className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest transition-colors flex items-center justify-center gap-1.5 whitespace-nowrap ${abaAtiva === 'contrato' ? 'text-[#CDFF00] border-b-2 border-[#CDFF00]' : 'text-neutral-500 hover:text-white'}`}
+                onClick={() => openLinkedTab('contrato')}
+                className={`px-3 py-3 text-[10px] font-black uppercase leading-tight transition-colors min-w-0 flex items-center justify-center gap-1.5 border-t sm:border-t-0 border-l border-[#2d2d2d] ${abaAtiva === 'contrato' ? 'text-[#CDFF00] bg-[#1f1f1f] shadow-[inset_0_-2px_0_0_#CDFF00]' : 'text-neutral-500 hover:text-white'}`}
               >
-                {!editingEventId && <Lock size={10} />}
-                Emissão do Contrato
+                {!editingEventId && <Lock size={10} className="shrink-0" />}
+                <span className="min-w-0"><span className="sm:hidden">Contrato</span><span className="hidden sm:inline">Emissão do Contrato</span></span>
               </button>
             </div>
             {abaAtiva === 'despesas' ? (
-              <div className="p-4 overflow-y-auto [&::-webkit-scrollbar]:w-[6px] [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-[#2a2a2a] [&::-webkit-scrollbar-thumb]:rounded-[10px] [&::-webkit-scrollbar-thumb:hover]:bg-[#555]">
+              <div className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-5 [&::-webkit-scrollbar]:w-[6px] [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-[#2a2a2a] [&::-webkit-scrollbar-thumb]:rounded-[10px] [&::-webkit-scrollbar-thumb:hover]:bg-[#555]">
                 <DespesasDoEvento eventId={editingEventId} eventDate={formData.date} />
               </div>
             ) : abaAtiva === 'contrato' ? (
-              <div className="p-4 overflow-y-auto [&::-webkit-scrollbar]:w-[6px] [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-[#2a2a2a] [&::-webkit-scrollbar-thumb]:rounded-[10px] [&::-webkit-scrollbar-thumb:hover]:bg-[#555]">
+              <div className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-5 [&::-webkit-scrollbar]:w-[6px] [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-[#2a2a2a] [&::-webkit-scrollbar-thumb]:rounded-[10px] [&::-webkit-scrollbar-thumb:hover]:bg-[#555] lg:max-w-3xl lg:mx-auto">
                 <EmissaoContrato eventId={editingEventId} data={contractData} />
               </div>
             ) : (
-            <form onSubmit={handleCreateSubmit} className="p-4 space-y-4 overflow-y-auto [&::-webkit-scrollbar]:w-[6px] [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-[#2a2a2a] [&::-webkit-scrollbar-thumb]:rounded-[10px] [&::-webkit-scrollbar-thumb:hover]:bg-[#555]">
+            <form onSubmit={handleCreateSubmit} className="flex-1 min-h-0 flex flex-col">
+              <div className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-5 space-y-5 [&::-webkit-scrollbar]:w-[6px] [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-[#2a2a2a] [&::-webkit-scrollbar-thumb]:rounded-[10px] [&::-webkit-scrollbar-thumb:hover]:bg-[#555]">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+              {/* Coluna 1 — quem é o cliente + dados do evento */}
+              <div className="space-y-5 min-w-0">
               {abaAtiva === 'cliente' ? (
                 <>
                   <div>
@@ -1768,37 +1741,40 @@ event.status === 'evento_confirmado' ? 'bg-[#3b82f6] text-white' :
                           ))}
                         </div>
                       )}
-                    </div>
+                </div>
+              </div>
+              </div>
+              {/* Coluna 2 — dados do contrato, orçamento e observação */}
+              <div className="space-y-5 min-w-0">
+              {/* Dados do Contrato */}
+              <div>
+                <p className="text-[9px] font-black uppercase tracking-widest text-neutral-400 mb-3">Dados do Contrato</p>
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-1.5 flex items-center gap-1.5">
+                      <MapPin size={12} /> Endereço do Contratante
+                    </label>
+                    <input type="text" value={formData.clientAddress} onChange={e => setFormData(prev => ({ ...prev, clientAddress: e.target.value }))}
+                      placeholder="Ex: Rua Henrique Dias, nº 274"
+                      className="w-full bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg px-3 py-2 text-sm text-white placeholder-neutral-600 focus:border-[#CDFF00] outline-none" />
                   </div>
-                  {/* Dados do Contrato */}
-                  <div className="border-t border-[#2d2d2d] pt-3">
-                    <p className="text-[9px] font-black uppercase tracking-widest text-neutral-400 mb-3">Dados do Contrato</p>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div>
-                        <label className="block text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-1.5 flex items-center gap-1.5">
-                          <MapPin size={12} /> Endereço do Contratante
-                        </label>
-                        <input type="text" value={formData.clientAddress} onChange={e => setFormData(prev => ({ ...prev, clientAddress: e.target.value }))}
-                          placeholder="Ex: Rua Henrique Dias, nº 274"
-                          className="w-full bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg px-3 py-2 text-sm text-white placeholder-neutral-600 focus:border-[#CDFF00] outline-none" />
-                      </div>
-                      <div>
-                        <label className="block text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-1.5 flex items-center gap-1.5">
-                          <User size={12} /> Sexo do Contratante
-                        </label>
-                        <select
-                          value={formData.clientGender}
-                          onChange={e => setFormData(prev => ({ ...prev, clientGender: e.target.value }))}
-                          className="w-full bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg px-3 py-2 text-sm text-white focus:border-[#CDFF00] outline-none"
-                          style={{ colorScheme: 'dark' }}
-                        >
-                          <option value="">Não informado</option>
-                          <option value="F">Feminino</option>
-                          <option value="M">Masculino</option>
-                        </select>
-                      </div>
-                    </div>
+                  <div>
+                    <label className="block text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-1.5 flex items-center gap-1.5">
+                      <User size={12} /> Sexo do Contratante
+                    </label>
+                    <select
+                      value={formData.clientGender}
+                      onChange={e => setFormData(prev => ({ ...prev, clientGender: e.target.value }))}
+                      className="w-full bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg px-3 py-2 text-sm text-white focus:border-[#CDFF00] outline-none"
+                      style={{ colorScheme: 'dark' }}
+                    >
+                      <option value="">Não informado</option>
+                      <option value="F">Feminino</option>
+                      <option value="M">Masculino</option>
+                    </select>
                   </div>
+                </div>
+              </div>
                   {/* Itens do Orçamento */}
                   <div className="border-t border-[#2d2d2d] pt-3">
                     <div className="flex items-center justify-between mb-3">
@@ -2004,33 +1980,38 @@ event.status === 'evento_confirmado' ? 'bg-[#3b82f6] text-white' :
                   </div>
                 </div>
               </div>
+              </div>
+              </div>
+              </div>
               {submitError && (
-                <div className="px-4 py-3 bg-red-900/20 border-t border-red-900/40">
+                <div className="mx-4 sm:mx-5 mb-3 px-4 py-3 bg-red-900/20 border border-red-900/40 rounded-lg shrink-0">
                   <p className="text-[11px] text-red-400 font-bold">{submitError}</p>
                 </div>
               )}
-              <div className="flex flex-wrap items-center gap-2">
+              <div className="shrink-0 border-t border-[#2d2d2d] bg-[#1a1a1a] p-3 sm:p-4">
+                <div className="grid grid-cols-2 sm:flex sm:items-center sm:gap-2">
                 {editingEventId && (
                   <button type="button" onClick={handleDeleteEvent}
-                    className="px-3 py-3 bg-transparent border border-[#EF4444]/40 text-[#EF4444] font-bold text-xs uppercase tracking-widest rounded-lg hover:bg-[#EF4444]/10 hover:border-[#EF4444] transition-all flex items-center justify-center gap-2 shrink-0">
-                    <Trash2 size={14} />
-                    EXCLUIR
+                    className="col-span-2 sm:col-span-1 sm:shrink-0 py-3 px-3 bg-transparent border border-[#EF4444]/40 text-[#EF4444] font-bold text-[10px] uppercase tracking-wider rounded-lg hover:bg-[#EF4444]/10 hover:border-[#EF4444] transition-all flex items-center justify-center gap-2 min-w-0">
+                    <Trash2 size={14} className="shrink-0" />
+                    <span className="truncate">Excluir</span>
                   </button>
                 )}
                 <button type="button" onClick={handleExportPDF}
-                  className="flex-1 py-3 bg-[#1a1a1a] border border-[#2d2d2d] text-white font-bold text-[10px] uppercase tracking-widest rounded-lg hover:bg-[#2a2a2a] hover:border-[#555] transition-all flex items-center justify-center gap-2 min-w-0">
-                  <FileText size={14} />
-                  {isContrato ? 'CONTRATO (PDF)' : 'ORÇAMENTO (PDF)'}
+                  className="col-span-1 py-3 px-2 sm:flex-1 bg-[#1a1a1a] border border-[#2d2d2d] text-white font-bold text-[10px] uppercase tracking-wider rounded-lg hover:bg-[#2a2a2a] hover:border-[#555] transition-all flex items-center justify-center gap-2 min-w-0">
+                  <FileText size={14} className="shrink-0" />
+                  <span className="truncate">{isContrato ? 'Contrato (PDF)' : 'Orçamento (PDF)'}</span>
                 </button>
                 <button type="button" onClick={handleSendWhatsApp}
-                  className="flex-1 py-3 bg-[#1a1a1a] border border-[#25D366]/40 text-[#25D366] font-bold text-[10px] uppercase tracking-widest rounded-lg hover:bg-[#25D366]/10 hover:border-[#25D366] transition-all flex items-center justify-center gap-2 min-w-0">
-                  <MessageCircle size={14} />
-                  ENVIAR WHATSAPP
+                  className="col-span-1 py-3 px-2 sm:flex-1 bg-[#1a1a1a] border border-[#25D366]/40 text-[#25D366] font-bold text-[10px] uppercase tracking-wider rounded-lg hover:bg-[#25D366]/10 hover:border-[#25D366] transition-all flex items-center justify-center gap-2 min-w-0">
+                  <MessageCircle size={14} className="shrink-0" />
+                  <span className="truncate">Enviar WhatsApp</span>
                 </button>
                 <button type="submit"
-                  className="flex-[1.5] py-3 bg-[#CDFF00] text-black font-bold text-[10px] uppercase tracking-widest rounded-lg hover:bg-[#a1e600] transition-colors text-center leading-tight">
-                  {editingEventId ? 'Salvar Alterações' : abaAtiva === 'cliente' ? 'Cadastrar e Agendar' : 'Agendar Evento'}
+                  className="col-span-2 sm:flex-[1.5] py-3 px-2 bg-[#CDFF00] text-black font-bold text-[10px] uppercase tracking-wider rounded-lg hover:bg-[#a1e600] transition-colors text-center leading-tight min-w-0">
+                  <span className="block truncate">{editingEventId ? 'Salvar Alterações' : abaAtiva === 'cliente' ? 'Cadastrar e Agendar' : 'Agendar Evento'}</span>
                 </button>
+                </div>
               </div>
             </form>)}
           </div>
