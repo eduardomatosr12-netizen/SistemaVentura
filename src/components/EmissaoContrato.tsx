@@ -10,12 +10,25 @@ import { generateWhatsAppLink } from '../lib/whatsapp';
 interface Props {
   eventId: string | null;
   data: ContractData;
+  onAddressChange?: (value: string) => void;
+  onGenderChange?: (value: 'F' | 'M' | '') => void;
+  onSave?: () => void;
+  saving?: boolean;
 }
+
+const inputClass = 'w-full bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg px-3 py-2 text-sm text-white placeholder-neutral-600 focus:border-[#CDFF00] outline-none';
 
 const Row = ({ label, value }: { label: string; value: string }) => (
   <div className="flex items-start justify-between gap-3 py-1.5 border-b border-[#242424] last:border-b-0">
     <span className="text-[10px] font-black uppercase tracking-widest text-neutral-500 shrink-0">{label}</span>
     <span className="text-xs text-white text-right break-words">{value}</span>
+  </div>
+);
+
+const EditableRow = ({ label, children }: { label: string; children: React.ReactNode }) => (
+  <div className="py-1.5 border-b border-[#242424]">
+    <label className="block text-[10px] font-black uppercase tracking-widest text-neutral-500 mb-1">{label}</label>
+    {children}
   </div>
 );
 
@@ -26,7 +39,7 @@ const Block = ({ icon, title, children }: { icon: React.ReactNode; title: string
   </section>
 );
 
-export default function EmissaoContrato({ eventId, data }: Props) {
+export default function EmissaoContrato({ eventId, data, onAddressChange, onGenderChange, onSave, saving }: Props) {
   const items = data.items || [];
 
   const total = data.grossTotal && data.grossTotal > 0
@@ -97,8 +110,35 @@ export default function EmissaoContrato({ eventId, data }: Props) {
         <Row label="Contratante" value={data.clientName || '—'} />
         <Row label="CPF" value={data.cpf || '—'} />
         <Row label="RG" value={data.rg || '—'} />
-        <Row label="Endereço" value={data.clientAddress || '—'} />
-        <Row label="Sexo" value={data.clientGender === 'F' ? 'Feminino' : data.clientGender === 'M' ? 'Masculino' : '—'} />
+        {onAddressChange ? (
+          <EditableRow label="Endereço do Contratante">
+            <input
+              type="text"
+              value={data.clientAddress || ''}
+              onChange={e => onAddressChange(e.target.value)}
+              placeholder="Ex: Rua Henrique Dias, nº 274"
+              className={inputClass}
+            />
+          </EditableRow>
+        ) : (
+          <Row label="Endereço" value={data.clientAddress || '—'} />
+        )}
+        {onGenderChange ? (
+          <EditableRow label="Sexo do Contratante">
+            <select
+              value={data.clientGender || ''}
+              onChange={e => onGenderChange(e.target.value as 'F' | 'M' | '')}
+              className={inputClass}
+              style={{ colorScheme: 'dark' }}
+            >
+              <option value="">Não informado</option>
+              <option value="F">Feminino</option>
+              <option value="M">Masculino</option>
+            </select>
+          </EditableRow>
+        ) : (
+          <Row label="Sexo" value={data.clientGender === 'F' ? 'Feminino' : data.clientGender === 'M' ? 'Masculino' : '—'} />
+        )}
         <Row label="Cidade" value={data.city || '—'} />
         <Row label="Contratado" value={CONTRACTOR.name} />
         <Row label="CPF / RG" value={`${CONTRACTOR.cpf} / ${CONTRACTOR.rg}`} />
@@ -165,6 +205,17 @@ export default function EmissaoContrato({ eventId, data }: Props) {
       </Block>
 
       <div className="flex flex-col gap-2 pt-1">
+        {onSave && (
+          <button
+            type="button"
+            onClick={onSave}
+            disabled={saving}
+            className="w-full py-3 bg-[#1a1a1a] border border-[#CDFF00]/50 text-[#CDFF00] font-bold text-[10px] uppercase tracking-widest rounded-lg hover:bg-[#CDFF00]/10 transition-all flex items-center justify-center gap-2 disabled:opacity-40"
+          >
+            <PenLine size={14} />
+            {saving ? 'Salvando...' : 'Salvar Dados do Contrato'}
+          </button>
+        )}
         <button
           type="button"
           onClick={handleGeneratePDF}

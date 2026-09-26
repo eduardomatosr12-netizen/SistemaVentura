@@ -41,6 +41,12 @@ const sanitizeDescription = (desc: string | null | undefined): string => {
   return desc.trim().slice(0, 500);
 };
 
+const ErrorBanner = ({ message, className = '' }: { message: string; className?: string }) => (
+  <div className={`px-4 py-3 bg-red-900/20 border border-red-900/40 rounded-lg ${className}`}>
+    <p className="text-[11px] text-red-400 font-bold">{message}</p>
+  </div>
+);
+
 const statusLabel: Record<string, string> = {
   orcamento: 'Orçamento',
   orcamento_cancelado: 'Orçamento Cancelado',
@@ -89,6 +95,7 @@ const CRMDashboard = () => {
 
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [abaAtiva, setAbaAtiva] = useState<'cliente' | 'evento' | 'despesas' | 'contrato'>('cliente');
+  const [isSavingContract, setIsSavingContract] = useState(false);
 
   useScrollLock(!!selectedDayEvents || isCreateOpen);
 
@@ -403,6 +410,25 @@ const CRMDashboard = () => {
     setShowCreateItemForm(false);
     setAbaAtiva('cliente');
     setIsCreateOpen(true);
+  };
+
+  // Endereço e sexo do contratante são preenchidos na aba de emissão do contrato.
+  const handleSaveContractData = async () => {
+    if (!editingEventId) return;
+    setIsSavingContract(true);
+    setSubmitError(null);
+    try {
+      await updateEvent(editingEventId, {
+        clientAddress: formData.clientAddress,
+        clientGender: (formData.clientGender || undefined) as CalendarEvent['clientGender'],
+      });
+      showToast('Dados do contrato salvos');
+    } catch (err) {
+      console.error('[Painel] Erro ao salvar dados do contrato:', err);
+      setSubmitError('Erro ao salvar os dados do contrato. Tente novamente.');
+    } finally {
+      setIsSavingContract(false);
+    }
   };
 
   // Abas de Despesas e Contrato dependem do ID do evento: cria o rascunho se ainda não existir.
@@ -1522,7 +1548,15 @@ event.status === 'evento_confirmado' ? 'bg-[#3b82f6] text-white' :
               </div>
             ) : abaAtiva === 'contrato' ? (
               <div className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-5 [&::-webkit-scrollbar]:w-[6px] [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-[#2a2a2a] [&::-webkit-scrollbar-thumb]:rounded-[10px] [&::-webkit-scrollbar-thumb:hover]:bg-[#555] lg:max-w-3xl lg:mx-auto">
-                <EmissaoContrato eventId={editingEventId} data={contractData} />
+                {submitError && <ErrorBanner message={submitError} className="mb-3" />}
+                <EmissaoContrato
+                  eventId={editingEventId}
+                  data={contractData}
+                  onAddressChange={value => setFormData(prev => ({ ...prev, clientAddress: value }))}
+                  onGenderChange={value => setFormData(prev => ({ ...prev, clientGender: value }))}
+                  onSave={handleSaveContractData}
+                  saving={isSavingContract}
+                />
               </div>
             ) : (
             <form onSubmit={handleCreateSubmit} className="flex-1 min-h-0 flex flex-col">
@@ -1744,39 +1778,10 @@ event.status === 'evento_confirmado' ? 'bg-[#3b82f6] text-white' :
                 </div>
               </div>
               </div>
-              {/* Coluna 2 — dados do contrato, orçamento e observação */}
+              {/* Coluna 2 — itens do orçamento e observação */}
               <div className="space-y-5 min-w-0">
-              {/* Dados do Contrato */}
-              <div>
-                <p className="text-[9px] font-black uppercase tracking-widest text-neutral-400 mb-3">Dados do Contrato</p>
-                <div className="space-y-3">
-                  <div>
-                    <label className="block text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-1.5 flex items-center gap-1.5">
-                      <MapPin size={12} /> Endereço do Contratante
-                    </label>
-                    <input type="text" value={formData.clientAddress} onChange={e => setFormData(prev => ({ ...prev, clientAddress: e.target.value }))}
-                      placeholder="Ex: Rua Henrique Dias, nº 274"
-                      className="w-full bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg px-3 py-2 text-sm text-white placeholder-neutral-600 focus:border-[#CDFF00] outline-none" />
-                  </div>
-                  <div>
-                    <label className="block text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-1.5 flex items-center gap-1.5">
-                      <User size={12} /> Sexo do Contratante
-                    </label>
-                    <select
-                      value={formData.clientGender}
-                      onChange={e => setFormData(prev => ({ ...prev, clientGender: e.target.value }))}
-                      className="w-full bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg px-3 py-2 text-sm text-white focus:border-[#CDFF00] outline-none"
-                      style={{ colorScheme: 'dark' }}
-                    >
-                      <option value="">Não informado</option>
-                      <option value="F">Feminino</option>
-                      <option value="M">Masculino</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
                   {/* Itens do Orçamento */}
-                  <div className="border-t border-[#2d2d2d] pt-3">
+                  <div>
                     <div className="flex items-center justify-between mb-3">
                       <p className="text-[9px] font-black uppercase tracking-widest text-neutral-400">Itens do Orçamento</p>
                       <button type="button" onClick={() => { setOrcSearch(''); setOrcSearchOpen(true); }}
@@ -1983,11 +1988,7 @@ event.status === 'evento_confirmado' ? 'bg-[#3b82f6] text-white' :
               </div>
               </div>
               </div>
-              {submitError && (
-                <div className="mx-4 sm:mx-5 mb-3 px-4 py-3 bg-red-900/20 border border-red-900/40 rounded-lg shrink-0">
-                  <p className="text-[11px] text-red-400 font-bold">{submitError}</p>
-                </div>
-              )}
+              {submitError && <ErrorBanner message={submitError} className="mx-4 sm:mx-5 mb-3 shrink-0" />}
               <div className="shrink-0 border-t border-[#2d2d2d] bg-[#1a1a1a] p-3 sm:p-4">
                 <div className="grid grid-cols-2 sm:flex sm:items-center sm:gap-2">
                 {editingEventId && (
