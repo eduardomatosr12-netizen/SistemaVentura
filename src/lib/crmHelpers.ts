@@ -1,4 +1,4 @@
-import type { Lead } from '../types/crm';
+import type { Lead, OrcamentoItem } from '../types/crm';
 import { generateWhatsAppLink } from './whatsapp';
 import { eventTypeLabel } from './eventTypeLabel';
 
@@ -121,6 +121,90 @@ export function calculateTotalValue(Orçamentos: Lead[]): number {
   return Orçamentos.reduce((acc, lead) => acc + parseMonetaryValue(lead.value), 0);
 }
 
+export function formatNumberBR(value: number, decimals = 2): string {
+  if (!Number.isFinite(value)) return (0).toFixed(decimals).replace('.', ',');
+  return new Intl.NumberFormat('pt-BR', {
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals,
+  }).format(value);
+}
+
+const EXTENSO_UNIDADES = ['', 'Um', 'Dois', 'Três', 'Quatro', 'Cinco', 'Seis', 'Sete', 'Oito', 'Nove'];
+const EXTENSO_CENTENAS = ['', 'Cem', 'Duzentos', 'Trezentos', 'Quatrocentos', 'Quinhentos', 'Seiscentos', 'Setecentos', 'Oitocentos', 'Novecentos'];
+const EXTENSO_DEZENAS: Record<number, string> = {
+  10: 'Dez', 11: 'Onze', 12: 'Doze', 13: 'Treze', 14: 'Quatorze', 15: 'Quinze',
+  16: 'Dezesseis', 17: 'Dezessete', 18: 'Dezoito', 19: 'Dezenove',
+  20: 'Vinte', 30: 'Trinta', 40: 'Quarenta', 50: 'Cinquenta',
+  60: 'Sessenta', 70: 'Setenta', 80: 'Oitenta', 90: 'Noventa',
+};
+
+function extensoAte999(n: number): string {
+  if (n <= 0) return '';
+  const out: string[] = [];
+  const c = Math.floor(n / 100);
+  const r = n % 100;
+
+  if (c) out.push(c === 1 && r > 0 ? 'Cento' : EXTENSO_CENTENAS[c]);
+
+  if (r >= 10 && r < 20) {
+    out.push(EXTENSO_DEZENAS[r]);
+  } else if (r > 0) {
+    const d = Math.floor(r / 10);
+    const u = r % 10;
+    if (d) out.push(EXTENSO_DEZENAS[d * 10]);
+    if (u) out.push(EXTENSO_UNIDADES[u]);
+  }
+
+  return out.join(' e ');
+}
+
+function extensoMilhar(n: number): string {
+  if (n <= 0) return '';
+  const m = Math.floor(n / 1000);
+  const r = n % 1000;
+  if (!m) return extensoAte999(r);
+  const head = m === 1 ? 'Mil' : `${extensoAte999(m)} Mil`;
+  if (!r) return head;
+  // "e" só quando o resto é centena exata: "dois mil e quatrocentos", mas "mil duzentos e trinta e quatro".
+  return r % 100 === 0 ? `${head} e ${extensoAte999(r)}` : `${head} ${extensoAte999(r)}`;
+}
+
+export function numberToExtensoBRL(value: number): string {
+  const safe = Number.isFinite(value) ? Math.max(0, value) : 0;
+  const inteiro = Math.floor(safe);
+  const centavos = Math.round((safe - inteiro) * 100);
+
+  if (inteiro === 0 && centavos === 0) return 'Zero Reais';
+
+  let out = '';
+  if (inteiro > 0) {
+    const m = Math.floor(inteiro / 1_000_000);
+    const resto = inteiro % 1_000_000;
+    const grupos: string[] = [];
+    if (m) grupos.push(m === 1 ? 'Um Milhão' : `${extensoAte999(m)} Milhões`);
+    if (resto) {
+      const txt = extensoMilhar(resto);
+      grupos.push(grupos.length && resto < 100 ? ` e ${txt}` : ` ${txt}`);
+    }
+    const txt = grupos.join('').trim();
+    out = `${txt.charAt(0).toUpperCase()}${txt.slice(1)} ${inteiro === 1 ? 'Real' : 'Reais'}`;
+  }
+
+  if (centavos > 0) {
+    const cents = `${centavos === 1 ? 'Um' : extensoAte999(centavos)} Centavo${centavos === 1 ? '' : 's'}`;
+    out = out ? `${out} e ${cents}` : cents;
+  }
+
+  return out;
+}
+
+export function formatShortDate(dateStr?: string): string {
+  if (!dateStr) return '—';
+  const d = new Date(dateStr + 'T12:00:00');
+  if (isNaN(d.getTime())) return dateStr;
+  return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
+}
+
 export function isValidStage(stage: string): stage is Stage {
   return STAGES.includes(stage as Stage);
 }
@@ -150,47 +234,27 @@ export function groupOrçamentosByStage(Orçamentos: Lead[]): Record<Stage, Lead
   return grouped;
 }
 
-export function generatePDF(lead: Lead, discountData?: { type: 'percent' | 'fixed'; value: number }, grossTotal?: number, dateEnd?: string): void {
-  const win = window.open('', '_blank');
-  if (!win) return;
+const COMPANY_NAME = 'Ventura Luz e Efeitos';
+const COMPANY_ADDRESS = 'Rua Coronel Constantino, 224, Ipanema, Águas Belas - PE';
+const COMPANY_PHONE = '(87) 9.9618-9979';
+const COMPANY_EMAIL = 'producaoleoventura@gmail.com';
 
-  const items = lead.items || [];
-  const total = grossTotal && grossTotal > 0
-    ? grossTotal
-    : items.reduce((sum, item) => sum + ((item.valorUnit || 0) > 0 ? item.qtdAtual * item.valorUnit : 0), 0);
-  let discountAmount = 0;
-  let discountLabel = '';
-  let finalTotal = total;
+// Dados do CONTRATADO (empresa) e condições de pagamento do contrato.
+const CONTRACTOR = {
+  name: 'José Leony de Matos Ventura',
+  rg: '7.623.964',
+  cpf: '074.389.574-62',
+  address: 'Rua Coronel Constantino, n.º 224, Centro, Águas Belas (PE)',
+  forum: 'Águas Belas (PE)',
+  signDateCity: 'Águas Belas (PE)',
+  pix: '074.389.574-62',
+  bank: 'Banco do Brasil',
+  account: 'Conta/Poupança 25573-4',
+  agency: 'Agência 1012-x',
+  variation: 'Variação 51',
+};
 
-  if (discountData && discountData.value > 0) {
-    if (discountData.type === 'percent') {
-      discountAmount = total * (discountData.value / 100);
-      finalTotal = total - discountAmount;
-      discountLabel = `${discountData.value}%`;
-    } else {
-      discountAmount = discountData.value;
-      finalTotal = total - discountAmount;
-      discountLabel = `${formatCurrency(discountAmount)}`;
-    }
-  }
-
-  const dateStr = new Date().toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' });
-
-  const safeName = escapeHtml(lead.name);
-  const safeWhatsapp = escapeHtml(lead.whatsapp);
-  const safeEmail = escapeHtml(lead.email);
-  const safeInstagram = escapeHtml(lead.instagram);
-  const safeAddress = escapeHtml(lead.address);
-  const safeNotes = escapeHtml(lead.notes);
-  const safeStage = escapeHtml(lead.stage);
-
-  win.document.write(`
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <meta charset="UTF-8">
-      <title>Orçamento - ${safeName}</title>
-      <style>
+const DOC_CSS = `
         @page { margin: 15mm 12mm; }
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -412,42 +476,141 @@ export function generatePDF(lead: Lead, discountData?: { type: 'percent' | 'fixe
           background: #f1f8e9;
           color: #558B2F;
         }
-      </style>
-    </head>
-    <body>
-      <div class="watermark">VENTURA</div>
+      `;
 
+const CONTRACT_CSS = `
+        .contract-title {
+          text-align: center;
+          font-size: 17px;
+          font-weight: 800;
+          letter-spacing: 3px;
+          text-transform: uppercase;
+          color: #1a1a1a;
+          margin-bottom: 6px;
+        }
+        .contract-subtitle {
+          text-align: center;
+          font-size: 10px;
+          text-transform: uppercase;
+          letter-spacing: 2px;
+          color: #6B8E23;
+          margin-bottom: 24px;
+        }
+        .parties { margin-bottom: 22px; }
+        .party { margin-bottom: 10px; }
+        .party p {
+          font-size: 12.5px;
+          line-height: 1.7;
+          color: #333;
+          text-align: justify;
+        }
+        .party p strong { color: #1a1a1a; }
+        .section {
+          margin-top: 22px;
+          page-break-inside: avoid;
+        }
+        .section-title {
+          font-size: 10px;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 1.5px;
+          color: #6B8E23;
+          border-bottom: 1px solid #6B8E23;
+          padding-bottom: 4px;
+          margin-bottom: 10px;
+        }
+        .clause { margin-bottom: 12px; }
+        .clause p {
+          font-size: 12.5px;
+          line-height: 1.75;
+          color: #333;
+          text-align: justify;
+        }
+        .clause p + p { margin-top: 6px; }
+        .clause .indent { padding-left: 22px; }
+        .clause strong { color: #1a1a1a; }
+        .payment-box {
+          margin-top: 12px;
+          padding: 14px 16px;
+          background: #f9f9f9;
+          border-left: 3px solid #6B8E23;
+          border-radius: 2px;
+        }
+        .payment-box p {
+          font-size: 12.5px;
+          line-height: 1.7;
+          color: #333;
+        }
+        .payment-box .pay-title {
+          font-size: 10px;
+          font-weight: 700;
+          text-transform: uppercase;
+          letter-spacing: 1.2px;
+          color: #6B8E23;
+          margin-bottom: 6px;
+        }
+        .closing {
+          margin-top: 22px;
+          font-size: 12.5px;
+          line-height: 1.75;
+          color: #333;
+          text-align: justify;
+        }
+        .signatures {
+          margin-top: 45px;
+          page-break-inside: avoid;
+        }
+        .signatures .sig-row {
+          display: flex;
+          gap: 40px;
+          margin-bottom: 30px;
+        }
+        .signatures .sig-col {
+          flex: 1;
+          text-align: center;
+        }
+        .signatures .sig-line {
+          border-top: 1px solid #444;
+          padding-top: 6px;
+          font-size: 10.5px;
+          text-transform: uppercase;
+          letter-spacing: 1px;
+          color: #444;
+        }
+        .signatures .sig-line strong {
+          display: block;
+          color: #1a1a1a;
+          font-size: 12px;
+          text-transform: none;
+          letter-spacing: 0;
+          margin-bottom: 2px;
+        }
+        .sign-date {
+          margin-top: 8px;
+          text-align: center;
+          font-size: 11.5px;
+          color: #333;
+        }
+      `;
+
+function companyHeaderHtml(docTitle: string, dateLabel: string): string {
+  return `
       <div class="company-header">
         <div class="company-info">
-          <div class="company-name">Ventura Luz e Efeitos</div>
-          <p class="info-row"><strong>Endereço:</strong> Rua Coronel Constantino, 224, Ipanema, Águas Belas - PE</p>
-          <p class="info-row"><strong>Telefone:</strong> (87) 9.9618-9979</p>
-          <p class="info-row"><strong>E-mail:</strong> producaoleoventura@gmail.com</p>
+          <div class="company-name">${COMPANY_NAME}</div>
+          <p class="info-row"><strong>Endereço:</strong> ${COMPANY_ADDRESS}</p>
+          <p class="info-row"><strong>Telefone:</strong> ${COMPANY_PHONE}</p>
+          <p class="info-row"><strong>E-mail:</strong> ${COMPANY_EMAIL}</p>
         </div>
         <div class="doc-info">
-          <div class="doc-title">Orçamento</div>
-          <div class="doc-date">Emitido em ${dateStr}</div>
+          <div class="doc-title">${docTitle}</div>
+          <div class="doc-date">${dateLabel}</div>
         </div>
-      </div>
+      </div>`;
+}
 
-      <div class="content">
-        <div class="client-section">
-          <div class="col">
-            <h3>Cliente</h3>
-            <p><strong>${safeName}</strong></p>
-            ${lead.whatsapp ? `<p>WhatsApp: <a href="${generateWhatsAppLink(lead.whatsapp)}" target="_blank" style="color: #25D366; text-decoration: underline;">${safeWhatsapp}</a></p>` : ''}
-            ${lead.email ? `<p>Email: ${safeEmail}</p>` : ''}
-            ${lead.instagram ? `<p>Instagram: ${safeInstagram}</p>` : ''}
-          </div>
-          <div class="col" style="text-align: right;">
-            <h3>Evento</h3>
-            <p><strong>${eventTypeLabel(lead.niche)}</strong></p>
-            <p>Data: ${formatEventDateRange(lead.firstContact, dateEnd)}</p>
-            ${lead.address ? `<p>Local: ${safeAddress}</p>` : ''}
-            <p style="margin-top: 6px;"><span class="badge">${safeStage}</span></p>
-          </div>
-        </div>
-
+function itemsTableHtml(items: OrcamentoItem[]): string {
+  return `
         <table>
           <thead>
             <tr>
@@ -471,7 +634,75 @@ export function generatePDF(lead: Lead, discountData?: { type: 'percent' | 'fixe
               </tr>
             `).join('')}
           </tbody>
-        </table>
+        </table>`;
+}
+
+export function generatePDF(lead: Lead, discountData?: { type: 'percent' | 'fixed'; value: number }, grossTotal?: number, dateEnd?: string): void {
+  const win = window.open('', '_blank');
+  if (!win) return;
+
+  const items = lead.items || [];
+  const total = grossTotal && grossTotal > 0
+    ? grossTotal
+    : items.reduce((sum, item) => sum + ((item.valorUnit || 0) > 0 ? item.qtdAtual * item.valorUnit : 0), 0);
+  let discountAmount = 0;
+  let discountLabel = '';
+  let finalTotal = total;
+
+  if (discountData && discountData.value > 0) {
+    if (discountData.type === 'percent') {
+      discountAmount = total * (discountData.value / 100);
+      finalTotal = total - discountAmount;
+      discountLabel = `${discountData.value}%`;
+    } else {
+      discountAmount = discountData.value;
+      finalTotal = total - discountAmount;
+      discountLabel = `${formatCurrency(discountAmount)}`;
+    }
+  }
+
+  const dateStr = new Date().toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+
+  const safeName = escapeHtml(lead.name);
+  const safeWhatsapp = escapeHtml(lead.whatsapp);
+  const safeEmail = escapeHtml(lead.email);
+  const safeInstagram = escapeHtml(lead.instagram);
+  const safeAddress = escapeHtml(lead.address);
+  const safeNotes = escapeHtml(lead.notes);
+  const safeStage = escapeHtml(lead.stage);
+
+  win.document.write(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <title>Orçamento - ${safeName}</title>
+      <style>${DOC_CSS}</style>
+    </head>
+    <body>
+      <div class="watermark">VENTURA</div>
+
+${companyHeaderHtml('Orçamento', `Emitido em ${dateStr}`)}
+
+      <div class="content">
+        <div class="client-section">
+          <div class="col">
+            <h3>Cliente</h3>
+            <p><strong>${safeName}</strong></p>
+            ${lead.whatsapp ? `<p>WhatsApp: <a href="${generateWhatsAppLink(lead.whatsapp)}" target="_blank" style="color: #25D366; text-decoration: underline;">${safeWhatsapp}</a></p>` : ''}
+            ${lead.email ? `<p>Email: ${safeEmail}</p>` : ''}
+            ${lead.instagram ? `<p>Instagram: ${safeInstagram}</p>` : ''}
+          </div>
+          <div class="col" style="text-align: right;">
+            <h3>Evento</h3>
+            <p><strong>${eventTypeLabel(lead.niche)}</strong></p>
+            <p>Data: ${formatEventDateRange(lead.firstContact, dateEnd)}</p>
+            ${lead.address ? `<p>Local: ${safeAddress}</p>` : ''}
+            <p style="margin-top: 6px;"><span class="badge">${safeStage}</span></p>
+          </div>
+        </div>
+
+${itemsTableHtml(items)}
 
         <div class="summary-section">
           <div class="summary-row">
@@ -506,3 +737,187 @@ export function generatePDF(lead: Lead, discountData?: { type: 'percent' | 'fixe
   win.document.close();
   win.print();
 }
+
+export interface ContractData {
+  clientName: string;
+  whatsapp: string;
+  email: string;
+  cpf: string;
+  clientAddress?: string;
+  clientGender?: 'F' | 'M';
+  eventType: string;
+  date: string;
+  dateEnd?: string;
+  time?: string;
+  city: string;
+  venue?: string;
+  notes: string;
+  items: OrcamentoItem[];
+  grossTotal: number;
+  discount: number;
+}
+
+export function generateContractPDF(data: ContractData): void {
+  const win = window.open('', '_blank');
+  if (!win) return;
+
+  const items = data.items || [];
+  const total = data.grossTotal && data.grossTotal > 0
+    ? data.grossTotal
+    : items.reduce((sum, item) => sum + ((item.valorUnit || 0) > 0 ? item.qtdAtual * item.valorUnit : 0), 0);
+  const discountAmount = data.discount > 0 ? data.discount : 0;
+  const finalTotal = Math.max(0, total - discountAmount);
+
+  const dateStr = new Date().toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+  const eventType = eventTypeLabel(data.eventType);
+  const pontosLuz = items.reduce((sum, item) => sum + (item.qtdAtual || 0), 0);
+  const eventoData = data.dateEnd
+    ? `${formatShortDate(data.date)} a ${formatShortDate(data.dateEnd)}`
+    : formatShortDate(data.date);
+  const metade = finalTotal / 2;
+
+  const safeName = escapeHtml(data.clientName || 'Contratante');
+  const safeCpf = escapeHtml(data.cpf);
+  const safeCity = escapeHtml(data.city);
+  const safeVenue = escapeHtml(data.venue || '');
+  const safeClientAddress = escapeHtml(data.clientAddress || '');
+  const safeEventType = escapeHtml(eventType);
+  const safeNotas = escapeHtml(data.notes);
+
+  // Concordância de gênero com o contratante.
+  const genero = data.clientGender === 'F'
+    ? { nacional: 'brasileira', portador: 'portadora', domiciliado: 'domiciliada' }
+    : data.clientGender === 'M'
+      ? { nacional: 'brasileiro', portador: 'portador', domiciliado: 'domiciliado' }
+      : { nacional: 'brasileiro(a)', portador: 'portador(a)', domiciliado: 'domiciliado(a)' };
+
+  const cpfTermo = safeCpf ? `, ${genero.portador} do CPF sob o n.º ${safeCpf}` : '';
+  const domicilioTermo = safeClientAddress
+    ? `, residente e ${genero.domiciliado} na ${safeClientAddress}${safeCity ? `, ${safeCity}` : ''}`
+    : safeCity
+      ? `, residente e ${genero.domiciliado} na cidade de ${safeCity}`
+      : '';
+  const localTermo = safeVenue
+    ? `em <strong>${safeVenue}</strong>${safeCity ? `, ${safeCity}` : ''}`
+    : safeCity
+      ? `na cidade de <strong>${safeCity}</strong>`
+      : 'em local a ser informado';
+
+  win.document.write(`
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="UTF-8">
+      <title>Contrato - ${safeName}</title>
+      <style>${DOC_CSS}${CONTRACT_CSS}</style>
+    </head>
+    <body>
+      <div class="watermark">VENTURA</div>
+
+${companyHeaderHtml('Contrato', `Emitido em ${dateStr}`)}
+
+      <div class="content">
+        <div class="contract-title">Contrato de Prestação de Serviços</div>
+        <div class="contract-subtitle">Iluminação Cênica</div>
+
+        <div class="parties">
+          <div class="party">
+            <p><strong>CONTRATANTE:</strong> ${safeName}, ${genero.nacional}${cpfTermo}${domicilioTermo}.</p>
+          </div>
+          <div class="party">
+            <p><strong>CONTRATADO:</strong> ${CONTRACTOR.name}, brasileiro, portador do RG sob o n.º ${CONTRACTOR.rg}, e CPF sob o n.º ${CONTRACTOR.cpf}, residente e domiciliado na ${CONTRACTOR.address}.</p>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">Do Objeto do Contrato</div>
+          <div class="clause">
+            <p>Cláusula 1ª. O presente contrato tem como OBJETO a realização, do evento pela Ventura Luz &amp; Efeitos, neste ato denominado simplesmente CONTRATADO, serviços de Iluminação Cênica cerimônia e recepção com uma média de <strong>${pontosLuz}</strong> pontos de luzes. O evento será realizado ${localTermo}, no dia <strong>(${eventoData})</strong>.</p>
+            <p class="indent">Tipo de evento: <strong>${safeEventType}</strong>${data.time ? ` — horário: <strong>${escapeHtml(data.time)}</strong>` : ''}.</p>
+            ${itemsTableHtml(items)}
+            ${safeNotas ? `<p class="indent"><strong>Observações:</strong> ${safeNotas}</p>` : ''}
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">Das Obrigações</div>
+          <div class="clause">
+            <p>Cláusula 2ª. O CONTRATADO se responsabiliza por sua presença no dia e local do evento, para fazer montagem dos serviços contratados no ato desse contrato, salvo as situações de caso fortuito ou força maior, que impeçam de comparecer no evento.</p>
+            <p>Parágrafo Primeiro. O CONTRATADO se responsabiliza pela montagem de iluminação cênica da festa para a realização da mesma.</p>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">Das Perdas e Danos</div>
+          <div class="clause">
+            <p>Cláusula 3ª. Caso não haja cumprimento de qualquer das cláusulas do presente instrumento, a parte que der causa se responsabilizará por perdas e danos que causar à outra.</p>
+            <p>Cláusula 4ª. Fica estipulada a indenização de 50% do valor deste contrato, a qualquer das partes pelo não cumprimento dos compromissos acima referenciados, exceto se for por motivo de força maior, ocorrer impossibilidades, tais como: calamidade pública, convulsão social, acidentes de viagem ou transporte.</p>
+            <p>Parágrafo Único. O CONTRATANTE se obriga a dar garantia ao material, responsabilizando-se por qualquer dano causado por desafachas com convidados durante a execução do evento.</p>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">Da Remuneração</div>
+          <div class="clause">
+            <p>Cláusula 5ª. Pelos serviços contratados pactuados neste instrumento, o CONTRATANTE se compromete a pagar a quantia de <strong>R$ (${formatNumberBR(finalTotal)})</strong> (${numberToExtensoBRL(finalTotal)}). Com a seguinte forma de pagamento: <strong>50%</strong> (R$ (${formatNumberBR(metade)})) no ato do contrato e o restante (R$ (${formatNumberBR(finalTotal - metade)})) até o dia da realização do evento.</p>
+            <div class="payment-box">
+              <div class="pay-title">Conta para depósito</div>
+              <p>${CONTRACTOR.bank}<br>${CONTRACTOR.account}<br>${CONTRACTOR.agency}<br>${CONTRACTOR.variation}<br>${CONTRACTOR.name}</p>
+              <p>PIX: <strong>${CONTRACTOR.pix}</strong></p>
+            </div>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">Do Foro</div>
+          <div class="clause">
+            <p>Cláusula 6ª. Para dirimir quaisquer controvérsias oriundas do CONTRATO, as partes elegem o foro da comarca de ${CONTRACTOR.forum}.</p>
+          </div>
+        </div>
+
+        <p class="closing">Por estarem assim justas e contratadas, firmam o presente instrumento, em duas vias de igual teor, juntamente com 2 (duas) testemunhas.</p>
+
+        <div class="signatures">
+          <div class="sig-row">
+            <div class="sig-col">
+              <div class="sig-line">
+                <strong>${safeName}</strong>
+                Contratante
+              </div>
+            </div>
+            <div class="sig-col">
+              <div class="sig-line">
+                <strong>${CONTRACTOR.name}</strong>
+                Contratado
+              </div>
+            </div>
+          </div>
+          <div class="sig-row">
+            <div class="sig-col">
+              <div class="sig-line">
+                <strong>Testemunha 1</strong>
+                CPF: ______________________
+              </div>
+            </div>
+            <div class="sig-col">
+              <div class="sig-line">
+                <strong>Testemunha 2</strong>
+                CPF: ______________________
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="sign-date">${CONTRACTOR.signDateCity}, ____ de _________________ de ____________.</div>
+      </div>
+
+      <div class="page-footer">
+        <p>Ventura Luz e Efeitos • Iluminação Profissional • Documento gerado automaticamente pelo sistema.</p>
+      </div>
+    </body>
+    </html>
+  `);
+  win.document.close();
+  win.print();
+}
+

@@ -57,6 +57,8 @@ export interface CalendarEvent {
   clientEmail?: string;
   clientPhone?: string;
   clientCpf?: string;
+  clientAddress?: string;
+  clientGender?: 'F' | 'M';
   status?: 'orcamento' | 'orcamento_cancelado' | 'evento_confirmado' | 'evento_concluido';
   valorTotal?: number;
   desconto?: number;

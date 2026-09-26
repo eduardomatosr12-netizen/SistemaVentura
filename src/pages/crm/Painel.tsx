@@ -6,7 +6,7 @@ import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell, LabelList, Cart
 import { ChartTooltipContent } from '../../components/charts';
 import { useCRM } from '../../contexts/CRMContext';
 import type { CalendarEvent, Lead, OrcamentoItem } from '../../types/crm';
-import { parseMonetaryValue, formatCurrency, generatePDF, formatEventDateRange } from '../../lib/crmHelpers';
+import { parseMonetaryValue, formatCurrency, generatePDF, generateContractPDF, formatEventDateRange } from '../../lib/crmHelpers';
 import { eventTypeLabel } from '../../lib/eventTypeLabel';
 import { useActivityLogs } from '../../contexts/ActivityContext';
 import { generateUUID } from '../../lib/uuid';
@@ -109,8 +109,8 @@ const CRMDashboard = () => {
   // Create modal state
   const [, setCreateDate] = useState('');
   const [formData, setFormData] = useState({
-    name: '', whatsapp: '', email: '', cpf: '',
-    eventType: '', date: '', dateEnd: '', time: '', city: '', observacao: '',
+    name: '', whatsapp: '', email: '', cpf: '', clientAddress: '', clientGender: '',
+    eventType: '', date: '', dateEnd: '', time: '', city: '', local: '', observacao: '',
     status: '', outroEventoType: '',
     orcamentoItems: [] as OrcamentoItem[], desconto: 0, valor: 0,
   });
@@ -239,10 +239,36 @@ const CRMDashboard = () => {
 
   const total = useMemo(() => Math.max(0, (formData.valor || 0) - formData.desconto), [formData.valor, formData.desconto]);
 
+  // Evento confirmado gera contrato; todos os demais status seguem gerando orçamento.
+  const isContrato = formData.status === 'evento_confirmado';
+
   const handleExportPDF = () => {
     const effectiveEventType = formData.eventType === 'Outros' && formData.outroEventoType?.trim()
       ? formData.outroEventoType.trim()
       : formData.eventType;
+
+    if (isContrato) {
+      generateContractPDF({
+        clientName: formData.name || 'Cliente',
+        whatsapp: formData.whatsapp || '',
+        email: formData.email || '',
+        cpf: formData.cpf || '',
+        clientAddress: formData.clientAddress || undefined,
+        clientGender: (formData.clientGender || undefined) as 'F' | 'M' | undefined,
+        eventType: effectiveEventType || '',
+        date: formData.date || '',
+        dateEnd: formData.dateEnd || undefined,
+        time: formData.time || undefined,
+        city: formData.city || '',
+        venue: formData.local || undefined,
+        notes: formData.observacao || '',
+        items: formData.orcamentoItems || [],
+        grossTotal: formData.valor,
+        discount: formData.desconto,
+      });
+      return;
+    }
+
     const leadData: Lead = {
       id: '',
       name: formData.name || 'Orçamento',
@@ -266,7 +292,8 @@ const CRMDashboard = () => {
   const handleSendWhatsApp = () => {
     if (!formData.whatsapp) return;
     const dataEvento = formatEventDateRange(formData.date, formData.dateEnd);
-    const msg = `Olá ${formData.name || ''}! Segue o seu orçamento em PDF.\n\nData do evento: ${dataEvento}`;
+    const doc = isContrato ? 'contrato' : 'orçamento';
+    const msg = `Olá ${formData.name || ''}! Segue o seu ${doc} em PDF.\n\nData do evento: ${dataEvento}`;
     window.open(generateWhatsAppLink(formData.whatsapp, msg), '_blank');
   };
 
@@ -320,7 +347,7 @@ const CRMDashboard = () => {
   const openCreateModal = (dateStr: string) => {
     setEditingEventId(null);
     setCreateDate(dateStr);
-    setFormData(prev => ({ ...prev, date: dateStr, dateEnd: '', eventType: '', city: '', observacao: '', status: '', outroEventoType: '', orcamentoItems: [], desconto: 0, valor: 0 }));
+    setFormData(prev => ({ ...prev, date: dateStr, dateEnd: '', eventType: '', city: '', local: '', clientAddress: '', clientGender: '', observacao: '', status: '', outroEventoType: '', orcamentoItems: [], desconto: 0, valor: 0 }));
     setSelectedClientId('');
     setClientSearch('');
     setOrcSearch('');
@@ -347,11 +374,14 @@ const CRMDashboard = () => {
       whatsapp: event.clientPhone || '',
       email: event.clientEmail || '',
       cpf: event.clientCpf || '',
+      clientAddress: event.clientAddress || '',
+      clientGender: event.clientGender || '',
       eventType: isCustomType ? 'Outros' : eventTypeValue,
       date: event.date || '',
       dateEnd: event.dateEnd || '',
       time: event.time || '',
       city: event.city || '',
+      local: event.local || '',
       observacao: event.description || '',
       status: event.status || '',
       outroEventoType: isCustomType ? eventTypeValue : '',
@@ -385,11 +415,14 @@ const CRMDashboard = () => {
           clientPhone: formData.whatsapp,
           clientEmail: formData.email,
           clientCpf: formData.cpf,
+          clientAddress: formData.clientAddress,
+          clientGender: (formData.clientGender || undefined) as CalendarEvent['clientGender'],
           eventType: effectiveEventType,
           date: formData.date,
           dateEnd: formData.dateEnd || '',
           time: formData.time,
           city: formData.city,
+          local: formData.local,
           description: formData.observacao,
           status: (formData.status as CalendarEvent['status']) || 'orcamento',
           valorTotal: total,
@@ -478,11 +511,14 @@ const newLeadId = await addLead(leadInput as Omit<Lead, 'id'>);
             clientPhone: formData.whatsapp,
             clientEmail: formData.email,
             clientCpf: formData.cpf,
+            clientAddress: formData.clientAddress,
+            clientGender: (formData.clientGender || undefined) as CalendarEvent['clientGender'],
             eventType: effectiveEventType,
             date: formData.date,
             dateEnd: formData.dateEnd || '',
             time: formData.time,
             city: formData.city,
+            local: formData.local,
             description: formData.observacao,
             status: (formData.status as CalendarEvent['status']) || 'orcamento',
             valorTotal: total,
@@ -512,11 +548,14 @@ await addTransaction({
           clientPhone: client.whatsapp,
           clientEmail: client.email,
           clientCpf: '',
+          clientAddress: formData.clientAddress,
+          clientGender: (formData.clientGender || undefined) as CalendarEvent['clientGender'],
           eventType: effectiveEventType,
           date: formData.date,
           dateEnd: formData.dateEnd || '',
           time: formData.time,
           city: formData.city,
+          local: formData.local,
           description: formData.observacao,
           status: (formData.status as CalendarEvent['status']) || 'orcamento',
           valorTotal: total,
@@ -1564,6 +1603,14 @@ event.status === 'evento_confirmado' ? 'bg-[#3b82f6] text-white' :
                       placeholder="Ex: São Paulo, SP"
                       className="w-full bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg px-3 py-2 text-sm text-white placeholder-neutral-600 focus:border-[#CDFF00] outline-none" />
                   </div>
+                  <div>
+                    <label className="block text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-1.5 flex items-center gap-1.5">
+                      <MapPin size={12} /> Local do Evento
+                    </label>
+                    <input type="text" value={formData.local} onChange={e => setFormData(prev => ({ ...prev, local: e.target.value }))}
+                      placeholder="Ex: Fazenda Terra do Sol"
+                      className="w-full bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg px-3 py-2 text-sm text-white placeholder-neutral-600 focus:border-[#CDFF00] outline-none" />
+                  </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                       <label className="block text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-1.5 flex items-center gap-1.5">
@@ -1616,6 +1663,35 @@ event.status === 'evento_confirmado' ? 'bg-[#3b82f6] text-white' :
                           ))}
                         </div>
                       )}
+                    </div>
+                  </div>
+                  {/* Dados do Contrato */}
+                  <div className="border-t border-[#2d2d2d] pt-3">
+                    <p className="text-[9px] font-black uppercase tracking-widest text-neutral-400 mb-3">Dados do Contrato</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-1.5 flex items-center gap-1.5">
+                          <MapPin size={12} /> Endereço do Contratante
+                        </label>
+                        <input type="text" value={formData.clientAddress} onChange={e => setFormData(prev => ({ ...prev, clientAddress: e.target.value }))}
+                          placeholder="Ex: Rua Henrique Dias, nº 274"
+                          className="w-full bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg px-3 py-2 text-sm text-white placeholder-neutral-600 focus:border-[#CDFF00] outline-none" />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-1.5 flex items-center gap-1.5">
+                          <User size={12} /> Sexo do Contratante
+                        </label>
+                        <select
+                          value={formData.clientGender}
+                          onChange={e => setFormData(prev => ({ ...prev, clientGender: e.target.value }))}
+                          className="w-full bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg px-3 py-2 text-sm text-white focus:border-[#CDFF00] outline-none"
+                          style={{ colorScheme: 'dark' }}
+                        >
+                          <option value="">Não informado</option>
+                          <option value="F">Feminino</option>
+                          <option value="M">Masculino</option>
+                        </select>
+                      </div>
                     </div>
                   </div>
                   {/* Itens do Orçamento */}
@@ -1839,7 +1915,7 @@ event.status === 'evento_confirmado' ? 'bg-[#3b82f6] text-white' :
                 <button type="button" onClick={handleExportPDF}
                   className="flex-1 py-3 bg-[#1a1a1a] border border-[#2d2d2d] text-white font-bold text-[10px] uppercase tracking-widest rounded-lg hover:bg-[#2a2a2a] hover:border-[#555] transition-all flex items-center justify-center gap-2 min-w-0">
                   <FileText size={14} />
-                  EXPORTAR (PDF)
+                  {isContrato ? 'CONTRATO (PDF)' : 'ORÇAMENTO (PDF)'}
                 </button>
                 <button type="button" onClick={handleSendWhatsApp}
                   className="flex-1 py-3 bg-[#1a1a1a] border border-[#25D366]/40 text-[#25D366] font-bold text-[10px] uppercase tracking-widest rounded-lg hover:bg-[#25D366]/10 hover:border-[#25D366] transition-all flex items-center justify-center gap-2 min-w-0">
