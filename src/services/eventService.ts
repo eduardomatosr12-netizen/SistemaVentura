@@ -25,6 +25,11 @@ const mapEventDoc = (d: { id: string; data: () => Record<string, unknown> }): Ca
     clientEmail: data.clientEmail || '',
     clientPhone: data.clientPhone || '',
     clientCpf: data.clientCpf || '',
+    clientAddress: data.clientAddress || '',
+    clientGender: data.clientGender === 'F' || data.clientGender === 'M' ? data.clientGender : undefined,
+    contractServices: Array.isArray(data.contractServices)
+      ? (data.contractServices as unknown[]).map(String).filter(Boolean)
+      : undefined,
     status: data.status || 'orcamento',
     valorTotal: data.valorTotal ?? 0,
     desconto: data.desconto ?? 0,

@@ -1,17 +1,23 @@
-import { useMemo } from 'react';
-import { FileText, MessageCircle, Lock, AlertCircle, User, CalendarDays, Package, CreditCard, PenLine } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { FileText, MessageCircle, Lock, AlertCircle, User, CalendarDays, Package, CreditCard, PenLine, Plus, Check, Sparkles, X } from 'lucide-react';
 import {
   generateContractPDF, formatNumberBR, numberToExtensoBRL, formatShortDate, CONTRACTOR,
+  buildServicesTerm, formatServicesList,
   type ContractData,
 } from '../lib/crmHelpers';
 import { eventTypeLabel } from '../lib/eventTypeLabel';
 import { generateWhatsAppLink } from '../lib/whatsapp';
+import {
+  PRESET_CONTRACT_SERVICES, subscribeContractServiceTypes, addContractServiceType,
+  deleteContractServiceType, mergeServiceNames, type ContractServiceType,
+} from '../services/contractServiceTypeService';
 
 interface Props {
   eventId: string | null;
   data: ContractData;
   onAddressChange?: (value: string) => void;
   onGenderChange?: (value: 'F' | 'M' | '') => void;
+  onServicesChange?: (services: string[]) => void;
   onSave?: () => void;
   saving?: boolean;
 }
@@ -39,8 +45,68 @@ const Block = ({ icon, title, children }: { icon: React.ReactNode; title: string
   </section>
 );
 
-export default function EmissaoContrato({ eventId, data, onAddressChange, onGenderChange, onSave, saving }: Props) {
+export default function EmissaoContrato({ eventId, data, onAddressChange, onGenderChange, onServicesChange, onSave, saving }: Props) {
   const items = data.items || [];
+  const selected = data.services || [];
+
+  const [customTypes, setCustomTypes] = useState<ContractServiceType[]>([]);
+  const [newService, setNewService] = useState('');
+  const [isAddingService, setIsAddingService] = useState(false);
+  const [catalogError, setCatalogError] = useState<string | null>(null);
+
+  useEffect(() => subscribeContractServiceTypes(setCustomTypes), []);
+
+  const available = useMemo(
+    () => mergeServiceNames(PRESET_CONTRACT_SERVICES, customTypes),
+    [customTypes],
+  );
+  const customIds = useMemo(() => new Set(customTypes.map(c => c.name.toLowerCase())), [customTypes]);
+  const selectedKey = (name: string) => name.trim().toLowerCase();
+
+  const toggleService = (name: string) => {
+    if (!onServicesChange) return;
+    const key = selectedKey(name);
+    const next = selected.some(s => selectedKey(s) === key)
+      ? selected.filter(s => selectedKey(s) !== key)
+      : [...selected, name.trim()];
+    onServicesChange(next);
+  };
+
+  const handleAddService = async () => {
+    const name = newService.trim();
+    if (!name || isAddingService) return;
+    setIsAddingService(true);
+    setCatalogError(null);
+    try {
+      await addContractServiceType(name);
+      setNewService('');
+      if (onServicesChange && !selected.some(s => selectedKey(s) === selectedKey(name))) {
+        onServicesChange([...selected, name]);
+      }
+    } catch (err) {
+      console.error('[EmissaoContrato] Erro ao cadastrar tipo de serviço:', err);
+      setCatalogError('Não foi possível cadastrar o serviço. Tente novamente.');
+    } finally {
+      setIsAddingService(false);
+    }
+  };
+
+  const handleRemoveService = async (name: string) => {
+    const match = customTypes.find(c => c.name.toLowerCase() === selectedKey(name));
+    setCatalogError(null);
+    if (match) {
+      try {
+        await deleteContractServiceType(match.id);
+      } catch (err) {
+        console.error('[EmissaoContrato] Erro ao remover tipo de serviço:', err);
+        setCatalogError('Não foi possível remover o serviço. Tente novamente.');
+        return;
+      }
+    }
+    if (onServicesChange) {
+      onServicesChange(selected.filter(s => selectedKey(s) !== selectedKey(name)));
+    }
+  };
 
   const total = data.grossTotal && data.grossTotal > 0
     ? data.grossTotal
@@ -152,6 +218,83 @@ export default function EmissaoContrato({ eventId, data, onAddressChange, onGend
         <Row label="Cidade" value={data.city || '—'} />
         <Row label="Pontos de luz" value={String(pontosLuz)} />
         {data.notes && <Row label="Observações" value={data.notes} />}
+      </Block>
+
+      <Block icon={<Sparkles size={12} />} title="Serviços Contratados">
+        {onServicesChange ? (
+          <>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 mb-3">
+              {available.map(name => {
+                const isOn = selected.some(s => selectedKey(s) === selectedKey(name));
+                const isCustom = customIds.has(selectedKey(name));
+                return (
+                  <div
+                    key={name}
+                    className={`flex items-center gap-2 px-2.5 py-2 rounded-lg border transition-colors ${
+                      isOn ? 'border-[#CDFF00]/60 bg-[#CDFF00]/10' : 'border-[#2d2d2d] bg-[#1a1a1a]'
+                    }`}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => toggleService(name)}
+                      className="flex items-center gap-2 min-w-0 flex-1 text-left"
+                    >
+                      <span className={`w-4 h-4 shrink-0 rounded border flex items-center justify-center ${
+                        isOn ? 'bg-[#CDFF00] border-[#CDFF00]' : 'border-[#555] bg-transparent'
+                      }`}>
+                        {isOn && <Check size={11} className="text-black" strokeWidth={3} />}
+                      </span>
+                      <span className={`text-xs truncate ${isOn ? 'text-white font-medium' : 'text-neutral-400'}`}>{name}</span>
+                    </button>
+                    {isCustom && (
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveService(name)}
+                        title="Remover dos tipos de serviço"
+                        className="p-1 hover:bg-[#2a2a2a] rounded transition-colors shrink-0"
+                      >
+                        <X size={12} className="text-neutral-500 hover:text-red-400" />
+                      </button>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                value={newService}
+                onChange={e => setNewService(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === 'Enter') { e.preventDefault(); handleAddService(); }
+                }}
+                placeholder="Cadastrar novo tipo de serviço..."
+                className="flex-1 bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg px-3 py-2 text-xs text-white placeholder-neutral-600 focus:border-[#CDFF00] outline-none"
+              />
+              <button
+                type="button"
+                onClick={handleAddService}
+                disabled={!newService.trim() || isAddingService}
+                className="shrink-0 px-3 py-2 bg-[#CDFF00] text-black rounded-lg text-[10px] font-black uppercase tracking-wider hover:bg-[#a1e600] transition-colors flex items-center gap-1.5 disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                <Plus size={12} /> {isAddingService ? 'Salvando' : 'Adicionar'}
+              </button>
+            </div>
+            {catalogError && <p className="text-[10px] text-red-400 mt-1.5">{catalogError}</p>}
+          </>
+        ) : (
+          <div className="flex flex-wrap gap-1.5">
+            {formatServicesList(data.services).map(name => (
+              <span key={name} className="text-[10px] font-black uppercase tracking-wider px-2 py-1 rounded bg-[#1a1a1a] border border-[#2d2d2d] text-white">
+                {name}
+              </span>
+            ))}
+          </div>
+        )}
+        <p className="text-[10px] text-neutral-500 italic mt-2 leading-relaxed">
+          No contrato: {buildServicesTerm(data.services, pontosLuz)}.
+        </p>
       </Block>
 
       <Block icon={<Package size={12} />} title="Itens Contratados">

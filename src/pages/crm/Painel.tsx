@@ -121,6 +121,7 @@ const CRMDashboard = () => {
     eventType: '', date: '', dateEnd: '', time: '', city: '', local: '', observacao: '',
     status: '', outroEventoType: '',
     orcamentoItems: [] as OrcamentoItem[], desconto: 0, valor: 0,
+    contractServices: [] as string[],
   });
   const [selectedClientId, setSelectedClientId] = useState('');
   const [editingEventId, setEditingEventId] = useState<string | null>(null);
@@ -311,6 +312,7 @@ const CRMDashboard = () => {
       items: formData.orcamentoItems || [],
       grossTotal: formData.valor,
       discount: formData.desconto,
+      services: formData.contractServices,
     };
   }, [formData]);
 
@@ -402,7 +404,7 @@ const CRMDashboard = () => {
   const openCreateModal = (dateStr: string) => {
     setEditingEventId(null);
     setCreateDate(dateStr);
-    setFormData(prev => ({ ...prev, date: dateStr, dateEnd: '', eventType: '', city: '', local: '', clientAddress: '', clientGender: '', observacao: '', status: '', outroEventoType: '', orcamentoItems: [], desconto: 0, valor: 0 }));
+    setFormData(prev => ({ ...prev, date: dateStr, dateEnd: '', eventType: '', city: '', local: '', clientAddress: '', clientGender: '', observacao: '', status: '', outroEventoType: '', orcamentoItems: [], desconto: 0, valor: 0, contractServices: [] }));
     setSelectedClientId('');
     setClientSearch('');
     setOrcSearch('');
@@ -412,7 +414,7 @@ const CRMDashboard = () => {
     setIsCreateOpen(true);
   };
 
-  // Endereço e sexo do contratante são preenchidos na aba de emissão do contrato.
+  // Endereço, sexo e tipos de serviço são preenchidos na aba de emissão do contrato.
   const handleSaveContractData = async () => {
     if (!editingEventId) return;
     setIsSavingContract(true);
@@ -421,6 +423,7 @@ const CRMDashboard = () => {
       await updateEvent(editingEventId, {
         clientAddress: formData.clientAddress,
         clientGender: (formData.clientGender || undefined) as CalendarEvent['clientGender'],
+        contractServices: formData.contractServices,
       });
       showToast('Dados do contrato salvos');
     } catch (err) {
@@ -497,6 +500,7 @@ const CRMDashboard = () => {
       orcamentoItems: (lead?.items as OrcamentoItem[]) || [],
       desconto: event.desconto || 0,
       valor: (event.valorTotal || 0) + (event.desconto || 0),
+      contractServices: event.contractServices || [],
     });
     setSelectedClientId(leadId);
     setClientSearch(event.client ? `${event.client} — ${event.clientPhone || ''}` : '');
@@ -1554,6 +1558,7 @@ event.status === 'evento_confirmado' ? 'bg-[#3b82f6] text-white' :
                   data={contractData}
                   onAddressChange={value => setFormData(prev => ({ ...prev, clientAddress: value }))}
                   onGenderChange={value => setFormData(prev => ({ ...prev, clientGender: value }))}
+                  onServicesChange={services => setFormData(prev => ({ ...prev, contractServices: services }))}
                   onSave={handleSaveContractData}
                   saving={isSavingContract}
                 />

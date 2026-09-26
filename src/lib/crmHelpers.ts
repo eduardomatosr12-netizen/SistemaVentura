@@ -756,6 +756,41 @@ export interface ContractData {
   items: OrcamentoItem[];
   grossTotal: number;
   discount: number;
+  services?: string[];
+}
+
+/** Serviço principal da empresa, usado quando nenhum foi selecionado. */
+export const DEFAULT_CONTRACT_SERVICES = ['Iluminação Cênica'];
+
+/**
+ * Monta o trecho "serviços de X, de Y e de Z" da Cláusula 1ª.
+ * Iluminação cênica é a única que carrega a contagem de pontos de luz.
+ */
+export function buildServicesTerm(services: string[] | undefined, pontosLuz: number): string {
+  const selected = (services || []).map(s => s.trim()).filter(Boolean);
+  const names = selected.length > 0 ? selected : DEFAULT_CONTRACT_SERVICES;
+
+  const isLighting = (name: string) => /^ilumina[cç][aã]o/i.test(name.trim());
+  const phrases = names.map(name => {
+    const lower = name.trim().toLowerCase();
+    return isLighting(name) ? `${lower} para cerimônia e recepção com uma média de ${pontosLuz} pontos de luzes` : lower;
+  });
+
+  // "serviços de A" / "serviços de A e de B" / "serviços de A, de B e de C"
+  const [first, ...rest] = phrases;
+  const tail = rest.length === 1
+    ? ` e de ${rest[0]}`
+    : rest.length > 1
+      ? `, de ${rest.slice(0, -1).join(', de ')} e de ${rest[rest.length - 1]}`
+      : '';
+
+  return `serviços de ${first}${tail}`;
+}
+
+/** Lista os serviços para legendas e descrições, no formato "X • Y". */
+export function formatServicesList(services: string[] | undefined): string[] {
+  const selected = (services || []).map(s => s.trim()).filter(Boolean);
+  return selected.length > 0 ? selected : DEFAULT_CONTRACT_SERVICES;
 }
 
 export function generateContractPDF(data: ContractData): void {
@@ -776,6 +811,9 @@ export function generateContractPDF(data: ContractData): void {
     ? `${formatShortDate(data.date)} a ${formatShortDate(data.dateEnd)}`
     : formatShortDate(data.date);
   const metade = finalTotal / 2;
+  const servicesTerm = escapeHtml(buildServicesTerm(data.services, pontosLuz));
+  const servicesSubtitle = formatServicesList(data.services).map(escapeHtml).join(' • ');
+  const servicesParenthetical = escapeHtml(formatServicesList(data.services).join(', ').toLowerCase());
 
   const safeName = escapeHtml(data.clientName || 'Contratante');
   const safeCpf = escapeHtml(data.cpf);
@@ -824,7 +862,7 @@ ${companyHeaderHtml('Contrato', `Emitido em ${dateStr}`)}
 
       <div class="content">
         <div class="contract-title">Contrato de Prestação de Serviços</div>
-        <div class="contract-subtitle">Iluminação Cênica</div>
+        <div class="contract-subtitle">${servicesSubtitle}</div>
 
         <div class="parties">
           <div class="party">
@@ -838,7 +876,7 @@ ${companyHeaderHtml('Contrato', `Emitido em ${dateStr}`)}
         <div class="section">
           <div class="section-title">Do Objeto do Contrato</div>
           <div class="clause">
-            <p>Cláusula 1ª. O presente contrato tem como OBJETO a realização, do evento pela Ventura Luz &amp; Efeitos, neste ato denominado simplesmente CONTRATADO, serviços de Iluminação Cênica cerimônia e recepção com uma média de <strong>${pontosLuz}</strong> pontos de luzes. O evento será realizado ${localTermo}, no dia <strong>(${eventoData})</strong>.</p>
+            <p>Cláusula 1ª. O presente contrato tem como OBJETO a realização, do evento pela Ventura Luz &amp; Efeitos, neste ato denominado simplesmente CONTRATADO, ${servicesTerm}. O evento será realizado ${localTermo}, no dia <strong>(${eventoData})</strong>.</p>
             <p class="indent">Tipo de evento: <strong>${safeEventType}</strong>${data.time ? ` — horário: <strong>${escapeHtml(data.time)}</strong>` : ''}.</p>
             ${itemsTableHtml(items)}
             ${safeNotas ? `<p class="indent"><strong>Observações:</strong> ${safeNotas}</p>` : ''}
@@ -849,7 +887,7 @@ ${companyHeaderHtml('Contrato', `Emitido em ${dateStr}`)}
           <div class="section-title">Das Obrigações</div>
           <div class="clause">
             <p>Cláusula 2ª. O CONTRATADO se responsabiliza por sua presença no dia e local do evento, para fazer montagem dos serviços contratados no ato desse contrato, salvo as situações de caso fortuito ou força maior, que impeçam de comparecer no evento.</p>
-            <p>Parágrafo Primeiro. O CONTRATADO se responsabiliza pela montagem de iluminação cênica da festa para a realização da mesma.</p>
+            <p>Parágrafo Primeiro. O CONTRATADO se responsabiliza pela montagem e operação dos serviços contratados (${servicesParenthetical}) para a realização da mesma.</p>
           </div>
         </div>
 
