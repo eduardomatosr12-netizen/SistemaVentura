@@ -1579,8 +1579,9 @@ event.status === 'evento_confirmado' ? 'bg-[#3b82f6] text-white' :
             ) : (
             <form onSubmit={handleCreateSubmit} className="flex-1 min-h-0 flex flex-col">
               <div className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-5 space-y-5 [&::-webkit-scrollbar]:w-[6px] [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-[#2a2a2a] [&::-webkit-scrollbar-thumb]:rounded-[10px] [&::-webkit-scrollbar-thumb:hover]:bg-[#555]">
-              <div className="mx-auto w-full max-w-3xl grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
-              {/* Coluna 1 — quem é o cliente + dados do evento */}
+              {/* Coluna única — mesmo alinhamento da aba Emissão do Contrato */}
+              <div className="mx-auto w-full max-w-3xl space-y-6">
+              {/* Seção 1 — quem é o cliente + dados do evento */}
               <div className="space-y-5 min-w-0">
               {abaAtiva === 'cliente' ? (
                 <>
@@ -1796,7 +1797,7 @@ event.status === 'evento_confirmado' ? 'bg-[#3b82f6] text-white' :
                 </div>
               </div>
               </div>
-              {/* Coluna 2 — itens do orçamento e observação */}
+              {/* Seção 2 — itens do orçamento, valores e observação */}
               <div className="space-y-5 min-w-0">
                   {/* Itens do Orçamento */}
                   <div>
