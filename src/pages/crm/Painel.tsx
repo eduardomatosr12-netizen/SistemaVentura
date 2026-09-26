@@ -6,7 +6,7 @@ import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell, LabelList, Cart
 import { ChartTooltipContent } from '../../components/charts';
 import { useCRM } from '../../contexts/CRMContext';
 import type { CalendarEvent, Lead, OrcamentoItem } from '../../types/crm';
-import { parseMonetaryValue, formatCurrency, generatePDF, generateContractPDF, formatEventDateRange } from '../../lib/crmHelpers';
+import { parseMonetaryValue, formatCurrency, generatePDF, generateContractPDF, formatEventDateRange, type ContractData } from '../../lib/crmHelpers';
 import { eventTypeLabel } from '../../lib/eventTypeLabel';
 import { useActivityLogs } from '../../contexts/ActivityContext';
 import { generateUUID } from '../../lib/uuid';
@@ -14,6 +14,7 @@ import { subscribeEventStock, addEventStockItem, EVENT_STOCK_CATEGORIES, type Ev
 import { addTransaction } from '../../services/financeService';
 import { generateWhatsAppLink } from '../../lib/whatsapp';
 import DespesasDoEvento from '../../components/DespesasDoEvento';
+import EmissaoContrato from '../../components/EmissaoContrato';
 import EstoqueDeEventos from '../../components/EstoqueDeEventos';
 
 const ACTION_ICONS: Record<string, LucideIcon> = {
@@ -87,7 +88,7 @@ const CRMDashboard = () => {
   const toastTimerRef = useRef<number | null>(null);
 
   const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [abaAtiva, setAbaAtiva] = useState<'cliente' | 'evento' | 'despesas'>('cliente');
+  const [abaAtiva, setAbaAtiva] = useState<'cliente' | 'evento' | 'despesas' | 'contrato'>('cliente');
 
   useScrollLock(!!selectedDayEvents || isCreateOpen);
 
@@ -156,9 +157,47 @@ const CRMDashboard = () => {
         nome: o.name,
         whatsapp: o.whatsapp,
         cidade: o.address,
+        email: o.email,
+        niche: o.niche,
+        items: (o.items || []) as OrcamentoItem[],
+        valor: parseMonetaryValue(o.value),
       }];
     });
   }, [Orçamentos]);
+
+  // Dados de contrato (CPF, endereço, sexo) e tipo de evento já lançados em outros
+  // eventos do mesmo cliente, reaproveitados para não exigir preenchimento manual de novo.
+  const clientContractFallbacks = useMemo(() => {
+    const ordered = (Array.isArray(events) ? events : [])
+      .slice()
+      .sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+    const byId = new Map<string, CalendarEvent>();
+    const byName = new Map<string, CalendarEvent>();
+    ordered.forEach(ev => {
+      if (ev.clientId && !byId.has(ev.clientId)) byId.set(ev.clientId, ev);
+      const key = (ev.client || '').trim().toLowerCase();
+      if (key && !byName.has(key)) byName.set(key, ev);
+    });
+
+    return (leadId?: string, leadName?: string) => {
+      const candidates = [
+        leadId ? byId.get(leadId) : undefined,
+        leadName ? byName.get(leadName.trim().toLowerCase()) : undefined,
+      ].filter(Boolean) as CalendarEvent[];
+
+      const cpf = candidates.map(e => e.clientCpf || '').find(Boolean) || '';
+      const clientAddress = candidates.map(e => e.clientAddress || '').find(Boolean) || '';
+      const clientGender = candidates.map(e => e.clientGender || '').find(Boolean) || '';
+      return { cpf, clientAddress, clientGender };
+    };
+  }, [events]);
+
+  const matchEventType = (niche?: string): { value: string; custom: string } => {
+    const label = (niche || '').trim();
+    if (!label) return { value: '', custom: '' };
+    const predefined = EVENT_TYPES.find(t => t.value.toLowerCase() === label.toLowerCase());
+    return predefined ? { value: predefined.value, custom: '' } : { value: 'Outros', custom: label };
+  };
 
   const filteredOrcItems = useMemo(() => {
     if (!orcSearch.trim()) return orcamentoItems.slice(0, 40);
@@ -239,8 +278,34 @@ const CRMDashboard = () => {
 
   const total = useMemo(() => Math.max(0, (formData.valor || 0) - formData.desconto), [formData.valor, formData.desconto]);
 
-  // Evento confirmado gera contrato; todos os demais status seguem gerando orçamento.
-  const isContrato = formData.status === 'evento_confirmado';
+  // Eventos confirmados e concluídos geram contrato; os demais status seguem gerando orçamento.
+  const isContrato = formData.status === 'evento_confirmado' || formData.status === 'evento_concluido';
+
+  const contractData = useMemo<ContractData>(() => {
+    const effectiveEventType = formData.eventType === 'Outros' && formData.outroEventoType?.trim()
+      ? formData.outroEventoType.trim()
+      : formData.eventType;
+
+    return {
+      clientName: formData.name || 'Cliente',
+      whatsapp: formData.whatsapp || '',
+      email: formData.email || '',
+      cpf: formData.cpf || '',
+      rg: '',
+      clientAddress: formData.clientAddress || undefined,
+      clientGender: (formData.clientGender || undefined) as 'F' | 'M' | undefined,
+      eventType: effectiveEventType || '',
+      date: formData.date || '',
+      dateEnd: formData.dateEnd || undefined,
+      time: formData.time || undefined,
+      city: formData.city || '',
+      venue: formData.local || undefined,
+      notes: formData.observacao || '',
+      items: formData.orcamentoItems || [],
+      grossTotal: formData.valor,
+      discount: formData.desconto,
+    };
+  }, [formData]);
 
   const handleExportPDF = () => {
     const effectiveEventType = formData.eventType === 'Outros' && formData.outroEventoType?.trim()
@@ -248,24 +313,7 @@ const CRMDashboard = () => {
       : formData.eventType;
 
     if (isContrato) {
-      generateContractPDF({
-        clientName: formData.name || 'Cliente',
-        whatsapp: formData.whatsapp || '',
-        email: formData.email || '',
-        cpf: formData.cpf || '',
-        clientAddress: formData.clientAddress || undefined,
-        clientGender: (formData.clientGender || undefined) as 'F' | 'M' | undefined,
-        eventType: effectiveEventType || '',
-        date: formData.date || '',
-        dateEnd: formData.dateEnd || undefined,
-        time: formData.time || undefined,
-        city: formData.city || '',
-        venue: formData.local || undefined,
-        notes: formData.observacao || '',
-        items: formData.orcamentoItems || [],
-        grossTotal: formData.valor,
-        discount: formData.desconto,
-      });
+      generateContractPDF(contractData);
       return;
     }
 
@@ -1458,10 +1506,54 @@ event.status === 'evento_confirmado' ? 'bg-[#3b82f6] text-white' :
                 {!editingEventId && <Lock size={10} />}
                 Despesas do Evento
               </button>
+              <button
+                onClick={async () => {
+                  if (!editingEventId) {
+                    const effectiveEventType = formData.eventType === 'Outros' && formData.outroEventoType?.trim()
+                      ? formData.outroEventoType.trim()
+                      : formData.eventType;
+                    const draftData = {
+                      title: effectiveEventType ? `${effectiveEventType} - ${(formData.name || 'Novo Evento')}` : (formData.name || 'Novo Evento'),
+                      client: formData.name || '',
+                      clientPhone: formData.whatsapp || '',
+                      clientEmail: formData.email || '',
+                      clientCpf: formData.cpf || '',
+                      eventType: effectiveEventType || '',
+                      date: formData.date || '',
+                      time: formData.time || '',
+                      city: formData.city || '',
+                      description: formData.observacao || '',
+                      status: 'orcamento' as const,
+                    };
+                    try {
+                      const newId = await addEvent(draftData);
+                      if (newId) {
+                        setEditingEventId(newId);
+                        setAbaAtiva('contrato');
+                      } else {
+                        setSubmitError('Erro ao criar rascunho do evento.');
+                      }
+                    } catch (err) {
+                      console.error('[Painel] Erro ao criar rascunho:', err);
+                      setSubmitError('Erro ao criar rascunho. Tente novamente.');
+                    }
+                  } else {
+                    setAbaAtiva('contrato');
+                  }
+                }}
+                className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest transition-colors flex items-center justify-center gap-1.5 whitespace-nowrap ${abaAtiva === 'contrato' ? 'text-[#CDFF00] border-b-2 border-[#CDFF00]' : 'text-neutral-500 hover:text-white'}`}
+              >
+                {!editingEventId && <Lock size={10} />}
+                Emissão do Contrato
+              </button>
             </div>
             {abaAtiva === 'despesas' ? (
               <div className="p-4 overflow-y-auto [&::-webkit-scrollbar]:w-[6px] [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-[#2a2a2a] [&::-webkit-scrollbar-thumb]:rounded-[10px] [&::-webkit-scrollbar-thumb:hover]:bg-[#555]">
                 <DespesasDoEvento eventId={editingEventId} eventDate={formData.date} />
+              </div>
+            ) : abaAtiva === 'contrato' ? (
+              <div className="p-4 overflow-y-auto [&::-webkit-scrollbar]:w-[6px] [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-[#2a2a2a] [&::-webkit-scrollbar-thumb]:rounded-[10px] [&::-webkit-scrollbar-thumb:hover]:bg-[#555]">
+                <EmissaoContrato eventId={editingEventId} data={contractData} />
               </div>
             ) : (
             <form onSubmit={handleCreateSubmit} className="p-4 space-y-4 overflow-y-auto [&::-webkit-scrollbar]:w-[6px] [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-[#2a2a2a] [&::-webkit-scrollbar-thumb]:rounded-[10px] [&::-webkit-scrollbar-thumb:hover]:bg-[#555]">
@@ -1529,21 +1621,34 @@ event.status === 'evento_confirmado' ? 'bg-[#3b82f6] text-white' :
                                 setSelectedClientId(lead.id);
                                 setClientSearch(`${lead.nome} — ${lead.whatsapp}`);
                                 setClientSearchOpen(false);
-                                setFormData(prev => ({
-                                  ...prev,
-                                  name: lead.nome,
-                                  city: lead.cidade,
-                                  whatsapp: lead.whatsapp,
-                                }));
+                                setFormData(prev => {
+                                  const fb = clientContractFallbacks(lead.id, lead.nome);
+                                  const evType = matchEventType(lead.niche);
+                                  const valorBase = lead.valor && lead.valor > 0 ? lead.valor : 0;
+                                  return {
+                                    ...prev,
+                                    name: lead.nome,
+                                    city: lead.cidade,
+                                    whatsapp: lead.whatsapp,
+                                    email: lead.email || '',
+                                    cpf: fb.cpf || prev.cpf,
+                                    clientAddress: fb.clientAddress || prev.clientAddress,
+                                    clientGender: fb.clientGender || prev.clientGender,
+                                    eventType: evType.value || prev.eventType,
+                                    outroEventoType: evType.custom || prev.outroEventoType,
+                                    orcamentoItems: (lead.items && lead.items.length > 0) ? lead.items : prev.orcamentoItems,
+                                    valor: (lead.items && lead.items.length > 0) ? prev.valor : (valorBase > 0 ? valorBase : prev.valor),
+                                  };
+                                });
                               }}
-                              className={`w-full text-left px-3 py-2 text-sm text-white hover:bg-[#2a2a2a] transition-colors flex items-center gap-2 ${selectedClientId === lead.id ? 'bg-[#2a2a2a] border-l-2 border-[#CDFF00]' : ''}`}
-                            >
-                              <User size={12} className="text-neutral-500 shrink-0" />
-                              <div className="min-w-0">
-                                <span className="block truncate">{lead.nome}</span>
-                                <span className="block text-[10px] text-neutral-500 truncate">{lead.whatsapp}</span>
-                              </div>
-                            </button>
+                                className={`w-full text-left px-3 py-2 text-sm text-white hover:bg-[#2a2a2a] transition-colors flex items-center gap-2 ${selectedClientId === lead.id ? 'bg-[#2a2a2a] border-l-2 border-[#CDFF00]' : ''}`}
+                              >
+                                <User size={12} className="text-neutral-500 shrink-0" />
+                                <div className="min-w-0">
+                                  <span className="block truncate">{lead.nome}</span>
+                                  <span className="block text-[10px] text-neutral-500 truncate">{lead.whatsapp}</span>
+                                </div>
+                              </button>
                           ))
                         )}
                       </div>

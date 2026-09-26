@@ -240,7 +240,7 @@ const COMPANY_PHONE = '(87) 9.9618-9979';
 const COMPANY_EMAIL = 'producaoleoventura@gmail.com';
 
 // Dados do CONTRATADO (empresa) e condições de pagamento do contrato.
-const CONTRACTOR = {
+export const CONTRACTOR = {
   name: 'José Leony de Matos Ventura',
   rg: '7.623.964',
   cpf: '074.389.574-62',
@@ -743,6 +743,7 @@ export interface ContractData {
   whatsapp: string;
   email: string;
   cpf: string;
+  rg?: string;
   clientAddress?: string;
   clientGender?: 'F' | 'M';
   eventType: string;
@@ -778,6 +779,7 @@ export function generateContractPDF(data: ContractData): void {
 
   const safeName = escapeHtml(data.clientName || 'Contratante');
   const safeCpf = escapeHtml(data.cpf);
+  const safeRg = escapeHtml(data.rg || '');
   const safeCity = escapeHtml(data.city);
   const safeVenue = escapeHtml(data.venue || '');
   const safeClientAddress = escapeHtml(data.clientAddress || '');
@@ -792,6 +794,10 @@ export function generateContractPDF(data: ContractData): void {
       : { nacional: 'brasileiro(a)', portador: 'portador(a)', domiciliado: 'domiciliado(a)' };
 
   const cpfTermo = safeCpf ? `, ${genero.portador} do CPF sob o n.º ${safeCpf}` : '';
+  const rgTermo = safeRg ? `${safeCpf ? '' : `, ${genero.portador} do`}${safeCpf ? '' : ' '}${!safeCpf ? '' : ''} RG sob o n.º ${safeRg}` : ''; // keep minimal
+  const identidadeTermo = cpfTermo || rgTermo
+    ? `${cpfTermo}${safeRg && safeCpf ? ' e portador(a) do RG sob o n.º ' + safeRg : (safeRg && !safeCpf ? ', ' + genero.portador + ' do RG sob o n.º ' + safeRg : '')}`
+    : '';
   const domicilioTermo = safeClientAddress
     ? `, residente e ${genero.domiciliado} na ${safeClientAddress}${safeCity ? `, ${safeCity}` : ''}`
     : safeCity
@@ -822,7 +828,7 @@ ${companyHeaderHtml('Contrato', `Emitido em ${dateStr}`)}
 
         <div class="parties">
           <div class="party">
-            <p><strong>CONTRATANTE:</strong> ${safeName}, ${genero.nacional}${cpfTermo}${domicilioTermo}.</p>
+            <p><strong>CONTRATANTE:</strong> ${safeName}, ${genero.nacional}${identidadeTermo}${domicilioTermo}.</p>
           </div>
           <div class="party">
             <p><strong>CONTRATADO:</strong> ${CONTRACTOR.name}, brasileiro, portador do RG sob o n.º ${CONTRACTOR.rg}, e CPF sob o n.º ${CONTRACTOR.cpf}, residente e domiciliado na ${CONTRACTOR.address}.</p>
