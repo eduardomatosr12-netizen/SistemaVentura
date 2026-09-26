@@ -205,6 +205,23 @@ export function formatShortDate(dateStr?: string): string {
   return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
 }
 
+/**
+ * Data do evento em formato curto. Quando início e término caem no mesmo dia,
+ * mostra uma data só em vez de "12/09/2026 a 12/09/2026".
+ */
+export function formatShortDateRange(start?: string, end?: string): string {
+  const from = formatShortDate(start);
+  if (!end) return from;
+  const to = formatShortDate(end);
+  return from === to ? from : `${from} a ${to}`;
+}
+
+/** True quando o evento tem data de término preenchida e cai no mesmo dia do início. */
+export function isSingleDayEvent(start?: string, end?: string): boolean {
+  if (!start || !end) return false;
+  return formatShortDate(start) === formatShortDate(end);
+}
+
 export function isValidStage(stage: string): stage is Stage {
   return STAGES.includes(stage as Stage);
 }
@@ -807,9 +824,7 @@ export function generateContractPDF(data: ContractData): void {
   const dateStr = new Date().toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' });
   const eventType = eventTypeLabel(data.eventType);
   const pontosLuz = items.reduce((sum, item) => sum + (item.qtdAtual || 0), 0);
-  const eventoData = data.dateEnd
-    ? `${formatShortDate(data.date)} a ${formatShortDate(data.dateEnd)}`
-    : formatShortDate(data.date);
+  const eventoData = formatShortDateRange(data.date, data.dateEnd);
   const metade = finalTotal / 2;
   const servicesTerm = escapeHtml(buildServicesTerm(data.services, pontosLuz));
   const servicesSubtitle = formatServicesList(data.services).map(escapeHtml).join(' • ');

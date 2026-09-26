@@ -4,6 +4,7 @@ import type { CalendarEvent } from '../../types/crm';
 import { generateUUID } from '../../lib/uuid';
 import { generateWhatsAppLink } from '../../lib/whatsapp';
 import { eventTypeLabel } from '../../lib/eventTypeLabel';
+import { isSingleDayEvent } from '../../lib/crmHelpers';
 import { subscribeEventStock, addEventStockItem, EVENT_STOCK_CATEGORIES, type EventStockItem } from '../../services/eventStockService';
 import { X, Clock, User, Users, MessageSquare, Plus, Trash2, Calendar as CalendarIcon, FileText, ChevronLeft, ChevronRight, Search, MapPin, Mail, Phone, CreditCard, Flag, MessageCircle, Package, Save } from 'lucide-react';
 
@@ -61,6 +62,9 @@ interface CalendarOccurrence {
 }
 
 const getPhaseColor = (occ: CalendarOccurrence): string => getEventStatusColor(occ.event.status);
+
+const getOccurrenceStatusLabel = (occ: CalendarOccurrence): string =>
+  STATUS_CONFIG[occ.event.status ?? '']?.label ?? 'Evento';
 
 const getPhaseBg = (occ: CalendarOccurrence): string => getEventStatusBg(occ.event.status);
 
@@ -535,7 +539,7 @@ const CRMCalendario = () => {
                     <div className="space-y-1">
                       {dayOccurrences.map(occ => (
                         <button
-                          key={`${occ.event.id}-${occ.phase}`}
+                          key={occ.event.id}
                           onClick={() => handleOpenView(occ.event)}
                           className="w-full text-left p-2 rounded-md transition-all group overflow-hidden min-h-[44px] flex items-center"
                           style={{
@@ -551,15 +555,13 @@ const CRMCalendario = () => {
                                 color: '#000',
                               }}
                             >
-                              {PHASE_CONFIG[occ.phase].shortLabel}
+                              {getOccurrenceStatusLabel(occ)}
                             </span>
                             <span
                               className="text-[8px] font-bold leading-none"
                               style={{ color: getPhaseColor(occ) }}
                             >
-                              {occ.phase === 'evento'
-                                ? eventTypeLabel(occ.event.eventType)
-                                : PHASE_CONFIG[occ.phase].label}
+                              {eventTypeLabel(occ.event.eventType)}
                             </span>
                           </div>
                           <div className="text-[8px] font-bold text-neutral-400 truncate leading-none">
@@ -591,7 +593,7 @@ const CRMCalendario = () => {
               {upcomingOccurrences.map((occ) => (
                 <button
                   type="button"
-                  key={`${occ.event.id}-${occ.phase}`}
+                  key={occ.event.id}
                   className="group w-full text-left"
                   onClick={() => handleOpenView(occ.event)}
                 >
@@ -611,7 +613,7 @@ const CRMCalendario = () => {
                             color: '#000',
                           }}
                         >
-                          {PHASE_CONFIG[occ.phase].shortLabel}
+                          {getOccurrenceStatusLabel(occ)}
                         </span>
                         <span className="text-[9px] text-neutral-500 font-bold uppercase tracking-tighter">
                           {(() => {
@@ -713,11 +715,11 @@ const CRMCalendario = () => {
                       <CalendarIcon size={14} className="text-[#CDFF00]" />
                     </div>
                     <div>
-                      <p className="text-[10px] text-neutral-500 font-bold uppercase tracking-widest">Data de Início</p>
+                      <p className="text-[10px] text-neutral-500 font-bold uppercase tracking-widest">{isSingleDayEvent(viewEvent.date, viewEvent.dateEnd) ? 'Data do Evento' : 'Data de Início'}</p>
                       <p className="text-sm font-black text-white">{formatFullDate(viewEvent.date)}</p>
                     </div>
                   </div>
-                  {viewEvent.dateEnd && (
+                  {viewEvent.dateEnd && !isSingleDayEvent(viewEvent.date, viewEvent.dateEnd) && (
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-full bg-[#3b82f6]/20 flex items-center justify-center shrink-0">
                         <CalendarIcon size={14} className="text-[#3b82f6]" />

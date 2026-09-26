@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { FileText, MessageCircle, Lock, AlertCircle, User, CalendarDays, Package, CreditCard, PenLine, Plus, Check, Sparkles, X } from 'lucide-react';
 import {
-  generateContractPDF, formatNumberBR, numberToExtensoBRL, formatShortDate, CONTRACTOR,
+  generateContractPDF, formatNumberBR, numberToExtensoBRL, formatShortDateRange, CONTRACTOR,
   buildServicesTerm, formatServicesList,
   type ContractData,
 } from '../lib/crmHelpers';
@@ -115,9 +115,7 @@ export default function EmissaoContrato({ eventId, data, onAddressChange, onGend
   const metade = finalTotal / 2;
   const pontosLuz = items.reduce((sum, item) => sum + (item.qtdAtual || 0), 0);
 
-  const eventoData = data.dateEnd
-    ? `${formatShortDate(data.date)} a ${formatShortDate(data.dateEnd)}`
-    : formatShortDate(data.date);
+  const eventoData = formatShortDateRange(data.date, data.dateEnd);
 
   const pendencias = useMemo(() => {
     const list: string[] = [];

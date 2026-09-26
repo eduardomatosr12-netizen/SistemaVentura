@@ -6,7 +6,7 @@ import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell, LabelList, Cart
 import { ChartTooltipContent } from '../../components/charts';
 import { useCRM } from '../../contexts/CRMContext';
 import type { CalendarEvent, Lead, OrcamentoItem } from '../../types/crm';
-import { parseMonetaryValue, formatCurrency, generatePDF, generateContractPDF, formatEventDateRange, type ContractData } from '../../lib/crmHelpers';
+import { parseMonetaryValue, formatCurrency, generatePDF, generateContractPDF, formatEventDateRange, isSingleDayEvent, type ContractData } from '../../lib/crmHelpers';
 import { eventTypeLabel } from '../../lib/eventTypeLabel';
 import { useActivityLogs } from '../../contexts/ActivityContext';
 import { generateUUID } from '../../lib/uuid';
@@ -1490,14 +1490,23 @@ event.status === 'evento_confirmado' ? 'bg-[#3b82f6] text-white' :
                   <div className="border-t border-[#2d2d2d] pt-3">
                     <p className="text-[9px] font-black uppercase tracking-widest text-neutral-400 mb-2">Marcos do Evento</p>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      <div className="bg-[#1a1a1a] rounded-md p-2 text-center">
-                        <p className="text-[8px] text-neutral-500 uppercase tracking-wider">Início</p>
-                        <p className="text-[11px] text-white font-bold mt-0.5 truncate">{formatDate(event.date)}</p>
-                      </div>
-                      <div className="bg-[#1a1a1a] rounded-md p-2 text-center">
-                        <p className="text-[8px] text-neutral-500 uppercase tracking-wider">Término</p>
-                        <p className="text-[11px] text-white font-bold mt-0.5 truncate">{event.dateEnd ? formatDate(event.dateEnd) : '—'}</p>
-                      </div>
+                      {isSingleDayEvent(event.date, event.dateEnd) ? (
+                        <div className="bg-[#1a1a1a] rounded-md p-2 text-center sm:col-span-2">
+                          <p className="text-[8px] text-neutral-500 uppercase tracking-wider">Data do Evento</p>
+                          <p className="text-[11px] text-white font-bold mt-0.5 truncate">{formatDate(event.date)}</p>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="bg-[#1a1a1a] rounded-md p-2 text-center">
+                            <p className="text-[8px] text-neutral-500 uppercase tracking-wider">Início</p>
+                            <p className="text-[11px] text-white font-bold mt-0.5 truncate">{formatDate(event.date)}</p>
+                          </div>
+                          <div className="bg-[#1a1a1a] rounded-md p-2 text-center">
+                            <p className="text-[8px] text-neutral-500 uppercase tracking-wider">Término</p>
+                            <p className="text-[11px] text-white font-bold mt-0.5 truncate">{event.dateEnd ? formatDate(event.dateEnd) : '—'}</p>
+                          </div>
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -1548,10 +1557,13 @@ event.status === 'evento_confirmado' ? 'bg-[#3b82f6] text-white' :
             </div>
             {abaAtiva === 'despesas' ? (
               <div className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-5 [&::-webkit-scrollbar]:w-[6px] [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-[#2a2a2a] [&::-webkit-scrollbar-thumb]:rounded-[10px] [&::-webkit-scrollbar-thumb:hover]:bg-[#555]">
-                <DespesasDoEvento eventId={editingEventId} eventDate={formData.date} />
+                <div className="mx-auto w-full max-w-3xl">
+                  <DespesasDoEvento eventId={editingEventId} eventDate={formData.date} />
+                </div>
               </div>
             ) : abaAtiva === 'contrato' ? (
-              <div className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-5 [&::-webkit-scrollbar]:w-[6px] [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-[#2a2a2a] [&::-webkit-scrollbar-thumb]:rounded-[10px] [&::-webkit-scrollbar-thumb:hover]:bg-[#555] lg:max-w-3xl lg:mx-auto">
+              <div className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-5 [&::-webkit-scrollbar]:w-[6px] [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-[#2a2a2a] [&::-webkit-scrollbar-thumb]:rounded-[10px] [&::-webkit-scrollbar-thumb:hover]:bg-[#555]">
+                <div className="mx-auto w-full max-w-3xl">
                 {submitError && <ErrorBanner message={submitError} className="mb-3" />}
                 <EmissaoContrato
                   eventId={editingEventId}
@@ -1562,11 +1574,12 @@ event.status === 'evento_confirmado' ? 'bg-[#3b82f6] text-white' :
                   onSave={handleSaveContractData}
                   saving={isSavingContract}
                 />
+                </div>
               </div>
             ) : (
             <form onSubmit={handleCreateSubmit} className="flex-1 min-h-0 flex flex-col">
               <div className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-5 space-y-5 [&::-webkit-scrollbar]:w-[6px] [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-[#2a2a2a] [&::-webkit-scrollbar-thumb]:rounded-[10px] [&::-webkit-scrollbar-thumb:hover]:bg-[#555]">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+              <div className="mx-auto w-full max-w-3xl grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
               {/* Coluna 1 — quem é o cliente + dados do evento */}
               <div className="space-y-5 min-w-0">
               {abaAtiva === 'cliente' ? (
@@ -1993,9 +2006,13 @@ event.status === 'evento_confirmado' ? 'bg-[#3b82f6] text-white' :
               </div>
               </div>
               </div>
-              {submitError && <ErrorBanner message={submitError} className="mx-4 sm:mx-5 mb-3 shrink-0" />}
+              {submitError && (
+                <div className="shrink-0 px-4 sm:px-5 pb-3">
+                  <ErrorBanner message={submitError} className="mx-auto w-full max-w-3xl" />
+                </div>
+              )}
               <div className="shrink-0 border-t border-[#2d2d2d] bg-[#1a1a1a] p-3 sm:p-4">
-                <div className="grid grid-cols-2 sm:flex sm:items-center sm:gap-2">
+                <div className="mx-auto w-full max-w-3xl grid grid-cols-2 sm:flex sm:items-center sm:gap-2">
                 {editingEventId && (
                   <button type="button" onClick={handleDeleteEvent}
                     className="col-span-2 sm:col-span-1 sm:shrink-0 py-3 px-3 bg-transparent border border-[#EF4444]/40 text-[#EF4444] font-bold text-[10px] uppercase tracking-wider rounded-lg hover:bg-[#EF4444]/10 hover:border-[#EF4444] transition-all flex items-center justify-center gap-2 min-w-0">
