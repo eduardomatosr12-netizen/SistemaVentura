@@ -55,6 +55,23 @@ const TopHeader = ({ onMenuClick }: TopHeaderProps) => {
 
   const timeoutRefs = useRef<Map<string, ReturnType<typeof setTimeout>>>(new Map());
 
+  // Publish the real header height so full-screen overlays can park below it.
+  const headerRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    const el = headerRef.current;
+    if (!el) return;
+    const publish = () => {
+      document.documentElement.style.setProperty('--top-header-height', `${el.offsetHeight}px`);
+    };
+    publish();
+    const ro = new ResizeObserver(publish);
+    ro.observe(el);
+    return () => {
+      ro.disconnect();
+      document.documentElement.style.removeProperty('--top-header-height');
+    };
+  }, []);
+
   useEffect(() => {
     const map = timeoutRefs.current;
     return () => {
@@ -105,9 +122,12 @@ const TopHeader = ({ onMenuClick }: TopHeaderProps) => {
   }, [notifications, dismissAll]);
 
   return (
-    <header className="sticky top-0 z-40 bg-black border-b border-[#2d2d2d] px-3 md:px-6 py-3 md:py-4 flex items-center justify-between transition-all duration-300 shadow-[0_1px_3px_rgba(0,0,0,0.3)]">
-      {/* Mobile Menu Button */}
-      <button
+    <header
+      ref={headerRef}
+      className="sticky top-0 z-40 bg-black border-b border-[#2d2d2d] pt-[calc(0.75rem+env(safe-area-inset-top,0px))] pb-3 md:pt-4 md:pb-4 pl-[max(0.75rem,env(safe-area-inset-left,0px))] pr-[max(0.75rem,env(safe-area-inset-right,0px))] md:pl-6 md:pr-6 flex items-center justify-between transition-all duration-300 shadow-[0_1px_3px_rgba(0,0,0,0.3)]"
+    >
+
+      {/* Mobile Menu Button */}      <button
         onClick={onMenuClick}
         className="p-2.5 -ml-2 rounded-lg hover:bg-white/5 md:hidden min-w-[44px] min-h-[44px] flex items-center justify-center"
         aria-label="Abrir menu"
@@ -145,13 +165,13 @@ const TopHeader = ({ onMenuClick }: TopHeaderProps) => {
 
           {/* Notifications Panel */}
           {isNotificationsOpen && (
-            <div className="absolute right-0 left-auto mt-3 w-96 max-w-[calc(100vw-24px)] bg-[#111] border border-[#333] rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 origin-top-right z-[100]">
-               <div className="px-6 py-4 border-b border-[#333] flex justify-between items-center bg-[#111]">
-                 <h3 className="text-[10px] font-black text-white uppercase tracking-widest">Notificações</h3>
-                 <span className="text-[9px] font-black bg-[#222] text-neutral-400 px-2 py-0.5 rounded uppercase">{unreadCount} nova{unreadCount !== 1 ? 's' : ''}</span>
+            <div className="fixed left-3 right-3 z-[100] top-[calc(var(--top-header-height,69px)+8px)] sm:absolute sm:left-auto sm:right-0 sm:top-auto sm:mt-3 sm:w-96 sm:max-w-[calc(100vw-24px)] bg-[#111] border border-[#333] rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 origin-top-right">
+               <div className="px-4 sm:px-6 py-4 border-b border-[#333] flex justify-between items-center bg-[#111]">
+                  <h3 className="text-[10px] font-black text-white uppercase tracking-widest">Notificações</h3>
+                  <span className="text-[9px] font-black bg-[#222] text-neutral-400 px-2 py-0.5 rounded uppercase">{unreadCount} nova{unreadCount !== 1 ? 's' : ''}</span>
                </div>
-               <div className="max-h-[450px] overflow-y-auto divide-y divide-[#222222]">
-                 {Array.isArray(notifications) && notifications.length > 0 ? (
+                <div className="max-h-[min(450px,45dvh)] overflow-y-auto divide-y divide-[#222222]">
+                  {Array.isArray(notifications) && notifications.length > 0 ? (
                    notifications.map((n, idx) => {
                      const Icon = notificationIcon(n?.type);
                      const isLeaving = leavingIds.has(n?.id);
@@ -159,7 +179,7 @@ const TopHeader = ({ onMenuClick }: TopHeaderProps) => {
                        <div
                          key={n?.id ?? `notification-${idx}`}
                          onClick={() => !isLeaving && handleNotificationClick(n)}
-                         className={`relative p-5 hover:bg-[#222] transition-all duration-300 cursor-pointer group ${!n?.isRead ? 'bg-[#222]/50' : ''} ${isLeaving ? 'opacity-0 -translate-x-4 scale-95 pointer-events-none' : 'opacity-100 translate-x-0 scale-100'}`}
+                          className={`relative p-4 sm:p-5 hover:bg-[#222] transition-all duration-300 cursor-pointer group ${!n?.isRead ? 'bg-[#222]/50' : ''} ${isLeaving ? 'opacity-0 -translate-x-4 scale-95 pointer-events-none' : 'opacity-100 translate-x-0 scale-100'}`}
                        >
                           <button
                             onClick={(e) => { e.stopPropagation(); handleDismiss(n?.id); }}
@@ -191,7 +211,7 @@ const TopHeader = ({ onMenuClick }: TopHeaderProps) => {
                  )}
                </div>
                {notifications.length > 0 && (
-                 <div className="px-6 py-3 bg-[#111] border-t border-[#333] text-center">
+                 <div className="px-4 sm:px-6 py-3 bg-[#111] border-t border-[#333] text-center">
                    <button onClick={handleClearAll} className="text-[9px] font-black text-neutral-500 hover:text-white uppercase tracking-[2px] transition-colors">Limpar tudo</button>
                  </div>
                )}

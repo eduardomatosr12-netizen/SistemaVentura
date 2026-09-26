@@ -7,7 +7,9 @@ export default function PWAInstallBanner() {
   if (!isInstallable || isStandalone) return null;
 
   return (
-    <div className="fixed left-4 right-4 z-[60] md:bottom-6 md:left-auto md:right-6 md:max-w-sm" style={{ bottom: 'calc(var(--bottom-nav-height, 64px) + env(safe-area-inset-bottom, 0px) + 8px)' }}>
+    <div
+      className="fixed z-[60] left-[max(1rem,env(safe-area-inset-left,0px))] right-[max(1rem,env(safe-area-inset-right,0px))] bottom-[calc(var(--bottom-nav-height,64px)+env(safe-area-inset-bottom,0px)+8px)] md:bottom-6 md:left-auto md:right-6 md:max-w-sm"
+    >
       <div className="bg-[#1a1a1a] border border-[#2d2d2d] rounded-2xl shadow-2xl p-4 flex items-center gap-3 animate-in slide-in-from-bottom-4 fade-in duration-300">
         <div className="w-10 h-10 rounded-xl bg-[#CDFF00]/10 flex items-center justify-center shrink-0">
           <Download size={18} className="text-[#CDFF00]" />

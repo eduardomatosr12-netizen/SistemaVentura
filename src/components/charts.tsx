@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { type ReactNode } from 'react';
 import {
   ResponsiveContainer,
   PieChart,
@@ -16,6 +16,9 @@ import {
 } from 'recharts';
 import type { LucideIcon } from 'lucide-react';
 import { TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { formatCurrency } from '../lib/crmHelpers';
+import { formatCompact } from '../lib/formatters';
+import { useCountUp } from '../hooks/useCountUp';
 
 export const C_GREEN = '#CDFF00';
 export const C_GREEN_DARK = '#77AA00';
@@ -23,46 +26,6 @@ export const C_RED = '#FF4444';
 export const C_YELLOW = '#FFB800';
 export const C_BLUE = '#4488FF';
 export const C_ORANGE = '#FF8C00';
-
-export const formatCurrency = (val: number) =>
-  new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(val || 0);
-
-export const formatCompact = (val: number) => {
-  const abs = Math.abs(val || 0);
-  const sign = val < 0 ? '-' : '';
-  if (abs >= 1000000) {
-    return `${sign}R$${(abs / 1000000).toLocaleString('pt-BR', { maximumFractionDigits: 1 })}M`;
-  }
-  if (abs >= 1000) {
-    return `${sign}R$${(abs / 1000).toLocaleString('pt-BR', { maximumFractionDigits: 0 })}k`;
-  }
-  return `${sign}R$${abs.toLocaleString('pt-BR')}`;
-};
-
-export function useCountUp(target: number, duration = 800) {
-  const [value, setValue] = useState(() => target);
-  const startedRef = useRef(false);
-
-  useEffect(() => {
-    if (startedRef.current) {
-      setValue(target);
-      return;
-    }
-    startedRef.current = true;
-    let raf = 0;
-    const start = performance.now();
-    const tick = (now: number) => {
-      const t = Math.min(1, (now - start) / duration);
-      const eased = 1 - Math.pow(1 - t, 3);
-      setValue(target * eased);
-      if (t < 1) raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [target, duration]);
-
-  return value;
-}
 
 export function KpiCard({
   icon: Icon,
@@ -82,7 +45,7 @@ export function KpiCard({
   formatter?: (v: number) => string;
 }) {
   const animated = useCountUp(value, 800);
-  const deltaIcon = deltaTone === 'up' ? TrendingUp : deltaTone === 'down' ? TrendingDown : Minus;
+  const DeltaIcon = deltaTone === 'up' ? TrendingUp : deltaTone === 'down' ? TrendingDown : Minus;
   return (
     <div className="group relative overflow-hidden bg-[#1a1a1a] border border-[#2d2d2d] rounded-xl p-4 md:p-5 shadow-[0_4px_12px_rgba(0,0,0,0.3)] hover:border-[#CDFF00]/60 hover:scale-[1.02] transition-all duration-150">
       <div className="flex items-start justify-between gap-3">
@@ -102,7 +65,7 @@ export function KpiCard({
           className="mt-2 flex items-center gap-1 text-[11px] font-bold"
           style={{ color: deltaTone === 'up' ? C_GREEN : deltaTone === 'down' ? C_RED : 'rgba(255,255,255,0.4)' }}
         >
-          <deltaIcon size={12} strokeWidth={2.5} />
+          <DeltaIcon size={12} strokeWidth={2.5} />
           {delta}
         </p>
       )}
@@ -145,7 +108,23 @@ export function ChartCard({
   );
 }
 
-export function ChartTooltipContent({ active, payload, label, formatter }: any) {
+/** One row of a recharts tooltip payload, narrowed to what we actually read. */
+export interface ChartTooltipEntry {
+  name?: string;
+  value?: number | string;
+  color?: string;
+  fill?: string;
+  dataKey?: string | number;
+}
+
+interface ChartTooltipContentProps {
+  active?: boolean;
+  payload?: ChartTooltipEntry[];
+  label?: ReactNode;
+  formatter?: (value: number, entry: ChartTooltipEntry) => string;
+}
+
+export function ChartTooltipContent({ active, payload, label, formatter }: ChartTooltipContentProps) {
   if (!active || !payload?.length) return null;
   return (
     <div className="bg-[#2d2d2d] border border-[rgba(205,255,0,0.35)] rounded-lg px-3.5 py-2.5 shadow-[0_8px_24px_rgba(0,0,0,0.5)]">
@@ -153,12 +132,12 @@ export function ChartTooltipContent({ active, payload, label, formatter }: any) 
         <p className="text-[10px] font-bold uppercase tracking-widest text-white/50 mb-1.5">{label}</p>
       )}
       <div className="space-y-1">
-        {payload.map((p: any, i: number) => (
+        {payload.map((p, i) => (
           <div key={i} className="flex items-center gap-2 text-xs">
             <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ backgroundColor: p.color || p.fill }} />
             <span className="text-white/70">{p.name}:</span>
             <span className="font-bold text-white tabular-nums">
-              {formatter ? formatter(p.value, p) : formatCurrency(p.value)}
+              {formatter ? formatter(Number(p.value), p) : formatCurrency(Number(p.value))}
             </span>
           </div>
         ))}
@@ -279,7 +258,7 @@ export function MonthlyBarChart({
   highlightIndex,
   compact = formatCompact,
 }: {
-  data: Record<string, any>[];
+  data: Record<string, unknown>[];
   series: { key: string; label: string; color: string; gradientId: string; start: string; end: string }[];
   height?: number;
   highlightIndex?: number;
@@ -325,7 +304,7 @@ export function MonthlyBarChart({
             <LabelList
               dataKey={s.key}
               position="top"
-              formatter={(v: number) => (v > 0 ? compact(v) : '')}
+              formatter={(v) => (Number(v) > 0 ? compact(Number(v)) : '')}
               style={{ fill: s.color, fontSize: 10, fontWeight: 800 }}
               offset={6}
             />

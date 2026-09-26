@@ -1,7 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import './App.css';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
-import type { UserRole } from './contexts/AuthContext';
 import { CRMProvider } from './contexts/CRMContext';
 import { FinanceProvider } from './contexts/FinanceContext';
 import { ActivityLogsProvider } from './contexts/ActivityContext';
@@ -36,11 +35,11 @@ function AppRoutes() {
       <Route
         path="/unauthorized"
         element={
-          <div className="h-dvh flex items-center justify-center">
-            <div className="text-center">
-              <h1 className="text-2xl font-black text-black mb-2">Acesso Negado</h1>
-              <p className="text-neutral-500">Você não tem permissão para acessar esta página.</p>
-              <a href="/home" className="text-black underline mt-4 block">Voltar ao início</a>
+          <div className="h-dvh w-full flex items-center justify-center bg-black px-4 text-center">
+            <div>
+              <h1 className="text-2xl font-black text-white mb-2">Acesso Negado</h1>
+              <p className="text-neutral-400">Você não tem permissão para acessar esta página.</p>
+              <a href="/home" className="text-[#CDFF00] underline mt-4 inline-block min-h-[44px] leading-[44px]">Voltar ao início</a>
             </div>
           </div>
         }

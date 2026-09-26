@@ -6,6 +6,7 @@ import { generateWhatsAppLink } from '../../lib/whatsapp';
 import { eventTypeLabel } from '../../lib/eventTypeLabel';
 import { isSingleDayEvent } from '../../lib/crmHelpers';
 import { subscribeEventStock, addEventStockItem, EVENT_STOCK_CATEGORIES, type EventStockItem } from '../../services/eventStockService';
+import { subscribeEmployees } from '../../services/employeeService';
 import { X, Clock, User, Users, MessageSquare, Plus, Trash2, Calendar as CalendarIcon, FileText, ChevronLeft, ChevronRight, Search, MapPin, Mail, Phone, CreditCard, Flag, MessageCircle, Package, Save } from 'lucide-react';
 
 const toBR = (iso: string): string => {
@@ -229,20 +230,16 @@ const CRMCalendario = () => {
   }, []);
 
   useEffect(() => {
-    if (!formData.clientId) return;
-    const lead = closedOrçamentos.find(o => o.id === formData.clientId);
-    if (lead) {
-      const itemsDesc = buildItemsDescription(lead);
-      const updates: Partial<typeof formData> = {};
-      if (itemsDesc) updates.description = itemsDesc;
-      if (lead.whatsapp) updates.clientPhone = lead.whatsapp;
-      if (lead.email) updates.clientEmail = lead.email;
-      setFormData(prev => ({ ...prev, ...updates }));
-    }
-  }, [formData.clientId]);
+    const unsub = subscribeEmployees(employees => {
+      setEquipeMembers(employees.map(e => e.name).filter(Boolean));
+    });
+    return unsub;
+  }, []);
 
   const days = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
-  const safeEvents = Array.isArray(events) ? events : [];
+  // Memoised so the reference stays stable across renders: it is a dependency
+  // of the upcoming-occurrences memo below.
+  const safeEvents = useMemo(() => (Array.isArray(events) ? events : []), [events]);
 
   const monthNames = [
     'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
@@ -264,17 +261,6 @@ const CRMCalendario = () => {
       setCurrentYear(currentYear + 1);
     } else {
       setCurrentMonth(currentMonth + 1);
-    }
-  };
-
-  const formatDate = (dateStr?: string) => {
-    if (!dateStr) return '--/--';
-    const date = parseDate(dateStr);
-    if (!date) return '--/--';
-    try {
-      return date.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
-    } catch {
-      return '--/--';
     }
   };
 
@@ -342,6 +328,11 @@ const CRMCalendario = () => {
     const brDate = toBR(event.date || '');
     const brDateEnd = toBR(event.dateEnd || '');
     const desc = (event.description || '').replace(/\n\nItens do Evento:\n[\s\S]*$/, '');
+    // Refresh contact data from the closed orçamento. This used to run in an
+    // effect keyed on `formData.clientId`, which set state during the commit
+    // phase and caused an extra render on every modal open.
+    const lead = event.clientId ? closedOrçamentos.find(o => o.id === event.clientId) : undefined;
+    const leadItemsDesc = lead ? buildItemsDescription(lead) : '';
     setFormData({
       title: event.title || '',
       eventType: event.eventType || '',
@@ -351,13 +342,13 @@ const CRMCalendario = () => {
       local: event.local || '',
       client: event.client || '',
       clientId: event.clientId || '',
-      clientEmail: event.clientEmail || '',
-      clientPhone: event.clientPhone || '',
+      clientEmail: lead?.email || event.clientEmail || '',
+      clientPhone: lead?.whatsapp || event.clientPhone || '',
       clientCpf: event.clientCpf || '',
       status: event.status || 'orcamento',
       city: event.city || '',
       decorator: event.decorator || '',
-      description: desc,
+      description: leadItemsDesc || desc,
       equipe: event.equipe || '',
       valorTotal: event.valorTotal || 0,
     });
@@ -426,8 +417,12 @@ const CRMCalendario = () => {
   };
 
   const upcomingOccurrences = useMemo(() => {
+    // `today` is intentionally re-read here instead of being a dependency: it
+    // is `new Date()` on every render, so depending on it would recompute this
+    // memo constantly. The list only needs to roll forward when events change.
+    const now = new Date();
+    const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const all: CalendarOccurrence[] = [];
-    const todayStart = new Date(today.getFullYear(), today.getMonth(), today.getDate());
     for (const e of safeEvents) {
       if (!e) continue;
       if (e.date) {
@@ -436,8 +431,8 @@ const CRMCalendario = () => {
       }
     }
     all.sort((a, b) => {
-      const da = getOccurrenceDate(a);
-      const db = getOccurrenceDate(b);
+      const da = parseDate(a.event.date);
+      const db = parseDate(b.event.date);
       if (!da || !db) return 0;
       return da.getTime() - db.getTime();
     });
@@ -495,18 +490,18 @@ const CRMCalendario = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-3 md:gap-6">
-        <div className="lg:col-span-3 bg-[#1a1a1a] border border-[#2d2d2d] rounded-xl p-6 shadow-[0_4px_12px_rgba(0,0,0,0.3)] overflow-x-auto transition-all duration-200">
+        <div className="lg:col-span-3 bg-[#1a1a1a] border border-[#2d2d2d] rounded-xl p-2 sm:p-4 lg:p-6 shadow-[0_4px_12px_rgba(0,0,0,0.3)] overflow-x-auto transition-all duration-200">
           {/* Calendar Grid Header */}
-          <div className="grid grid-cols-7 gap-1 mb-4 min-w-[420px]">
+          <div className="grid grid-cols-7 gap-0.5 sm:gap-1 mb-2 sm:mb-4">
             {days.map((day) => (
-              <div key={day} className="text-center text-[10px] text-white font-black uppercase tracking-widest py-2">
+              <div key={day} className="text-center text-[9px] sm:text-[10px] text-white font-black uppercase py-1 sm:py-2">
                 {day}
               </div>
             ))}
           </div>
 
           {/* Calendar Grid Body */}
-          <div className="grid grid-cols-7 gap-1 min-w-[420px]">
+          <div className="grid grid-cols-7 gap-0.5 sm:gap-1">
             {(() => {
               const firstDay = new Date(currentYear, currentMonth, 1).getDay();
               const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();

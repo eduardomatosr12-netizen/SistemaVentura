@@ -70,20 +70,35 @@ export default defineConfig({
         ],
       },
       workbox: {
+        // The page itself is never force-reloaded: PWAUpdateNotification asks
+        // the user first, so an in-progress form is not discarded mid-edit.
+        // Safe because the app ships a single bundle (no lazy chunks that a
+        // mid-session SW swap could 404).
+        skipWaiting: true,
+        clientsClaim: true,
         globPatterns: ['**/*.{js,css,html,svg,png,jpg,ico,json,woff2}'],
         runtimeCaching: [
           {
-            urlPattern: /^https:\/\/api\.(asaas|whatsapp)\.com\/.*/,
-            handler: 'NetworkFirst',
+            // Webfonts live on a third-party origin and are not in the precache,
+            // so without this the installed PWA falls back to the system font
+            // on the first offline load.
+            urlPattern: /^https:\/\/fonts\.(googleapis|gstatic)\.com\/.*/i,
+            handler: 'CacheFirst',
             options: {
-              cacheName: 'external-api-cache',
+              cacheName: 'google-fonts',
               expiration: {
-                maxEntries: 50,
-                maxAgeSeconds: 60 * 60 * 24,
+                maxEntries: 30,
+                maxAgeSeconds: 60 * 60 * 24 * 365,
               },
+              cacheableResponse: { statuses: [0, 200] },
             },
           },
         ],
+        // NOTE: api.asaas.com is deliberately NOT runtime-cached. A
+        // NetworkFirst entry with a long TTL falls back to cache whenever the
+        // network fails, which let the Financeiro screen display up to 24h-old
+        // balances and charges with no staleness hint. Financial data stays
+        // network-only.
       },
     }),
   ],

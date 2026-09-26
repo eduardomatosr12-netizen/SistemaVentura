@@ -1,4 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
 @import 'tailwindcss/base';
 @import 'tailwindcss/components';
 @import 'tailwindcss/utilities';
@@ -112,9 +111,14 @@ body {
   height: 100dvh;
 }
 
-/* Prevent iOS zoom on input focus */
-@media screen and (max-width: 768px) {
-  input, textarea, select {
+/* Prevent iOS zoom on input focus.
+   Only text-entry controls: applying 16px to checkbox/radio/range/buttons
+   breaks their intrinsic sizing. `pointer: coarse` extends the same
+   protection to tablets (iPad is 834px wide, so a width-only query misses it). */
+@media screen and (max-width: 768px), (pointer: coarse) {
+  input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='button']):not([type='submit']):not([type='reset']):not([type='file']):not([type='color']),
+  textarea,
+  select {
     font-size: 16px !important;
   }
 }
@@ -143,6 +147,10 @@ button, a, select, input, textarea {
 :root {
   --bottom-nav-height: 64px;
   --bottom-nav-pb: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom, 0px));
+  /* Real height is measured and published by TopHeader via ResizeObserver;
+     this is the pre-paint fallback. Consumed by the notification panel and the
+     PWA update banner so both park below the header instead of under the notch. */
+  --top-header-height: 69px;
 }
 
 /* Utility for bottom nav safe area - mobile only (desktop has no bottom nav and uses md:pb-* overrides) */
@@ -167,10 +175,12 @@ button, a, select, input, textarea {
   }
 }
 
-/* Safe area for fixed overlays */
+/* Safe area for fixed overlays.
+   `contain` stops touch scroll from chaining to the page behind a modal. */
 .fixed.inset-0 {
   padding-top: env(safe-area-inset-top, 0px);
   padding-bottom: env(safe-area-inset-bottom, 0px);
+  overscroll-behavior: contain;
 }
 
 /* Smooth scroll for the app */

@@ -5,9 +5,10 @@ import {
   ArrowLeft, ChevronLeft, ChevronRight, TrendingUp, TrendingDown, Clock, DollarSign, BarChart2, PieChart as PieIcon, Receipt, Wallet,
 } from 'lucide-react';
 import { eventTypeLabel } from '../../lib/eventTypeLabel';
+import { formatCurrency } from '../../lib/crmHelpers';
 import {
   C_GREEN, C_GREEN_DARK, C_RED, C_YELLOW, C_BLUE, C_ORANGE,
-  formatCurrency, KpiCard, ChartCard, DonutChart, MonthlyBarChart, MonthlyAreaChart,
+  KpiCard, ChartCard, DonutChart, MonthlyBarChart, MonthlyAreaChart,
 } from '../../components/charts';
 
 const CATEGORY_COLORS = [
@@ -122,9 +123,6 @@ export default function DashboardFinanceiro() {
 
   const metrics = useMemo(() => computeMetrics(periodTransactions), [computeMetrics, periodTransactions]);
   const prevMetrics = useMemo(() => computeMetrics(prevTransactions), [computeMetrics, prevTransactions]);
-
-  const totalGeral = metrics.receitasPagas + metrics.receitasPendentes
-    + metrics.despesasPagas + metrics.despesasPendentes;
 
   const chart1Data = useMemo(() => [
     { name: 'Receitas Pagas', value: metrics.receitasPagas, color: C_GREEN_DARK },

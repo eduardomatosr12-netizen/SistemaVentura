@@ -90,7 +90,7 @@ const MainLayout = ({ children }: MainLayoutProps) => {
           <div className="bg-[#1a1a1a] rounded-3xl shadow-xl p-8 md:p-12 border border-[#2d2d2d]">
             <div className="text-center mb-8">
               <img
-                src="/logo.png"
+                src="/logo.jpg"
                 alt="Ventura Luz e Efeitos"
                 className="h-12 w-auto object-contain mx-auto mb-6"
               />
@@ -197,22 +197,30 @@ className="w-full bg-[#1a1a1a] border-2 border-[#2d2d2d] rounded-xl px-4 py-3 fo
         </div>
       </main>
 
-      <nav className="bottom-nav fixed bottom-0 left-0 right-0 z-50 bg-black border-t border-[#2d2d2d] flex md:hidden justify-around items-center h-16" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)', height: 'calc(var(--bottom-nav-height, 64px) + env(safe-area-inset-bottom, 0px))' }}>
-        <Link to="/home" className={`flex flex-col items-center gap-0.5 px-3 py-1 min-w-[56px] min-h-[48px] justify-center ${location.pathname === '/home' ? 'text-[#CDFF00]' : 'text-neutral-400'}`}>
+      <nav
+        className="bottom-nav fixed bottom-0 left-0 right-0 z-50 bg-black border-t border-[#2d2d2d] flex md:hidden justify-around items-center h-16"
+        style={{
+          paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+          paddingLeft: 'env(safe-area-inset-left, 0px)',
+          paddingRight: 'env(safe-area-inset-right, 0px)',
+          height: 'calc(var(--bottom-nav-height, 64px) + env(safe-area-inset-bottom, 0px))',
+        }}
+      >
+        <Link to="/home" className={`flex flex-col items-center gap-0.5 px-2 py-1 min-w-[56px] min-h-[48px] justify-center ${location.pathname === '/home' ? 'text-[#CDFF00]' : 'text-neutral-400'}`}>
           <LayoutDashboard size={20} />
-          <span className="text-[9px] font-bold uppercase tracking-wider">Home</span>
+          <span className="text-[10px] font-bold uppercase tracking-wide">Home</span>
         </Link>
-        <Link to="/contatos" className={`flex flex-col items-center gap-0.5 px-3 py-1 min-w-[56px] min-h-[48px] justify-center ${location.pathname === '/contatos' ? 'text-[#CDFF00]' : 'text-neutral-400'}`}>
+        <Link to="/contatos" className={`flex flex-col items-center gap-0.5 px-2 py-1 min-w-[56px] min-h-[48px] justify-center ${location.pathname === '/contatos' ? 'text-[#CDFF00]' : 'text-neutral-400'}`}>
           <Users size={20} />
-          <span className="text-[9px] font-bold uppercase tracking-wider">Contatos</span>
+          <span className="text-[10px] font-bold uppercase tracking-wide">Contatos</span>
         </Link>
-        <Link to="/tarefas" className={`flex flex-col items-center gap-0.5 px-3 py-1 min-w-[56px] min-h-[48px] justify-center ${location.pathname === '/tarefas' ? 'text-[#CDFF00]' : 'text-neutral-400'}`}>
+        <Link to="/tarefas" className={`flex flex-col items-center gap-0.5 px-2 py-1 min-w-[56px] min-h-[48px] justify-center ${location.pathname === '/tarefas' ? 'text-[#CDFF00]' : 'text-neutral-400'}`}>
           <Package size={20} />
-          <span className="text-[9px] font-bold uppercase tracking-wider">Estoque</span>
+          <span className="text-[10px] font-bold uppercase tracking-wide">Estoque</span>
         </Link>
-        <Link to="/financeiro" className={`flex flex-col items-center gap-0.5 px-3 py-1 min-w-[56px] min-h-[48px] justify-center ${location.pathname.startsWith('/financeiro') ? 'text-[#CDFF00]' : 'text-neutral-400'}`}>
+        <Link to="/financeiro" className={`flex flex-col items-center gap-0.5 px-2 py-1 min-w-[56px] min-h-[48px] justify-center ${location.pathname.startsWith('/financeiro') ? 'text-[#CDFF00]' : 'text-neutral-400'}`}>
           <DollarSign size={20} />
-          <span className="text-[9px] font-bold uppercase tracking-wider">Financeiro</span>
+          <span className="text-[10px] font-bold uppercase tracking-wide">Financeiro</span>
         </Link>
       </nav>
     </div>

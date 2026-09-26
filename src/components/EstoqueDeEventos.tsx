@@ -5,10 +5,11 @@ import {
 import {
   ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, LabelList,
 } from 'recharts';
-import { DonutChart, ChartCard, ChartTooltipContent, formatCompact } from './charts';
+import { DonutChart, ChartCard, ChartTooltipContent } from './charts';
 import { useCRM } from '../contexts/CRMContext';
 import { generateUUID } from '../lib/uuid';
 import { formatCurrency } from '../lib/crmHelpers';
+import { formatCompact } from '../lib/formatters';
 import type { OrcamentoItem } from '../types/crm';
 import {
   subscribeEventStock,
@@ -374,7 +375,7 @@ const EstoqueDeEventos = ({ onMessage }: EstoqueDeEventosProps) => {
                 <CartesianGrid strokeDasharray="3 3" stroke="#2d2d2d" />
                 <XAxis dataKey="label" stroke="#999" fontSize={10} tickLine={false} axisLine={{ stroke: '#333' }} />
                 <YAxis stroke="#777" fontSize={10} tickLine={false} axisLine={false} allowDecimals={false} tickFormatter={v => `${v}`} />
-                <Tooltip cursor={{ stroke: 'rgba(205,255,0,0.3)', strokeDasharray: '3 3' }} content={<ChartTooltipContent formatter={v => `${v} itens`} />} />
+                <Tooltip cursor={{ stroke: 'rgba(205,255,0,0.3)', strokeDasharray: '3 3' }} content={<ChartTooltipContent formatter={(v: number) => `${v} itens`} />} />
                 <Area
                   type="monotone"
                   dataKey="total"
@@ -390,7 +391,7 @@ const EstoqueDeEventos = ({ onMessage }: EstoqueDeEventosProps) => {
                 <LabelList
                   dataKey="total"
                   position="top"
-                  formatter={(v: number) => (v > 0 ? formatCompact(v) : '')}
+                  formatter={(v) => (Number(v) > 0 ? formatCompact(Number(v)) : '')}
                   style={{ fill: '#CDFF00', fontSize: 10, fontWeight: 800 }}
                   offset={6}
                 />
