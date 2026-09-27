@@ -8,6 +8,8 @@ const COLLECTION = 'events';
 
 const mapEventDoc = (d: { id: string; data: () => Record<string, unknown> }): CalendarEvent => {
   const data = d.data();
+  const rawGender = data.clientGender;
+  const validGender = rawGender === 'F' || rawGender === 'M' ? rawGender : '';
   return {
     id: d.id,
     title: data.title || '',
@@ -26,14 +28,14 @@ const mapEventDoc = (d: { id: string; data: () => Record<string, unknown> }): Ca
     clientPhone: data.clientPhone || '',
     clientCpf: data.clientCpf || '',
     clientAddress: data.clientAddress || '',
-    clientGender: data.clientGender === 'F' || data.clientGender === 'M' ? data.clientGender : undefined,
+    clientGender: validGender,
     contractServices: Array.isArray(data.contractServices)
       ? (data.contractServices as unknown[]).map(String).filter(Boolean)
-      : undefined,
+      : [],
     status: data.status || 'orcamento',
     valorTotal: data.valorTotal ?? 0,
     desconto: data.desconto ?? 0,
-    items: data.items ?? undefined,
+    items: data.items ?? [],
   } as CalendarEvent;
 };
 
@@ -64,8 +66,11 @@ export const fetchEvents = async (): Promise<CalendarEvent[]> => {
 
 export const addEvent = async (event: Omit<CalendarEvent, 'id'>): Promise<string> => {
   try {
+    const cleanEvent = Object.fromEntries(
+      Object.entries(event).filter(([, value]) => value !== undefined)
+    );
     const docRef = await addDoc(collection(db, COLLECTION), {
-      ...event,
+      ...cleanEvent,
       createdAt: Timestamp.now(),
     });
     console.log('[Firestore] Evento criado:', docRef.id);
@@ -78,7 +83,10 @@ export const addEvent = async (event: Omit<CalendarEvent, 'id'>): Promise<string
 
 export const updateEvent = async (id: string, fields: Partial<CalendarEvent>): Promise<void> => {
   try {
-    await updateDoc(doc(db, COLLECTION, id), { ...fields, updatedAt: Timestamp.now() });
+    const cleanFields = Object.fromEntries(
+      Object.entries(fields).filter(([, value]) => value !== undefined)
+    );
+    await updateDoc(doc(db, COLLECTION, id), { ...cleanFields, updatedAt: Timestamp.now() });
     console.log('[Firestore] Evento atualizado:', id);
   } catch (err) {
     console.error('[Firestore] Erro ao atualizar evento:', id, err);

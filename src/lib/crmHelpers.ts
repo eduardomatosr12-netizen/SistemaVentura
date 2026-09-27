@@ -762,7 +762,7 @@ export interface ContractData {
   cpf: string;
   rg?: string;
   clientAddress?: string;
-  clientGender?: 'F' | 'M';
+  clientGender?: 'F' | 'M' | '';
   eventType: string;
   date: string;
   dateEnd?: string;

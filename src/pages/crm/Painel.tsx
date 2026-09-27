@@ -301,7 +301,7 @@ const CRMDashboard = () => {
       cpf: formData.cpf || '',
       rg: '',
       clientAddress: formData.clientAddress || undefined,
-      clientGender: (formData.clientGender || undefined) as 'F' | 'M' | undefined,
+      clientGender: formData.clientGender,
       eventType: effectiveEventType || '',
       date: formData.date || '',
       dateEnd: formData.dateEnd || undefined,
@@ -422,7 +422,7 @@ const CRMDashboard = () => {
     try {
       await updateEvent(editingEventId, {
         clientAddress: formData.clientAddress,
-        clientGender: (formData.clientGender || undefined) as CalendarEvent['clientGender'],
+        clientGender: formData.clientGender,
         contractServices: formData.contractServices,
       });
       showToast('Dados do contrato salvos');
@@ -529,7 +529,7 @@ const CRMDashboard = () => {
           clientEmail: formData.email,
           clientCpf: formData.cpf,
           clientAddress: formData.clientAddress,
-          clientGender: (formData.clientGender || undefined) as CalendarEvent['clientGender'],
+          clientGender: formData.clientGender,
           eventType: effectiveEventType,
           date: formData.date,
           dateEnd: formData.dateEnd || '',
@@ -625,7 +625,7 @@ const newLeadId = await addLead(leadInput as Omit<Lead, 'id'>);
             clientEmail: formData.email,
             clientCpf: formData.cpf,
             clientAddress: formData.clientAddress,
-            clientGender: (formData.clientGender || undefined) as CalendarEvent['clientGender'],
+clientGender: formData.clientGender,
             eventType: effectiveEventType,
             date: formData.date,
             dateEnd: formData.dateEnd || '',
@@ -662,7 +662,7 @@ await addTransaction({
           clientEmail: client.email,
           clientCpf: '',
           clientAddress: formData.clientAddress,
-          clientGender: (formData.clientGender || undefined) as CalendarEvent['clientGender'],
+          clientGender: formData.clientGender,
           eventType: effectiveEventType,
           date: formData.date,
           dateEnd: formData.dateEnd || '',

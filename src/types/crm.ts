@@ -58,7 +58,7 @@ export interface CalendarEvent {
   clientPhone?: string;
   clientCpf?: string;
   clientAddress?: string;
-  clientGender?: 'F' | 'M';
+  clientGender?: 'F' | 'M' | '';
   contractServices?: string[];
   status?: 'orcamento' | 'orcamento_cancelado' | 'evento_confirmado' | 'evento_concluido';
   valorTotal?: number;
