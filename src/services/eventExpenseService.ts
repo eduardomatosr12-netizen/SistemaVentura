@@ -4,6 +4,7 @@ import {
 } from 'firebase/firestore';
 import { db } from './firebase';
 import type { EventExpense } from '../types/crm';
+import { cleanDataForFirestore } from '../lib/dataCleaner';
 
 const COLLECTION = 'event_expenses';
 
@@ -37,9 +38,12 @@ export const addEventExpense = async (
   eventId: string,
   expense: Omit<EventExpense, 'id' | 'financeiroId'>
 ): Promise<string> => {
-  const docRef = await addDoc(collection(db, COLLECTION), {
+  const cleanExpense = cleanDataForFirestore({
     ...expense,
     eventId,
+  } as Record<string, unknown>);
+  const docRef = await addDoc(collection(db, COLLECTION), {
+    ...cleanExpense,
     createdAt: Timestamp.now(),
     updatedAt: Timestamp.now(),
   });
@@ -50,8 +54,9 @@ export const updateEventExpense = async (
   expenseId: string,
   data: Partial<EventExpenseRecord>
 ) => {
+  const cleanData = cleanDataForFirestore(data as Record<string, unknown>);
   await updateDoc(doc(db, COLLECTION, expenseId), {
-    ...data,
+    ...cleanData,
     updatedAt: Timestamp.now(),
   });
 };

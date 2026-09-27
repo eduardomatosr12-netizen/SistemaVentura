@@ -32,6 +32,14 @@ export interface InventoryItemInfo {
 
 const COLLECTION = 'inventory_boards';
 
+const normalizeString = (str: string): string => {
+  return str
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim();
+};
+
 const inventoryChangeListeners: Set<() => void> = new Set();
 
 export const subscribeInventoryChanges = (callback: () => void): (() => void) => {
@@ -93,10 +101,11 @@ export const updateBoard = async (id: string, board: Partial<InventoryBoard>): P
 
 export const findInventoryItem = (itemName: string): InventoryItemInfo | null => {
   if (!lastBoards) return null;
+  const normalizedSearch = normalizeString(itemName);
   for (const board of lastBoards) {
     for (const row of board.rows) {
       const name = String(row.values['col-1'] || '');
-      if (name.toLowerCase() === itemName.toLowerCase()) {
+      if (normalizeString(name) === normalizedSearch) {
         return { row, board, itemName: name, currentQty: Number(row.values['col-3']) || 0 };
       }
     }
@@ -104,8 +113,34 @@ export const findInventoryItem = (itemName: string): InventoryItemInfo | null =>
   return null;
 };
 
-export const getAvailableQuantity = (_itemName: string, _eventDate: string): number => {
-  const info = findInventoryItem(_itemName);
+export const findInventoryItemByRowId = (rowId: string): InventoryItemInfo | null => {
+  if (!lastBoards) return null;
+  for (const board of lastBoards) {
+    for (const row of board.rows) {
+      if (row.id === rowId) {
+        const name = String(row.values['col-1'] || '');
+        return { row, board, itemName: name, currentQty: Number(row.values['col-3']) || 0 };
+      }
+    }
+  }
+  return null;
+};
+
+export const findInventoryItemByEventStockId = async (eventStockId: string): Promise<InventoryItemInfo | null> => {
+  try {
+    const { fetchEventStock } = await import('../services/eventStockService');
+    const stockItems = await fetchEventStock();
+    const stockItem = stockItems.find(item => item.id === eventStockId);
+    if (!stockItem) return null;
+    return findInventoryItem(stockItem.name);
+  } catch {
+    return null;
+  }
+};
+
+export const getAvailableQuantity = (itemName: string, _eventDate: string): number => {
+  void _eventDate; // reserved for future date-based availability checks
+  const info = findInventoryItem(itemName);
   if (!info) return 0;
   return Math.max(0, info.currentQty);
 };
@@ -114,12 +149,13 @@ export const deductInventory = async (itemName: string, quantity: number): Promi
   try {
     const q = query(collection(db, COLLECTION), orderBy('title'));
     const snapshot = await getDocs(q);
+    const normalizedSearch = normalizeString(itemName);
     for (const boardDoc of snapshot.docs) {
       const data = boardDoc.data();
       const rows: InventoryRow[] = data.rows || [];
       for (let i = 0; i < rows.length; i++) {
         const name = String(rows[i].values['col-1'] || '');
-        if (name.toLowerCase() === itemName.toLowerCase()) {
+        if (normalizeString(name) === normalizedSearch) {
           await runTransaction(db, async (transaction) => {
             const freshDoc = await transaction.get(doc(db, COLLECTION, boardDoc.id));
             if (!freshDoc.exists()) return;
@@ -146,7 +182,7 @@ export const deductInventory = async (itemName: string, quantity: number): Promi
   }
 };
 
-export const restoreInventory = async (itemName: string, quantity: number): Promise<void> => {
+export const deductInventoryByRowId = async (rowId: string, quantity: number): Promise<void> => {
   try {
     const q = query(collection(db, COLLECTION), orderBy('title'));
     const snapshot = await getDocs(q);
@@ -154,8 +190,54 @@ export const restoreInventory = async (itemName: string, quantity: number): Prom
       const data = boardDoc.data();
       const rows: InventoryRow[] = data.rows || [];
       for (let i = 0; i < rows.length; i++) {
+        if (rows[i].id === rowId) {
+          await runTransaction(db, async (transaction) => {
+            const freshDoc = await transaction.get(doc(db, COLLECTION, boardDoc.id));
+            if (!freshDoc.exists()) return;
+            const freshRows: InventoryRow[] = freshDoc.data().rows || [];
+            const current = Number(freshRows[i]?.values?.['col-3']) || 0;
+            freshRows[i] = {
+              ...freshRows[i],
+              values: { ...freshRows[i].values, 'col-3': Math.max(0, current - quantity) },
+            };
+            transaction.update(doc(db, COLLECTION, boardDoc.id), {
+              rows: freshRows,
+              updatedAt: Timestamp.now(),
+            });
+            const name = String(freshRows[i].values['col-1'] || '');
+            console.log(`[Inventory] Deduzido ${quantity} de "${name}" (rowId: ${rowId}). Novo saldo: ${Math.max(0, current - quantity)}`);
+          });
+          return;
+        }
+      }
+    }
+    console.warn(`[Inventory] Item com rowId "${rowId}" não encontrado para dedução`);
+  } catch (err) {
+    console.error(`[Firestore] Erro ao deduzir inventário por rowId "${rowId}":`, err);
+    throw err;
+  }
+};
+
+export const deductInventoryByEventStockId = async (eventStockId: string, quantity: number): Promise<void> => {
+  const info = await findInventoryItemByEventStockId(eventStockId);
+  if (!info) {
+    console.warn(`[Inventory] Item com eventStockId "${eventStockId}" não encontrado para dedução`);
+    return;
+  }
+  await deductInventoryByRowId(info.row.id, quantity);
+};
+
+export const restoreInventory = async (itemName: string, quantity: number): Promise<void> => {
+  try {
+    const q = query(collection(db, COLLECTION), orderBy('title'));
+    const snapshot = await getDocs(q);
+    const normalizedSearch = normalizeString(itemName);
+    for (const boardDoc of snapshot.docs) {
+      const data = boardDoc.data();
+      const rows: InventoryRow[] = data.rows || [];
+      for (let i = 0; i < rows.length; i++) {
         const name = String(rows[i].values['col-1'] || '');
-        if (name.toLowerCase() === itemName.toLowerCase()) {
+        if (normalizeString(name) === normalizedSearch) {
           await runTransaction(db, async (transaction) => {
             const freshDoc = await transaction.get(doc(db, COLLECTION, boardDoc.id));
             if (!freshDoc.exists()) return;
@@ -180,6 +262,51 @@ export const restoreInventory = async (itemName: string, quantity: number): Prom
     console.error(`[Firestore] Erro ao restaurar inventário de "${itemName}":`, err);
     throw err;
   }
+};
+
+export const restoreInventoryByRowId = async (rowId: string, quantity: number): Promise<void> => {
+  try {
+    const q = query(collection(db, COLLECTION), orderBy('title'));
+    const snapshot = await getDocs(q);
+    for (const boardDoc of snapshot.docs) {
+      const data = boardDoc.data();
+      const rows: InventoryRow[] = data.rows || [];
+      for (let i = 0; i < rows.length; i++) {
+        if (rows[i].id === rowId) {
+          await runTransaction(db, async (transaction) => {
+            const freshDoc = await transaction.get(doc(db, COLLECTION, boardDoc.id));
+            if (!freshDoc.exists()) return;
+            const freshRows: InventoryRow[] = freshDoc.data().rows || [];
+            const current = Number(freshRows[i]?.values?.['col-3']) || 0;
+            freshRows[i] = {
+              ...freshRows[i],
+              values: { ...freshRows[i].values, 'col-3': current + quantity },
+            };
+            transaction.update(doc(db, COLLECTION, boardDoc.id), {
+              rows: freshRows,
+              updatedAt: Timestamp.now(),
+            });
+            const name = String(freshRows[i].values['col-1'] || '');
+            console.log(`[Inventory] Restaurado ${quantity} de "${name}" (rowId: ${rowId}). Novo saldo: ${current + quantity}`);
+          });
+          return;
+        }
+      }
+    }
+    console.warn(`[Inventory] Item com rowId "${rowId}" não encontrado para restauração`);
+  } catch (err) {
+    console.error(`[Firestore] Erro ao restaurar inventário por rowId "${rowId}":`, err);
+    throw err;
+  }
+};
+
+export const restoreInventoryByEventStockId = async (eventStockId: string, quantity: number): Promise<void> => {
+  const info = await findInventoryItemByEventStockId(eventStockId);
+  if (!info) {
+    console.warn(`[Inventory] Item com eventStockId "${eventStockId}" não encontrado para restauração`);
+    return;
+  }
+  await restoreInventoryByRowId(info.row.id, quantity);
 };
 
 export const saveBoards = async (boards: InventoryBoard[]): Promise<void> => {

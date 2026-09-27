@@ -3,6 +3,7 @@ import {
 } from 'firebase/firestore';
 import { db } from './firebase';
 import type { Lead } from '../types/crm';
+import { cleanDataForFirestore } from '../lib/dataCleaner';
 const COLLECTION = 'leads';
 
 const toDate = (ts: Timestamp | string | undefined): string => {
@@ -68,9 +69,12 @@ export const fetchLeads = async (): Promise<Lead[]> => {
 
 export const addLead = async (lead: Omit<Lead, 'id'>): Promise<string> => {
   try {
-    const docRef = await addDoc(collection(db, COLLECTION), {
+    const cleanLead = cleanDataForFirestore({
       ...lead,
       firstContact: lead.firstContact || new Date().toISOString().split('T')[0],
+    } as Record<string, unknown>);
+    const docRef = await addDoc(collection(db, COLLECTION), {
+      ...cleanLead,
       createdAt: Timestamp.now(),
     });
     console.log('[Firestore] Lead criado:', docRef.id);
@@ -83,7 +87,8 @@ export const addLead = async (lead: Omit<Lead, 'id'>): Promise<string> => {
 
 export const updateLead = async (id: string, fields: Partial<Lead>): Promise<void> => {
   try {
-    await updateDoc(doc(db, COLLECTION, id), { ...fields, updatedAt: Timestamp.now() });
+    const cleanFields = cleanDataForFirestore(fields as Record<string, unknown>);
+    await updateDoc(doc(db, COLLECTION, id), { ...cleanFields, updatedAt: Timestamp.now() });
     console.log('[Firestore] Lead atualizado:', id);
   } catch (err) {
     console.error('[Firestore] Erro ao atualizar lead:', id, err);

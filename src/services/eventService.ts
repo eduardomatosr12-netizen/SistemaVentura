@@ -3,6 +3,7 @@ import {
 } from 'firebase/firestore';
 import { db } from './firebase';
 import type { CalendarEvent } from '../types/crm';
+import { sanitizeEventData, cleanDataForFirestore } from '../lib/dataCleaner';
 
 const COLLECTION = 'events';
 
@@ -66,9 +67,7 @@ export const fetchEvents = async (): Promise<CalendarEvent[]> => {
 
 export const addEvent = async (event: Omit<CalendarEvent, 'id'>): Promise<string> => {
   try {
-    const cleanEvent = Object.fromEntries(
-      Object.entries(event).filter(([, value]) => value !== undefined)
-    );
+    const cleanEvent = sanitizeEventData(event as Record<string, unknown>);
     const docRef = await addDoc(collection(db, COLLECTION), {
       ...cleanEvent,
       createdAt: Timestamp.now(),
@@ -83,9 +82,7 @@ export const addEvent = async (event: Omit<CalendarEvent, 'id'>): Promise<string
 
 export const updateEvent = async (id: string, fields: Partial<CalendarEvent>): Promise<void> => {
   try {
-    const cleanFields = Object.fromEntries(
-      Object.entries(fields).filter(([, value]) => value !== undefined)
-    );
+    const cleanFields = cleanDataForFirestore(fields as Record<string, unknown>);
     await updateDoc(doc(db, COLLECTION, id), { ...cleanFields, updatedAt: Timestamp.now() });
     console.log('[Firestore] Evento atualizado:', id);
   } catch (err) {

@@ -2,6 +2,7 @@ import {
   collection, addDoc, updateDoc, deleteDoc, doc, query, orderBy, getDocs, onSnapshot, Timestamp, where,
 } from 'firebase/firestore';
 import { db } from './firebase';
+import { cleanDataForFirestore } from '../lib/dataCleaner';
 
 export interface FinanceRecord {
   id?: string;
@@ -61,8 +62,9 @@ export const fetchTransactions = async (): Promise<FinanceRecord[]> => {
 
 export const addTransaction = async (record: Omit<FinanceRecord, 'id' | 'createdAt'>): Promise<string> => {
   try {
+    const cleanRecord = cleanDataForFirestore(record as Record<string, unknown>);
     const docRef = await addDoc(collection(db, COLLECTION), {
-      ...record,
+      ...cleanRecord,
       createdAt: Timestamp.now(),
     });
     console.log('[Firestore] Transação criada:', docRef.id);
@@ -75,7 +77,8 @@ export const addTransaction = async (record: Omit<FinanceRecord, 'id' | 'created
 
 export const updateTransaction = async (id: string, fields: Partial<FinanceRecord>): Promise<void> => {
   try {
-    await updateDoc(doc(db, COLLECTION, id), { ...fields, updatedAt: Timestamp.now() });
+    const cleanFields = cleanDataForFirestore(fields as Record<string, unknown>);
+    await updateDoc(doc(db, COLLECTION, id), { ...cleanFields, updatedAt: Timestamp.now() });
     console.log('[Firestore] Transação atualizada:', id);
   } catch (err) {
     console.error('[Firestore] Erro ao atualizar transação:', id, err);

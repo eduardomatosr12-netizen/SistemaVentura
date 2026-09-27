@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import { STAGES, STAGE_CONFIG, parseMonetaryValue, calculateTotalValue, groupOrçamentosByStage, type Stage } from '../lib/crmHelpers';
 import * as leadService from '../services/leadService';
 import * as eventService from '../services/eventService';
-import { subscribeInventory, deductInventory, restoreInventory } from '../lib/inventory';
+import { subscribeInventory, deductInventory, restoreInventory, deductInventoryByEventStockId, restoreInventoryByEventStockId } from '../lib/inventory';
 import { addTransaction, updateTransaction, getTransactionByEventId } from '../services/financeService';
 import type { Lead, CalendarEvent, OrcamentoItem } from '../types/crm';
 
@@ -78,7 +78,13 @@ export const CRMProvider = ({ children }: { children: ReactNode }) => {
       const linkedEvents = events.filter(e => e.clientId === id && e.status === 'evento_confirmado');
       for (const event of linkedEvents) {
         if (lead.items && lead.items.length > 0) {
-          await Promise.all(lead.items.map(item => restoreInventory(item.item, item.qtdAtual)));
+          await Promise.all(lead.items.map(async item => {
+            if (item.eventStockId) {
+              await restoreInventoryByEventStockId(item.eventStockId, item.qtdAtual);
+            } else {
+              await restoreInventory(item.item, item.qtdAtual);
+            }
+          }));
         }
       }
     }
@@ -99,13 +105,25 @@ export const CRMProvider = ({ children }: { children: ReactNode }) => {
 
     if (fields.status === 'evento_confirmado' && previous?.status !== 'evento_confirmado') {
       if (lead?.items && lead.items.length > 0) {
-        await Promise.all(lead.items.map(item => deductInventory(item.item, item.qtdAtual)));
+        await Promise.all(lead.items.map(async item => {
+          if (item.eventStockId) {
+            await deductInventoryByEventStockId(item.eventStockId, item.qtdAtual);
+          } else {
+            await deductInventory(item.item, item.qtdAtual);
+          }
+        }));
       }
     }
 
     if (previous?.status === 'evento_confirmado' && fields.status !== 'evento_confirmado') {
       if (lead?.items && lead.items.length > 0) {
-        await Promise.all(lead.items.map(item => restoreInventory(item.item, item.qtdAtual)));
+        await Promise.all(lead.items.map(async item => {
+          if (item.eventStockId) {
+            await restoreInventoryByEventStockId(item.eventStockId, item.qtdAtual);
+          } else {
+            await restoreInventory(item.item, item.qtdAtual);
+          }
+        }));
       }
     }
 
