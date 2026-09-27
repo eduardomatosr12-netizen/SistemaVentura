@@ -4,7 +4,7 @@ import {
 } from 'firebase/firestore';
 import { db } from './firebase';
 import type { EventExpense } from '../types/crm';
-import { cleanDataForFirestore } from '../lib/dataCleaner';
+import { validateAndCleanEventExpense, ValidationResult } from '../lib/dataValidator';
 
 const COLLECTION = 'event_expenses';
 
@@ -38,12 +38,17 @@ export const addEventExpense = async (
   eventId: string,
   expense: Omit<EventExpense, 'id' | 'financeiroId'>
 ): Promise<string> => {
-  const cleanExpense = cleanDataForFirestore({
+  const result: ValidationResult<EventExpense> = validateAndCleanEventExpense({
     ...expense,
     eventId,
-  } as Record<string, unknown>);
+  });
+  if (!result.success) {
+    const error = new Error('Validação falhou: ' + result.errors?.join(', '));
+    console.error('[EventExpenses] Validação falhou ao criar despesa:', error.message);
+    throw error;
+  }
   const docRef = await addDoc(collection(db, COLLECTION), {
-    ...cleanExpense,
+    ...result.data,
     createdAt: Timestamp.now(),
     updatedAt: Timestamp.now(),
   });
@@ -54,9 +59,18 @@ export const updateEventExpense = async (
   expenseId: string,
   data: Partial<EventExpenseRecord>
 ) => {
-  const cleanData = cleanDataForFirestore(data as Record<string, unknown>);
+  const result: ValidationResult<EventExpense> = validateAndCleanEventExpense({ ...data, id: expenseId });
+  if (!result.success) {
+    const error = new Error('Validação falhou: ' + result.errors?.join(', '));
+    console.error('[EventExpenses] Validação falhou ao atualizar despesa:', error.message);
+    throw error;
+  }
+  const dataObj = { ...result.data } as Record<string, unknown>;
+  delete dataObj.id;
+  delete dataObj.createdAt;
+  delete dataObj.updatedAt;
   await updateDoc(doc(db, COLLECTION, expenseId), {
-    ...cleanData,
+    ...dataObj,
     updatedAt: Timestamp.now(),
   });
 };

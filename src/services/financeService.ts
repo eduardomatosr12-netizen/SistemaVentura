@@ -2,7 +2,7 @@ import {
   collection, addDoc, updateDoc, deleteDoc, doc, query, orderBy, getDocs, onSnapshot, Timestamp, where,
 } from 'firebase/firestore';
 import { db } from './firebase';
-import { cleanDataForFirestore } from '../lib/dataCleaner';
+import { validateAndCleanFinance, ValidationResult } from '../lib/dataValidator';
 
 export interface FinanceRecord {
   id?: string;
@@ -62,9 +62,14 @@ export const fetchTransactions = async (): Promise<FinanceRecord[]> => {
 
 export const addTransaction = async (record: Omit<FinanceRecord, 'id' | 'createdAt'>): Promise<string> => {
   try {
-    const cleanRecord = cleanDataForFirestore(record as Record<string, unknown>);
+    const result: ValidationResult<FinanceRecord> = validateAndCleanFinance(record);
+    if (!result.success) {
+      const error = new Error('Validação falhou: ' + result.errors?.join(', '));
+      console.error('[Firestore] Validação falhou ao criar transação:', error.message);
+      throw error;
+    }
     const docRef = await addDoc(collection(db, COLLECTION), {
-      ...cleanRecord,
+      ...result.data,
       createdAt: Timestamp.now(),
     });
     console.log('[Firestore] Transação criada:', docRef.id);
@@ -77,8 +82,17 @@ export const addTransaction = async (record: Omit<FinanceRecord, 'id' | 'created
 
 export const updateTransaction = async (id: string, fields: Partial<FinanceRecord>): Promise<void> => {
   try {
-    const cleanFields = cleanDataForFirestore(fields as Record<string, unknown>);
-    await updateDoc(doc(db, COLLECTION, id), { ...cleanFields, updatedAt: Timestamp.now() });
+    const result: ValidationResult<FinanceRecord> = validateAndCleanFinance({ ...fields, id });
+    if (!result.success) {
+      const error = new Error('Validação falhou: ' + result.errors?.join(', '));
+      console.error('[Firestore] Validação falhou ao atualizar transação:', error.message);
+      throw error;
+    }
+    const data = { ...result.data } as Record<string, unknown>;
+    delete data.id;
+    delete data.createdAt;
+    delete data.updatedAt;
+    await updateDoc(doc(db, COLLECTION, id), { ...data, updatedAt: Timestamp.now() });
     console.log('[Firestore] Transação atualizada:', id);
   } catch (err) {
     console.error('[Firestore] Erro ao atualizar transação:', id, err);

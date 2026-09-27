@@ -2,6 +2,7 @@ import {
   collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, orderBy, onSnapshot, Timestamp,
 } from 'firebase/firestore';
 import { db } from './firebase';
+import { validateAndCleanEventStock, ValidationResult } from '../lib/dataValidator';
 
 export interface EventStockItem {
   id: string;
@@ -76,13 +77,20 @@ export const fetchEventStock = async (): Promise<EventStockItem[]> => {
 
 export const addEventStockItem = async (item: EventStockItemInput): Promise<string> => {
   try {
-    const docRef = await addDoc(collection(db, COLLECTION), {
-      name: item.name,
-      category: item.category,
-      observacao: item.observacao,
+    const itemWithDefaults = {
+      ...item,
       quantity: item.quantity ?? 0,
       unit: item.unit ?? 'unidade',
       valorReferencia: item.valorReferencia ?? 0,
+    };
+    const result: ValidationResult<EventStockItemInput> = validateAndCleanEventStock(itemWithDefaults);
+    if (!result.success) {
+      const error = new Error('Validação falhou: ' + result.errors?.join(', '));
+      console.error('[Firestore] Validação falhou ao criar item do estoque:', error.message);
+      throw error;
+    }
+    const docRef = await addDoc(collection(db, COLLECTION), {
+      ...result.data,
       createdAt: Timestamp.now(),
     });
     console.log('[Firestore] Item do estoque de eventos criado:', docRef.id);
@@ -95,7 +103,17 @@ export const addEventStockItem = async (item: EventStockItemInput): Promise<stri
 
 export const updateEventStockItem = async (id: string, fields: Partial<Omit<EventStockItem, 'id'>>): Promise<void> => {
   try {
-    await updateDoc(doc(db, COLLECTION, id), { ...fields, updatedAt: Timestamp.now() });
+    const result: ValidationResult<EventStockItemInput> = validateAndCleanEventStock({ ...fields, id });
+    if (!result.success) {
+      const error = new Error('Validação falhou: ' + result.errors?.join(', '));
+      console.error('[Firestore] Validação falhou ao atualizar item do estoque:', error.message);
+      throw error;
+    }
+    const data = { ...result.data } as Record<string, unknown>;
+    delete data.id;
+    delete data.createdAt;
+    delete data.updatedAt;
+    await updateDoc(doc(db, COLLECTION, id), { ...data, updatedAt: Timestamp.now() });
     console.log('[Firestore] Item do estoque de eventos atualizado:', id);
   } catch (err) {
     console.error('[Firestore] Erro ao atualizar item do estoque de eventos:', id, err);

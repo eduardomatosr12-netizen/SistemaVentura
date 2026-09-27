@@ -3,7 +3,7 @@ import {
 } from 'firebase/firestore';
 import { db } from './firebase';
 import type { CalendarEvent } from '../types/crm';
-import { sanitizeEventData, cleanDataForFirestore } from '../lib/dataCleaner';
+import { validateAndCleanEvent, ValidationResult } from '../lib/dataValidator';
 
 const COLLECTION = 'events';
 
@@ -67,9 +67,14 @@ export const fetchEvents = async (): Promise<CalendarEvent[]> => {
 
 export const addEvent = async (event: Omit<CalendarEvent, 'id'>): Promise<string> => {
   try {
-    const cleanEvent = sanitizeEventData(event as Record<string, unknown>);
+    const result: ValidationResult<CalendarEvent> = validateAndCleanEvent(event);
+    if (!result.success) {
+      const error = new Error('Validação falhou: ' + result.errors?.join(', '));
+      console.error('[Firestore] Validação falhou ao criar evento:', error.message);
+      throw error;
+    }
     const docRef = await addDoc(collection(db, COLLECTION), {
-      ...cleanEvent,
+      ...result.data,
       createdAt: Timestamp.now(),
     });
     console.log('[Firestore] Evento criado:', docRef.id);
@@ -82,8 +87,17 @@ export const addEvent = async (event: Omit<CalendarEvent, 'id'>): Promise<string
 
 export const updateEvent = async (id: string, fields: Partial<CalendarEvent>): Promise<void> => {
   try {
-    const cleanFields = cleanDataForFirestore(fields as Record<string, unknown>);
-    await updateDoc(doc(db, COLLECTION, id), { ...cleanFields, updatedAt: Timestamp.now() });
+    const result: ValidationResult<CalendarEvent> = validateAndCleanEvent({ ...fields, id });
+    if (!result.success) {
+      const error = new Error('Validação falhou: ' + result.errors?.join(', '));
+      console.error('[Firestore] Validação falhou ao atualizar evento:', error.message);
+      throw error;
+    }
+    const data = { ...result.data } as Record<string, unknown>;
+    delete data.id;
+    delete data.createdAt;
+    delete data.updatedAt;
+    await updateDoc(doc(db, COLLECTION, id), { ...data, updatedAt: Timestamp.now() });
     console.log('[Firestore] Evento atualizado:', id);
   } catch (err) {
     console.error('[Firestore] Erro ao atualizar evento:', id, err);

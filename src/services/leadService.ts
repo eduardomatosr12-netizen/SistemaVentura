@@ -3,7 +3,7 @@ import {
 } from 'firebase/firestore';
 import { db } from './firebase';
 import type { Lead } from '../types/crm';
-import { cleanDataForFirestore } from '../lib/dataCleaner';
+import { validateAndCleanLead, ValidationResult } from '../lib/dataValidator';
 const COLLECTION = 'leads';
 
 const toDate = (ts: Timestamp | string | undefined): string => {
@@ -69,12 +69,17 @@ export const fetchLeads = async (): Promise<Lead[]> => {
 
 export const addLead = async (lead: Omit<Lead, 'id'>): Promise<string> => {
   try {
-    const cleanLead = cleanDataForFirestore({
+    const result: ValidationResult<Lead> = validateAndCleanLead({
       ...lead,
       firstContact: lead.firstContact || new Date().toISOString().split('T')[0],
-    } as Record<string, unknown>);
+    });
+    if (!result.success) {
+      const error = new Error('Validação falhou: ' + result.errors?.join(', '));
+      console.error('[Firestore] Validação falhou ao criar lead:', error.message);
+      throw error;
+    }
     const docRef = await addDoc(collection(db, COLLECTION), {
-      ...cleanLead,
+      ...result.data,
       createdAt: Timestamp.now(),
     });
     console.log('[Firestore] Lead criado:', docRef.id);
@@ -87,8 +92,17 @@ export const addLead = async (lead: Omit<Lead, 'id'>): Promise<string> => {
 
 export const updateLead = async (id: string, fields: Partial<Lead>): Promise<void> => {
   try {
-    const cleanFields = cleanDataForFirestore(fields as Record<string, unknown>);
-    await updateDoc(doc(db, COLLECTION, id), { ...cleanFields, updatedAt: Timestamp.now() });
+    const result: ValidationResult<Lead> = validateAndCleanLead({ ...fields, id });
+    if (!result.success) {
+      const error = new Error('Validação falhou: ' + result.errors?.join(', '));
+      console.error('[Firestore] Validação falhou ao atualizar lead:', error.message);
+      throw error;
+    }
+    const data = { ...result.data } as Record<string, unknown>;
+    delete data.id;
+    delete data.createdAt;
+    delete data.updatedAt;
+    await updateDoc(doc(db, COLLECTION, id), { ...data, updatedAt: Timestamp.now() });
     console.log('[Firestore] Lead atualizado:', id);
   } catch (err) {
     console.error('[Firestore] Erro ao atualizar lead:', id, err);
