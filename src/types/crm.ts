@@ -57,6 +57,7 @@ export interface CalendarEvent {
   clientEmail?: string;
   clientPhone?: string;
   clientCpf?: string;
+  clientRg?: string;
   clientAddress?: string;
   clientGender?: 'F' | 'M' | '';
   contractServices?: string[];

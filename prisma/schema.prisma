@@ -20,3 +20,208 @@ model User {
 
   @@map("users")
 }
+
+model Event {
+  id                String   @id @default(uuid())
+  title             String
+  client            String?
+  clientId          String?
+  eventType         String?
+  date              DateTime
+  dateEnd           DateTime?
+  time              String?
+  local             String?
+  decorator         String?
+  city              String?
+  description       String?
+  equipe            String?
+  clientEmail       String?
+  clientPhone       String?
+  clientCpf         String?
+  clientRg          String?
+  clientAddress     String?
+  clientGender      String?
+  contractServices  String[] @default([])
+  status            String   @default("orcamento")
+  valorTotal        Float    @default(0)
+  desconto          Float    @default(0)
+  items             Json?
+  despesasInternas  Json?
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  @@map("events")
+}
+
+model Lead {
+  id                String   @id @default(uuid())
+  name              String
+  niche             String
+  whatsapp          String
+  email             String
+  instagram         String?
+  stage             String
+  origin            String?
+  firstContact      DateTime @default(now()) @map("first_contact")
+  closingDate       DateTime? @map("closing_date")
+  followUpReminder  DateTime? @map("follow_up_reminder")
+  address           String?
+  notes             String?
+  value             String   @default("0")
+  items             Json?
+  lastModifiedBy    String?  @map("last_modified_by")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  @@map("leads")
+}
+
+model Transaction {
+  id               String   @id @default(uuid())
+  type             String
+  client           String?
+  description      String
+  amount           Float
+  date             DateTime
+  paidDate         DateTime? @map("paid_date")
+  status           String
+  source           String?
+  paymentMethod    String?  @map("payment_method")
+  installments     Int?
+  category         String?
+  eventType        String?  @map("event_type")
+  origemEventoId   String?  @map("origem_evento_id")
+  lastModifiedBy   String?  @map("last_modified_by")
+  expenseType      String?  @map("expense_type")
+  recurrence       String?
+  dueDay           Int?     @map("due_day")
+  parentId         String?  @map("parent_id")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  @@map("transactions")
+}
+
+model InventoryBoard {
+  id        String   @id @default(uuid())
+  title     String
+  color     String   @default("#3b82f6")
+  columns   Json
+  rows      Json
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("inventory_boards")
+}
+
+model Employee {
+  id        String   @id @default(uuid())
+  nome      String
+  funcao    String?
+  telefone  String?
+  email     String?
+  cpf       String?
+  pix       String?
+  salario   Float?
+  ativo     Boolean  @default(true)
+  avatarUrl String?  @map("avatar_url")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("employees")
+}
+
+model ActivityLog {
+  id        String   @id @default(uuid())
+  acao      String
+  descricao String
+  userId    String   @map("user_id")
+  userName  String   @map("user_name")
+  timestamp DateTime @default(now())
+
+  @@map("activity_logs")
+}
+
+model Rental {
+  id           String   @id @default(uuid())
+  clientName   String   @map("client_name")
+  clientPhone  String?  @map("client_phone")
+  clientEmail  String?  @map("client_email")
+  items        Json
+  totalValue   Float    @map("total_value")
+  discount     Float    @default(0)
+  status       String   @default("ativo")
+  startDate    DateTime @map("start_date")
+  endDate      DateTime? @map("end_date")
+  notes        String?
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@map("rentals")
+}
+
+model EventExpense {
+  id              String   @id @default(uuid())
+  eventId         String   @map("event_id")
+  description     String
+  category        String
+  customName      String?  @map("custom_name")
+  valor           Float
+  status          String   @default("Pendente")
+  paymentMethod   String?  @map("payment_method")
+  tipo            String   @default("variavel")
+  interno         Boolean  @default(true)
+  financeiroId    String?  @map("financeiro_id")
+  date            DateTime
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  @@map("event_expenses")
+}
+
+model EventStockItem {
+  id              String   @id @default(uuid())
+  name            String
+  category        String
+  quantity        Int      @default(0)
+  unit            String   @default("unidade")
+  valorReferencia Float    @default(0) @map("valor_referencia")
+  observacao      String?
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  @@map("event_stock_items")
+}
+
+model ContractServiceType {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  isDefault   Boolean  @default(false) @map("is_default")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("contract_service_types")
+}
+
+model WhatsAppTemplate {
+  id        String   @id @default(uuid())
+  name      String
+  content   String
+  category  String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("whatsapp_templates")
+}
+
+model SystemConfig {
+  id             String   @id @default("singleton")
+  whatsappApiKey String?  @map("whatsapp_api_key")
+  asaasApiKey    String?  @map("asaas_api_key")
+  firebaseConfig Json?    @map("firebase_config")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  @@map("system_config")
+}

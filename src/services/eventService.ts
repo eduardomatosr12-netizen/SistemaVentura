@@ -28,6 +28,7 @@ const mapEventDoc = (d: { id: string; data: () => Record<string, unknown> }): Ca
     clientEmail: data.clientEmail || '',
     clientPhone: data.clientPhone || '',
     clientCpf: data.clientCpf || '',
+    clientRg: data.clientRg || '',
     clientAddress: data.clientAddress || '',
     clientGender: validGender,
     contractServices: Array.isArray(data.contractServices)

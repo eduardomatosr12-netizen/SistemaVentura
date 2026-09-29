@@ -1,6 +1,6 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
 import { useScrollLock } from '../../hooks/useScrollLock';
-import { Calendar, UserPlus, ArrowRight, CheckSquare, Activity, AlertCircle, LayoutDashboard, X, ChevronLeft, ChevronRight, ChevronDown, Search, User, Phone, Mail, CreditCard, CalendarDays, Clock, Plus, Trash2, MapPin, Pencil, FileText, MessageCircle, Lock, Package, History, BadgeDollarSign } from 'lucide-react';
+import { Calendar, UserPlus, ArrowRight, CheckSquare, Activity, AlertCircle, LayoutDashboard, X, ChevronLeft, ChevronRight, ChevronDown, Search, User, Phone, Mail, CreditCard, CalendarDays, Clock, Plus,   Trash2, MapPin, Pencil, FileText, MessageCircle, Lock, Package, History, BadgeDollarSign, IdCard } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell, LabelList, CartesianGrid, Tooltip } from 'recharts';
 import { ChartTooltipContent } from '../../components/charts';
@@ -117,7 +117,7 @@ const CRMDashboard = () => {
   // Create modal state
   const [, setCreateDate] = useState('');
   const [formData, setFormData] = useState({
-    name: '', whatsapp: '', email: '', cpf: '', clientAddress: '', clientGender: '',
+    name: '', whatsapp: '', email: '', cpf: '', rg: '', clientAddress: '', clientGender: '',
     eventType: '', date: '', dateEnd: '', time: '', city: '', local: '', observacao: '',
     status: '', outroEventoType: '',
     orcamentoItems: [] as OrcamentoItem[], desconto: 0, valor: 0,
@@ -194,9 +194,10 @@ const CRMDashboard = () => {
       ].filter(Boolean) as CalendarEvent[];
 
       const cpf = candidates.map(e => e.clientCpf || '').find(Boolean) || '';
+      const rg = candidates.map(e => e.clientRg || '').find(Boolean) || '';
       const clientAddress = candidates.map(e => e.clientAddress || '').find(Boolean) || '';
       const clientGender = candidates.map(e => e.clientGender || '').find(Boolean) || '';
-      return { cpf, clientAddress, clientGender };
+      return { cpf, rg, clientAddress, clientGender };
     };
   }, [events]);
 
@@ -299,7 +300,7 @@ const CRMDashboard = () => {
       whatsapp: formData.whatsapp || '',
       email: formData.email || '',
       cpf: formData.cpf || '',
-      rg: '',
+      rg: formData.rg || '',
       clientAddress: formData.clientAddress || undefined,
       clientGender: formData.clientGender,
       eventType: effectiveEventType || '',
@@ -450,6 +451,7 @@ const CRMDashboard = () => {
         clientPhone: formData.whatsapp || '',
         clientEmail: formData.email || '',
         clientCpf: formData.cpf || '',
+        clientRg: formData.rg || '',
         eventType: effectiveEventType || '',
         date: formData.date || '',
         time: formData.time || '',
@@ -486,6 +488,7 @@ const CRMDashboard = () => {
       whatsapp: event.clientPhone || '',
       email: event.clientEmail || '',
       cpf: event.clientCpf || '',
+      rg: event.clientRg || '',
       clientAddress: event.clientAddress || '',
       clientGender: event.clientGender || '',
       eventType: isCustomType ? 'Outros' : eventTypeValue,
@@ -528,6 +531,7 @@ const CRMDashboard = () => {
           clientPhone: formData.whatsapp,
           clientEmail: formData.email,
           clientCpf: formData.cpf,
+          clientRg: formData.rg,
           clientAddress: formData.clientAddress,
           clientGender: formData.clientGender,
           eventType: effectiveEventType,
@@ -624,6 +628,7 @@ const newLeadId = await addLead(leadInput as Omit<Lead, 'id'>);
             clientPhone: formData.whatsapp,
             clientEmail: formData.email,
             clientCpf: formData.cpf,
+            clientRg: formData.rg,
             clientAddress: formData.clientAddress,
 clientGender: formData.clientGender,
             eventType: effectiveEventType,
@@ -660,7 +665,8 @@ await addTransaction({
           clientId: client.id,
           clientPhone: client.whatsapp,
           clientEmail: client.email,
-          clientCpf: '',
+          clientCpf: formData.cpf,
+          clientRg: formData.rg,
           clientAddress: formData.clientAddress,
           clientGender: formData.clientGender,
           eventType: effectiveEventType,
@@ -1608,12 +1614,21 @@ event.status === 'evento_confirmado' ? 'bg-[#3b82f6] text-white' :
                         className="w-full bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg px-3 py-2 text-sm text-white focus:border-[#CDFF00] outline-none" />
                     </div>
                   </div>
-                  <div>
-                    <label className="block text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-1.5 flex items-center gap-1.5">
-                      <CreditCard size={12} /> CPF
-                    </label>
-                    <input type="text" value={formData.cpf} onChange={e => setFormData(prev => ({ ...prev, cpf: e.target.value }))}
-                      className="w-full bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg px-3 py-2 text-sm text-white focus:border-[#CDFF00] outline-none" />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-1.5 flex items-center gap-1.5">
+                        <CreditCard size={12} /> CPF
+                      </label>
+                      <input type="text" value={formData.cpf} onChange={e => setFormData(prev => ({ ...prev, cpf: e.target.value }))}
+                        className="w-full bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg px-3 py-2 text-sm text-white focus:border-[#CDFF00] outline-none" />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-1.5 flex items-center gap-1.5">
+                        <IdCard size={12} /> RG
+                      </label>
+                      <input type="text" value={formData.rg} onChange={e => setFormData(prev => ({ ...prev, rg: e.target.value }))}
+                        className="w-full bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg px-3 py-2 text-sm text-white focus:border-[#CDFF00] outline-none" />
+                    </div>
                   </div>
                 </>
               ) : (
@@ -1658,6 +1673,7 @@ event.status === 'evento_confirmado' ? 'bg-[#3b82f6] text-white' :
                                     whatsapp: lead.whatsapp,
                                     email: lead.email || '',
                                     cpf: fb.cpf || prev.cpf,
+                                    rg: fb.rg || prev.rg,
                                     clientAddress: fb.clientAddress || prev.clientAddress,
                                     clientGender: fb.clientGender || prev.clientGender,
                                     eventType: evType.value || prev.eventType,
@@ -1683,6 +1699,22 @@ event.status === 'evento_confirmado' ? 'bg-[#3b82f6] text-white' :
                   {selectedClientId && (
                     <p className="text-[10px] text-[#CDFF00] mt-1">Cliente selecionado</p>
                   )}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
+                    <div>
+                      <label className="block text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-1.5 flex items-center gap-1.5">
+                        <CreditCard size={12} /> CPF
+                      </label>
+                      <input type="text" value={formData.cpf} onChange={e => setFormData(prev => ({ ...prev, cpf: e.target.value }))}
+                        className="w-full bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg px-3 py-2 text-sm text-white focus:border-[#CDFF00] outline-none" />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-1.5 flex items-center gap-1.5">
+                        <IdCard size={12} /> RG
+                      </label>
+                      <input type="text" value={formData.rg} onChange={e => setFormData(prev => ({ ...prev, rg: e.target.value }))}
+                        className="w-full bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg px-3 py-2 text-sm text-white focus:border-[#CDFF00] outline-none" />
+                    </div>
+                  </div>
                 </div>
               )}
               {/* Event fields — common to both modes */}
