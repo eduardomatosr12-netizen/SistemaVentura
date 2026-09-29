@@ -3,7 +3,8 @@ import {
 } from 'firebase/firestore';
 import { db } from './firebase';
 import type { CalendarEvent } from '../types/crm';
-import { validateAndCleanEvent, ValidationResult } from '../lib/dataValidator';
+import { validateAndCleanEvent } from '../lib/dataValidator';
+import type { ValidationResult } from '../lib/dataValidator';
 
 const COLLECTION = 'events';
 

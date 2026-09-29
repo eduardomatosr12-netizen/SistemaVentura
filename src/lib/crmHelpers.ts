@@ -762,7 +762,7 @@ export interface ContractData {
   cpf: string;
   rg?: string;
   clientAddress?: string;
-  clientGender?: 'F' | 'M' | '';
+  clientGender?: 'F' | 'M';
   eventType: string;
   date: string;
   dateEnd?: string;
@@ -774,6 +774,8 @@ export interface ContractData {
   grossTotal: number;
   discount: number;
   services?: string[];
+  downPayment?: number;
+  downPaymentType?: 'percent' | 'fixed';
 }
 
 /** Serviço principal da empresa, usado quando nenhum foi selecionado. */
@@ -825,7 +827,16 @@ export function generateContractPDF(data: ContractData): void {
   const eventType = eventTypeLabel(data.eventType);
   const pontosLuz = items.reduce((sum, item) => sum + (item.qtdAtual || 0), 0);
   const eventoData = formatShortDateRange(data.date, data.dateEnd);
-  const metade = finalTotal / 2;
+
+  const downPaymentType = data.downPaymentType || 'percent';
+  const downPaymentValue = data.downPayment ?? 50;
+  const entrada = downPaymentType === 'percent'
+    ? finalTotal * (downPaymentValue / 100)
+    : Math.min(downPaymentValue, finalTotal);
+  const restante = finalTotal - entrada;
+  const entradaPct = finalTotal > 0 ? Math.round((entrada / finalTotal) * 100) : 0;
+  const restantePct = 100 - entradaPct;
+
   const servicesTerm = escapeHtml(buildServicesTerm(data.services, pontosLuz));
   const servicesSubtitle = formatServicesList(data.services).map(escapeHtml).join(' • ');
   const servicesParenthetical = escapeHtml(formatServicesList(data.services).join(', ').toLowerCase());
@@ -918,7 +929,7 @@ ${companyHeaderHtml('Contrato', `Emitido em ${dateStr}`)}
         <div class="section">
           <div class="section-title">Da Remuneração</div>
           <div class="clause">
-            <p>Cláusula 5ª. Pelos serviços contratados pactuados neste instrumento, o CONTRATANTE se compromete a pagar a quantia de <strong>R$ (${formatNumberBR(finalTotal)})</strong> (${numberToExtensoBRL(finalTotal)}). Com a seguinte forma de pagamento: <strong>50%</strong> (R$ (${formatNumberBR(metade)})) no ato do contrato e o restante (R$ (${formatNumberBR(finalTotal - metade)})) até o dia da realização do evento.</p>
+            <p>Cláusula 5ª. Pelos serviços contratados pactuados neste instrumento, o CONTRATANTE se compromete a pagar a quantia de <strong>R$ (${formatNumberBR(finalTotal)})</strong> (${numberToExtensoBRL(finalTotal)}). Com a seguinte forma de pagamento: <strong>${entradaPct}%</strong> (R$ (${formatNumberBR(entrada)})) no ato do contrato e o restante <strong>${restantePct}%</strong> (R$ (${formatNumberBR(restante)})) até o dia da realização do evento.</p>
             <div class="payment-box">
               <div class="pay-title">Conta para depósito</div>
               <p>${CONTRACTOR.bank}<br>${CONTRACTOR.account}<br>${CONTRACTOR.agency}<br>${CONTRACTOR.variation}<br>${CONTRACTOR.name}</p>

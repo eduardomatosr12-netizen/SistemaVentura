@@ -18,6 +18,7 @@ interface Props {
   onAddressChange?: (value: string) => void;
   onGenderChange?: (value: 'F' | 'M' | '') => void;
   onServicesChange?: (services: string[]) => void;
+  onDownPaymentChange?: (value: number, type: 'percent' | 'fixed') => void;
   onSave?: () => void;
   saving?: boolean;
 }
@@ -112,7 +113,16 @@ export default function EmissaoContrato({ eventId, data, onAddressChange, onGend
     ? data.grossTotal
     : items.reduce((sum, item) => sum + ((item.valorUnit || 0) > 0 ? item.qtdAtual * item.valorUnit : 0), 0);
   const finalTotal = Math.max(0, total - (data.discount > 0 ? data.discount : 0));
-  const metade = finalTotal / 2;
+
+  const downPaymentType = data.downPaymentType || 'percent';
+  const downPaymentValue = data.downPayment ?? 50;
+  const entrada = downPaymentType === 'percent'
+    ? finalTotal * (downPaymentValue / 100)
+    : Math.min(downPaymentValue, finalTotal);
+  const restante = finalTotal - entrada;
+  const entradaPct = finalTotal > 0 ? Math.round((entrada / finalTotal) * 100) : 0;
+  const restantePct = 100 - entradaPct;
+
   const pontosLuz = items.reduce((sum, item) => sum + (item.qtdAtual || 0), 0);
 
   const eventoData = formatShortDateRange(data.date, data.dateEnd);
@@ -318,13 +328,50 @@ export default function EmissaoContrato({ eventId, data, onAddressChange, onGend
           <span className="text-sm font-black text-white">R$ {formatNumberBR(finalTotal)}</span>
         </div>
         <p className="text-[10px] text-neutral-500 italic pb-1.5">({numberToExtensoBRL(finalTotal)})</p>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+          <div>
+            <label className="block text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-1.5">Sinal (entrada)</label>
+            <div className="flex items-center gap-2">
+              <select
+                value={downPaymentType}
+                onChange={e => {
+                  const type = e.target.value as 'percent' | 'fixed';
+                  onDownPaymentChange?.(downPaymentValue, type);
+                }}
+                className="w-24 bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg px-2 py-1.5 text-xs text-white focus:border-[#CDFF00] outline-none"
+              >
+                <option value="percent">%</option>
+                <option value="fixed">R$</option>
+              </select>
+              <input
+                type="number"
+                step={downPaymentType === 'percent' ? '1' : '0.01'}
+                min="0"
+                max={downPaymentType === 'percent' ? '100' : finalTotal}
+                value={downPaymentValue}
+                onChange={e => {
+                  const val = parseFloat(e.target.value) || 0;
+                  onDownPaymentChange?.(val, downPaymentType);
+                }}
+                className="flex-1 bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg px-3 py-2 text-sm text-white focus:border-[#CDFF00] outline-none"
+              />
+            </div>
+          </div>
+          <div className="flex items-end">
+            <span className="text-xs text-neutral-400">
+              = R$ {formatNumberBR(entrada)} ({entradaPct}%)
+            </span>
+          </div>
+        </div>
+
         <div className="flex items-center justify-between py-1.5 border-t border-[#242424]">
-          <span className="text-[10px] font-black uppercase tracking-widest text-neutral-500">50% no ato</span>
-          <span className="text-xs text-white">R$ {formatNumberBR(metade)}</span>
+          <span className="text-[10px] font-black uppercase tracking-widest text-neutral-500">{entradaPct}% no ato</span>
+          <span className="text-xs text-white">R$ {formatNumberBR(entrada)}</span>
         </div>
         <div className="flex items-center justify-between py-1.5">
-          <span className="text-[10px] font-black uppercase tracking-widest text-neutral-500">50% até o evento</span>
-          <span className="text-xs text-white">R$ {formatNumberBR(finalTotal - metade)}</span>
+          <span className="text-[10px] font-black uppercase tracking-widest text-neutral-500">{restantePct}% até o evento</span>
+          <span className="text-xs text-white">R$ {formatNumberBR(restante)}</span>
         </div>
         <div className="mt-2 bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg p-3 space-y-0.5">
           <p className="text-[9px] font-black uppercase tracking-widest text-neutral-400">Conta para depósito</p>

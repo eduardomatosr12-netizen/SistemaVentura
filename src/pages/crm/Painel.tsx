@@ -122,6 +122,8 @@ const CRMDashboard = () => {
     status: '', outroEventoType: '',
     orcamentoItems: [] as OrcamentoItem[], desconto: 0, valor: 0,
     contractServices: [] as string[],
+    downPayment: 50,
+    downPaymentType: 'percent' as 'percent' | 'fixed',
   });
   const [selectedClientId, setSelectedClientId] = useState('');
   const [editingEventId, setEditingEventId] = useState<string | null>(null);
@@ -314,6 +316,8 @@ const CRMDashboard = () => {
       grossTotal: formData.valor,
       discount: formData.desconto,
       services: formData.contractServices,
+      downPayment: formData.downPayment,
+      downPaymentType: formData.downPaymentType,
     };
   }, [formData]);
 
@@ -1577,6 +1581,7 @@ event.status === 'evento_confirmado' ? 'bg-[#3b82f6] text-white' :
                   onAddressChange={value => setFormData(prev => ({ ...prev, clientAddress: value }))}
                   onGenderChange={value => setFormData(prev => ({ ...prev, clientGender: value }))}
                   onServicesChange={services => setFormData(prev => ({ ...prev, contractServices: services }))}
+                  onDownPaymentChange={(value, type) => setFormData(prev => ({ ...prev, downPayment: value, downPaymentType: type }))}
                   onSave={handleSaveContractData}
                   saving={isSavingContract}
                 />

@@ -2,7 +2,8 @@ import {
   collection, addDoc, updateDoc, deleteDoc, doc, query, orderBy, getDocs, onSnapshot, Timestamp, where,
 } from 'firebase/firestore';
 import { db } from './firebase';
-import { validateAndCleanFinance, ValidationResult } from '../lib/dataValidator';
+import { validateAndCleanFinance } from '../lib/dataValidator';
+import type { ValidationResult } from '../lib/dataValidator';
 
 export interface FinanceRecord {
   id?: string;

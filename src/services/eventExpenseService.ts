@@ -4,7 +4,8 @@ import {
 } from 'firebase/firestore';
 import { db } from './firebase';
 import type { EventExpense } from '../types/crm';
-import { validateAndCleanEventExpense, ValidationResult } from '../lib/dataValidator';
+import { validateAndCleanEventExpense } from '../lib/dataValidator';
+import type { ValidationResult } from '../lib/dataValidator';
 
 const COLLECTION = 'event_expenses';
 

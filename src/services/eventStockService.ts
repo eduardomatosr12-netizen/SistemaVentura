@@ -2,7 +2,8 @@ import {
   collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, orderBy, onSnapshot, Timestamp,
 } from 'firebase/firestore';
 import { db } from './firebase';
-import { validateAndCleanEventStock, ValidationResult } from '../lib/dataValidator';
+import { validateAndCleanEventStock } from '../lib/dataValidator';
+import type { ValidationResult } from '../lib/dataValidator';
 
 export interface EventStockItem {
   id: string;

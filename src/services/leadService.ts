@@ -3,7 +3,8 @@ import {
 } from 'firebase/firestore';
 import { db } from './firebase';
 import type { Lead } from '../types/crm';
-import { validateAndCleanLead, ValidationResult } from '../lib/dataValidator';
+import { validateAndCleanLead } from '../lib/dataValidator';
+import type { ValidationResult } from '../lib/dataValidator';
 const COLLECTION = 'leads';
 
 const toDate = (ts: Timestamp | string | undefined): string => {

@@ -4,6 +4,8 @@ export interface ValidationResult<T> {
   errors?: string[];
 }
 
+export type ValidationResultAny = ValidationResult<unknown>;
+
 const log = (prefix: string, data: unknown) => {
   console.log(`[Validator] ${prefix}:`, data);
 };
