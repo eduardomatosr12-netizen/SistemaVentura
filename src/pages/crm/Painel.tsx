@@ -521,7 +521,7 @@ const CRMDashboard = () => {
 
   const [submitError, setSubmitError] = useState<string | null>(null);
 
-  const handleCreateSubmit = async (e: React.FormEvent) => {
+const handleCreateSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubmitError(null);
     const effectiveEventType = formData.eventType === 'Outros' && formData.outroEventoType?.trim()
@@ -565,6 +565,10 @@ const CRMDashboard = () => {
             followUpReminder: '',
             address: formData.city || '',
             notes: formData.observacao || '',
+            cpf: formData.cpf,
+            rg: formData.rg,
+            clientAddress: formData.clientAddress,
+            clientGender: formData.clientGender,
           };
           if (formData.orcamentoItems.length > 0) {
             leadInput.value = total.toString();
@@ -605,10 +609,7 @@ const CRMDashboard = () => {
           await updateLead(selectedClientId, leadUpdate);
         }
         setEditingEventId(null);
-} else if (abaAtiva === 'cliente') {
-        const effectiveEventType = formData.eventType === 'Outros' && formData.outroEventoType?.trim()
-          ? formData.outroEventoType.trim()
-          : formData.eventType;
+      } else if (abaAtiva === 'cliente' && !selectedClientId) {
         const leadInput: Partial<Omit<Lead, 'id'>> = {
           name: formData.name,
           niche: effectiveEventType || 'Evento',
@@ -642,7 +643,7 @@ const CRMDashboard = () => {
             clientCpf: formData.cpf,
             clientRg: formData.rg,
             clientAddress: formData.clientAddress,
-clientGender: formData.clientGender,
+            clientGender: formData.clientGender,
             eventType: effectiveEventType,
             date: formData.date,
             dateEnd: formData.dateEnd || '',
@@ -655,8 +656,7 @@ clientGender: formData.clientGender,
             desconto: formData.desconto,
             items: formData.orcamentoItems,
           });
-        }
-await addTransaction({
+          await addTransaction({
             client: formData.name,
             description: `Evento: ${effectiveEventType || 'Evento'} - ${formData.name}${formData.observacao ? ' • ' + formData.observacao : ''}`,
             amount: total,
@@ -665,6 +665,44 @@ await addTransaction({
             type: 'receita',
             source: 'evento',
           });
+        }
+      } else if (abaAtiva === 'cliente') {
+        const client = Orçamentos.find(l => l.id === selectedClientId);
+        if (!client) {
+          setSubmitError('Cliente não encontrado. Selecione um cliente válido.');
+          return;
+        }
+        await addEvent({
+          title: effectiveEventType ? `${effectiveEventType} - ${client.name}` : client.name,
+          client: client.name,
+          clientId: client.id,
+          clientPhone: client.whatsapp,
+          clientEmail: client.email,
+          clientCpf: formData.cpf,
+          clientRg: formData.rg,
+          clientAddress: formData.clientAddress,
+          clientGender: formData.clientGender,
+          eventType: effectiveEventType,
+          date: formData.date,
+          dateEnd: formData.dateEnd || '',
+          time: formData.time,
+          city: formData.city,
+          local: formData.local,
+          description: formData.observacao,
+          status: (formData.status as CalendarEvent['status']) || 'orcamento',
+          valorTotal: total,
+          desconto: formData.desconto,
+          items: formData.orcamentoItems,
+        });
+        await addTransaction({
+          client: client.name,
+          description: `Evento: ${effectiveEventType || 'Evento'} - ${client.name}${formData.observacao ? ' • ' + formData.observacao : ''}`,
+          amount: total,
+          date: formData.date || new Date().toISOString().split('T')[0],
+          status: 'Pendente',
+          type: 'receita',
+          source: 'evento',
+        });
       } else {
         const client = Orçamentos.find(l => l.id === selectedClientId);
         if (!client) {
@@ -692,6 +730,15 @@ await addTransaction({
           valorTotal: total,
           desconto: formData.desconto,
           items: formData.orcamentoItems,
+        });
+        await addTransaction({
+          client: client.name,
+          description: `Evento: ${effectiveEventType || 'Evento'} - ${client.name}${formData.observacao ? ' • ' + formData.observacao : ''}`,
+          amount: total,
+          date: formData.date || new Date().toISOString().split('T')[0],
+          status: 'Pendente',
+          type: 'receita',
+          source: 'evento',
         });
       }
       setIsCreateOpen(false);
