@@ -70,7 +70,7 @@ const getOccurrenceStatusLabel = (occ: CalendarOccurrence): string =>
 const getPhaseBg = (occ: CalendarOccurrence): string => getEventStatusBg(occ.event.status);
 
 const CRMCalendario = () => {
-  const { events, addEvent, updateEvent, deleteEvent, Orçamentos } = useCRM();
+  const { events, addEvent, updateEvent, deleteEvent, Orçamentos, addLead, updateLead } = useCRM();
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<'create' | 'edit' | 'view'>('create');
@@ -384,9 +384,53 @@ const CRMCalendario = () => {
       items: eventItems,
     };
     try {
+      let eventId = selectedEvent?.id;
+      let clientId = formData.clientId;
+
       if (modalMode === 'create') {
-        await addEvent(payload);
+        // If client has no clientId, create a new lead
+        if (formData.client && !formData.clientId) {
+          const leadInput = {
+            name: formData.client,
+            niche: formData.eventType || 'Evento',
+            whatsapp: formData.clientPhone || '',
+            email: formData.clientEmail || '',
+            instagram: '',
+            stage: 'Novos Orçamentos',
+            origin: 'evento',
+            firstContact: formData.date || new Date().toISOString().split('T')[0],
+            closingDate: '',
+            followUpReminder: '',
+            address: formData.city || '',
+            notes: formData.description || '',
+            cpf: formData.clientCpf || '',
+            rg: formData.clientRg || '',
+            clientAddress: '',
+            clientGender: formData.clientGender || '',
+          };
+          const newLeadId = await addLead(leadInput);
+          if (newLeadId) {
+            clientId = newLeadId;
+            payload.clientId = newLeadId;
+          }
+        }
+        eventId = await addEvent(payload);
       } else if (selectedEvent) {
+        // If updating and client has clientId, update the lead
+        if (formData.client && formData.clientId) {
+          const leadUpdate = {
+            name: formData.client,
+            whatsapp: formData.clientPhone || '',
+            email: formData.clientEmail || '',
+            address: formData.city || '',
+            notes: formData.description || '',
+            cpf: formData.clientCpf || '',
+            rg: formData.clientRg || '',
+            clientAddress: '',
+            clientGender: formData.clientGender || '',
+          };
+          await updateLead(formData.clientId, leadUpdate);
+        }
         await updateEvent(selectedEvent.id, payload);
       }
       setIsModalOpen(false);
