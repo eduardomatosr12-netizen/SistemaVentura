@@ -56,13 +56,57 @@ export const validateArray = <T>(value: unknown, field: string, itemValidator?: 
   return value as T[];
 };
 
+const normalizeToISODate = (value: unknown): string | null => {
+  if (value === undefined || value === null || value === '') return null;
+  
+  if (value instanceof Date) {
+    if (isNaN(value.getTime())) return null;
+    return value.toISOString().split('T')[0];
+  }
+  
+  if (typeof value === 'number') {
+    const date = new Date(value);
+    if (isNaN(date.getTime())) return null;
+    return date.toISOString().split('T')[0];
+  }
+  
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (!trimmed) return null;
+    
+    if (trimmed.match(/^\d{4}-\d{2}-\d{2}$/)) {
+      const date = new Date(trimmed + 'T00:00:00');
+      if (isNaN(date.getTime())) return null;
+      return trimmed;
+    }
+    
+    if (trimmed.match(/^\d{4}-\d{2}-\d{2}T/)) {
+      const date = new Date(trimmed);
+      if (isNaN(date.getTime())) return null;
+      return date.toISOString().split('T')[0];
+    }
+    
+    if (trimmed.match(/^\d{2}\/\d{2}\/\d{4}$/)) {
+      const [day, month, year] = trimmed.split('/');
+      const date = new Date(`${year}-${month}-${day}T00:00:00`);
+      if (isNaN(date.getTime())) return null;
+      return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+    }
+    
+    const date = new Date(trimmed);
+    if (!isNaN(date.getTime())) {
+      return date.toISOString().split('T')[0];
+    }
+  }
+  
+  return null;
+};
+
 export const validateISODate = (value: unknown, field: string): string | null => {
   if (value === undefined || value === null) return null;
-  if (typeof value !== 'string') return `${field}: deve ser string`;
-  if (!value.match(/^\d{4}-\d{2}-\d{2}/)) return `${field}: formato inválido (YYYY-MM-DD)`;
-  const date = new Date(value + 'T00:00:00');
-  if (isNaN(date.getTime())) return `${field}: data inválida`;
-  return value;
+  const normalized = normalizeToISODate(value);
+  if (normalized === null) return `${field}: formato inválido (YYYY-MM-DD)`;
+  return normalized;
 };
 
 export interface InventoryItemInput {
