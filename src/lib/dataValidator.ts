@@ -324,11 +324,11 @@ export const validateAndCleanLead = (data: unknown): ValidationResult<LeadInput>
   if (typeof niche === 'string' && !niche.startsWith('niche:')) cleaned.niche = niche;
   else if (niche) errors.push(niche);
 
-  const whatsapp = validateString(data?.whatsapp, 'whatsapp', true, false);
+  const whatsapp = validateString(data?.whatsapp, 'whatsapp', false, true);
   if (typeof whatsapp === 'string' && !whatsapp.startsWith('whatsapp:')) cleaned.whatsapp = whatsapp;
   else if (whatsapp) errors.push(whatsapp);
 
-  const email = validateString(data?.email, 'email', true, false);
+  const email = validateString(data?.email, 'email', false, true);
   if (typeof email === 'string' && !email.startsWith('email:')) cleaned.email = email;
   else if (email) errors.push(email);
 

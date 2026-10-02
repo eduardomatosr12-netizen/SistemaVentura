@@ -513,30 +513,7 @@ const Financeiro = () => {
     return () => window.removeEventListener('despesas-atualizadas', handler);
   }, []);
 
-  useEffect(() => {
-    if (!events || !transactions) return;
-    const eventTransactions = new Set(
-      transactions.filter(t => t.origemEventoId).map(t => t.origemEventoId)
-    );
-    const eventosSemFatura = events.filter(
-      e => e.status === 'evento_concluido' && e.id && !eventTransactions.has(e.id)
-    );
-    for (const event of eventosSemFatura) {
-      const lead = Orçamentos.find(o => o.id === event.clientId);
-      const valorOrcamento = lead ? parseMonetaryValue(lead.value) : Number(event.valorTotal ?? 0);
-      if (!valorOrcamento) continue;
-      addTransaction({
-        client: event.client || '',
-        description: `Evento: ${event.title} - ${event.client}`,
-        amount: Number(valorOrcamento),
-        date: event.date,
-        status: 'Pendente',
-        type: 'receita',
-        source: 'evento',
-        origemEventoId: event.id,
-      }).catch(err => console.error('[Finance] Erro ao criar receita de evento:', err));
-    }
-  }, [events, transactions, Orçamentos, addTransaction]);
+  
     
   const [isInvoiceModalOpen, setIsInvoiceModalOpen] = useState(false);
   const [editingInvoice, setEditingInvoice] = useState<Invoice | null>(null);
