@@ -24,6 +24,10 @@ export interface Lead {
   value: string;
   items?: OrcamentoItem[];
   lastModifiedBy?: string;
+  cpf?: string;
+  rg?: string;
+  clientAddress?: string;
+  clientGender?: 'F' | 'M' | '';
 }
 
 export interface EventExpense {

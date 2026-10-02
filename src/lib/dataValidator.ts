@@ -309,6 +309,10 @@ export interface LeadInput {
   value?: string;
   items?: Array<{ id: string; item: string; qtdAtual: number; valorUnit: number; semPreco?: boolean; eventStockId?: string }>;
   lastModifiedBy?: string;
+  cpf?: string;
+  rg?: string;
+  clientAddress?: string;
+  clientGender?: 'F' | 'M' | '';
 }
 
 export const validateAndCleanLead = (data: unknown): ValidationResult<LeadInput> => {
@@ -404,6 +408,22 @@ export const validateAndCleanLead = (data: unknown): ValidationResult<LeadInput>
   const lastModifiedBy = validateString(data?.lastModifiedBy, 'lastModifiedBy', false, true);
   if (lastModifiedBy && !lastModifiedBy.startsWith('lastModifiedBy:')) cleaned.lastModifiedBy = lastModifiedBy;
   else if (lastModifiedBy) errors.push(lastModifiedBy);
+
+  const cpf = validateString(data?.cpf, 'cpf', false, true);
+  if (cpf && !cpf.startsWith('cpf:')) cleaned.cpf = cpf;
+  else if (cpf) errors.push(cpf);
+
+  const rg = validateString(data?.rg, 'rg', false, true);
+  if (rg && !rg.startsWith('rg:')) cleaned.rg = rg;
+  else if (rg) errors.push(rg);
+
+  const clientAddress = validateString(data?.clientAddress, 'clientAddress', false, true);
+  if (clientAddress && !clientAddress.startsWith('clientAddress:')) cleaned.clientAddress = clientAddress;
+  else if (clientAddress) errors.push(clientAddress);
+
+  const clientGender = validateString(data?.clientGender, 'clientGender', false, true);
+  if (clientGender && !clientGender.startsWith('clientGender:')) cleaned.clientGender = clientGender as LeadInput['clientGender'];
+  else if (clientGender) errors.push(clientGender);
 
   cleaned.updatedAt = new Date().toISOString();
   if (!data?.id) cleaned.createdAt = new Date().toISOString();

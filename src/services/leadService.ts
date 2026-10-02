@@ -35,6 +35,10 @@ export const subscribeLeads = (callback: (leads: Lead[]) => void): () => void =>
         value: data.value || '0',
         items: data.items || [],
         lastModifiedBy: data.lastModifiedBy || '',
+        cpf: data.cpf || '',
+        rg: data.rg || '',
+        clientAddress: data.clientAddress || '',
+        clientGender: data.clientGender || '',
       } as Lead;
     });
     callback(leads);
@@ -64,6 +68,10 @@ export const fetchLeads = async (): Promise<Lead[]> => {
       value: data.value || '0',
       items: data.items || [],
       lastModifiedBy: data.lastModifiedBy || '',
+      cpf: data.cpf || '',
+      rg: data.rg || '',
+      clientAddress: data.clientAddress || '',
+      clientGender: data.clientGender || '',
     } as Lead;
   });
 };

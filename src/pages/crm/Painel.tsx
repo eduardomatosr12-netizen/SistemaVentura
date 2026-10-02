@@ -593,6 +593,10 @@ const CRMDashboard = () => {
             email: formData.email,
             address: formData.city || '',
             notes: formData.observacao || '',
+            cpf: formData.cpf,
+            rg: formData.rg,
+            clientAddress: formData.clientAddress,
+            clientGender: formData.clientGender,
           };
           if (formData.orcamentoItems.length > 0) {
             leadUpdate.value = total.toString();
@@ -601,7 +605,7 @@ const CRMDashboard = () => {
           await updateLead(selectedClientId, leadUpdate);
         }
         setEditingEventId(null);
-      } else if (abaAtiva === 'cliente') {
+} else if (abaAtiva === 'cliente') {
         const effectiveEventType = formData.eventType === 'Outros' && formData.outroEventoType?.trim()
           ? formData.outroEventoType.trim()
           : formData.eventType;
@@ -618,12 +622,16 @@ const CRMDashboard = () => {
           followUpReminder: '',
           address: formData.city || '',
           notes: formData.observacao || '',
+          cpf: formData.cpf,
+          rg: formData.rg,
+          clientAddress: formData.clientAddress,
+          clientGender: formData.clientGender,
         };
         if (formData.orcamentoItems.length > 0) {
           leadInput.value = total.toString();
           leadInput.items = formData.orcamentoItems;
         }
-const newLeadId = await addLead(leadInput as Omit<Lead, 'id'>);
+        const newLeadId = await addLead(leadInput as Omit<Lead, 'id'>);
         if (newLeadId) {
           await addEvent({
             title: effectiveEventType ? `${effectiveEventType} - ${formData.name}` : formData.name,
@@ -1659,35 +1667,35 @@ event.status === 'evento_confirmado' ? 'bg-[#3b82f6] text-white' :
                         {filteredClients.length === 0 ? (
                           <div className="px-3 py-2 text-xs text-neutral-500 italic">Nenhum cliente encontrado</div>
                         ) : (
-                          filteredClients.map(lead => (
-                            <button
-                              type="button"
-                              key={lead.id}
-                              onClick={() => {
-                                setSelectedClientId(lead.id);
-                                setClientSearch(`${lead.nome} — ${lead.whatsapp}`);
-                                setClientSearchOpen(false);
-                                setFormData(prev => {
-                                  const fb = clientContractFallbacks(lead.id, lead.nome);
-                                  const evType = matchEventType(lead.niche);
-                                  const valorBase = lead.valor && lead.valor > 0 ? lead.valor : 0;
-                                  return {
-                                    ...prev,
-                                    name: lead.nome,
-                                    city: lead.cidade,
-                                    whatsapp: lead.whatsapp,
-                                    email: lead.email || '',
-                                    cpf: fb.cpf || prev.cpf,
-                                    rg: fb.rg || prev.rg,
-                                    clientAddress: fb.clientAddress || prev.clientAddress,
-                                    clientGender: fb.clientGender || prev.clientGender,
-                                    eventType: evType.value || prev.eventType,
-                                    outroEventoType: evType.custom || prev.outroEventoType,
-                                    orcamentoItems: (lead.items && lead.items.length > 0) ? lead.items : prev.orcamentoItems,
-                                    valor: (lead.items && lead.items.length > 0) ? prev.valor : (valorBase > 0 ? valorBase : prev.valor),
-                                  };
-                                });
-                              }}
+filteredClients.map(lead => (
+                              <button
+                                type="button"
+                                key={lead.id}
+                                onClick={() => {
+                                  setSelectedClientId(lead.id);
+                                  setClientSearch(`${lead.nome} — ${lead.whatsapp}`);
+                                  setClientSearchOpen(false);
+                                  setFormData(prev => {
+                                    const fb = clientContractFallbacks(lead.id, lead.nome);
+                                    const evType = matchEventType(lead.niche);
+                                    const valorBase = lead.valor && lead.valor > 0 ? lead.valor : 0;
+                                    return {
+                                      ...prev,
+                                      name: lead.nome,
+                                      city: lead.cidade,
+                                      whatsapp: lead.whatsapp,
+                                      email: lead.email || '',
+                                      cpf: lead.cpf || fb.cpf || prev.cpf,
+                                      rg: lead.rg || fb.rg || prev.rg,
+                                      clientAddress: lead.clientAddress || fb.clientAddress || prev.clientAddress,
+                                      clientGender: lead.clientGender || fb.clientGender || prev.clientGender,
+                                      eventType: evType.value || prev.eventType,
+                                      outroEventoType: evType.custom || prev.outroEventoType,
+                                      orcamentoItems: (lead.items && lead.items.length > 0) ? lead.items : prev.orcamentoItems,
+                                      valor: (lead.items && lead.items.length > 0) ? prev.valor : (valorBase > 0 ? valorBase : prev.valor),
+                                    };
+                                  });
+                                }}
                                 className={`w-full text-left px-3 py-2 text-sm text-white hover:bg-[#2a2a2a] transition-colors flex items-center gap-2 ${selectedClientId === lead.id ? 'bg-[#2a2a2a] border-l-2 border-[#CDFF00]' : ''}`}
                               >
                                 <User size={12} className="text-neutral-500 shrink-0" />

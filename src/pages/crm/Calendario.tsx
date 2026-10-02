@@ -984,28 +984,32 @@ const CRMCalendario = () => {
                           <button
                             key={o.id}
                             type="button"
-                            onClick={() => {
-                                                setClientSearch(o.name);
-                              const itemsDesc = buildItemsDescription(o);
-                              const itemsFromLead = (o.items || []).map(i => ({
-                                id: generateUUID(),
-                                item: i.item,
-                                qtdAtual: i.qtdAtual,
-                                valorUnit: i.valorUnit || 0,
-                                semPreco: i.semPreco,
-                              }));
-                              setEventItems(itemsFromLead);
-                              setFormData(prev => ({
-                                ...prev,
-                                client: o.name,
-                                clientId: o.id,
-                                description: itemsDesc || prev.description,
-                                local: o.address || prev.local || '',
-                                clientPhone: o.whatsapp || prev.clientPhone || '',
-                                clientEmail: o.email || prev.clientEmail || '',
-                              }));
-                              setShowClientDropdown(false);
-                            }}
+onClick={() => {
+                                setClientSearch(o.name);
+                                const itemsDesc = buildItemsDescription(o);
+                                const itemsFromLead = (o.items || []).map(i => ({
+                                  id: generateUUID(),
+                                  item: i.item,
+                                  qtdAtual: i.qtdAtual,
+                                  valorUnit: i.valorUnit || 0,
+                                  semPreco: i.semPreco,
+                                }));
+                                setEventItems(itemsFromLead);
+                                setFormData(prev => ({
+                                  ...prev,
+                                  client: o.name,
+                                  clientId: o.id,
+                                  description: itemsDesc || prev.description,
+                                  local: o.address || prev.local || '',
+                                  clientPhone: o.whatsapp || prev.clientPhone || '',
+                                  clientEmail: o.email || prev.clientEmail || '',
+                                  clientCpf: o.cpf || prev.clientCpf || '',
+                                  clientRg: o.rg || prev.clientRg || '',
+                                  clientAddress: o.clientAddress || prev.clientAddress || '',
+                                  clientGender: o.clientGender || prev.clientGender || '',
+                                }));
+                                setShowClientDropdown(false);
+                              }}
                             className="w-full text-left px-3 py-2 text-xs text-white hover:bg-[#333] transition-colors border-b border-[#222] last:border-b-0"
                           >
                             {o.name}
