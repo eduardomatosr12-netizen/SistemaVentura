@@ -1,6 +1,6 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
 import { useScrollLock } from '../../hooks/useScrollLock';
-import { Calendar, UserPlus, ArrowRight, CheckSquare, Activity, AlertCircle, LayoutDashboard, X, ChevronLeft, ChevronRight, ChevronDown, Search, User, Phone, CalendarDays, Clock, Plus, Trash2, MapPin, Pencil, FileText, MessageCircle, Lock, Package, History, BadgeDollarSign } from 'lucide-react';
+import { Calendar, UserPlus, ArrowRight, CheckSquare, Activity, AlertCircle, LayoutDashboard, X, ChevronLeft, ChevronRight, ChevronDown, Search, User, Phone, Mail, CreditCard, IdCard, CalendarDays, Clock, Plus, Trash2, MapPin, Pencil, FileText, MessageCircle, Lock, Package, History, BadgeDollarSign } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell, LabelList, CartesianGrid, Tooltip } from 'recharts';
 import { ChartTooltipContent } from '../../components/charts';
@@ -118,7 +118,7 @@ const CRMDashboard = () => {
   // Create modal state
   const [, setCreateDate] = useState('');
   const [formData, setFormData] = useState({
-    name: '', whatsapp: '', clientAddress: '', clientGender: '',
+    name: '', whatsapp: '', email: '', cpf: '', rg: '', clientAddress: '', clientGender: '',
     eventType: '', date: '', dateEnd: '', time: '', city: '', local: '', observacao: '',
     outroEventoType: '',
     orcamentoItems: [] as OrcamentoItem[], desconto: 0, valor: 0,
@@ -1722,11 +1722,6 @@ filteredClients.map(lead => (
                                       name: lead.nome,
                                       city: lead.cidade,
                                       whatsapp: lead.whatsapp,
-                                      email: lead.email || '',
-                                      cpf: lead.cpf || fb.cpf || prev.cpf,
-                                      rg: lead.rg || fb.rg || prev.rg,
-                                      clientAddress: lead.clientAddress || fb.clientAddress || prev.clientAddress,
-                                      clientGender: lead.clientGender || fb.clientGender || prev.clientGender,
                                       eventType: evType.value || prev.eventType,
                                       outroEventoType: evType.custom || prev.outroEventoType,
                                       orcamentoItems: (lead.items && lead.items.length > 0) ? lead.items : prev.orcamentoItems,
@@ -1766,6 +1761,36 @@ filteredClients.map(lead => (
                     </label>
                     <input type="text" value={formData.whatsapp} onChange={e => setFormData(prev => ({ ...prev, whatsapp: e.target.value }))}
                       className="w-full bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg px-3 py-2 text-sm text-white focus:border-[#CDFF00] outline-none" required />
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-1.5 flex items-center gap-1.5">
+                        <Mail size={12} /> E-mail
+                      </label>
+                      <input type="email" value={formData.email} onChange={e => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                        className="w-full bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg px-3 py-2 text-sm text-white focus:border-[#CDFF00] outline-none" />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-1.5 flex items-center gap-1.5">
+                        <CreditCard size={12} /> CPF
+                      </label>
+                      <input type="text" value={formData.cpf} onChange={e => setFormData(prev => ({ ...prev, cpf: e.target.value }))}
+                        className="w-full bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg px-3 py-2 text-sm text-white focus:border-[#CDFF00] outline-none" />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-1.5 flex items-center gap-1.5">
+                        <IdCard size={12} /> RG
+                      </label>
+                      <input type="text" value={formData.rg} onChange={e => setFormData(prev => ({ ...prev, rg: e.target.value }))}
+                        className="w-full bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg px-3 py-2 text-sm text-white focus:border-[#CDFF00] outline-none" />
+                    </div>
+                    <div className="sm:col-span-2">
+                      <label className="block text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-1.5 flex items-center gap-1.5">
+                        <MapPin size={12} /> Endereço do Cliente
+                      </label>
+                      <input type="text" value={formData.clientAddress} onChange={e => setFormData(prev => ({ ...prev, clientAddress: e.target.value }))}
+                        className="w-full bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg px-3 py-2 text-sm text-white focus:border-[#CDFF00] outline-none" placeholder="Rua, número, bairro, cidade, estado" />
+                    </div>
                   </div>
                 </>
               )}
