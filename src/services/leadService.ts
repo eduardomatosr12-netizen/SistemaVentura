@@ -1,8 +1,8 @@
 import {
-  collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, orderBy, onSnapshot, Timestamp,
+  collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, where, orderBy, onSnapshot, Timestamp,
 } from 'firebase/firestore';
 import { db } from './firebase';
-import type { Lead } from '../types/crm';
+import type { Lead, CalendarEvent } from '../types/crm';
 import { validateAndCleanLead } from '../lib/dataValidator';
 const COLLECTION = 'leads';
 
@@ -34,6 +34,7 @@ export const subscribeLeads = (callback: (leads: Lead[]) => void): () => void =>
         value: data.value || '0',
         items: data.items || [],
         lastModifiedBy: data.lastModifiedBy || '',
+        eventoId: data.eventoId || '',
         cpf: data.cpf || '',
         rg: data.rg || '',
         clientAddress: data.clientAddress || '',
@@ -67,6 +68,7 @@ export const fetchLeads = async (): Promise<Lead[]> => {
       value: data.value || '0',
       items: data.items || [],
       lastModifiedBy: data.lastModifiedBy || '',
+      eventoId: data.eventoId || '',
       cpf: data.cpf || '',
       rg: data.rg || '',
       clientAddress: data.clientAddress || '',
@@ -136,4 +138,71 @@ export const updateLeadStage = async (id: string, stage: string): Promise<void> 
     console.error('[Firestore] Erro ao atualizar stage do lead:', id, err);
     throw err;
   }
+};
+
+/** Campos do evento que alimentam o cadastro do cliente na sessão "Clientes". */
+export type ContractClientSource = Pick<
+  CalendarEvent,
+  'id' | 'client' | 'clientPhone' | 'eventType' | 'date' | 'city' | 'description'
+> &
+  Pick<CalendarEvent, 'clientCpf' | 'clientRg' | 'clientAddress' | 'clientGender' | 'valorTotal' | 'desconto' | 'items'>;
+
+const formatBRL = (value: number): string =>
+  value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+/**
+ * Grava (ou atualiza) o cliente de um evento que teve contrato emitido.
+ *
+ * É o único caminho do sistema que cria registros em `leads`: até aqui o
+ * cliente existe somente no calendário.
+ */
+export const saveContractClient = async (
+  event: ContractClientSource,
+  options: { contractServices?: string[] } = {},
+): Promise<string> => {
+  const today = new Date().toISOString().split('T')[0];
+  // `valorTotal` do evento já é líquido (o desconto foi abatido na hora de salvar).
+  const total = Math.max(0, Number(event.valorTotal || 0));
+  const items = (event.items || []) as Lead['items'];
+
+  const payload: Omit<Lead, 'id'> = {
+    name: event.client || 'Cliente',
+    niche: event.eventType || 'Evento',
+    whatsapp: event.clientPhone || '',
+    email: '',
+    instagram: '',
+    stage: 'Contrato Fechado',
+    origin: 'contrato',
+    firstContact: event.date || today,
+    closingDate: today,
+    followUpReminder: '',
+    address: event.city || '',
+    notes: event.description || '',
+    value: formatBRL(total),
+    items,
+    eventoId: event.id,
+    cpf: event.clientCpf || '',
+    rg: event.clientRg || '',
+    clientAddress: event.clientAddress || '',
+    clientGender: event.clientGender || '',
+  };
+
+  if (options.contractServices && options.contractServices.length > 0) {
+    payload.notes = [payload.notes, `Serviços: ${options.contractServices.join(', ')}`]
+      .filter(Boolean)
+      .join(' • ');
+  }
+
+  const existing = await getDocs(query(collection(db, COLLECTION), where('eventoId', '==', event.id)));
+  const existingId = existing.docs[0]?.id;
+
+  if (existingId) {
+    await updateLead(existingId, payload);
+    console.log('[Firestore] Cliente do contrato atualizado:', existingId);
+    return existingId;
+  }
+
+  const newId = await addLead(payload);
+  console.log('[Firestore] Cliente do contrato criado:', newId);
+  return newId;
 };

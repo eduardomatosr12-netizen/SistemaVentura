@@ -16,7 +16,8 @@
     "db:migrate:dev": "prisma migrate dev",
     "db:generate": "prisma generate",
     "db:seed": "tsx prisma/seed.ts",
-    "db:studio": "prisma studio"
+    "db:studio": "prisma studio",
+    "db:migrate:contract-only-clients": "node scripts/migrate-contract-only-clients.mjs"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1041.0",

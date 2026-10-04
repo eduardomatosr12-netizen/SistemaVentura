@@ -6,8 +6,8 @@ const CRMSubmenu = () => {
 
   const crmSubItems = [
     { id: 'painel', label: 'Painel', icon: LayoutDashboard, path: '/crm/painel' },
-    { id: 'orcamentos', label: 'Clientes', icon: Users, path: '/crm/orcamentos' },
-    { id: 'calendario', label: 'Calendário', icon: Calendar, path: '/crm/calendario' },
+    { id: 'orcamentos', label: 'Clientes', icon: Users, path: '/clientes' },
+    { id: 'calendario', label: 'Calendário', icon: Calendar, path: '/calendario' },
     { id: 'importar', label: 'Importar', icon: Upload, path: '/crm/importar' },
   ];
 

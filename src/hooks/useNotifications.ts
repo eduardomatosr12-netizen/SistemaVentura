@@ -44,21 +44,11 @@ export function useNotifications() {
     sevenDaysFromNow.setDate(sevenDaysFromNow.getDate() + 7);
     const nowISO = now.toISOString();
 
+    // `Orçamentos` agora são apenas clientes com contrato: os estágios que
+    // ainda não têm contrato não chegam aqui.
     for (const lead of Orçamentos) {
       const leadName = lead.name || 'Cliente';
       const leadValue = lead.value || '';
-
-      if (lead.stage === 'Novos Orçamentos') {
-        const id = `novo_cliente-${lead.id}`;
-        list.push({
-          id, title: 'Novo Cliente',
-          description: `Novo cliente ${leadName} foi cadastrado`,
-          time: formatRelativeTime(lead.firstContact),
-          timestamp: lead.firstContact || nowISO,
-          isRead: readMap[id] || false,
-          type: 'novo_cliente', link: '/crm/orcamentos',
-        });
-      }
 
       if (lead.stage === 'Proposta Enviada') {
         const id = `orcamento_pendente-${lead.id}`;
@@ -68,7 +58,7 @@ export function useNotifications() {
           time: formatRelativeTime(lead.firstContact),
           timestamp: lead.firstContact || nowISO,
           isRead: readMap[id] || false,
-          type: 'orcamento_pendente', link: '/contatos',
+          type: 'orcamento_pendente', link: '/clientes',
         });
       }
 
@@ -76,11 +66,11 @@ export function useNotifications() {
         const id = `fechamento-${lead.id}`;
         list.push({
           id, title: 'Fechamento',
-          description: `Novo fechamento registrado: ${leadName} - ${leadValue}`,
+          description: `Contrato fechado: ${leadName} - ${leadValue}`,
           time: formatRelativeTime(lead.closingDate || lead.firstContact),
           timestamp: lead.closingDate || lead.firstContact || nowISO,
           isRead: readMap[id] || false,
-          type: 'fechamento', link: '/crm/orcamentos',
+          type: 'fechamento', link: '/clientes',
         });
       }
     }
@@ -97,11 +87,9 @@ export function useNotifications() {
         time: formatRelativeTime(event.date),
         timestamp: event.date,
         isRead: readMap[id] || false,
-        type: 'evento_proximo', link: '/crm/calendario',
+        type: 'evento_proximo', link: '/calendario',
       });
     }
-
-
 
     list.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
     return list.slice(0, MAX_NOTIFICATIONS).filter(n => !dismissed.has(n.id));

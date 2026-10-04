@@ -1,13 +1,13 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useCRM } from '../../contexts/CRMContext';
-import type { CalendarEvent } from '../../types/crm';
+import type { CalendarEvent, OrcamentoItem } from '../../types/crm';
 import { generateUUID } from '../../lib/uuid';
 import { generateWhatsAppLink } from '../../lib/whatsapp';
 import { eventTypeLabel } from '../../lib/eventTypeLabel';
 import { isSingleDayEvent } from '../../lib/crmHelpers';
 import { subscribeEventStock, addEventStockItem, EVENT_STOCK_CATEGORIES, type EventStockItem } from '../../services/eventStockService';
 import { subscribeEmployees } from '../../services/employeeService';
-import { X, Clock, User, Users, MessageSquare, Plus, Trash2, Calendar as CalendarIcon, FileText, ChevronLeft, ChevronRight, Search, MapPin, Mail, Phone, CreditCard, Flag, MessageCircle, Package, Save } from 'lucide-react';
+import { X, Clock, User, Users, MessageSquare, Plus, Trash2, Calendar as CalendarIcon, FileText, ChevronLeft, ChevronRight, Search, MapPin, Phone, CreditCard, Flag, MessageCircle, Package, Save } from 'lucide-react';
 
 const toBR = (iso: string): string => {
   if (!iso) return '';
@@ -70,7 +70,7 @@ const getOccurrenceStatusLabel = (occ: CalendarOccurrence): string =>
 const getPhaseBg = (occ: CalendarOccurrence): string => getEventStatusBg(occ.event.status);
 
 const CRMCalendario = () => {
-  const { events, addEvent, updateEvent, deleteEvent, Orçamentos, addLead, updateLead } = useCRM();
+  const { events, addEvent, updateEvent, deleteEvent, Orçamentos } = useCRM();
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState<'create' | 'edit' | 'view'>('create');
@@ -91,9 +91,7 @@ const CRMCalendario = () => {
     local: '',
     client: '',
     clientId: '',
-    clientEmail: '',
     clientPhone: '',
-    clientCpf: '',
     status: 'orcamento',
     city: '',
     decorator: '',
@@ -134,23 +132,27 @@ const CRMCalendario = () => {
     ).slice(0, 40);
   }, [eventItemOptions, itemSearch]);
 
-  const closedOrçamentos = useMemo(() => {
+  // O seletor só oferece clientes que já têm contrato: quem ainda não tem
+  // contrato não existe como cliente, é apenas o nome digitado no evento.
+  const contractedClients = useMemo(() => {
     const seen = new Set<string>();
-    return Orçamentos.filter(o => {
-      const key = o.name?.trim().toLowerCase() || o.id;
-      if (seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    });
+    return Orçamentos
+      .filter(o => !!o.eventoId || o.stage === 'Contrato Fechado')
+      .filter(o => {
+        const key = o.name?.trim().toLowerCase() || o.id;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
   }, [Orçamentos]);
 
   const filteredClients = useMemo(() => {
-    if (!clientSearch.trim()) return closedOrçamentos;
+    if (!clientSearch.trim()) return contractedClients;
     const q = clientSearch.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-    return closedOrçamentos.filter(o =>
+    return contractedClients.filter(o =>
       o.name.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').includes(q)
     );
-  }, [closedOrçamentos, clientSearch]);
+  }, [contractedClients, clientSearch]);
 
   const parseDate = (val: string): Date | null => {
     if (!val) return null;
@@ -162,8 +164,7 @@ const CRMCalendario = () => {
     return isNaN(d.getTime()) ? null : d;
   };
 
-  const buildItemsDescription = (lead: typeof Orçamentos[number]): string => {
-    const items = lead.items;
+  const buildItemsDescription = (items?: OrcamentoItem[]): string => {
     if (!items || items.length === 0) return '';
     const lines = items.map(i => `- ${i.item}`);
     return `Itens do Orçamento Fechado:\n${lines.join('\n')}`;
@@ -300,9 +301,7 @@ const CRMCalendario = () => {
       local: '',
       client: '',
       clientId: '',
-      clientEmail: '',
       clientPhone: '',
-      clientCpf: '',
       status: 'orcamento',
       city: '',
       decorator: '',
@@ -327,11 +326,8 @@ const CRMCalendario = () => {
     const brDate = toBR(event.date || '');
     const brDateEnd = toBR(event.dateEnd || '');
     const desc = (event.description || '').replace(/\n\nItens do Evento:\n[\s\S]*$/, '');
-    // Refresh contact data from the closed orçamento. This used to run in an
-    // effect keyed on `formData.clientId`, which set state during the commit
-    // phase and caused an extra render on every modal open.
-    const lead = event.clientId ? closedOrçamentos.find(o => o.id === event.clientId) : undefined;
-    const leadItemsDesc = lead ? buildItemsDescription(lead) : '';
+    // Dados do cliente vêm do próprio evento: o calendário é a fonte para quem
+    // ainda não tem contrato.
     setFormData({
       title: event.title || '',
       eventType: event.eventType || '',
@@ -341,13 +337,11 @@ const CRMCalendario = () => {
       local: event.local || '',
       client: event.client || '',
       clientId: event.clientId || '',
-      clientEmail: lead?.email || event.clientEmail || '',
-      clientPhone: lead?.whatsapp || event.clientPhone || '',
-      clientCpf: event.clientCpf || '',
+      clientPhone: event.clientPhone || '',
       status: event.status || 'orcamento',
       city: event.city || '',
       decorator: event.decorator || '',
-      description: leadItemsDesc || desc,
+      description: desc,
       equipe: event.equipe || '',
       valorTotal: event.valorTotal || 0,
     });
@@ -384,54 +378,11 @@ const CRMCalendario = () => {
       items: eventItems,
     };
     try {
-      let eventId = selectedEvent?.id;
-      let clientId = formData.clientId;
-
       if (modalMode === 'create') {
-        // If client has no clientId, create a new lead
-        if (formData.client && !formData.clientId) {
-          const leadInput = {
-            name: formData.client,
-            niche: formData.eventType || 'Evento',
-            whatsapp: formData.clientPhone || '',
-            email: formData.clientEmail || '',
-            instagram: '',
-            stage: 'Novos Orçamentos',
-            origin: 'evento',
-            firstContact: formData.date || new Date().toISOString().split('T')[0],
-            closingDate: '',
-            followUpReminder: '',
-            address: formData.city || '',
-            notes: formData.description || '',
-            cpf: formData.clientCpf || '',
-            rg: formData.clientRg || '',
-            clientAddress: '',
-            clientGender: (formData.clientGender || '') as 'F' | 'M' | '',
-            value: '',
-          };
-          const newLeadId = await addLead(leadInput);
-          if (newLeadId) {
-            clientId = newLeadId;
-            payload.clientId = newLeadId;
-          }
-        }
-        eventId = await addEvent(payload);
+        // Orçamento/evento não cria cliente: ele vive apenas no calendário até
+        // que o contrato seja emitido.
+        await addEvent(payload);
       } else if (selectedEvent) {
-        // If updating and client has clientId, update the lead
-        if (formData.client && formData.clientId) {
-          const leadUpdate = {
-            name: formData.client,
-            whatsapp: formData.clientPhone || '',
-            email: formData.clientEmail || '',
-            address: formData.city || '',
-            notes: formData.description || '',
-            cpf: formData.clientCpf || '',
-            rg: formData.clientRg || '',
-            clientAddress: '',
-            clientGender: (formData.clientGender || '') as 'F' | 'M' | '',
-          };
-          await updateLead(formData.clientId, leadUpdate);
-        }
         await updateEvent(selectedEvent.id, payload);
       }
       setIsModalOpen(false);
@@ -730,19 +681,7 @@ const CRMCalendario = () => {
                       </button>
                     </div>
                   )}
-                  {viewEvent.clientEmail && (
-                    <div className="flex items-center gap-2">
-                      <Mail size={12} className="text-neutral-500 shrink-0" />
-                      <span className="text-sm text-white font-medium">{viewEvent.clientEmail}</span>
-                    </div>
-                  )}
-                  {viewEvent.clientCpf && (
-                    <div className="flex items-center gap-2">
-                      <CreditCard size={12} className="text-neutral-500 shrink-0" />
-                      <span className="text-sm text-white font-medium">CPF: {viewEvent.clientCpf}</span>
-                    </div>
-                  )}
-                </div>
+                  </div>
               )}
 
               {/* Marcos Temporais */}
@@ -1014,45 +953,39 @@ const CRMCalendario = () => {
                         setShowClientDropdown(true);
                       }}
                       onFocus={() => setShowClientDropdown(true)}
-                      placeholder="Pesquise por clientes com orçamentos fechados..."
+                      placeholder="Pesquise por clientes com contrato..."
                       className="w-full bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg pl-9 pr-3 py-2 text-xs font-black text-white focus:ring-1 focus:ring-[#CDFF00] outline-none transition-all"
                     />
                   </div>
                   {showClientDropdown && (
                     <div className="mt-1 bg-[#1a1a1a] border border-[#333] rounded-md shadow-xl max-h-48 overflow-y-auto">
                       {filteredClients.length === 0 ? (
-                        <p className="px-3 py-3 text-xs text-neutral-500 text-center">
-                          Nenhum orçamento fechado encontrado
-                        </p>
-                      ) : (
-                        filteredClients.map(o => (
-                          <button
-                            key={o.id}
-                            type="button"
+<p className="px-3 py-3 text-xs text-neutral-500 text-center">
+                           Nenhum cliente com contrato encontrado
+                         </p>
+                       ) : (
+                         filteredClients.map(o => (
+                           <button
+                             key={o.id}
+                             type="button"
 onClick={() => {
-                                setClientSearch(o.name);
-                                const itemsDesc = buildItemsDescription(o);
-                                const itemsFromLead = (o.items || []).map(i => ({
+                                 setClientSearch(o.name);
+                                 const itemsFromClient = (o.items || []).map(i => ({
                                   id: generateUUID(),
                                   item: i.item,
                                   qtdAtual: i.qtdAtual,
                                   valorUnit: i.valorUnit || 0,
                                   semPreco: i.semPreco,
                                 }));
-                                setEventItems(itemsFromLead);
-                                setFormData(prev => ({
-                                  ...prev,
-                                  client: o.name,
-                                  clientId: o.id,
-                                  description: itemsDesc || prev.description,
-                                  local: o.address || prev.local || '',
-                                  clientPhone: o.whatsapp || prev.clientPhone || '',
-                                  clientEmail: o.email || prev.clientEmail || '',
-                                  clientCpf: o.cpf || prev.clientCpf || '',
-                                  clientRg: o.rg || prev.clientRg || '',
-                                  clientAddress: o.clientAddress || prev.clientAddress || '',
-                                  clientGender: o.clientGender || prev.clientGender || '',
-                                }));
+setEventItems(itemsFromClient);
+                                 setFormData(prev => ({
+                                   ...prev,
+                                   client: o.name,
+                                   clientId: o.id,
+                                   description: buildItemsDescription(o.items) || prev.description,
+                                   local: prev.local || '',
+                                   clientPhone: o.whatsapp || prev.clientPhone || '',
+                                 }));
                                 setShowClientDropdown(false);
                               }}
                             className="w-full text-left px-3 py-2 text-xs text-white hover:bg-[#333] transition-colors border-b border-[#222] last:border-b-0"
@@ -1080,27 +1013,10 @@ onClick={() => {
                           className="w-full bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg px-3 py-2 text-xs font-bold text-white focus:ring-1 focus:ring-[#CDFF00] outline-none transition-all"
                         />
                       </div>
-                      <div className="space-y-1">
-                        <label className="text-[8px] font-bold text-neutral-500 uppercase tracking-widest">E-MAIL</label>
-                        <input
-                          type="email"
-                          value={formData.clientEmail || ''}
-                          onChange={(e) => setFormData({ ...formData, clientEmail: e.target.value })}
-                          placeholder="cliente@email.com"
-                          className="w-full bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg px-3 py-2 text-xs font-bold text-white focus:ring-1 focus:ring-[#CDFF00] outline-none transition-all"
-                        />
-                      </div>
-                      <div className="space-y-1">
-                        <label className="text-[8px] font-bold text-neutral-500 uppercase tracking-widest">CPF</label>
-                        <input
-                          type="text"
-                          value={formData.clientCpf || ''}
-                          onChange={(e) => setFormData({ ...formData, clientCpf: e.target.value })}
-                          placeholder="000.000.000-00"
-                          className="w-full bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg px-3 py-2 text-xs font-bold text-white focus:ring-1 focus:ring-[#CDFF00] outline-none transition-all"
-                        />
-                      </div>
                     </div>
+                    <p className="text-[10px] text-neutral-500 leading-relaxed">
+                      CPF, RG e endereço são solicitados apenas na aba Emissão do Contrato do Painel.
+                    </p>
                   </div>
                 )}
 

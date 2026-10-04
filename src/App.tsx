@@ -106,7 +106,7 @@ function AppRoutes() {
       {/* Legacy CRM routes - keep for backward compatibility */}
       <Route path="/crm/painel" element={<Navigate to="/home" replace />} />
       <Route path="/crm/pipeline" element={<Navigate to="/home" replace />} />
-      <Route path="/crm/orcamentos" element={<Navigate to="/contatos" replace />} />
+      <Route path="/crm/orcamentos" element={<Navigate to="/clientes" replace />} />
       <Route path="/crm/calendario" element={<Navigate to="/calendario" replace />} />
       <Route path="/crm/reuniao" element={<Navigate to="/reuniao" replace />} />
       <Route path="/crm/clientes" element={<Navigate to="/clientes" replace />} />

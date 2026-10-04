@@ -6,6 +6,7 @@ import { collection, getDocs, deleteDoc, doc, writeBatch, Timestamp } from 'fire
 import { db } from '../../services/firebase';
 import { useAuth } from '../../contexts/AuthContext';
 import { useCRM } from '../../contexts/CRMContext';
+import type { OrcamentoItem } from '../../types/crm';
 import { generateUUID } from '../../lib/uuid';
 import { generateWhatsAppLink, WHATSAPP_MESSAGE_TEMPLATES } from '../../lib/whatsapp';
 import { subscribeInventoryChanges, getBoards, updateBoard } from '../../lib/inventory';
@@ -822,6 +823,8 @@ const Board = ({
 
 const Tarefas = () => {
   const { role } = useAuth();
+  // Clientes e eventos vivem em coleções diferentes: quem tem contrato está em
+  // `Orçamentos`, quem só tem orçamento existe apenas em `events`.
   const { Orçamentos, events } = useCRM();
 
   const [boards, setBoards] = useState<BoardType[]>([DEFAULT_BOARD]);
@@ -853,15 +856,21 @@ const Tarefas = () => {
     b.rows.map(r => String(r.values['col-1'] || '')).filter(Boolean)
   );
 
-  const clientNames = (Orçamentos || []).map(o => o.name).filter(Boolean);
+  // Nomes disponíveis para aluguel: clientes com contrato + nomes de eventos.
+  const clientNames = useMemo(() => {
+    const names = new Set<string>();
+    (Orçamentos || []).forEach(o => { if (o.name) names.add(o.name); });
+    (events || []).forEach(ev => { if (ev.client) names.add(ev.client); });
+    return Array.from(names);
+  }, [Orçamentos, events]);
 
   const eventRentalRecords = useMemo(() => {
     const result: (RentalRecord & { eventId: string })[] = [];
     (events || []).forEach(ev => {
       if (ev.status !== 'evento_confirmado' && ev.status !== 'evento_concluido') return;
       if (!ev.client) return;
-      const lead = (Orçamentos || []).find(o => o.name.toLowerCase() === ev.client!.toLowerCase());
-      if (!lead || !lead.items || lead.items.length === 0) return;
+      const eventItems = (ev.items || []) as OrcamentoItem[];
+      if (eventItems.length === 0) return;
       const itemStatus = ev.status === 'evento_concluido' ? 'Devolvido' as const : 'Em Trânsito' as const;
       result.push({
         id: `event-${ev.id}`,
@@ -869,7 +878,7 @@ const Tarefas = () => {
         client: ev.client,
         dataSaida: ev.date,
         dataDevolucao: ev.dateEnd || '',
-        items: lead.items.map(invItem => ({
+        items: eventItems.map(invItem => ({
           id: `event-item-${invItem.id}`,
           item: invItem.item,
           status: itemStatus,
@@ -879,7 +888,7 @@ const Tarefas = () => {
     });
     result.sort((a, b) => a.dataSaida.localeCompare(b.dataSaida));
     return result;
-  }, [events, Orçamentos]);
+  }, [events]);
 
   const allRentalRecords = useMemo(() => {
     const manual = rentalRecords.map(r => ({ ...r, eventId: '' }));
@@ -894,24 +903,17 @@ const Tarefas = () => {
   const reservedByDate = useMemo(() => {
     if (!dateFilterEstoque) return new Map<string, number>();
 
-    const eventClients = new Set<string>();
-    (events || []).forEach(ev => {
-      if (ev.date === dateFilterEstoque && ev.client) {
-        eventClients.add(ev.client.toLowerCase().trim());
-      }
-    });
-
+    // A reserva de itens pertence ao evento, não ao cadastro de cliente.
     const map = new Map<string, number>();
-    (Orçamentos || []).forEach(lead => {
-      if (lead.firstContact !== dateFilterEstoque) return;
-      if (!eventClients.has(lead.name.toLowerCase().trim())) return;
-      (lead.items || []).forEach(item => {
+    (events || []).forEach(ev => {
+      if (ev.date !== dateFilterEstoque) return;
+      ((ev.items || []) as OrcamentoItem[]).forEach(item => {
         map.set(item.item, (map.get(item.item) || 0) + item.qtdAtual);
       });
     });
 
     return map;
-  }, [dateFilterEstoque, events, Orçamentos]);
+  }, [dateFilterEstoque, events]);
 
   const pendingBoardWrites = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
   const feedbackTimerRef = useRef<number | null>(null);
@@ -1415,7 +1417,7 @@ const Tarefas = () => {
                       type="text"
                       value={clientSearch}
                       onChange={(e) => { setClientSearch(e.target.value); setRentalForm({ ...rentalForm, client: e.target.value }); }}
-                      placeholder="Buscar cliente dos orçamentos..."
+                      placeholder="Buscar cliente ou evento..."
                       className="w-full pl-10 pr-4 py-3 border border-[#333] rounded-lg font-bold text-white focus:border-[#CDFF00] outline-none transition-colors bg-[#1a1a1a]"
                       autoComplete="off"
                     />

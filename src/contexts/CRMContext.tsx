@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { STAGES, STAGE_CONFIG, parseMonetaryValue, calculateTotalValue, groupOrçamentosByStage, type Stage } from '../lib/crmHelpers';
 import * as leadService from '../services/leadService';
 import * as eventService from '../services/eventService';
+import type { ContractClientSource } from '../services/leadService';
 import { subscribeInventory, deductInventory, restoreInventory, deductInventoryByEventStockId, restoreInventoryByEventStockId } from '../lib/inventory';
 import { addTransaction, updateTransaction, getTransactionByEventId } from '../services/financeService';
 import type { Lead, CalendarEvent, OrcamentoItem } from '../types/crm';
@@ -13,6 +14,7 @@ type LeadInput = Omit<Lead, 'id'>;
 type LeadUpdate = Partial<Omit<Lead, 'id'>>;
 
 interface CRMContextType {
+  /** Clientes com contrato emitido. Orçamento sem contrato vive só em `events`. */
   Orçamentos: Lead[];
   events: CalendarEvent[];
   isLoading: boolean;
@@ -22,6 +24,8 @@ interface CRMContextType {
   updateLead: (id: string, fields: LeadUpdate) => Promise<void>;
   updateOrçamentostage: (id: string, stage: string) => Promise<void>;
   deleteLead: (id: string) => Promise<void>;
+  /** Grava o cliente na sessão "Clientes" ao emitir o contrato. */
+  saveContractClient: (event: ContractClientSource, options?: { contractServices?: string[] }) => Promise<string>;
   getOrçamentosByStage: (stage: string) => Lead[];
   getTotalValueByStage: (stage: string) => number;
   addEvent: (event: Omit<CalendarEvent, 'id'>) => Promise<string>;
@@ -72,24 +76,28 @@ export const CRMProvider = ({ children }: { children: ReactNode }) => {
     await leadService.updateLeadStage(id, stage);
   }, []);
 
+  const saveContractClient = useCallback(
+    (event: ContractClientSource, options?: { contractServices?: string[] }) =>
+      leadService.saveContractClient(event, options),
+    [],
+  );
+
   const deleteLead = useCallback(async (id: string) => {
-    const lead = Orçamentos.find(o => o.id === id);
-    if (lead?.items && lead.items.length > 0) {
-      const linkedEvents = events.filter(e => e.clientId === id && e.status === 'evento_confirmado');
-      for (const event of linkedEvents) {
-        if (lead.items && lead.items.length > 0) {
-          await Promise.all(lead.items.map(async item => {
-            if (item.eventStockId) {
-              await restoreInventoryByEventStockId(item.eventStockId, item.qtdAtual);
-            } else {
-              await restoreInventory(item.item, item.qtdAtual);
-            }
-          }));
+    // Os itens do orçamento pertencem ao evento, não ao cliente.
+    const linkedEvents = events.filter(e => e.clientId === id);
+    for (const event of linkedEvents) {
+      const eventItems = (event.items || []) as OrcamentoItem[];
+      if (eventItems.length === 0) continue;
+      await Promise.all(eventItems.map(async item => {
+        if (item.eventStockId) {
+          await restoreInventoryByEventStockId(item.eventStockId, item.qtdAtual);
+        } else {
+          await restoreInventory(item.item, item.qtdAtual);
         }
-      }
+      }));
     }
     await leadService.deleteLead(id);
-  }, [Orçamentos, events]);
+  }, [events]);
 
   const addEvent = useCallback(async (event: Omit<CalendarEvent, 'id'>) => {
     const id = await eventService.addEvent(event);
@@ -100,12 +108,12 @@ export const CRMProvider = ({ children }: { children: ReactNode }) => {
     const previous = events.find(e => e.id === id);
     await eventService.updateEvent(id, fields);
 
-    const clientId = fields.clientId ?? previous?.clientId ?? '';
-    const lead = Orçamentos.find(o => o.id === clientId);
+    // Os itens do orçamento ficam no evento — não dependem de cliente cadastrado.
+    const eventItems = (fields.items ?? previous?.items ?? []) as OrcamentoItem[];
 
     if (fields.status === 'evento_confirmado' && previous?.status !== 'evento_confirmado') {
-      if (lead?.items && lead.items.length > 0) {
-        await Promise.all(lead.items.map(async item => {
+      if (eventItems.length > 0) {
+        await Promise.all(eventItems.map(async item => {
           if (item.eventStockId) {
             await deductInventoryByEventStockId(item.eventStockId, item.qtdAtual);
           } else {
@@ -116,8 +124,8 @@ export const CRMProvider = ({ children }: { children: ReactNode }) => {
     }
 
     if (previous?.status === 'evento_confirmado' && fields.status !== 'evento_confirmado') {
-      if (lead?.items && lead.items.length > 0) {
-        await Promise.all(lead.items.map(async item => {
+      if (eventItems.length > 0) {
+        await Promise.all(eventItems.map(async item => {
           if (item.eventStockId) {
             await restoreInventoryByEventStockId(item.eventStockId, item.qtdAtual);
           } else {
@@ -132,7 +140,7 @@ export const CRMProvider = ({ children }: { children: ReactNode }) => {
       const client = fields.client ?? previous?.client ?? '';
       const dataEvento = fields.date ?? previous?.date ?? '';
       const eventValue = fields.valorTotal ?? previous?.valorTotal ?? 0;
-      const valorOrcamento = lead ? parseMonetaryValue(lead.value) : Number(eventValue);
+      const valorOrcamento = eventValue;
 
       getTransactionByEventId(id).then(existing => {
         if (existing) return;
@@ -156,7 +164,7 @@ export const CRMProvider = ({ children }: { children: ReactNode }) => {
           .catch(err => console.error('[CRM] Erro ao cancelar fatura do evento:', err));
       });
     }
-  }, [events, Orçamentos]);
+  }, [events]);
 
   const deleteEvent = useCallback(async (id: string) => {
     await eventService.deleteEvent(id);
@@ -174,12 +182,12 @@ export const CRMProvider = ({ children }: { children: ReactNode }) => {
 
   const value = useMemo(() => ({
     Orçamentos, events, isLoading, searchTerm, setSearchTerm,
-    addLead, updateLead, updateOrçamentostage, deleteLead,
+    addLead, updateLead, updateOrçamentostage, deleteLead, saveContractClient,
     getOrçamentosByStage, getTotalValueByStage,
     addEvent, updateEvent, deleteEvent, OrçamentosByStage,
   }), [
     Orçamentos, events, isLoading, searchTerm,
-    addLead, updateLead, updateOrçamentostage, deleteLead,
+    addLead, updateLead, updateOrçamentostage, deleteLead, saveContractClient,
     getOrçamentosByStage, getTotalValueByStage,
     addEvent, updateEvent, deleteEvent, OrçamentosByStage,
   ]);

@@ -1,12 +1,12 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
 import { useScrollLock } from '../../hooks/useScrollLock';
-import { Calendar, UserPlus, ArrowRight, CheckSquare, Activity, AlertCircle, LayoutDashboard, X, ChevronLeft, ChevronRight, ChevronDown, Search, User, Phone, Mail, CreditCard, IdCard, CalendarDays, Clock, Plus, Trash2, MapPin, Pencil, FileText, MessageCircle, Lock, Package, History, BadgeDollarSign } from 'lucide-react';
+import { Calendar, UserPlus, ArrowRight, CheckSquare, Activity, AlertCircle, LayoutDashboard, X, ChevronLeft, ChevronRight, ChevronDown, Search, User, Phone, CalendarDays, Clock, Plus, Trash2, MapPin, Pencil, FileText, MessageCircle, Lock, Package, History, BadgeDollarSign } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell, LabelList, CartesianGrid, Tooltip } from 'recharts';
 import { ChartTooltipContent } from '../../components/charts';
 import { useCRM } from '../../contexts/CRMContext';
 import type { CalendarEvent, Lead, OrcamentoItem } from '../../types/crm';
-import { parseMonetaryValue, formatCurrency, generatePDF, generateContractPDF, formatEventDateRange, isSingleDayEvent, EVENT_TYPES, type ContractData } from '../../lib/crmHelpers';
+import { formatCurrency, generatePDF, generateContractPDF, formatEventDateRange, isSingleDayEvent, EVENT_TYPES, type ContractData } from '../../lib/crmHelpers';
 import { eventTypeLabel } from '../../lib/eventTypeLabel';
 import { useActivityLogs } from '../../contexts/ActivityContext';
 import { generateUUID } from '../../lib/uuid';
@@ -72,7 +72,7 @@ const statusBg: Record<string, string> = {
 };
 
 const CRMDashboard = () => {
-  const { events, Orçamentos, addLead, addEvent, updateEvent, updateLead, deleteEvent, deleteLead } = useCRM();
+  const { events, addEvent, updateEvent, deleteEvent, saveContractClient } = useCRM();
   const { activityLogs } = useActivityLogs();
   const [selectedDayEvents, setSelectedDayEvents] = useState<CalendarEvent[] | null>(null);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
@@ -109,7 +109,9 @@ const CRMDashboard = () => {
   // Create modal state
   const [, setCreateDate] = useState('');
   const [formData, setFormData] = useState({
-    name: '', whatsapp: '', email: '', cpf: '', rg: '', clientAddress: '', clientGender: '' as 'F' | 'M' | '',
+    name: '', whatsapp: '',
+    // Dados pessoais do contratante — só existem a partir da emissão do contrato.
+    cpf: '', rg: '', clientAddress: '', clientGender: '' as 'F' | 'M' | '',
     eventType: '', date: '', dateEnd: '', time: '', city: '', local: '', observacao: '',
     outroEventoType: '',
     orcamentoItems: [] as OrcamentoItem[], desconto: 0, valor: 0,
@@ -117,7 +119,6 @@ const CRMDashboard = () => {
     downPayment: 50,
     downPaymentType: 'percent' as 'percent' | 'fixed',
   });
-  const [selectedClientId, setSelectedClientId] = useState('');
   const [editingEventId, setEditingEventId] = useState<string | null>(null);
 
   const handleRemoveItem = (id: string) => {
@@ -233,9 +234,8 @@ const CRMDashboard = () => {
     return {
       clientName: formData.name || 'Cliente',
       whatsapp: formData.whatsapp || '',
-      email: '',
-      cpf: '',
-      rg: '',
+      cpf: formData.cpf || '',
+      rg: formData.rg || '',
       clientAddress: formData.clientAddress || undefined,
       clientGender: formData.clientGender,
       eventType: effectiveEventType || '',
@@ -328,8 +328,7 @@ const CRMDashboard = () => {
   const openCreateModal = (dateStr: string) => {
     setEditingEventId(null);
     setCreateDate(dateStr);
-    setFormData(prev => ({ ...prev, date: dateStr, dateEnd: '', eventType: '', city: '', local: '', clientAddress: '', clientGender: '', observacao: '', outroEventoType: '', orcamentoItems: [], desconto: 0, valor: 0, contractServices: [] }));
-    setSelectedClientId('');
+    setFormData(prev => ({ ...prev, date: dateStr, dateEnd: '', eventType: '', city: '', local: '', cpf: '', rg: '', clientAddress: '', clientGender: '', observacao: '', outroEventoType: '', orcamentoItems: [], desconto: 0, valor: 0, contractServices: [] }));
     setOrcSearch('');
     setOrcSearchOpen(false);
     setShowCreateItemForm(false);
@@ -337,18 +336,48 @@ const CRMDashboard = () => {
     setIsCreateOpen(true);
   };
 
-  // Endereço, sexo e tipos de serviço são preenchidos na aba de emissão do contrato.
+  // A emissão do contrato é o único momento em que o cliente é gravado na sessão
+  // "Clientes". Até lá ele existe somente no calendário.
   const handleSaveContractData = async () => {
     if (!editingEventId) return;
+    const eventId = editingEventId;
     setIsSavingContract(true);
     setSubmitError(null);
     try {
-      await updateEvent(editingEventId, {
+      const eventType = formData.eventType === 'Outros' && formData.outroEventoType?.trim()
+        ? formData.outroEventoType.trim()
+        : formData.eventType;
+
+      await updateEvent(eventId, {
+        clientCpf: formData.cpf,
+        clientRg: formData.rg,
         clientAddress: formData.clientAddress,
         clientGender: formData.clientGender,
         contractServices: formData.contractServices,
       });
-      showToast('Dados do contrato salvos');
+
+      // Montado a partir do formulário (e não do snapshot) para funcionar logo
+      // após criar o rascunho do evento.
+      const clientId = await saveContractClient({
+        id: eventId,
+        client: formData.name || 'Cliente',
+        clientPhone: formData.whatsapp || '',
+        eventType,
+        date: formData.date,
+        city: formData.city,
+        description: formData.observacao,
+        items: formData.orcamentoItems,
+        valorTotal: total,
+        desconto: formData.desconto,
+        clientCpf: formData.cpf,
+        clientRg: formData.rg,
+        clientAddress: formData.clientAddress,
+        clientGender: formData.clientGender,
+      }, { contractServices: formData.contractServices });
+
+      await updateEvent(eventId, { clientId });
+
+      showToast('Contrato salvo — cliente adicionado à sessão Clientes');
     } catch (err) {
       console.error('[Painel] Erro ao salvar dados do contrato:', err);
       setSubmitError('Erro ao salvar os dados do contrato. Tente novamente.');
@@ -371,9 +400,6 @@ const CRMDashboard = () => {
         title: effectiveEventType ? `${effectiveEventType} - ${(formData.name || 'Novo Orçamento')}` : (formData.name || 'Novo Orçamento'),
         client: formData.name || '',
         clientPhone: formData.whatsapp || '',
-        clientEmail: '',
-        clientCpf: '',
-        clientRg: '',
         eventType: effectiveEventType || '',
         date: formData.date || '',
         time: formData.time || '',
@@ -394,12 +420,6 @@ const CRMDashboard = () => {
   };
 
   const handleEditEvent = (event: CalendarEvent) => {
-    const leadFromId = event.clientId ? Orçamentos.find(l => l.id === event.clientId) : null;
-    const leadFromName = !leadFromId && event.client
-      ? Orçamentos.find(l => l.name.toLowerCase().trim() === event.client!.toLowerCase().trim())
-      : null;
-    const lead = leadFromId || leadFromName;
-    const leadId = lead?.id || event.clientId || '';
     const predefinedTypes = ['Aniver', 'Casam', 'Corporativo', 'Privado', 'Outros'];
     const eventTypeValue = event.eventType || '';
     const isCustomType = eventTypeValue && !predefinedTypes.includes(eventTypeValue);
@@ -408,7 +428,6 @@ const CRMDashboard = () => {
     setFormData({
       name: event.client || '',
       whatsapp: event.clientPhone || '',
-      email: event.clientEmail || '',
       cpf: event.clientCpf || '',
       rg: event.clientRg || '',
       clientAddress: event.clientAddress || '',
@@ -421,14 +440,13 @@ const CRMDashboard = () => {
       local: event.local || '',
       observacao: event.description || '',
       outroEventoType: isCustomType ? eventTypeValue : '',
-      orcamentoItems: (lead?.items as OrcamentoItem[]) || [],
+      orcamentoItems: (event.items as OrcamentoItem[]) || [],
       desconto: event.desconto || 0,
       valor: (event.valorTotal || 0) + (event.desconto || 0),
       contractServices: event.contractServices || [],
       downPayment: 50,
       downPaymentType: 'percent',
     });
-    setSelectedClientId(leadId);
     setOrcSearch('');
 
     setOrcSearchOpen(false);
@@ -448,15 +466,13 @@ const handleCreateSubmit = async (e: React.FormEvent) => {
       : formData.eventType;
     try {
       if (editingEventId) {
+        // A aba Orçamento só mexe em dados do evento: os campos de contrato
+        // (CPF/RG/endereço/sexo) são omitidos para não sobrescrever o que foi
+        // salvo na aba de emissão do contrato.
         const eventFields: Partial<CalendarEvent> = {
           title: effectiveEventType ? `${effectiveEventType} - ${formData.name}` : formData.name,
           client: formData.name,
           clientPhone: formData.whatsapp,
-          clientEmail: formData.email,
-          clientCpf: formData.cpf,
-          clientRg: formData.rg,
-          clientAddress: formData.clientAddress,
-          clientGender: formData.clientGender,
           eventType: effectiveEventType,
           date: formData.date,
           dateEnd: formData.dateEnd || '',
@@ -471,75 +487,27 @@ const handleCreateSubmit = async (e: React.FormEvent) => {
         };
 
         await updateEvent(editingEventId, eventFields);
-        if (selectedClientId) {
-          const leadUpdate: Partial<Lead> = {
-            name: formData.name,
-            whatsapp: formData.whatsapp,
-            email: formData.email,
-            address: formData.city || '',
-            notes: formData.observacao || '',
-            cpf: formData.cpf,
-            rg: formData.rg,
-            clientAddress: formData.clientAddress,
-            clientGender: formData.clientGender,
-          };
-          if (formData.orcamentoItems.length > 0) {
-            leadUpdate.value = total.toString();
-            leadUpdate.items = formData.orcamentoItems;
-          }
-          await updateLead(selectedClientId, leadUpdate);
-        }
         setEditingEventId(null);
       } else {
-        // Não há mais busca de cliente existente: o formulário da aba Orçamento é
-        // sempre um cadastro novo, então o lead é criado a partir dos campos
-        // preenchidos e o evento nasce linked a ele.
-        const leadInput: Partial<Omit<Lead, 'id'>> = {
-          name: formData.name,
-          niche: effectiveEventType || 'Evento',
-          whatsapp: formData.whatsapp,
-          email: formData.email,
-          instagram: '',
-          stage: 'Novos Orçamentos',
-          origin: 'evento',
-          firstContact: formData.date || new Date().toISOString().split('T')[0],
-          closingDate: '',
-          followUpReminder: '',
-          address: formData.city || '',
-          notes: formData.observacao || '',
-          cpf: formData.cpf,
-          rg: formData.rg,
-          clientAddress: formData.clientAddress,
-          clientGender: formData.clientGender,
-        };
-        if (formData.orcamentoItems.length > 0) {
-          leadInput.value = total.toString();
-          leadInput.items = formData.orcamentoItems;
-        }
-        const newLeadId = await addLead(leadInput as Omit<Lead, 'id'>);
-        if (newLeadId) {
-          await addEvent({
-            title: effectiveEventType ? `${effectiveEventType} - ${formData.name}` : formData.name,
-            client: formData.name,
-            clientId: newLeadId,
-            clientPhone: formData.whatsapp,
-            clientEmail: formData.email,
-            clientCpf: formData.cpf,
-            clientRg: formData.rg,
-            clientAddress: formData.clientAddress,
-            clientGender: formData.clientGender,
-            eventType: effectiveEventType,
-            date: formData.date,
-            dateEnd: formData.dateEnd || '',
-            time: formData.time,
-            city: formData.city,
-            local: formData.local,
-            description: formData.observacao,
-            status: 'orcamento',
-            valorTotal: total,
-            desconto: formData.desconto,
-            items: formData.orcamentoItems,
-          });
+        // Orçamento não cria cliente: o registro nasce apenas como evento do
+        // calendário. O cliente entra na sessão "Clientes" quando o contrato é salvo.
+        const newEventId = await addEvent({
+          title: effectiveEventType ? `${effectiveEventType} - ${formData.name}` : formData.name,
+          client: formData.name,
+          clientPhone: formData.whatsapp,
+          eventType: effectiveEventType,
+          date: formData.date,
+          dateEnd: formData.dateEnd || '',
+          time: formData.time,
+          city: formData.city,
+          local: formData.local,
+          description: formData.observacao,
+          status: 'orcamento',
+          valorTotal: total,
+          desconto: formData.desconto,
+          items: formData.orcamentoItems,
+        });
+        if (newEventId) {
           await addTransaction({
             client: formData.name,
             description: `Evento: ${effectiveEventType || 'Evento'} - ${formData.name}${formData.observacao ? ' • ' + formData.observacao : ''}`,
@@ -683,13 +651,20 @@ const handleCreateSubmit = async (e: React.FormEvent) => {
     return safeEvents.slice(start, start + ROWS_PER_PAGE);
   }, [safeEvents, eventPage]);
 
+  // A aba ORÇAMENTOS lista os eventos que ainda não viraram contrato.
+  // Clientes com contrato saem daqui e passam a viver em `/clientes`.
+  const budgetEvents = useMemo(
+    () => safeEvents.filter(e => e.status === 'orcamento' || e.status === 'orcamento_cancelado'),
+    [safeEvents],
+  );
+
   const paginatedOrcamentos = useMemo(() => {
     const start = orcPage * ROWS_PER_PAGE;
-    return Orçamentos.slice(start, start + ROWS_PER_PAGE);
-  }, [Orçamentos, orcPage]);
+    return budgetEvents.slice(start, start + ROWS_PER_PAGE);
+  }, [budgetEvents, orcPage]);
 
   const totalEventPages = Math.max(1, Math.ceil(safeEvents.length / ROWS_PER_PAGE));
-  const totalOrcPages = Math.max(1, Math.ceil(Orçamentos.length / ROWS_PER_PAGE));
+  const totalOrcPages = Math.max(1, Math.ceil(budgetEvents.length / ROWS_PER_PAGE));
 
   const handleTabChange = (tab: 'calendario' | 'eventos' | 'orcamentos' | 'estoque') => {
     setActiveTab(tab);
@@ -1156,23 +1131,23 @@ event.status === 'evento_confirmado' ? 'bg-[#3b82f6] text-white' :
                     <td colSpan={5} className="text-center py-8 text-neutral-500 text-xs italic">Nenhum orçamento encontrado.</td>
                   </tr>
                 ) : (
-                  paginatedOrcamentos.map(lead => (
-                    <tr key={lead.id} className="border-b border-[#2d2d2d] hover:bg-[#1a1a1a] transition-colors">
-                      <td className="px-4 py-3 text-sm text-white">{lead.name || '—'}</td>
-                      <td className="px-4 py-3 text-sm text-neutral-300">{formatDate(lead.firstContact)}</td>
+                  paginatedOrcamentos.map(event => (
+                    <tr key={event.id} className="border-b border-[#2d2d2d] hover:bg-[#1a1a1a] transition-colors">
+                      <td className="px-4 py-3 text-sm text-white">{event.client || '—'}</td>
+                      <td className="px-4 py-3 text-sm text-neutral-300">{formatDate(event.date)}</td>
                       <td className="px-4 py-3 text-sm text-[#CDFF00] font-bold">
-                        {lead.value ? formatCurrency(parseMonetaryValue(lead.value)) : 'R$ 0,00'}
+                        {formatCurrency((event.valorTotal || 0) + (event.desconto || 0))}
                       </td>
                       <td className="px-4 py-3">
                         <span className="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#2a2a2a] text-white">
-                          {lead.stage || '—'}
+                          {event.status ? statusLabel[event.status] : '—'}
                         </span>
                       </td>
                       <td className="px-4 py-3 text-right">
                         <button
                           onClick={() => {
-                            if (confirm(`Tem certeza que deseja excluir o orçamento de "${lead.name || '—'}"?`)) {
-                              deleteLead(lead.id);
+                            if (confirm(`Tem certeza que deseja excluir o orçamento de "${event.client || '—'}"?`)) {
+                              deleteEvent(event.id);
                             }
                           }}
                            className="p-2 rounded-md text-neutral-500 hover:text-red-400 hover:bg-red-400/10 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
@@ -1194,25 +1169,25 @@ event.status === 'evento_confirmado' ? 'bg-[#3b82f6] text-white' :
               <div className="text-center py-8 text-neutral-500 text-xs italic">Nenhum orçamento encontrado.</div>
             ) : (
               <div className="divide-y divide-[#2d2d2d]">
-                {paginatedOrcamentos.map(lead => (
-                  <div key={lead.id} className="p-4 space-y-2">
+                {paginatedOrcamentos.map(event => (
+                  <div key={event.id} className="p-4 space-y-2">
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0 flex-1">
-                        <p className="text-sm text-white font-bold truncate">{lead.name || '—'}</p>
-                        <p className="text-[11px] text-neutral-400">{formatDate(lead.firstContact)}</p>
+                        <p className="text-sm text-white font-bold truncate">{event.client || '—'}</p>
+                        <p className="text-[11px] text-neutral-400">{formatDate(event.date)}</p>
                       </div>
                       <span className="shrink-0 px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#2a2a2a] text-white">
-                        {lead.stage || '—'}
+                        {event.status ? statusLabel[event.status] : '—'}
                       </span>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-[#CDFF00] font-bold">
-                        {lead.value ? formatCurrency(parseMonetaryValue(lead.value)) : 'R$ 0,00'}
+                        {formatCurrency((event.valorTotal || 0) + (event.desconto || 0))}
                       </span>
                       <button
                         onClick={() => {
-                          if (confirm(`Tem certeza que deseja excluir o orçamento de "${lead.name || '—'}"?`)) {
-                            deleteLead(lead.id);
+                          if (confirm(`Tem certeza que deseja excluir o orçamento de "${event.client || '—'}"?`)) {
+                            deleteEvent(event.id);
                           }
                         }}
                         className="p-2 rounded-md text-neutral-500 hover:text-red-400 hover:bg-red-400/10 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
@@ -1230,7 +1205,7 @@ event.status === 'evento_confirmado' ? 'bg-[#3b82f6] text-white' :
           {/* Pagination footer */}
           <div className="flex items-center justify-between px-4 py-3 border-t border-[#2d2d2d] bg-[#1a1a1a]">
             <span className="text-[11px] text-neutral-500">
-              Página {orcPage + 1} de {totalOrcPages} ({Orçamentos.length} registros)
+              Página {orcPage + 1} de {totalOrcPages} ({budgetEvents.length} registros)
             </span>
             <div className="flex items-center gap-2">
               <button
@@ -1317,12 +1292,6 @@ event.status === 'evento_confirmado' ? 'bg-[#3b82f6] text-white' :
                         >
                           <MessageCircle size={14} />
                         </button>
-                      </div>
-                    )}
-                    {event.clientEmail && (
-                      <div>
-                        <span className="text-neutral-500">E-mail:</span>{' '}
-                        <span className="text-white">{event.clientEmail}</span>
                       </div>
                     )}
                     {event.clientCpf && (
@@ -1437,6 +1406,8 @@ event.status === 'evento_confirmado' ? 'bg-[#3b82f6] text-white' :
                 <EmissaoContrato
                   eventId={editingEventId}
                   data={contractData}
+                  onCpfChange={value => setFormData(prev => ({ ...prev, cpf: value }))}
+                  onRgChange={value => setFormData(prev => ({ ...prev, rg: value }))}
                   onAddressChange={value => setFormData(prev => ({ ...prev, clientAddress: value }))}
                   onGenderChange={value => setFormData(prev => ({ ...prev, clientGender: value }))}
                   onServicesChange={services => setFormData(prev => ({ ...prev, contractServices: services }))}
@@ -1467,36 +1438,10 @@ event.status === 'evento_confirmado' ? 'bg-[#3b82f6] text-white' :
                     <input type="text" value={formData.whatsapp} onChange={e => setFormData(prev => ({ ...prev, whatsapp: e.target.value }))}
                       className="w-full bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg px-3 py-2 text-sm text-white focus:border-[#CDFF00] outline-none" required />
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-1.5 flex items-center gap-1.5">
-                        <Mail size={12} /> E-mail
-                      </label>
-                      <input type="email" value={formData.email} onChange={e => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                        className="w-full bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg px-3 py-2 text-sm text-white focus:border-[#CDFF00] outline-none" />
-                    </div>
-                    <div>
-                      <label className="block text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-1.5 flex items-center gap-1.5">
-                        <CreditCard size={12} /> CPF
-                      </label>
-                      <input type="text" value={formData.cpf} onChange={e => setFormData(prev => ({ ...prev, cpf: e.target.value }))}
-                        className="w-full bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg px-3 py-2 text-sm text-white focus:border-[#CDFF00] outline-none" />
-                    </div>
-                    <div>
-                      <label className="block text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-1.5 flex items-center gap-1.5">
-                        <IdCard size={12} /> RG
-                      </label>
-                      <input type="text" value={formData.rg} onChange={e => setFormData(prev => ({ ...prev, rg: e.target.value }))}
-                        className="w-full bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg px-3 py-2 text-sm text-white focus:border-[#CDFF00] outline-none" />
-                    </div>
-                    <div className="sm:col-span-2">
-                      <label className="block text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-1.5 flex items-center gap-1.5">
-                        <MapPin size={12} /> Endereço do Cliente
-                      </label>
-                      <input type="text" value={formData.clientAddress} onChange={e => setFormData(prev => ({ ...prev, clientAddress: e.target.value }))}
-                        className="w-full bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg px-3 py-2 text-sm text-white focus:border-[#CDFF00] outline-none" placeholder="Rua, número, bairro, cidade, estado" />
-                    </div>
-                </div>
+                <p className="text-[10px] text-neutral-500 leading-relaxed">
+                  Os dados pessoais do cliente (CPF, RG, endereço) são solicitados apenas na aba
+                  Emissão do Contrato, e ficam salvos somente quando o contrato é gerado.
+                </p>
               </div>
               {/* Event fields — common to both modes */}
               <div className="border-t border-[#2d2d2d] pt-4">

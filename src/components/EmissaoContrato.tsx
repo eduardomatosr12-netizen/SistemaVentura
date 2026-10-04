@@ -15,6 +15,8 @@ import {
 interface Props {
   eventId: string | null;
   data: ContractData;
+  onCpfChange?: (value: string) => void;
+  onRgChange?: (value: string) => void;
   onAddressChange?: (value: string) => void;
   onGenderChange?: (value: 'F' | 'M' | '') => void;
   onServicesChange?: (services: string[]) => void;
@@ -46,7 +48,7 @@ const Block = ({ icon, title, children }: { icon: React.ReactNode; title: string
   </section>
 );
 
-export default function EmissaoContrato({ eventId, data, onAddressChange, onGenderChange, onServicesChange, onDownPaymentChange, onSave, saving }: Props) {
+export default function EmissaoContrato({ eventId, data, onCpfChange, onRgChange, onAddressChange, onGenderChange, onServicesChange, onDownPaymentChange, onSave, saving }: Props) {
   const items = data.items || [];
   const selected = data.services || [];
 
@@ -182,8 +184,33 @@ export default function EmissaoContrato({ eventId, data, onAddressChange, onGend
 
       <Block icon={<User size={12} />} title="Partes">
         <Row label="Contratante" value={data.clientName || '—'} />
-        <Row label="CPF" value={data.cpf || '—'} />
-        <Row label="RG" value={data.rg || '—'} />
+        {onCpfChange ? (
+          <EditableRow label="CPF do Contratante">
+            <input
+              type="text"
+              inputMode="numeric"
+              value={data.cpf || ''}
+              onChange={e => onCpfChange(e.target.value)}
+              placeholder="000.000.000-00"
+              className={inputClass}
+            />
+          </EditableRow>
+        ) : (
+          <Row label="CPF" value={data.cpf || '—'} />
+        )}
+        {onRgChange ? (
+          <EditableRow label="RG do Contratante">
+            <input
+              type="text"
+              value={data.rg || ''}
+              onChange={e => onRgChange(e.target.value)}
+              placeholder="Ex: 12.345.678-9 SSP/SP"
+              className={inputClass}
+            />
+          </EditableRow>
+        ) : (
+          <Row label="RG" value={data.rg || '—'} />
+        )}
         {onAddressChange ? (
           <EditableRow label="Endereço do Contratante">
             <input

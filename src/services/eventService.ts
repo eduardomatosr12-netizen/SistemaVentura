@@ -25,7 +25,6 @@ const mapEventDoc = (d: { id: string; data: () => Record<string, unknown> }): Ca
     city: data.city || '',
     description: data.description || '',
     equipe: data.equipe || '',
-    clientEmail: data.clientEmail || '',
     clientPhone: data.clientPhone || '',
     clientCpf: data.clientCpf || '',
     clientRg: data.clientRg || '',

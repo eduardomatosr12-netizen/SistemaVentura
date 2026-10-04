@@ -36,8 +36,6 @@ const CATEGORY_COLORS: Record<string, string> = {
   'Outros': '#22c55e',
 };
 
-const CLOSED_STAGES = new Set(['Contrato Fechado', 'Perdido']);
-
 const CHART_COLORS = ['#CDFF00', '#22d3ee', '#a78bfa', '#fb7185', '#fbbf24', '#64748b'];
 
 const FULL_MONTHS = [
@@ -50,7 +48,7 @@ interface EstoqueDeEventosProps {
 }
 
 const EstoqueDeEventos = ({ onMessage }: EstoqueDeEventosProps) => {
-  const { Orçamentos, updateLead } = useCRM();
+  const { events, updateEvent } = useCRM();
   const [items, setItems] = useState<EventStockItem[]>([]);
   const [search, setSearch] = useState('');
 
@@ -79,9 +77,13 @@ const EstoqueDeEventos = ({ onMessage }: EstoqueDeEventosProps) => {
     );
   }, [items, search]);
 
+  // Os itens do orçamento ficam no evento: não existe mais "lead de orçamento".
   const openOrcamentos = useMemo(() => {
-    return Orçamentos.filter(o => !CLOSED_STAGES.has(o.stage));
-  }, [Orçamentos]);
+    return events
+      .filter(e => e.status === 'orcamento' || e.status === 'orcamento_cancelado')
+      .filter(e => !!e.client)
+      .sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+  }, [events]);
 
   const openForm = (item?: EventStockItem) => {
     setEditingItem(item || null);
@@ -136,8 +138,8 @@ const EstoqueDeEventos = ({ onMessage }: EstoqueDeEventosProps) => {
       setLinkError('Selecione um orçamento para vincular o item.');
       return;
     }
-    const lead = Orçamentos.find(o => o.id === linkOrcamentoId);
-    if (!lead) {
+    const target = events.find(e => e.id === linkOrcamentoId);
+    if (!target) {
       setLinkError('Orçamento não encontrado.');
       return;
     }
@@ -150,8 +152,8 @@ const EstoqueDeEventos = ({ onMessage }: EstoqueDeEventosProps) => {
       eventStockId: linkItem.id,
     };
     try {
-      await updateLead(linkOrcamentoId, { items: [...(lead.items || []), newItem] });
-      onMessage(`"${linkItem.name}" adicionado ao orçamento de ${lead.name}.`);
+      await updateEvent(linkOrcamentoId, { items: [...((target.items || []) as OrcamentoItem[]), newItem] });
+      onMessage(`"${linkItem.name}" adicionado ao orçamento de ${target.client}.`);
       setLinkItem(null);
       setLinkOrcamentoId('');
       setLinkError('');
@@ -614,7 +616,7 @@ const EstoqueDeEventos = ({ onMessage }: EstoqueDeEventosProps) => {
                     <option value="">Selecionar orçamento...</option>
                     {openOrcamentos.map(o => (
                       <option key={o.id} value={o.id}>
-                        {o.name} {o.whatsapp ? `— ${o.whatsapp}` : ''}
+                        {o.client} {o.date ? `— ${o.date}` : ''}
                       </option>
                     ))}
                   </select>

@@ -1,4 +1,4 @@
-﻿import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
+import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import { Plus, Pencil, Trash2, X, Save, Filter, XCircle, ChevronDown, ChevronUp, AlertCircle, MessageCircle, Package, Search, FileText, Percent, DollarSign, Users } from 'lucide-react';
 import WhatsAppModal from '../../components/WhatsAppModal';
 import { useCRM } from '../../contexts/CRMContext';
@@ -32,9 +32,10 @@ const parseMonetaryValue = (val: string): number => {
 
 const EMPTY_LEAD: Partial<Lead> = {
   name: '', niche: '', whatsapp: '', email: '', instagram: '',
-  stage: 'Novos Orçamentos', firstContact: '', closingDate: '',
+  stage: 'Contrato Fechado', firstContact: '', closingDate: '',
   followUpReminder: '', address: '',
   notes: '', value: '', items: [],
+  cpf: '', rg: '', clientAddress: '', clientGender: '',
 };
 
 const EVENT_TYPES = [
@@ -104,13 +105,14 @@ const MONTHS = [
 ];
 
 const CRMOrçamentos = () => {
-  const { Orçamentos, events, addLead, updateLead, deleteLead, searchTerm } = useCRM();
+  // `/clientes` lista apenas quem já tem contrato emitido. Orçamento sem contrato
+  // não aparece aqui: ele vive somente no calendário.
+  const { Orçamentos, events, updateLead, deleteLead, searchTerm } = useCRM();
   const { clearFilters } = useFilters();
   const { role, employeeName } = useAuth();
 
   const [isOpen, setIsOpen] = useState(false);
   const [current, setCurrent] = useState<Partial<Lead>>(EMPTY_LEAD);
-  const [mode, setMode] = useState<'add' | 'edit'>('add');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [whatsAppTarget, setWhatsAppTarget] = useState<Lead | null>(null);
 
@@ -262,14 +264,8 @@ const CRMOrçamentos = () => {
     }
   };
 
-  const openAdd = () => { setMode('add'); setCurrent(EMPTY_LEAD); setIsOpen(true); setDiscountValue(0); };
   const openEdit = (lead: Lead) => {
-    if (lead.id.startsWith('event-')) {
-      alert('Este cliente veio de um evento no calendário. Para editar, vá até o Calendário.');
-      return;
-    }
-    setMode('edit');
-    setCurrent({ ...lead });
+    setCurrent({ ...lead, cpf: lead.cpf || '', rg: lead.rg || '', clientAddress: lead.clientAddress || '', clientGender: lead.clientGender || '' });
     setIsOpen(true);
     if (lead.items && lead.items.length > 0) {
       const total = lead.items.reduce((sum, i) => sum + i.qtdAtual * i.valorUnit, 0);
@@ -338,103 +334,53 @@ const CRMOrçamentos = () => {
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!current.id) return;
+
     const isFechado = current.stage === 'Contrato Fechado';
     const modifiedLead = {
       ...current,
       lastModifiedBy: employeeName || (role === 'admin' ? 'Administrador' : 'Funcionário')
     };
-    
+
     const finalValue = getFinalValue();
+    const wasFechado = Orçamentos.find(o => o.id === current.id)?.stage === 'Contrato Fechado';
 
-    if (mode === 'add') {
-      addLead(modifiedLead as Omit<Lead, 'id'>);
-      if (isFechado && current.items && current.items.length > 0) {
-        addPendingRevenue(current.name || 'Cliente', finalValue, current.firstContact || '');
-      }
-    } else {
-      const wasFechado = Orçamentos.find(o => o.id === current.id)?.stage === 'Contrato Fechado';
-
-      if (isFechado && current.items && current.items.length > 0) {
-        if (!wasFechado) {
-          addPendingRevenue(current.name || 'Cliente', finalValue, current.firstContact || '');
-        }
-      }
-
-      updateLead(current.id!, modifiedLead);
+    if (isFechado && !wasFechado && current.items && current.items.length > 0) {
+      addPendingRevenue(current.name || 'Cliente', finalValue, current.closingDate || current.firstContact || '');
     }
+
+    updateLead(current.id, modifiedLead);
     setIsOpen(false);
   };
 
   const handleDelete = (id: string | undefined) => {
     if (!id) return;
-    if (id.startsWith('event-')) {
-      alert('Este cliente veio de um evento no calendário. Para excluir, vá até o Calendário.');
-      return;
-    }
-    if (confirm('Excluir este lead?')) deleteLead(id);
+    if (confirm('Excluir este cliente?')) deleteLead(id);
   };
 
   const updateField = (field: keyof Lead, val: string) =>
     setCurrent(prev => ({ ...prev, [field]: val }));
 
-  const unifiedClients = useMemo(() => {
-    const eventStageMap: Record<string, string> = {
-      evento_confirmado: 'Contrato Fechado',
-      evento_concluido: 'Contrato Fechado',
-      orcamento: 'Novos Orçamentos',
-      orcamento_cancelado: 'Perdido',
-    };
-
-    const map = new Map<string, Lead>();
-
-    Orçamentos.forEach(lead => {
-      if (lead.name) map.set(lead.name.toLowerCase().trim(), lead);
-    });
-
-    events.forEach(ev => {
-      const key = (ev.client || '').toLowerCase().trim();
-      if (!key) return;
-
-      if (map.has(key)) {
-        const existing = map.get(key)!;
-        if (ev.valorTotal) {
-          const current = parseMonetaryValue(existing.value);
-          existing.value = formatCurrency(current + ev.valorTotal);
-        }
-      } else {
-        const stage = ev.status ? (eventStageMap[ev.status] || 'Novos Orçamentos') : 'Novos Orçamentos';
-        map.set(key, {
-          id: `event-${ev.id}`,
-          name: ev.client || '',
-          niche: ev.eventType || ev.title || '',
-          whatsapp: ev.clientPhone || '',
-          email: ev.clientEmail || '',
-          instagram: '',
-          stage,
-          origin: 'evento',
-          firstContact: ev.date || '',
-          closingDate: '',
-          followUpReminder: '',
-          address: '',
-          notes: ev.description || '',
-          value: ev.valorTotal ? formatCurrency(ev.valorTotal) : 'R$ 0,00',
-          items: [],
-        });
-      }
-    });
-
-    return Array.from(map.values());
-  }, [Orçamentos, events]);
+  // Só entram em `/clientes` os leads com contrato emitido: os gravados pela aba de
+// contrato (trazem `eventoId`) ou os importados que já estavam como "Contrato Fechado".
+  const contractedClients = useMemo(() => {
+    return Orçamentos
+      .filter(lead => !!lead.eventoId || lead.stage === 'Contrato Fechado')
+      .slice()
+      .sort((a, b) => (b.closingDate || b.firstContact || '').localeCompare(a.closingDate || a.firstContact || ''));
+  }, [Orçamentos]);
 
   const filteredOrçamentos = useMemo(() => {
-    if (!unifiedClients || !Array.isArray(unifiedClients)) return [];
-    let result = unifiedClients;
+    if (!contractedClients || !Array.isArray(contractedClients)) return [];
+    let result = contractedClients;
 
     if (searchTerm) {
-      result = result.filter(lead => 
-        lead.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        lead.niche?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        lead.email?.toLowerCase().includes(searchTerm.toLowerCase())
+      const q = searchTerm.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      result = result.filter(lead =>
+        lead.name?.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').includes(q) ||
+        lead.niche?.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').includes(q) ||
+        lead.cpf?.toLowerCase().includes(q) ||
+        lead.clientAddress?.toLowerCase().includes(q)
       );
     }
 
@@ -467,12 +413,11 @@ const CRMOrçamentos = () => {
         switch (key) {
           case 'name': return lead.name?.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').includes(q);
           case 'whatsapp': return lead.whatsapp?.toLowerCase().includes(q);
-          case 'email': return lead.email?.toLowerCase().includes(q);
-          case 'cpf': return true;
+          case 'cpf': return lead.cpf?.toLowerCase().includes(q);
           case 'eventType': return lead.niche?.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').includes(q);
           case 'date': return lead.firstContact?.startsWith(val);
-          case 'time': return true;
           case 'city': return lead.address?.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').includes(q);
+          case 'address': return lead.clientAddress?.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').includes(q);
           case 'status': return lead.stage?.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').includes(q);
           default: return true;
         }
@@ -480,7 +425,7 @@ const CRMOrçamentos = () => {
     });
 
     return result;
-  }, [unifiedClients, searchTerm, eventType, citySearch, selectedMonth, mobileFilters]);
+  }, [contractedClients, searchTerm, eventType, citySearch, selectedMonth, mobileFilters]);
 
   const hasActiveFilters = selectedMonth !== '' || eventType !== '' || citySearch !== '' || Object.values(mobileFilters).some(v => !!v);
 
@@ -547,7 +492,7 @@ const CRMOrçamentos = () => {
           <div className="fixed inset-0 bg-black/60 z-[55] md:hidden" onClick={() => setIsSidebarOpen(false)} />
           <div className="fixed inset-x-0 bottom-0 z-[100] bg-[#1a1a1a] border-t border-[#2d2d2d] rounded-t-xl p-4 max-h-[70dvh] overflow-y-auto md:hidden shadow-xl" style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}>
             <div className="flex items-center justify-between mb-3">
-              <h2 className="text-lg font-black text-[#CDFF00]">Filtrar Contatos</h2>
+              <h2 className="text-lg font-black text-[#CDFF00]">Filtrar Clientes</h2>
               <button onClick={() => setIsSidebarOpen(false)} className="p-2 hover:bg-[#222] rounded-md transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center">
                 <X size={14} className="text-[#CDFF00]" />
               </button>
@@ -559,24 +504,23 @@ const CRMOrçamentos = () => {
               </button>
             )}
             <div className="space-y-3">
-              {renderFilterField('name', 'Nome', 'text')}
-              {renderFilterField('whatsapp', 'WhatsApp', 'text')}
-              {renderFilterField('email', 'E-mail', 'text')}
-              {renderFilterField('cpf', 'CPF/CNPJ', 'text')}
-              {renderFilterField('eventType', 'Tipo de Evento', 'text')}
-              {renderFilterField('date', 'Data', 'date')}
-              {renderFilterField('time', 'Horário', 'text')}
-              {renderFilterField('city', 'Cidade', 'text')}
-              {renderFilterField('status', 'Status', 'text')}
+{renderFilterField('name', 'Nome', 'text')}
+            {renderFilterField('whatsapp', 'WhatsApp', 'text')}
+            {renderFilterField('cpf', 'CPF', 'text')}
+            {renderFilterField('eventType', 'Tipo de Evento', 'text')}
+            {renderFilterField('date', 'Data do Evento', 'date')}
+            {renderFilterField('city', 'Cidade do Evento', 'text')}
+            {renderFilterField('address', 'Endereço', 'text')}
+            {renderFilterField('status', 'Status', 'text')}
             </div>
           </div>
           <div className="hidden md:block absolute top-14 left-4 w-[280px] max-h-[80vh] bg-[#1a1a1a] border border-[#2d2d2d] rounded-xl shadow-xl overflow-y-auto z-50">
             <div className="p-3 sticky top-0 bg-[#1a1a1a] border-b border-[#2d2d2d] flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <div>
-                  <h2 className="text-2xl md:text-3xl font-black text-white tracking-tight mb-1">Contatos</h2>
+                  <h2 className="text-2xl md:text-3xl font-black text-white tracking-tight mb-1">Clientes</h2>
                   <p className="text-[#CDFF00] text-xs md:text-sm">
-                    {filteredOrçamentos.length} contato{filteredOrçamentos.length !== 1 ? 's' : ''} encontrado{filteredOrçamentos.length !== 1 ? 's' : ''}
+                    {filteredOrçamentos.length} cliente{filteredOrçamentos.length !== 1 ? 's' : ''} com contrato
                     {hasActiveFilters && <span className="text-[#CDFF00]"> (filtrado{filteredOrçamentos.length !== 1 ? 's' : ''})</span>}
                   </p>
                 </div>
@@ -659,19 +603,14 @@ const CRMOrçamentos = () => {
               <div>
                 <h1 className="text-2xl md:text-[32px] font-black text-white tracking-[0.5px] mb-2 flex items-center gap-3">
                   <Users size={28} className="text-[#CDFF00]" />
-                  Contatos
+                  Clientes
                 </h1>
                 <p className="text-xs md:text-sm font-medium text-white/70">
-                  {filteredOrçamentos.length} contato{filteredOrçamentos.length !== 1 ? 's' : ''} encontrado{filteredOrçamentos.length !== 1 ? 's' : ''}
+                  {filteredOrçamentos.length} cliente{filteredOrçamentos.length !== 1 ? 's' : ''} com contrato
                   {hasActiveFilters && <span className="text-[#CDFF00]"> (filtrado{filteredOrçamentos.length !== 1 ? 's' : ''})</span>}
                 </p>
               </div>
             </div>
-            <button onClick={openAdd} className="flex items-center gap-2 px-6 py-3 bg-[#CDFF00] text-black font-black rounded-lg hover:bg-[#a1e600] transition-all whitespace-nowrap">
-              <Plus size={15} strokeWidth={2.5} />
-              <span className="hidden sm:inline">Novo Contato</span>
-              <span className="sm:hidden text-xs">Novo</span>
-            </button>
           </div>
 
           <div className="bg-[#1a1a1a] border border-[#2d2d2d] rounded-xl overflow-hidden shadow-[0_4px_12px_rgba(0,0,0,0.3)]">
@@ -680,8 +619,8 @@ const CRMOrçamentos = () => {
             <table className="w-full text-xs md:text-sm">
               <thead>
                 <tr className="border-b border-[#2d2d2d] bg-[#0a0a0a]">
-                  {['NOME', 'WHATSAPP', 'INSTAGRAM', 'VALOR', 'STATUS', 'AÇÕES'].map((h, i) => (
-                    <th key={h} className={`px-3 md:px-5 py-2 md:py-3.5 text-[10px] md:text-[11px] text-[#CDFF00] font-semibold uppercase tracking-wider whitespace-nowrap ${i >= 4 ? 'text-center' : 'text-left'}`}>
+                  {['NOME', 'WHATSAPP', 'CPF', 'ENDEREÇO', 'VALOR', 'STATUS', 'AÇÕES'].map((h, i) => (
+                    <th key={h} className={`px-3 md:px-5 py-2 md:py-3.5 text-[10px] md:text-[11px] text-[#CDFF00] font-semibold uppercase tracking-wider whitespace-nowrap ${i >= 5 ? 'text-center' : 'text-left'}`}>
                       {h}
                     </th>
                   ))}
@@ -692,7 +631,7 @@ const CRMOrçamentos = () => {
                   <tr key={lead?.id} className="hover:bg-[#111] transition-colors group">
                     <td className="px-3 md:px-5 py-2 md:py-4">
                       <div className="font-semibold text-white text-xs md:text-sm">{lead?.name}</div>
-                      <div className="text-[10px] md:text-xs text-neutral-400 truncate">{lead?.niche} · {lead?.email}</div>
+                      <div className="text-[10px] md:text-xs text-neutral-400 truncate">{lead?.niche}</div>
                     </td>
                     <td className="px-3 md:px-5 py-2 md:py-4 text-neutral-400 text-xs md:text-sm whitespace-nowrap">
                       {lead?.whatsapp ? (
@@ -711,11 +650,15 @@ const CRMOrçamentos = () => {
                         <span className="text-[#CDFF00]">—</span>
                       )}
                     </td>
-                    <td className="px-3 md:px-5 py-2 md:py-4 text-neutral-400 text-xs md:text-sm whitespace-nowrap">{lead?.instagram}</td>
+                    <td className="px-3 md:px-5 py-2 md:py-4 text-neutral-400 text-xs md:text-sm whitespace-nowrap">{lead?.cpf || '—'}</td>
+                    <td className="px-3 md:px-5 py-2 md:py-4 text-neutral-400 text-xs md:text-sm">
+                      <div className="max-w-[220px] truncate" title={lead?.clientAddress || ''}>{lead?.clientAddress || '—'}</div>
+                      {lead?.address && <div className="text-[10px] text-neutral-500 truncate">Evento em {lead.address}</div>}
+                    </td>
                     <td className="px-3 md:px-5 py-2 md:py-4 text-white font-medium text-xs md:text-sm whitespace-nowrap">{lead?.value || '—'}</td>
                     <td className="px-3 md:px-5 py-4 md:py-6 text-center">
                       <span className={`${stageStyle[lead?.stage] ?? baseStageStyle}`}>
-                        {lead?.stage === 'Novos Orçamentos' ? 'Novos Contatos' : lead?.stage}
+                        {lead?.stage}
                       </span>
                     </td>
                     <td className="px-3 md:px-5 py-2 md:py-4">
@@ -731,8 +674,8 @@ const CRMOrçamentos = () => {
                   </tr>
                 )) : (
                   <tr>
-                    <td colSpan={6} className="px-3 md:px-5 py-8 md:py-12 text-center text-neutral-400 font-medium italic text-xs md:text-sm">
-                      {hasActiveFilters ? 'Nenhum cliente encontrado com os filtros aplicados' : `Nenhum cliente encontrado para "${searchTerm}"`}
+                    <td colSpan={7} className="px-3 md:px-5 py-8 md:py-12 text-center text-neutral-400 font-medium italic text-xs md:text-sm">
+                      {hasActiveFilters ? 'Nenhum cliente encontrado com os filtros aplicados' : 'Nenhum cliente com contrato emitido ainda.'}
                     </td>
                   </tr>
                 )}
@@ -746,7 +689,7 @@ const CRMOrçamentos = () => {
                 <div key={lead?.id} className="bg-[#111] border border-[#333] rounded-lg p-4 space-y-2.5">
                   <div>
                     <div className="font-semibold text-white text-sm">{lead?.name}</div>
-                    <div className="text-xs text-neutral-400 truncate">{lead?.niche} · {lead?.email}</div>
+                    <div className="text-xs text-neutral-400 truncate">{lead?.niche}</div>
                   </div>
                   <div className="flex items-center gap-2 text-xs text-neutral-300">
                     <span className="text-neutral-500 font-medium">WhatsApp:</span>
@@ -766,8 +709,12 @@ const CRMOrçamentos = () => {
                     )}
                   </div>
                   <div className="flex items-center gap-2 text-xs text-neutral-300">
-                    <span className="text-neutral-500 font-medium">Instagram:</span>
-                    <span>{lead?.instagram || '—'}</span>
+                    <span className="text-neutral-500 font-medium">CPF:</span>
+                    <span>{lead?.cpf || '—'}</span>
+                  </div>
+                  <div className="flex items-start gap-2 text-xs text-neutral-300">
+                    <span className="text-neutral-500 font-medium">Endereço:</span>
+                    <span>{lead?.clientAddress || '—'}</span>
                   </div>
                   <div className="flex items-center gap-2 text-xs">
                     <span className="text-neutral-500 font-medium">Valor:</span>
@@ -775,7 +722,7 @@ const CRMOrçamentos = () => {
                   </div>
                   <div className="flex justify-center pt-1 w-full">
                     <span className={`${stageStyle[lead?.stage] ?? baseStageStyle}`}>
-                      {lead?.stage === 'Novos Orçamentos' ? 'Novos Contatos' : lead?.stage}
+                      {lead?.stage}
                     </span>
                   </div>
                   <div className="flex items-center justify-end gap-2 pt-2 border-t border-[#222]">
@@ -789,7 +736,7 @@ const CRMOrçamentos = () => {
                 </div>
               )) : (
                 <div className="text-center text-neutral-400 font-medium italic text-xs py-8">
-                  {hasActiveFilters ? 'Nenhum cliente encontrado com os filtros aplicados' : `Nenhum cliente encontrado para "${searchTerm}"`}
+                  {hasActiveFilters ? 'Nenhum cliente encontrado com os filtros aplicados' : 'Nenhum cliente com contrato emitido ainda.'}
                 </div>
               )}
             </div>
@@ -803,10 +750,10 @@ const CRMOrçamentos = () => {
             <div className="flex justify-between items-start md:items-center gap-3 px-4 md:px-7 py-3 md:py-5 border-b border-slate-100 shrink-0">
               <div>
                 <h2 className="text-lg md:text-xl font-black text-white tracking-tight">
-                  {mode === 'add' ? 'Novo Orçamento' : 'Editar Orçamento'}
+                  Editar Cliente
                 </h2>
                 <p className="text-[10px] md:text-xs text-[#CDFF00] mt-0.5 md:mt-0.5">
-                  {mode === 'add' ? 'Preencha os dados para cadastrar um novo orçamento.' : `Editando: ${current.name}`}
+                  {`Editando: ${current.name}`}
                 </p>
               </div>
               <button onClick={() => setIsOpen(false)} className="text-[#CDFF00] hover:text-white transition-colors p-1 flex-shrink-0" type="button">
@@ -866,7 +813,37 @@ const CRMOrçamentos = () => {
                   </Field>
                 </div>
 
-                <Field label="CIDADE">
+                {/* Dados pessoais do contratante — disponíveis porque houve contrato. */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
+                  <Field label="CPF">
+                    <input type="text" value={current.cpf || ''} onChange={e => updateField('cpf', e.target.value)}
+                      className={inputCls} placeholder="000.000.000-00" />
+                  </Field>
+                  <Field label="RG">
+                    <input type="text" value={current.rg || ''} onChange={e => updateField('rg', e.target.value)}
+                      className={inputCls} placeholder="00.000.000-0" />
+                  </Field>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
+                  <Field label="ENDEREÇO">
+                    <input type="text" value={current.clientAddress || ''} onChange={e => updateField('clientAddress', e.target.value)}
+                      className={inputCls} placeholder="Rua, número, bairro" />
+                  </Field>
+                  <Field label="SEXO">
+                    <select
+                      value={current.clientGender || ''}
+                      onChange={e => updateField('clientGender', e.target.value)}
+                      className={`${inputCls} appearance-none cursor-pointer`}
+                    >
+                      <option value="">Não informado</option>
+                      <option value="F">Feminino</option>
+                      <option value="M">Masculino</option>
+                    </select>
+                  </Field>
+                </div>
+
+                <Field label="CIDADE DO EVENTO">
                   <input type="text" value={current.address} onChange={e => updateField('address', e.target.value)}
                     className={inputCls} placeholder="Ex: São Paulo - SP" />
                 </Field>
@@ -1068,7 +1045,7 @@ const CRMOrçamentos = () => {
                   className="flex-1 flex items-center justify-center gap-2 bg-black text-white px-4 py-2 md:py-3 rounded-md font-bold hover:bg-neutral-800 active:scale-[0.98] transition-all text-xs md:text-sm"
                 >
                   <Save size={15} strokeWidth={2.5} />
-                  {mode === 'add' ? 'CADASTRAR CLIENTE E AGENDAR' : 'SALVAR ALTERAÇÕES'}
+                  SALVAR ALTERAÇÕES
                 </button>
               </div>
             </form>

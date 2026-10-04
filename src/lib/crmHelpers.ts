@@ -695,7 +695,6 @@ export function generatePDF(lead: Lead, discountData?: { type: 'percent' | 'fixe
 
   const safeName = escapeHtml(lead.name);
   const safeWhatsapp = escapeHtml(lead.whatsapp);
-  const safeEmail = escapeHtml(lead.email);
   const safeInstagram = escapeHtml(lead.instagram);
   const safeAddress = escapeHtml(lead.address);
   const safeNotes = escapeHtml(lead.notes);
@@ -720,7 +719,6 @@ ${companyHeaderHtml('Orçamento', `Emitido em ${dateStr}`)}
             <h3>Cliente</h3>
             <p><strong>${safeName}</strong></p>
             ${lead.whatsapp ? `<p>WhatsApp: <a href="${generateWhatsAppLink(lead.whatsapp)}" target="_blank" style="color: #25D366; text-decoration: underline;">${safeWhatsapp}</a></p>` : ''}
-            ${lead.email ? `<p>Email: ${safeEmail}</p>` : ''}
             ${lead.instagram ? `<p>Instagram: ${safeInstagram}</p>` : ''}
           </div>
           <div class="col" style="text-align: right;">
@@ -771,8 +769,7 @@ ${itemsTableHtml(items)}
 export interface ContractData {
   clientName: string;
   whatsapp: string;
-  email: string;
-  cpf: string;
+  cpf?: string;
   rg?: string;
   clientAddress?: string;
   clientGender?: 'F' | 'M' | '';
@@ -855,7 +852,7 @@ export function generateContractPDF(data: ContractData): void {
   const servicesParenthetical = escapeHtml(formatServicesList(data.services).join(', ').toLowerCase());
 
   const safeName = escapeHtml(data.clientName || 'Contratante');
-  const safeCpf = escapeHtml(data.cpf);
+  const safeCpf = escapeHtml(data.cpf || '');
   const safeRg = escapeHtml(data.rg || '');
   const safeCity = escapeHtml(data.city);
   const safeVenue = escapeHtml(data.venue || '');

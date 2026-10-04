@@ -20,11 +20,14 @@ const COLUMNS_BY_TYPE: Record<string, { headers: string[]; map: Record<string, s
     },
   },
   Clientes: {
-    headers: ['Nome', 'Email', 'Telefone', 'Instagram', 'Nicho', 'Origem'],
+    headers: ['Nome', 'Telefone', 'CPF', 'RG', 'Endereço', 'Email', 'Instagram', 'Nicho', 'Origem'],
     map: {
       'Nome': 'nome',
-      'Email': 'email',
       'Telefone': 'telefone',
+      'CPF': 'cpf',
+      'RG': 'rg',
+      'Endereço': 'endereco',
+      'Email': 'email',
       'Instagram': 'instagram',
       'Nicho': 'nicho',
       'Origem': 'origem',
@@ -45,10 +48,17 @@ const COLUMNS_BY_TYPE: Record<string, { headers: string[]; map: Record<string, s
 
 const CATEGORY_OPTIONS = ['Decoração', 'Móveis', 'Iluminação'];
 
+const parseMonetaryValue = (val: string): number => {
+  if (!val) return 0;
+  const clean = val.replace(/R\$\s*/gi, '').replace(/\./g, '').replace(',', '.').trim();
+  const num = parseFloat(clean);
+  return isNaN(num) ? 0 : num;
+};
+
 const ROUTE_MAP: Record<string, string> = {
   Estoque: '/tarefas',
-  Clientes: '/crm/orcamentos',
-  Orçamentos: '/crm/orcamentos',
+  Clientes: '/clientes',
+  Orçamentos: '/home',
 };
 
 type ImportType = keyof typeof COLUMNS_BY_TYPE;
@@ -155,7 +165,7 @@ const Importar = () => {
   const [toast, setToast] = useState<Toast | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const { addLead } = useCRM();
+  const { addLead, addEvent } = useCRM();
 
   const showToast = (t: Toast) => {
     setToast(t);
@@ -214,50 +224,63 @@ const Importar = () => {
   const processOrcamentos = (rows: Record<string, string>[], isCliente: boolean) => {
     const now = new Date().toISOString().slice(0, 10);
 
-    const newRecords = rows.map((row) => {
-      if (isCliente) {
-        return {
-          name: (row['Nome'] || row['nome'] || '').trim(),
-          email: (row['Email'] || row['email'] || '').trim(),
-          whatsapp: (row['Telefone'] || row['telefone'] || row['WhatsApp'] || row['whatsapp'] || '').trim(),
-          instagram: (row['Instagram'] || row['instagram'] || '').trim(),
-          niche: (row['Nicho'] || row['nicho'] || '').trim(),
-          origin: (row['Origem'] || row['origem'] || '').trim(),
-          stage: 'Novos Orçamentos',
-          firstContact: now,
-          closingDate: '',
-          followUpReminder: '',
-          address: '',
-          notes: '',
-          value: '',
-        };
+    if (isCliente) {
+      // Clientes importados entram como contratos já fechados: são eles que
+      // aparecem em `/clientes`.
+      const newRecords = rows.map((row) => ({
+        name: (row['Nome'] || row['nome'] || '').trim(),
+        email: (row['Email'] || row['email'] || '').trim(),
+        whatsapp: (row['Telefone'] || row['telefone'] || row['WhatsApp'] || row['whatsapp'] || '').trim(),
+        instagram: (row['Instagram'] || row['instagram'] || '').trim(),
+        niche: (row['Nicho'] || row['nicho'] || '').trim(),
+        origin: (row['Origem'] || row['origem'] || 'importacao').trim(),
+        stage: 'Contrato Fechado',
+        firstContact: now,
+        closingDate: now,
+        followUpReminder: '',
+        address: '',
+        notes: '',
+        value: '',
+        cpf: (row['CPF'] || row['cpf'] || '').trim(),
+        rg: (row['RG'] || row['rg'] || '').trim(),
+        clientAddress: (row['Endereço'] || row['Endereco'] || row['endereco'] || '').trim(),
+      }));
+
+      for (const record of newRecords) {
+        addLead(record);
       }
 
-      return {
-        name: (row['Cliente'] || row['cliente'] || row['Nome'] || row['nome'] || '').trim(),
-        address: (row['Cidade'] || row['cidade'] || '').trim(),
-        firstContact: (row['Data'] || row['data'] || now).trim(),
-        value: (row['Valor'] || row['valor'] || '').trim(),
-        notes: (row['Observações'] || row['observacoes'] || '').trim(),
-        niche: (row['Categoria'] || row['categoria'] || '').trim(),
-        stage: 'Novos Orçamentos',
-        email: '',
-        whatsapp: '',
-        instagram: '',
-        origin: '',
-        closingDate: '',
-        followUpReminder: '',
-      };
-    });
+      showToast({
+        type: 'success',
+        message: `${newRecords.length} clientes importados com sucesso em Clientes`,
+        action: { label: 'Ver registros importados', href: ROUTE_MAP.Clientes },
+      });
+      return;
+    }
 
-    for (const record of newRecords) {
-      addLead(record);
+    // Orçamentos importados viram eventos do calendário: não são clientes.
+    const newEvents = rows.map((row) => ({
+      title: `${(row['Categoria'] || row['categoria'] || 'Evento').trim()} - ${(row['Cliente'] || row['cliente'] || row['Nome'] || row['nome'] || '').trim()}`,
+      client: (row['Cliente'] || row['cliente'] || row['Nome'] || row['nome'] || '').trim(),
+      clientPhone: '',
+      eventType: (row['Categoria'] || row['categoria'] || '').trim(),
+      date: (row['Data'] || row['data'] || now).trim(),
+      time: '',
+      city: (row['Cidade'] || row['cidade'] || '').trim(),
+      description: (row['Observações'] || row['observacoes'] || '').trim(),
+      status: 'orcamento' as const,
+      valorTotal: parseMonetaryValue((row['Valor'] || row['valor'] || '').trim()),
+      desconto: 0,
+    }));
+
+    for (const record of newEvents) {
+      addEvent(record);
     }
 
     showToast({
       type: 'success',
-      message: `${newRecords.length} registros importados com sucesso em ${isCliente ? 'Clientes' : 'Orçamentos'}`,
-      action: { label: 'Ver registros importados', href: ROUTE_MAP.Orçamentos },
+      message: `${newEvents.length} orçamentos importados com sucesso em Orçamentos`,
+      action: { label: 'Ver registros importados', href: '/home' },
     });
   };
 

@@ -7,6 +7,12 @@ export interface OrcamentoItem {
   eventStockId?: string;
 }
 
+/**
+ * Cliente com contrato emitido.
+ *
+ * A coleção `leads` é criada exclusivamente na aba Emissão do Contrato: quem
+ * apenas tem orçamento vive apenas no calendário (`CalendarEvent`).
+ */
 export interface Lead {
   id: string;
   name: string;
@@ -24,6 +30,9 @@ export interface Lead {
   value: string;
   items?: OrcamentoItem[];
   lastModifiedBy?: string;
+  /** Evento do calendário que originou o contrato. */
+  eventoId?: string;
+  /** Dados pessoais do contratante — só existem porque houve contrato. */
   cpf?: string;
   rg?: string;
   clientAddress?: string;
@@ -58,7 +67,7 @@ export interface CalendarEvent {
   city?: string;
   description?: string;
   equipe?: string;
-  clientEmail?: string;
+  /** Dados pessoais do contratante — preenchidos e gravados apenas na aba de emissão do contrato. */
   clientPhone?: string;
   clientCpf?: string;
   clientRg?: string;

@@ -211,8 +211,8 @@ export interface EventInput {
   client: string;
   clientId?: string;
   clientPhone?: string;
-  clientEmail?: string;
   clientCpf?: string;
+  clientRg?: string;
   clientAddress?: string;
   clientGender?: 'F' | 'M' | '';
   eventType?: string;
@@ -265,13 +265,13 @@ export const validateAndCleanEvent = (data: unknown): ValidationResult<EventInpu
   if (clientPhone && !clientPhone.startsWith('clientPhone:')) cleaned.clientPhone = clientPhone;
   else if (clientPhone) errors.push(clientPhone);
 
-  const clientEmail = validateString(normalizedData?.clientEmail, 'clientEmail', false, true);
-  if (clientEmail && !clientEmail.startsWith('clientEmail:')) cleaned.clientEmail = clientEmail;
-  else if (clientEmail) errors.push(clientEmail);
-
   const clientCpf = validateString(normalizedData?.clientCpf, 'clientCpf', false, true);
   if (clientCpf && !clientCpf.startsWith('clientCpf:')) cleaned.clientCpf = clientCpf;
   else if (clientCpf) errors.push(clientCpf);
+
+  const clientRg = validateString(normalizedData?.clientRg, 'clientRg', false, true);
+  if (clientRg && !clientRg.startsWith('clientRg:')) cleaned.clientRg = clientRg;
+  else if (clientRg) errors.push(clientRg);
 
   const clientAddress = validateString(normalizedData?.clientAddress, 'clientAddress', false, true);
   if (clientAddress && !clientAddress.startsWith('clientAddress:')) cleaned.clientAddress = clientAddress;
@@ -402,6 +402,7 @@ export interface LeadInput {
   value?: string;
   items?: Array<{ id: string; item: string; qtdAtual: number; valorUnit: number; semPreco?: boolean; eventStockId?: string }>;
   lastModifiedBy?: string;
+  eventoId?: string;
   cpf?: string;
   rg?: string;
   clientAddress?: string;
@@ -514,6 +515,10 @@ export const validateAndCleanLead = (data: unknown): ValidationResult<LeadInput>
   if (lastModifiedBy && !lastModifiedBy.startsWith('lastModifiedBy:')) cleaned.lastModifiedBy = lastModifiedBy;
   else if (lastModifiedBy) errors.push(lastModifiedBy);
 
+  const eventoId = validateString(normalizedData?.eventoId, 'eventoId', false, true);
+  if (eventoId && !eventoId.startsWith('eventoId:')) cleaned.eventoId = eventoId;
+  else if (eventoId) errors.push(eventoId);
+
   const cpf = validateString(normalizedData?.cpf, 'cpf', false, true);
   if (cpf && !cpf.startsWith('cpf:')) cleaned.cpf = cpf;
   else if (cpf) errors.push(cpf);
@@ -527,8 +532,13 @@ export const validateAndCleanLead = (data: unknown): ValidationResult<LeadInput>
   else if (clientAddress) errors.push(clientAddress);
 
   const clientGender = validateString(normalizedData?.clientGender, 'clientGender', false, true);
-  if (clientGender && !clientGender.startsWith('clientGender:')) cleaned.clientGender = clientGender as LeadInput['clientGender'];
-  else if (clientGender) errors.push(clientGender);
+  if (clientGender && !clientGender.startsWith('clientGender:') && ['F', 'M', ''].includes(clientGender)) {
+    cleaned.clientGender = clientGender as LeadInput['clientGender'];
+  } else if (clientGender) {
+    errors.push('clientGender: deve ser "F", "M" ou ""');
+  } else {
+    cleaned.clientGender = '';
+  }
 
   cleaned.updatedAt = new Date().toISOString();
   if (!input.id) cleaned.createdAt = new Date().toISOString();
