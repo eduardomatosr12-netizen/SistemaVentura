@@ -803,10 +803,10 @@ const CRMOrçamentos = () => {
             <div className="flex justify-between items-start md:items-center gap-3 px-4 md:px-7 py-3 md:py-5 border-b border-slate-100 shrink-0">
               <div>
                 <h2 className="text-lg md:text-xl font-black text-white tracking-tight">
-                  {mode === 'add' ? 'Novo Evento' : 'Editar Evento'}
+                  {mode === 'add' ? 'Novo Orçamento' : 'Editar Orçamento'}
                 </h2>
                 <p className="text-[10px] md:text-xs text-[#CDFF00] mt-0.5 md:mt-0.5">
-                  {mode === 'add' ? 'Preencha os dados para cadastrar um novo evento.' : `Editando: ${current.name}`}
+                  {mode === 'add' ? 'Preencha os dados para cadastrar um novo orçamento.' : `Editando: ${current.name}`}
                 </p>
               </div>
               <button onClick={() => setIsOpen(false)} className="text-[#CDFF00] hover:text-white transition-colors p-1 flex-shrink-0" type="button">

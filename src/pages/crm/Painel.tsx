@@ -1,6 +1,6 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
 import { useScrollLock } from '../../hooks/useScrollLock';
-import { Calendar, UserPlus, ArrowRight, CheckSquare, Activity, AlertCircle, LayoutDashboard, X, ChevronLeft, ChevronRight, ChevronDown, Search, User, Phone, Mail, CreditCard, CalendarDays, Clock, Plus,   Trash2, MapPin, Pencil, FileText, MessageCircle, Lock, Package, History, BadgeDollarSign, IdCard } from 'lucide-react';
+import { Calendar, UserPlus, ArrowRight, CheckSquare, Activity, AlertCircle, LayoutDashboard, X, ChevronLeft, ChevronRight, ChevronDown, Search, User, Phone, CalendarDays, Clock, Plus, Trash2, MapPin, Pencil, FileText, MessageCircle, Lock, Package, History, BadgeDollarSign } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell, LabelList, CartesianGrid, Tooltip } from 'recharts';
 import { ChartTooltipContent } from '../../components/charts';
@@ -117,9 +117,9 @@ const CRMDashboard = () => {
   // Create modal state
   const [, setCreateDate] = useState('');
   const [formData, setFormData] = useState({
-    name: '', whatsapp: '', email: '', cpf: '', rg: '', clientAddress: '', clientGender: '',
+    name: '', whatsapp: '', clientAddress: '', clientGender: '',
     eventType: '', date: '', dateEnd: '', time: '', city: '', local: '', observacao: '',
-    status: '', outroEventoType: '',
+    outroEventoType: '',
     orcamentoItems: [] as OrcamentoItem[], desconto: 0, valor: 0,
     contractServices: [] as string[],
     downPayment: 50,
@@ -137,11 +137,9 @@ const CRMDashboard = () => {
 
   // Custom dropdown state
   const [eventTypeOpen, setEventTypeOpen] = useState(false);
-  const [statusOpen, setStatusOpen] = useState(false);
   const [clientSearchOpen, setClientSearchOpen] = useState(false);
   const [clientSearch, setClientSearch] = useState('');
   const eventTypeRef = useRef<HTMLDivElement>(null);
-  const statusRef = useRef<HTMLDivElement>(null);
   const clientSearchRef = useRef<HTMLDivElement>(null);
 
   // Itens do orçamento (Estoque de Eventos — lista limpa para o cliente)
@@ -289,8 +287,8 @@ const CRMDashboard = () => {
 
   const total = useMemo(() => Math.max(0, (formData.valor || 0) - formData.desconto), [formData.valor, formData.desconto]);
 
-  // Eventos confirmados e concluídos geram contrato; os demais status seguem gerando orçamento.
-  const isContrato = formData.status === 'evento_confirmado' || formData.status === 'evento_concluido';
+  // Sem status - todos geram orçamento
+  const isContrato = false;
 
   const contractData = useMemo<ContractData>(() => {
     const effectiveEventType = formData.eventType === 'Outros' && formData.outroEventoType?.trim()
@@ -300,9 +298,9 @@ const CRMDashboard = () => {
     return {
       clientName: formData.name || 'Cliente',
       whatsapp: formData.whatsapp || '',
-      email: formData.email || '',
-      cpf: formData.cpf || '',
-      rg: formData.rg || '',
+      email: '',
+      cpf: '',
+      rg: '',
       clientAddress: formData.clientAddress || undefined,
       clientGender: formData.clientGender,
       eventType: effectiveEventType || '',
@@ -336,9 +334,9 @@ const CRMDashboard = () => {
       name: formData.name || 'Orçamento',
       niche: effectiveEventType || '',
       whatsapp: formData.whatsapp || '',
-      email: formData.email || '',
+      email: '',
       instagram: '',
-      stage: formData.status || 'Novos Orçamentos',
+      stage: 'Novos Orçamentos',
       firstContact: formData.date || '',
       closingDate: '',
       followUpReminder: '',
@@ -372,9 +370,6 @@ const CRMDashboard = () => {
       const target = e.target as Node;
       if (eventTypeRef.current && !eventTypeRef.current.contains(target)) {
         setEventTypeOpen(false);
-      }
-      if (statusRef.current && !statusRef.current.contains(target)) {
-        setStatusOpen(false);
       }
       if (clientSearchRef.current && !clientSearchRef.current.contains(target)) {
         setClientSearchOpen(false);
@@ -450,12 +445,12 @@ const CRMDashboard = () => {
       : formData.eventType;
     try {
       const newId = await addEvent({
-        title: effectiveEventType ? `${effectiveEventType} - ${(formData.name || 'Novo Evento')}` : (formData.name || 'Novo Evento'),
+        title: effectiveEventType ? `${effectiveEventType} - ${(formData.name || 'Novo Orçamento')}` : (formData.name || 'Novo Orçamento'),
         client: formData.name || '',
         clientPhone: formData.whatsapp || '',
-        clientEmail: formData.email || '',
-        clientCpf: formData.cpf || '',
-        clientRg: formData.rg || '',
+        clientEmail: '',
+        clientCpf: '',
+        clientRg: '',
         eventType: effectiveEventType || '',
         date: formData.date || '',
         time: formData.time || '',
@@ -533,9 +528,9 @@ const handleCreateSubmit = async (e: React.FormEvent) => {
           title: effectiveEventType ? `${effectiveEventType} - ${formData.name}` : formData.name,
           client: formData.name,
           clientPhone: formData.whatsapp,
-          clientEmail: formData.email,
-          clientCpf: formData.cpf,
-          clientRg: formData.rg,
+          clientEmail: '',
+          clientCpf: '',
+          clientRg: '',
           clientAddress: formData.clientAddress,
           clientGender: formData.clientGender,
           eventType: effectiveEventType,
@@ -545,7 +540,7 @@ const handleCreateSubmit = async (e: React.FormEvent) => {
           city: formData.city,
           local: formData.local,
           description: formData.observacao,
-          status: (formData.status as CalendarEvent['status']) || 'orcamento',
+          status: 'orcamento',
           valorTotal: total,
           desconto: formData.desconto,
           items: formData.orcamentoItems,
@@ -556,7 +551,7 @@ const handleCreateSubmit = async (e: React.FormEvent) => {
             name: formData.name,
             niche: effectiveEventType || 'Evento',
             whatsapp: formData.whatsapp,
-            email: formData.email,
+            email: '',
             instagram: '',
             stage: 'Novos Orçamentos',
             origin: 'evento',
@@ -565,8 +560,8 @@ const handleCreateSubmit = async (e: React.FormEvent) => {
             followUpReminder: '',
             address: formData.city || '',
             notes: formData.observacao || '',
-            cpf: formData.cpf,
-            rg: formData.rg,
+            cpf: '',
+            rg: '',
             clientAddress: formData.clientAddress,
             clientGender: formData.clientGender,
           };
@@ -594,11 +589,11 @@ const handleCreateSubmit = async (e: React.FormEvent) => {
           const leadUpdate: Partial<Lead> = {
             name: formData.name,
             whatsapp: formData.whatsapp,
-            email: formData.email,
+            email: '',
             address: formData.city || '',
             notes: formData.observacao || '',
-            cpf: formData.cpf,
-            rg: formData.rg,
+            cpf: '',
+            rg: '',
             clientAddress: formData.clientAddress,
             clientGender: formData.clientGender,
           };
@@ -614,7 +609,7 @@ const handleCreateSubmit = async (e: React.FormEvent) => {
           name: formData.name,
           niche: effectiveEventType || 'Evento',
           whatsapp: formData.whatsapp,
-          email: formData.email,
+          email: '',
           instagram: '',
           stage: 'Novos Orçamentos',
           origin: 'evento',
@@ -623,8 +618,8 @@ const handleCreateSubmit = async (e: React.FormEvent) => {
           followUpReminder: '',
           address: formData.city || '',
           notes: formData.observacao || '',
-          cpf: formData.cpf,
-          rg: formData.rg,
+          cpf: '',
+          rg: '',
           clientAddress: formData.clientAddress,
           clientGender: formData.clientGender,
         };
@@ -639,9 +634,9 @@ const handleCreateSubmit = async (e: React.FormEvent) => {
             client: formData.name,
             clientId: newLeadId,
             clientPhone: formData.whatsapp,
-            clientEmail: formData.email,
-            clientCpf: formData.cpf,
-            clientRg: formData.rg,
+            clientEmail: '',
+            clientCpf: '',
+            clientRg: '',
             clientAddress: formData.clientAddress,
             clientGender: formData.clientGender,
             eventType: effectiveEventType,
@@ -651,7 +646,7 @@ const handleCreateSubmit = async (e: React.FormEvent) => {
             city: formData.city,
             local: formData.local,
             description: formData.observacao,
-            status: (formData.status as CalendarEvent['status']) || 'orcamento',
+            status: 'orcamento',
             valorTotal: total,
             desconto: formData.desconto,
             items: formData.orcamentoItems,
@@ -678,8 +673,8 @@ const handleCreateSubmit = async (e: React.FormEvent) => {
           clientId: client.id,
           clientPhone: client.whatsapp,
           clientEmail: client.email,
-          clientCpf: formData.cpf,
-          clientRg: formData.rg,
+          clientCpf: '',
+          clientRg: '',
           clientAddress: formData.clientAddress,
           clientGender: formData.clientGender,
           eventType: effectiveEventType,
@@ -689,7 +684,7 @@ const handleCreateSubmit = async (e: React.FormEvent) => {
           city: formData.city,
           local: formData.local,
           description: formData.observacao,
-          status: (formData.status as CalendarEvent['status']) || 'orcamento',
+          status: 'orcamento',
           valorTotal: total,
           desconto: formData.desconto,
           items: formData.orcamentoItems,
@@ -715,8 +710,8 @@ const handleCreateSubmit = async (e: React.FormEvent) => {
           clientId: client.id,
           clientPhone: client.whatsapp,
           clientEmail: client.email,
-          clientCpf: formData.cpf,
-          clientRg: formData.rg,
+          clientCpf: '',
+          clientRg: '',
           clientAddress: formData.clientAddress,
           clientGender: formData.clientGender,
           eventType: effectiveEventType,
@@ -726,7 +721,7 @@ const handleCreateSubmit = async (e: React.FormEvent) => {
           city: formData.city,
           local: formData.local,
           description: formData.observacao,
-          status: (formData.status as CalendarEvent['status']) || 'orcamento',
+          status: 'orcamento',
           valorTotal: total,
           desconto: formData.desconto,
           items: formData.orcamentoItems,
@@ -1586,7 +1581,7 @@ event.status === 'evento_confirmado' ? 'bg-[#3b82f6] text-white' :
         <div className="fixed inset-0 bg-black/80 flex items-end sm:items-center justify-center z-[100] p-0 sm:p-4" onClick={() => { setEditingEventId(null); setIsCreateOpen(false); }}>
           <div className="bg-[#1a1a1a] border border-[#2d2d2d] rounded-t-2xl sm:rounded-lg w-full sm:max-w-4xl max-h-[95vh] sm:max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between p-4 border-b border-[#2d2d2d] shrink-0">
-              <h3 className="text-sm font-black uppercase tracking-widest text-[#CDFF00]">{editingEventId ? 'Editar Evento' : 'Novo Evento'}</h3>
+              <h3 className="text-sm font-black uppercase tracking-widest text-[#CDFF00]">{editingEventId ? 'Editar Orçamento' : 'Novo Orçamento'}</h3>
               <button onClick={() => { setEditingEventId(null); setIsCreateOpen(false); }} className="min-w-[44px] min-h-[44px] flex items-center justify-center hover:bg-[#2a2a2a] rounded-md transition-colors">
                 <X size={16} className="text-neutral-400" />
               </button>
@@ -1603,7 +1598,7 @@ event.status === 'evento_confirmado' ? 'bg-[#3b82f6] text-white' :
                 onClick={() => setAbaAtiva('evento')}
                 className={`px-3 py-3 text-[10px] font-black uppercase leading-tight transition-colors min-w-0 border-l border-[#2d2d2d] ${abaAtiva === 'evento' ? 'text-[#CDFF00] bg-[#1f1f1f] shadow-[inset_0_-2px_0_0_#CDFF00]' : 'text-neutral-500 hover:text-white'}`}
               >
-                Novo Evento
+                Orçamento
               </button>
               <button
                 onClick={() => openLinkedTab('despesas')}
@@ -1658,37 +1653,12 @@ event.status === 'evento_confirmado' ? 'bg-[#3b82f6] text-white' :
                     <input type="text" value={formData.name} onChange={e => setFormData(prev => ({ ...prev, name: e.target.value }))}
                       className="w-full bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg px-3 py-2 text-sm text-white focus:border-[#CDFF00] outline-none" required />
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-1.5 flex items-center gap-1.5">
-                        <Phone size={12} /> WhatsApp
-                      </label>
-                      <input type="text" value={formData.whatsapp} onChange={e => setFormData(prev => ({ ...prev, whatsapp: e.target.value }))}
-                        className="w-full bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg px-3 py-2 text-sm text-white focus:border-[#CDFF00] outline-none" required />
-                    </div>
-                    <div>
-                      <label className="block text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-1.5 flex items-center gap-1.5">
-                        <Mail size={12} /> E-mail
-                      </label>
-                      <input type="email" value={formData.email} onChange={e => setFormData(prev => ({ ...prev, email: e.target.value }))}
-                        className="w-full bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg px-3 py-2 text-sm text-white focus:border-[#CDFF00] outline-none" />
-                    </div>
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <div>
-                      <label className="block text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-1.5 flex items-center gap-1.5">
-                        <CreditCard size={12} /> CPF
-                      </label>
-                      <input type="text" value={formData.cpf} onChange={e => setFormData(prev => ({ ...prev, cpf: e.target.value }))}
-                        className="w-full bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg px-3 py-2 text-sm text-white focus:border-[#CDFF00] outline-none" />
-                    </div>
-                    <div>
-                      <label className="block text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-1.5 flex items-center gap-1.5">
-                        <IdCard size={12} /> RG
-                      </label>
-                      <input type="text" value={formData.rg} onChange={e => setFormData(prev => ({ ...prev, rg: e.target.value }))}
-                        className="w-full bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg px-3 py-2 text-sm text-white focus:border-[#CDFF00] outline-none" />
-                    </div>
+                  <div>
+                    <label className="block text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-1.5 flex items-center gap-1.5">
+                      <Phone size={12} /> WhatsApp
+                    </label>
+                    <input type="text" value={formData.whatsapp} onChange={e => setFormData(prev => ({ ...prev, whatsapp: e.target.value }))}
+                      className="w-full bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg px-3 py-2 text-sm text-white focus:border-[#CDFF00] outline-none" required />
                   </div>
                 </>
               ) : (
@@ -1759,22 +1729,6 @@ filteredClients.map(lead => (
                   {selectedClientId && (
                     <p className="text-[10px] text-[#CDFF00] mt-1">Cliente selecionado</p>
                   )}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
-                    <div>
-                      <label className="block text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-1.5 flex items-center gap-1.5">
-                        <CreditCard size={12} /> CPF
-                      </label>
-                      <input type="text" value={formData.cpf} onChange={e => setFormData(prev => ({ ...prev, cpf: e.target.value }))}
-                        className="w-full bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg px-3 py-2 text-sm text-white focus:border-[#CDFF00] outline-none" />
-                    </div>
-                    <div>
-                      <label className="block text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-1.5 flex items-center gap-1.5">
-                        <IdCard size={12} /> RG
-                      </label>
-                      <input type="text" value={formData.rg} onChange={e => setFormData(prev => ({ ...prev, rg: e.target.value }))}
-                        className="w-full bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg px-3 py-2 text-sm text-white focus:border-[#CDFF00] outline-none" />
-                    </div>
-                  </div>
                 </div>
               )}
               {/* Event fields — common to both modes */}
@@ -1856,39 +1810,7 @@ filteredClients.map(lead => (
                     </label>
                     <input type="date" value={formData.dateEnd || ''} onChange={e => setFormData(prev => ({ ...prev, dateEnd: e.target.value }))}
                       className="w-full bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg px-3 py-2 text-sm text-white focus:border-[#CDFF00] outline-none" style={{ colorScheme: 'dark' }} />
-                  </div>
-                  {/* Status do Evento */}
-                  <div ref={statusRef}>
-                    <label className="block text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-1.5 flex items-center gap-1.5">
-                      <CalendarDays size={12} /> Status do Evento
-                    </label>
-                    <div className="relative">
-                      <button
-                        type="button"
-                        onClick={() => setStatusOpen(prev => !prev)}
-                        className={`w-full bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg px-3 py-2 text-sm text-left flex items-center justify-between gap-2 transition-colors ${formData.status ? 'text-white' : 'text-neutral-500'} focus:border-[#CDFF00] outline-none`}
-                      >
-                        <span>{formData.status ? statusLabel[formData.status] || formData.status : 'Selecionar...'}</span>
-                        <ChevronDown size={14} className={`text-neutral-500 transition-transform ${statusOpen ? 'rotate-180' : ''}`} />
-                      </button>
-                      {statusOpen && (
-                        <div className="mt-1 bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg overflow-hidden z-50 shadow-xl">
-                          {Object.entries(statusLabel).map(([key, label]) => (
-                            <button
-                              type="button"
-                              key={key}
-                              onClick={() => { setFormData(prev => ({ ...prev, status: key })); setStatusOpen(false); }}
-                              className={`w-full text-left px-3 py-2 text-sm transition-colors flex items-center gap-2 ${formData.status === key ? 'bg-[#2a2a2a] text-[#CDFF00] font-bold' : 'text-white hover:bg-[#2a2a2a]'}`}
-                            >
-                              <div className={`w-2.5 h-2.5 rounded-full ${statusBg[key]}`} />
-                              {label}
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                </div>
-              </div>
-              </div>
+</div>
               {/* Seção 2 — itens do orçamento, valores e observação */}
               <div className="space-y-5 min-w-0">
                   {/* Itens do Orçamento */}
