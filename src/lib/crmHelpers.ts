@@ -62,6 +62,19 @@ export interface LeadCardSharedProps {
   isClosed: boolean;
 }
 
+export const EVENT_TYPES = [
+  { value: 'Aniver', label: 'Aniversário' },
+  { value: 'Casam', label: 'Casamento' },
+  { value: 'Corporativo', label: 'Corporativo' },
+  { value: 'Privado', label: 'Privado' },
+  { value: 'Outros', label: 'Outros' },
+];
+
+export function generateEventTypeLabel(value: string, custom?: string): string {
+  if (value === 'Outros') return custom?.trim() || 'Outros';
+  return EVENT_TYPES.find(t => t.value === value)?.label || value;
+}
+
 export function parseMonetaryValue(value: string): number {
   if (!value || typeof value !== 'string') return 0;
   
@@ -762,7 +775,7 @@ export interface ContractData {
   cpf: string;
   rg?: string;
   clientAddress?: string;
-  clientGender?: 'F' | 'M';
+  clientGender?: 'F' | 'M' | '';
   eventType: string;
   date: string;
   dateEnd?: string;

@@ -4,7 +4,6 @@ import {
 import { db } from './firebase';
 import type { Lead } from '../types/crm';
 import { validateAndCleanLead } from '../lib/dataValidator';
-import type { ValidationResult } from '../lib/dataValidator';
 const COLLECTION = 'leads';
 
 const toDate = (ts: Timestamp | string | undefined): string => {
@@ -78,7 +77,7 @@ export const fetchLeads = async (): Promise<Lead[]> => {
 
 export const addLead = async (lead: Omit<Lead, 'id'>): Promise<string> => {
   try {
-    const result: ValidationResult<Lead> = validateAndCleanLead({
+    const result = validateAndCleanLead({
       ...lead,
       firstContact: lead.firstContact || new Date().toISOString().split('T')[0],
     });
@@ -101,7 +100,7 @@ export const addLead = async (lead: Omit<Lead, 'id'>): Promise<string> => {
 
 export const updateLead = async (id: string, fields: Partial<Lead>): Promise<void> => {
   try {
-    const result: ValidationResult<Lead> = validateAndCleanLead({ ...fields, id });
+    const result = validateAndCleanLead({ ...fields, id });
     if (!result.success) {
       const error = new Error('Validação falhou: ' + result.errors?.join(', '));
       console.error('[Firestore] Validação falhou ao atualizar lead:', error.message);

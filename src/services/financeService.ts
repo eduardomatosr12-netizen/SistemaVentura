@@ -3,7 +3,7 @@ import {
 } from 'firebase/firestore';
 import { db } from './firebase';
 import { validateAndCleanFinance } from '../lib/dataValidator';
-import type { ValidationResult } from '../lib/dataValidator';
+
 
 export interface FinanceRecord {
   id?: string;
@@ -63,7 +63,7 @@ export const fetchTransactions = async (): Promise<FinanceRecord[]> => {
 
 export const addTransaction = async (record: Omit<FinanceRecord, 'id' | 'createdAt'>): Promise<string> => {
   try {
-    const result: ValidationResult<FinanceRecord> = validateAndCleanFinance(record);
+    const result = validateAndCleanFinance(record);
     if (!result.success) {
       const error = new Error('Validação falhou: ' + result.errors?.join(', '));
       console.error('[Firestore] Validação falhou ao criar transação:', error.message);
@@ -83,7 +83,7 @@ export const addTransaction = async (record: Omit<FinanceRecord, 'id' | 'created
 
 export const updateTransaction = async (id: string, fields: Partial<FinanceRecord>): Promise<void> => {
   try {
-    const result: ValidationResult<FinanceRecord> = validateAndCleanFinance({ ...fields, id });
+    const result = validateAndCleanFinance({ ...fields, id });
     if (!result.success) {
       const error = new Error('Validação falhou: ' + result.errors?.join(', '));
       console.error('[Firestore] Validação falhou ao atualizar transação:', error.message);

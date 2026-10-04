@@ -6,7 +6,7 @@ import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell, LabelList, Cart
 import { ChartTooltipContent } from '../../components/charts';
 import { useCRM } from '../../contexts/CRMContext';
 import type { CalendarEvent, Lead, OrcamentoItem } from '../../types/crm';
-import { parseMonetaryValue, formatCurrency, generatePDF, generateContractPDF, formatEventDateRange, isSingleDayEvent, type ContractData } from '../../lib/crmHelpers';
+import { parseMonetaryValue, formatCurrency, generatePDF, generateContractPDF, formatEventDateRange, isSingleDayEvent, EVENT_TYPES, type ContractData } from '../../lib/crmHelpers';
 import { eventTypeLabel } from '../../lib/eventTypeLabel';
 import { useActivityLogs } from '../../contexts/ActivityContext';
 import { generateUUID } from '../../lib/uuid';
@@ -71,14 +71,6 @@ const statusBg: Record<string, string> = {
   evento_concluido: 'bg-[#22c55e]',
 };
 
-const EVENT_TYPES = [
-  { value: 'Aniver', label: 'Aniversário' },
-  { value: 'Casam', label: 'Casamento' },
-  { value: 'Corporativo', label: 'Corporativo' },
-  { value: 'Privado', label: 'Privado' },
-  { value: 'Outros', label: 'Outros' },
-];
-
 const CRMDashboard = () => {
   const { events, Orçamentos, addLead, addEvent, updateEvent, updateLead, deleteEvent, deleteLead } = useCRM();
   const { activityLogs } = useActivityLogs();
@@ -118,7 +110,7 @@ const CRMDashboard = () => {
   // Create modal state
   const [, setCreateDate] = useState('');
   const [formData, setFormData] = useState({
-    name: '', whatsapp: '', email: '', cpf: '', rg: '', clientAddress: '', clientGender: '',
+    name: '', whatsapp: '', email: '', cpf: '', rg: '', clientAddress: '', clientGender: '' as 'F' | 'M' | '',
     eventType: '', date: '', dateEnd: '', time: '', city: '', local: '', observacao: '',
     outroEventoType: '',
     orcamentoItems: [] as OrcamentoItem[], desconto: 0, valor: 0,
@@ -197,7 +189,7 @@ const CRMDashboard = () => {
       const cpf = candidates.map(e => e.clientCpf || '').find(Boolean) || '';
       const rg = candidates.map(e => e.clientRg || '').find(Boolean) || '';
       const clientAddress = candidates.map(e => e.clientAddress || '').find(Boolean) || '';
-      const clientGender = candidates.map(e => e.clientGender || '').find(Boolean) || '';
+      const clientGender = (candidates.map(e => e.clientGender || '').find(Boolean) || '') as 'F' | 'M' | '';
       return { cpf, rg, clientAddress, clientGender };
     };
   }, [events]);
@@ -405,7 +397,7 @@ const CRMDashboard = () => {
   const openCreateModal = (dateStr: string) => {
     setEditingEventId(null);
     setCreateDate(dateStr);
-    setFormData(prev => ({ ...prev, date: dateStr, dateEnd: '', eventType: '', city: '', local: '', clientAddress: '', clientGender: '', observacao: '', status: '', outroEventoType: '', orcamentoItems: [], desconto: 0, valor: 0, contractServices: [] }));
+    setFormData(prev => ({ ...prev, date: dateStr, dateEnd: '', eventType: '', city: '', local: '', clientAddress: '', clientGender: '', observacao: '', outroEventoType: '', orcamentoItems: [], desconto: 0, valor: 0, contractServices: [] }));
     setSelectedClientId('');
     setClientSearch('');
     setOrcSearch('');
@@ -499,12 +491,13 @@ const CRMDashboard = () => {
       city: event.city || '',
       local: event.local || '',
       observacao: event.description || '',
-      status: event.status || '',
       outroEventoType: isCustomType ? eventTypeValue : '',
       orcamentoItems: (lead?.items as OrcamentoItem[]) || [],
       desconto: event.desconto || 0,
       valor: (event.valorTotal || 0) + (event.desconto || 0),
       contractServices: event.contractServices || [],
+      downPayment: 50,
+      downPaymentType: 'percent',
     });
     setSelectedClientId(leadId);
     setClientSearch(event.client ? `${event.client} — ${event.clientPhone || ''}` : '');
@@ -1557,8 +1550,8 @@ event.status === 'evento_confirmado' ? 'bg-[#3b82f6] text-white' :
                           <p className="text-[8px] text-neutral-500 uppercase tracking-wider">Data do Evento</p>
                           <p className="text-[11px] text-white font-bold mt-0.5 truncate">{formatDate(event.date)}</p>
                         </div>
-                      ) : (
-                        <>
+) : (
+                    <div>
                           <div className="bg-[#1a1a1a] rounded-md p-2 text-center">
                             <p className="text-[8px] text-neutral-500 uppercase tracking-wider">Início</p>
                             <p className="text-[11px] text-white font-bold mt-0.5 truncate">{formatDate(event.date)}</p>
@@ -1567,7 +1560,7 @@ event.status === 'evento_confirmado' ? 'bg-[#3b82f6] text-white' :
                             <p className="text-[8px] text-neutral-500 uppercase tracking-wider">Término</p>
                             <p className="text-[11px] text-white font-bold mt-0.5 truncate">{event.dateEnd ? formatDate(event.dateEnd) : '—'}</p>
                           </div>
-                        </>
+                        </div>
                       )}
                     </div>
                   </div>
@@ -1647,7 +1640,7 @@ event.status === 'evento_confirmado' ? 'bg-[#3b82f6] text-white' :
               {/* Seção 1 — quem é o cliente + dados do evento */}
               <div className="space-y-5 min-w-0">
               {abaAtiva === 'cliente' ? (
-                <>
+                <div>
                   <div>
                     <label className="block text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-1.5 flex items-center gap-1.5">
                       <User size={12} /> Nome
@@ -1662,9 +1655,9 @@ event.status === 'evento_confirmado' ? 'bg-[#3b82f6] text-white' :
                     <input type="text" value={formData.whatsapp} onChange={e => setFormData(prev => ({ ...prev, whatsapp: e.target.value }))}
                       className="w-full bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg px-3 py-2 text-sm text-white focus:border-[#CDFF00] outline-none" required />
                   </div>
-                </>
-              ) : abaAtiva === 'evento' ? (
-                <>
+                </div>
+              ) : (
+                <div>
                   {/* Sub-tabs for Orçamento */}
                   <div className="grid grid-cols-2 border-b border-[#2d2d2d] mb-4">
                     <button
@@ -1722,6 +1715,10 @@ filteredClients.map(lead => (
                                       name: lead.nome,
                                       city: lead.cidade,
                                       whatsapp: lead.whatsapp,
+                                      cpf: fb.cpf || prev.cpf,
+                                      rg: fb.rg || prev.rg,
+                                      clientAddress: fb.clientAddress || prev.clientAddress,
+                                      clientGender: fb.clientGender || prev.clientGender,
                                       eventType: evType.value || prev.eventType,
                                       outroEventoType: evType.custom || prev.outroEventoType,
                                       orcamentoItems: (lead.items && lead.items.length > 0) ? lead.items : prev.orcamentoItems,
@@ -1790,10 +1787,10 @@ filteredClients.map(lead => (
                       </label>
                       <input type="text" value={formData.clientAddress} onChange={e => setFormData(prev => ({ ...prev, clientAddress: e.target.value }))}
                         className="w-full bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg px-3 py-2 text-sm text-white focus:border-[#CDFF00] outline-none" placeholder="Rua, número, bairro, cidade, estado" />
-                    </div>
-                  </div>
+</div>
+                        </div>
                 </>
-              )}
+                      )}
               {/* Event fields — common to both modes */}
               <div className="border-t border-[#2d2d2d] pt-4">
                 <p className="text-[9px] font-black uppercase tracking-widest text-neutral-400 mb-3">Dados do Evento</p>
@@ -2079,12 +2076,14 @@ filteredClients.map(lead => (
                       rows={3}
                       className="w-full bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg px-3 py-2 text-sm text-white placeholder-neutral-600 focus:border-[#CDFF00] outline-none resize-none" />
                   </div>
+</div>
                 </div>
+                </div>
+                </div>
+              )}
               </div>
               </div>
-              </div>
-              </div>
-              {submitError && (
+                {submitError && (
                 <div className="shrink-0 px-4 sm:px-5 pb-3">
                   <ErrorBanner message={submitError} className="mx-auto w-full max-w-3xl" />
                 </div>
@@ -2113,6 +2112,7 @@ filteredClients.map(lead => (
                   <span className="block truncate">{editingEventId ? 'Salvar Alterações' : abaAtiva === 'cliente' ? 'Cadastrar e Agendar' : 'Agendar Evento'}</span>
                 </button>
                 </div>
+              </div>
               </div>
             </form>)}
           </div>

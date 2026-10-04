@@ -43,7 +43,7 @@ export const validateString = (value: unknown, field: string, required = true, a
   return value.trim();
 };
 
-export const validateNumber = (value: unknown, field: string, required = true, min?: number): number | null => {
+export const validateNumber = (value: unknown, field: string, required = true, min?: number): number | string | null => {
   if (value === undefined || value === null) {
     return required ? `${field}: obrigatório` : null;
   }
@@ -61,7 +61,7 @@ export const validateBoolean = (value: unknown): boolean => {
   return Boolean(value);
 };
 
-export const validateArray = <T>(value: unknown, field: string, itemValidator?: (item: unknown) => T): T[] | null => {
+export const validateArray = <T>(value: unknown, field: string, itemValidator?: (item: unknown) => T): T[] | string | null => {
   if (value === undefined || value === null) return [];
   if (!Array.isArray(value)) return `${field}: deve ser array`;
   if (itemValidator) {
@@ -152,45 +152,48 @@ export interface InventoryItemInput {
   unit?: string;
   valorReferencia?: number;
   observacao?: string;
+  updatedAt?: string;
+  createdAt?: string;
 }
 
 export const validateAndCleanInventory = (data: unknown): ValidationResult<InventoryItemInput> => {
+  const input = (data ?? {}) as Record<string, unknown>;
   log('Validando inventory item', data);
   const errors: string[] = [];
   const cleaned: Partial<InventoryItemInput> = {};
 
-  const name = validateString(data?.name, 'name', true, false);
+  const name = validateString(input.name, 'name', true, false);
   if (typeof name === 'string' && !name.startsWith('name:')) cleaned.name = name;
   else if (name) errors.push(name);
 
-  const quantity = validateNumber(data?.quantity, 'quantity', true, 0);
+  const quantity = validateNumber(input.quantity, 'quantity', true, 0);
   if (typeof quantity === 'number') cleaned.quantity = quantity;
   else if (quantity) errors.push(quantity);
 
-  const category = validateString(data?.category, 'category', false, true);
+  const category = validateString(input.category, 'category', false, true);
   if (category && !category.startsWith('category:')) cleaned.category = category;
   else if (category) errors.push(category);
 
-  const unit = validateString(data?.unit, 'unit', false, true);
+  const unit = validateString(input.unit, 'unit', false, true);
   if (unit && !unit.startsWith('unit:')) cleaned.unit = unit;
   else if (unit) errors.push(unit);
 
-  const valorReferencia = validateNumber(data?.valorReferencia, 'valorReferencia', false, 0);
+  const valorReferencia = validateNumber(input.valorReferencia, 'valorReferencia', false, 0);
   if (typeof valorReferencia === 'number') cleaned.valorReferencia = valorReferencia;
   else if (valorReferencia) errors.push(valorReferencia);
 
-  const observacao = validateString(data?.observacao, 'observacao', false, true);
+  const observacao = validateString(input.observacao, 'observacao', false, true);
   if (observacao && !observacao.startsWith('observacao:')) cleaned.observacao = observacao;
   else if (observacao) errors.push(observacao);
 
-  if (data?.id) {
-    const id = validateString(data.id, 'id', false, false);
+  if (input.id) {
+    const id = validateString(input.id, 'id', false, false);
     if (id && !id.startsWith('id:')) cleaned.id = id;
     else if (id) errors.push(id);
   }
 
   cleaned.updatedAt = new Date().toISOString();
-  if (!data?.id) cleaned.createdAt = new Date().toISOString();
+  if (!input.id) cleaned.createdAt = new Date().toISOString();
 
   if (errors.length > 0) {
     log('Validação falhou', errors);
@@ -225,9 +228,12 @@ export interface EventInput {
   valorTotal?: number;
   desconto?: number;
   items?: Array<{ id: string; item: string; qtdAtual: number; valorUnit: number; semPreco?: boolean; eventStockId?: string }>;
+  updatedAt?: string;
+  createdAt?: string;
 }
 
 export const validateAndCleanEvent = (data: unknown): ValidationResult<EventInput> => {
+  const input = (data ?? {}) as Record<string, unknown>;
   log('Validando event (dados brutos)', data);
   
   const normalizedData = { ...data as Record<string, unknown> };
@@ -335,39 +341,40 @@ export const validateAndCleanEvent = (data: unknown): ValidationResult<EventInpu
 
   if (normalizedData?.items) {
     const itemsResult = validateArray(normalizedData.items, 'items', (item) => {
+      const it = (item ?? {}) as Record<string, unknown>;
       const itemErrors: string[] = [];
       const itemCleaned: Record<string, unknown> = {};
-      const itemId = validateString(item?.id, 'item.id', true, false);
+      const itemId = validateString(it.id, 'item.id', true, false);
       if (typeof itemId === 'string' && !itemId.startsWith('item.id:')) itemCleaned.id = itemId;
       else if (itemId) itemErrors.push(itemId);
 
-      const itemName = validateString(item?.item, 'item.item', true, false);
+      const itemName = validateString(it.item, 'item.item', true, false);
       if (typeof itemName === 'string' && !itemName.startsWith('item.item:')) itemCleaned.item = itemName;
       else if (itemName) itemErrors.push(itemName);
 
-      const qtdAtual = validateNumber(item?.qtdAtual, 'item.qtdAtual', true, 0);
+      const qtdAtual = validateNumber(it.qtdAtual, 'item.qtdAtual', true, 0);
       if (typeof qtdAtual === 'number') itemCleaned.qtdAtual = qtdAtual;
       else if (qtdAtual) itemErrors.push(qtdAtual);
 
-      const valorUnit = validateNumber(item?.valorUnit, 'item.valorUnit', true, 0);
+      const valorUnit = validateNumber(it.valorUnit, 'item.valorUnit', true, 0);
       if (typeof valorUnit === 'number') itemCleaned.valorUnit = valorUnit;
       else if (valorUnit) itemErrors.push(valorUnit);
 
-      itemCleaned.semPreco = validateBoolean(item?.semPreco);
+      itemCleaned.semPreco = validateBoolean(it.semPreco);
 
-      const eventStockId = validateString(item?.eventStockId, 'item.eventStockId', false, true);
+      const eventStockId = validateString(it.eventStockId, 'item.eventStockId', false, true);
       if (eventStockId && !eventStockId.startsWith('item.eventStockId:')) itemCleaned.eventStockId = eventStockId;
       else if (eventStockId) itemErrors.push(eventStockId);
 
-      if (itemErrors.length > 0) return `item ${item?.id}: ${itemErrors.join(', ')}`;
+      if (itemErrors.length > 0) return `item ${it.id}: ${itemErrors.join(', ')}`;
       return itemCleaned;
     });
-    if (Array.isArray(itemsResult)) cleaned.items = itemsResult;
+    if (Array.isArray(itemsResult)) cleaned.items = itemsResult as NonNullable<EventInput['items']>;
     else if (itemsResult) errors.push(itemsResult);
   }
 
   cleaned.updatedAt = new Date().toISOString();
-  if (!data?.id) cleaned.createdAt = new Date().toISOString();
+  if (!input.id) cleaned.createdAt = new Date().toISOString();
 
   if (errors.length > 0) {
     log('Validação falhou', errors);
@@ -399,9 +406,12 @@ export interface LeadInput {
   rg?: string;
   clientAddress?: string;
   clientGender?: 'F' | 'M' | '';
+  updatedAt?: string;
+  createdAt?: string;
 }
 
 export const validateAndCleanLead = (data: unknown): ValidationResult<LeadInput> => {
+  const input = (data ?? {}) as Record<string, unknown>;
   log('Validando lead (dados brutos)', data);
   
   const normalizedData = { ...data as Record<string, unknown> };
@@ -468,34 +478,35 @@ export const validateAndCleanLead = (data: unknown): ValidationResult<LeadInput>
 
   if (normalizedData?.items) {
     const itemsResult = validateArray(normalizedData.items, 'items', (item) => {
+      const it = (item ?? {}) as Record<string, unknown>;
       const itemErrors: string[] = [];
       const itemCleaned: Record<string, unknown> = {};
-      const itemId = validateString(item?.id, 'item.id', true, false);
+      const itemId = validateString(it.id, 'item.id', true, false);
       if (typeof itemId === 'string' && !itemId.startsWith('item.id:')) itemCleaned.id = itemId;
       else if (itemId) itemErrors.push(itemId);
 
-      const itemName = validateString(item?.item, 'item.item', true, false);
+      const itemName = validateString(it.item, 'item.item', true, false);
       if (typeof itemName === 'string' && !itemName.startsWith('item.item:')) itemCleaned.item = itemName;
       else if (itemName) itemErrors.push(itemName);
 
-      const qtdAtual = validateNumber(item?.qtdAtual, 'item.qtdAtual', true, 0);
+      const qtdAtual = validateNumber(it.qtdAtual, 'item.qtdAtual', true, 0);
       if (typeof qtdAtual === 'number') itemCleaned.qtdAtual = qtdAtual;
       else if (qtdAtual) itemErrors.push(qtdAtual);
 
-      const valorUnit = validateNumber(item?.valorUnit, 'item.valorUnit', true, 0);
+      const valorUnit = validateNumber(it.valorUnit, 'item.valorUnit', true, 0);
       if (typeof valorUnit === 'number') itemCleaned.valorUnit = valorUnit;
       else if (valorUnit) itemErrors.push(valorUnit);
 
-      itemCleaned.semPreco = validateBoolean(item?.semPreco);
+      itemCleaned.semPreco = validateBoolean(it.semPreco);
 
-      const eventStockId = validateString(item?.eventStockId, 'item.eventStockId', false, true);
+      const eventStockId = validateString(it.eventStockId, 'item.eventStockId', false, true);
       if (eventStockId && !eventStockId.startsWith('item.eventStockId:')) itemCleaned.eventStockId = eventStockId;
       else if (eventStockId) itemErrors.push(eventStockId);
 
-      if (itemErrors.length > 0) return `item ${item?.id}: ${itemErrors.join(', ')}`;
+      if (itemErrors.length > 0) return `item ${it.id}: ${itemErrors.join(', ')}`;
       return itemCleaned;
     });
-    if (Array.isArray(itemsResult)) cleaned.items = itemsResult;
+    if (Array.isArray(itemsResult)) cleaned.items = itemsResult as NonNullable<EventInput['items']>;
     else if (itemsResult) errors.push(itemsResult);
   }
 
@@ -520,7 +531,7 @@ export const validateAndCleanLead = (data: unknown): ValidationResult<LeadInput>
   else if (clientGender) errors.push(clientGender);
 
   cleaned.updatedAt = new Date().toISOString();
-  if (!data?.id) cleaned.createdAt = new Date().toISOString();
+  if (!input.id) cleaned.createdAt = new Date().toISOString();
 
   if (errors.length > 0) {
     log('Validação falhou', errors);
@@ -551,9 +562,12 @@ export interface FinanceRecordInput {
   recurrence?: 'mensal' | 'trimestral' | 'anual';
   dueDay?: number;
   parentId?: string;
+  updatedAt?: string;
+  createdAt?: string;
 }
 
 export const validateAndCleanFinance = (data: unknown): ValidationResult<FinanceRecordInput> => {
+  const input = (data ?? {}) as Record<string, unknown>;
   log('Validando finance record (dados brutos)', data);
   
   const normalizedData = { ...data as Record<string, unknown> };
@@ -653,7 +667,7 @@ export const validateAndCleanFinance = (data: unknown): ValidationResult<Finance
   else if (parentId) errors.push(parentId);
 
   cleaned.updatedAt = new Date().toISOString();
-  if (!data?.id) cleaned.createdAt = new Date().toISOString();
+  if (!input.id) cleaned.createdAt = new Date().toISOString();
 
   if (errors.length > 0) {
     log('Validação falhou', errors);
@@ -677,9 +691,12 @@ export interface EventExpenseInput {
   interno: true;
   financeiroId?: string;
   date: string;
+  updatedAt?: string;
+  createdAt?: string;
 }
 
 export const validateAndCleanEventExpense = (data: unknown): ValidationResult<EventExpenseInput> => {
+  const input = (data ?? {}) as Record<string, unknown>;
   log('Validando event expense (dados brutos)', data);
   
   const normalizedData = { ...data as Record<string, unknown> };
@@ -741,7 +758,7 @@ export const validateAndCleanEventExpense = (data: unknown): ValidationResult<Ev
   else if (date) errors.push(date);
 
   cleaned.updatedAt = new Date().toISOString();
-  if (!data?.id) cleaned.createdAt = new Date().toISOString();
+  if (!input.id) cleaned.createdAt = new Date().toISOString();
 
   if (errors.length > 0) {
     log('Validação falhou', errors);
@@ -760,18 +777,21 @@ export interface EventStockItemInput {
   unit: string;
   valorReferencia: number;
   observacao: string;
+  updatedAt?: string;
+  createdAt?: string;
 }
 
 export const validateAndCleanEventStock = (data: unknown): ValidationResult<EventStockItemInput> => {
+  const input = (data ?? {}) as Record<string, unknown>;
   log('Validando event stock item', data);
   const errors: string[] = [];
   const cleaned: Partial<EventStockItemInput> = {};
 
-  const name = validateString(data?.name, 'name', true, false);
+  const name = validateString(input.name, 'name', true, false);
   if (typeof name === 'string' && !name.startsWith('name:')) cleaned.name = name;
   else if (name) errors.push(name);
 
-  const category = validateString(data?.category, 'category', true, false);
+  const category = validateString(input.category, 'category', true, false);
   if (typeof category === 'string' && !category.startsWith('category:') && 
       ['Iluminação', 'Som', 'Efeitos', 'Estrutura', 'Vídeo', 'Outros'].includes(category)) {
     cleaned.category = category;
@@ -779,11 +799,11 @@ export const validateAndCleanEventStock = (data: unknown): ValidationResult<Even
     errors.push('category: deve ser Iluminação, Som, Efeitos, Estrutura, Vídeo ou Outros');
   }
 
-  const quantity = validateNumber(data?.quantity, 'quantity', false, 0);
+  const quantity = validateNumber(input.quantity, 'quantity', false, 0);
   if (typeof quantity === 'number') cleaned.quantity = quantity;
   else if (quantity) errors.push(quantity);
 
-  const unit = validateString(data?.unit, 'unit', false, true);
+  const unit = validateString(input.unit, 'unit', false, true);
   if (unit && !unit.startsWith('unit:') && 
       ['kit', 'unidade', 'par', 'set', 'metro', 'outros'].includes(unit)) {
     cleaned.unit = unit;
@@ -791,22 +811,22 @@ export const validateAndCleanEventStock = (data: unknown): ValidationResult<Even
     errors.push('unit: deve ser kit, unidade, par, set, metro ou outros');
   }
 
-  const valorReferencia = validateNumber(data?.valorReferencia, 'valorReferencia', false, 0);
+  const valorReferencia = validateNumber(input.valorReferencia, 'valorReferencia', false, 0);
   if (typeof valorReferencia === 'number') cleaned.valorReferencia = valorReferencia;
   else if (valorReferencia) errors.push(valorReferencia);
 
-  const observacao = validateString(data?.observacao, 'observacao', false, true);
+  const observacao = validateString(input.observacao, 'observacao', false, true);
   if (observacao && !observacao.startsWith('observacao:')) cleaned.observacao = observacao;
   else if (observacao) errors.push(observacao);
 
-  if (data?.id) {
-    const id = validateString(data.id, 'id', false, false);
+  if (input.id) {
+    const id = validateString(input.id, 'id', false, false);
     if (id && !id.startsWith('id:')) cleaned.id = id;
     else if (id) errors.push(id);
   }
 
   cleaned.updatedAt = new Date().toISOString();
-  if (!data?.id) cleaned.createdAt = new Date().toISOString();
+  if (!input.id) cleaned.createdAt = new Date().toISOString();
 
   if (errors.length > 0) {
     log('Validação falhou', errors);

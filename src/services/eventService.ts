@@ -4,7 +4,6 @@ import {
 import { db } from './firebase';
 import type { CalendarEvent } from '../types/crm';
 import { validateAndCleanEvent } from '../lib/dataValidator';
-import type { ValidationResult } from '../lib/dataValidator';
 
 const COLLECTION = 'events';
 
@@ -69,7 +68,7 @@ export const fetchEvents = async (): Promise<CalendarEvent[]> => {
 
 export const addEvent = async (event: Omit<CalendarEvent, 'id'>): Promise<string> => {
   try {
-    const result: ValidationResult<CalendarEvent> = validateAndCleanEvent(event);
+    const result = validateAndCleanEvent(event);
     if (!result.success) {
       const error = new Error('Validação falhou: ' + result.errors?.join(', '));
       console.error('[Firestore] Validação falhou ao criar evento:', error.message);
@@ -89,7 +88,7 @@ export const addEvent = async (event: Omit<CalendarEvent, 'id'>): Promise<string
 
 export const updateEvent = async (id: string, fields: Partial<CalendarEvent>): Promise<void> => {
   try {
-    const result: ValidationResult<CalendarEvent> = validateAndCleanEvent({ ...fields, id });
+    const result = validateAndCleanEvent({ ...fields, id });
     if (!result.success) {
       const error = new Error('Validação falhou: ' + result.errors?.join(', '));
       console.error('[Firestore] Validação falhou ao atualizar evento:', error.message);

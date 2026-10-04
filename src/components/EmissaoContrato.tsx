@@ -46,7 +46,7 @@ const Block = ({ icon, title, children }: { icon: React.ReactNode; title: string
   </section>
 );
 
-export default function EmissaoContrato({ eventId, data, onAddressChange, onGenderChange, onServicesChange, onSave, saving }: Props) {
+export default function EmissaoContrato({ eventId, data, onAddressChange, onGenderChange, onServicesChange, onDownPaymentChange, onSave, saving }: Props) {
   const items = data.items || [];
   const selected = data.services || [];
 

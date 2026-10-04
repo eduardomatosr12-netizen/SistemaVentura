@@ -5,7 +5,6 @@ import {
 import { db } from './firebase';
 import type { EventExpense } from '../types/crm';
 import { validateAndCleanEventExpense } from '../lib/dataValidator';
-import type { ValidationResult } from '../lib/dataValidator';
 
 const COLLECTION = 'event_expenses';
 
@@ -39,7 +38,7 @@ export const addEventExpense = async (
   eventId: string,
   expense: Omit<EventExpense, 'id' | 'financeiroId'>
 ): Promise<string> => {
-  const result: ValidationResult<EventExpense> = validateAndCleanEventExpense({
+  const result = validateAndCleanEventExpense({
     ...expense,
     eventId,
   });
@@ -60,7 +59,7 @@ export const updateEventExpense = async (
   expenseId: string,
   data: Partial<EventExpenseRecord>
 ) => {
-  const result: ValidationResult<EventExpense> = validateAndCleanEventExpense({ ...data, id: expenseId });
+  const result = validateAndCleanEventExpense({ ...data, id: expenseId });
   if (!result.success) {
     const error = new Error('Validação falhou: ' + result.errors?.join(', '));
     console.error('[EventExpenses] Validação falhou ao atualizar despesa:', error.message);

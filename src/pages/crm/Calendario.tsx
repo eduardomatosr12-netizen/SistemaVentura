@@ -406,7 +406,8 @@ const CRMCalendario = () => {
             cpf: formData.clientCpf || '',
             rg: formData.clientRg || '',
             clientAddress: '',
-            clientGender: formData.clientGender || '',
+            clientGender: (formData.clientGender || '') as 'F' | 'M' | '',
+            value: '',
           };
           const newLeadId = await addLead(leadInput);
           if (newLeadId) {
@@ -427,7 +428,7 @@ const CRMCalendario = () => {
             cpf: formData.clientCpf || '',
             rg: formData.clientRg || '',
             clientAddress: '',
-            clientGender: formData.clientGender || '',
+            clientGender: (formData.clientGender || '') as 'F' | 'M' | '',
           };
           await updateLead(formData.clientId, leadUpdate);
         }

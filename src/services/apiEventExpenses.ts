@@ -1,4 +1,4 @@
-import { api, type ApiError } from '../lib/apiClient.ts';
+import { api, ApiError } from '../lib/apiClient.ts';
 
 export interface EventExpense {
   id: string;

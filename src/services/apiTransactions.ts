@@ -1,4 +1,4 @@
-import { api, type ApiError } from '../lib/apiClient.ts';
+import { api, ApiError } from '../lib/apiClient.ts';
 
 export interface Transaction {
   id: string;
@@ -27,7 +27,7 @@ export interface Transaction {
 export const transactionsApi = {
   list: () => api.get<Transaction[]>('/transactions'),
   get: (id: string) => api.get<Transaction>(`/transactions/${id}`),
-  getByEventId: (eventId: string) => api.get<Transaction>(`/transactions?origemEventoId=${eventId}`).then(arr => arr[0] || null),
+  getByEventId: (eventId: string) => api.get<Transaction[]>(`/transactions?origemEventoId=${eventId}`).then(arr => arr[0] || null),
   create: (data: Omit<Transaction, 'id' | 'createdAt' | 'updatedAt'>) => api.post<Transaction>('/transactions', data),
   update: (id: string, data: Partial<Transaction>) => api.put<Transaction>(`/transactions/${id}`, data),
   delete: (id: string) => api.delete<void>(`/transactions/${id}`),
