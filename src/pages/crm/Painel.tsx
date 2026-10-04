@@ -72,7 +72,7 @@ const statusBg: Record<string, string> = {
 };
 
 const CRMDashboard = () => {
-  const { events, Orçamentos, addEvent, updateEvent, updateLead, deleteEvent, deleteLead } = useCRM();
+  const { events, Orçamentos, addLead, addEvent, updateEvent, updateLead, deleteEvent, deleteLead } = useCRM();
   const { activityLogs } = useActivityLogs();
   const [selectedDayEvents, setSelectedDayEvents] = useState<CalendarEvent[] | null>(null);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
@@ -87,7 +87,6 @@ const CRMDashboard = () => {
 
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [abaAtiva, setAbaAtiva] = useState<'evento' | 'despesas' | 'contrato'>('evento');
-  const [orcamentoSubTab, setOrcamentoSubTab] = useState<'selecionar' | 'novo'>('selecionar');
   const [isSavingContract, setIsSavingContract] = useState(false);
 
   useScrollLock(!!selectedDayEvents || isCreateOpen);
@@ -130,10 +129,7 @@ const CRMDashboard = () => {
 
   // Custom dropdown state
   const [eventTypeOpen, setEventTypeOpen] = useState(false);
-  const [clientSearchOpen, setClientSearchOpen] = useState(false);
-  const [clientSearch, setClientSearch] = useState('');
   const eventTypeRef = useRef<HTMLDivElement>(null);
-  const clientSearchRef = useRef<HTMLDivElement>(null);
 
   // Itens do orçamento (Estoque de Eventos — lista limpa para o cliente)
   const [orcamentoItems, setOrcamentoItems] = useState<EventStockItem[]>([]);
@@ -146,60 +142,6 @@ const CRMDashboard = () => {
     observacao: '',
   });
   const orcSearchRef = useRef<HTMLDivElement>(null);
-
-  const clientList = useMemo(() => {
-    const seen = new Set<string>();
-    return Orçamentos.flatMap(o => {
-      const key = o.name?.trim().toLowerCase() || o.id;
-      if (seen.has(key)) return [];
-      seen.add(key);
-      return [{
-        id: o.id,
-        nome: o.name,
-        whatsapp: o.whatsapp,
-        cidade: o.address,
-        email: o.email,
-        niche: o.niche,
-        items: (o.items || []) as OrcamentoItem[],
-        valor: parseMonetaryValue(o.value),
-      }];
-    });
-  }, [Orçamentos]);
-
-  // Dados de contrato (CPF, endereço, sexo) e tipo de evento já lançados em outros
-  // eventos do mesmo cliente, reaproveitados para não exigir preenchimento manual de novo.
-  const clientContractFallbacks = useMemo(() => {
-    const ordered = (Array.isArray(events) ? events : [])
-      .slice()
-      .sort((a, b) => (b.date || '').localeCompare(a.date || ''));
-    const byId = new Map<string, CalendarEvent>();
-    const byName = new Map<string, CalendarEvent>();
-    ordered.forEach(ev => {
-      if (ev.clientId && !byId.has(ev.clientId)) byId.set(ev.clientId, ev);
-      const key = (ev.client || '').trim().toLowerCase();
-      if (key && !byName.has(key)) byName.set(key, ev);
-    });
-
-    return (leadId?: string, leadName?: string) => {
-      const candidates = [
-        leadId ? byId.get(leadId) : undefined,
-        leadName ? byName.get(leadName.trim().toLowerCase()) : undefined,
-      ].filter(Boolean) as CalendarEvent[];
-
-      const cpf = candidates.map(e => e.clientCpf || '').find(Boolean) || '';
-      const rg = candidates.map(e => e.clientRg || '').find(Boolean) || '';
-      const clientAddress = candidates.map(e => e.clientAddress || '').find(Boolean) || '';
-      const clientGender = (candidates.map(e => e.clientGender || '').find(Boolean) || '') as 'F' | 'M' | '';
-      return { cpf, rg, clientAddress, clientGender };
-    };
-  }, [events]);
-
-  const matchEventType = (niche?: string): { value: string; custom: string } => {
-    const label = (niche || '').trim();
-    if (!label) return { value: '', custom: '' };
-    const predefined = EVENT_TYPES.find(t => t.value.toLowerCase() === label.toLowerCase());
-    return predefined ? { value: predefined.value, custom: '' } : { value: 'Outros', custom: label };
-  };
 
   const filteredOrcItems = useMemo(() => {
     if (!orcSearch.trim()) return orcamentoItems.slice(0, 40);
@@ -364,9 +306,6 @@ const CRMDashboard = () => {
       if (eventTypeRef.current && !eventTypeRef.current.contains(target)) {
         setEventTypeOpen(false);
       }
-      if (clientSearchRef.current && !clientSearchRef.current.contains(target)) {
-        setClientSearchOpen(false);
-      }
       if (orcSearchRef.current && !orcSearchRef.current.contains(target)) {
         setOrcSearchOpen(false);
       }
@@ -386,25 +325,15 @@ const CRMDashboard = () => {
     return unsub;
   }, []);
 
-  const filteredClients = useMemo(() => {
-    if (!clientSearch.trim()) return clientList;
-    const q = clientSearch.toLowerCase();
-    return clientList.filter(c =>
-      c.nome.toLowerCase().includes(q) || c.whatsapp.includes(q)
-    );
-  }, [clientSearch, clientList]);
-
   const openCreateModal = (dateStr: string) => {
     setEditingEventId(null);
     setCreateDate(dateStr);
     setFormData(prev => ({ ...prev, date: dateStr, dateEnd: '', eventType: '', city: '', local: '', clientAddress: '', clientGender: '', observacao: '', outroEventoType: '', orcamentoItems: [], desconto: 0, valor: 0, contractServices: [] }));
     setSelectedClientId('');
-    setClientSearch('');
     setOrcSearch('');
     setOrcSearchOpen(false);
     setShowCreateItemForm(false);
     setAbaAtiva('evento');
-    setOrcamentoSubTab('selecionar');
     setIsCreateOpen(true);
   };
 
@@ -500,8 +429,8 @@ const CRMDashboard = () => {
       downPaymentType: 'percent',
     });
     setSelectedClientId(leadId);
-    setClientSearch(event.client ? `${event.client} — ${event.clientPhone || ''}` : '');
     setOrcSearch('');
+
     setOrcSearchOpen(false);
     setAbaAtiva('evento');
     setIsCreateOpen(true);
@@ -523,9 +452,9 @@ const handleCreateSubmit = async (e: React.FormEvent) => {
           title: effectiveEventType ? `${effectiveEventType} - ${formData.name}` : formData.name,
           client: formData.name,
           clientPhone: formData.whatsapp,
-          clientEmail: '',
-          clientCpf: '',
-          clientRg: '',
+          clientEmail: formData.email,
+          clientCpf: formData.cpf,
+          clientRg: formData.rg,
           clientAddress: formData.clientAddress,
           clientGender: formData.clientGender,
           eventType: effectiveEventType,
@@ -546,11 +475,11 @@ const handleCreateSubmit = async (e: React.FormEvent) => {
           const leadUpdate: Partial<Lead> = {
             name: formData.name,
             whatsapp: formData.whatsapp,
-            email: '',
+            email: formData.email,
             address: formData.city || '',
             notes: formData.observacao || '',
-            cpf: '',
-            rg: '',
+            cpf: formData.cpf,
+            rg: formData.rg,
             clientAddress: formData.clientAddress,
             clientGender: formData.clientGender,
           };
@@ -562,42 +491,65 @@ const handleCreateSubmit = async (e: React.FormEvent) => {
         }
         setEditingEventId(null);
       } else {
-        const client = Orçamentos.find(l => l.id === selectedClientId);
-        if (!client) {
-          setSubmitError('Cliente não encontrado. Selecione um cliente válido.');
-          return;
-        }
-        await addEvent({
-          title: effectiveEventType ? `${effectiveEventType} - ${client.name}` : client.name,
-          client: client.name,
-          clientId: client.id,
-          clientPhone: client.whatsapp,
-          clientEmail: client.email,
-          clientCpf: '',
-          clientRg: '',
+        // Não há mais busca de cliente existente: o formulário da aba Orçamento é
+        // sempre um cadastro novo, então o lead é criado a partir dos campos
+        // preenchidos e o evento nasce linked a ele.
+        const leadInput: Partial<Omit<Lead, 'id'>> = {
+          name: formData.name,
+          niche: effectiveEventType || 'Evento',
+          whatsapp: formData.whatsapp,
+          email: formData.email,
+          instagram: '',
+          stage: 'Novos Orçamentos',
+          origin: 'evento',
+          firstContact: formData.date || new Date().toISOString().split('T')[0],
+          closingDate: '',
+          followUpReminder: '',
+          address: formData.city || '',
+          notes: formData.observacao || '',
+          cpf: formData.cpf,
+          rg: formData.rg,
           clientAddress: formData.clientAddress,
           clientGender: formData.clientGender,
-          eventType: effectiveEventType,
-          date: formData.date,
-          dateEnd: formData.dateEnd || '',
-          time: formData.time,
-          city: formData.city,
-          local: formData.local,
-          description: formData.observacao,
-          status: 'orcamento',
-          valorTotal: total,
-          desconto: formData.desconto,
-          items: formData.orcamentoItems,
-        });
-        await addTransaction({
-          client: client.name,
-          description: `Evento: ${effectiveEventType || 'Evento'} - ${client.name}${formData.observacao ? ' • ' + formData.observacao : ''}`,
-          amount: total,
-          date: formData.date || new Date().toISOString().split('T')[0],
-          status: 'Pendente',
-          type: 'receita',
-          source: 'evento',
-        });
+        };
+        if (formData.orcamentoItems.length > 0) {
+          leadInput.value = total.toString();
+          leadInput.items = formData.orcamentoItems;
+        }
+        const newLeadId = await addLead(leadInput as Omit<Lead, 'id'>);
+        if (newLeadId) {
+          await addEvent({
+            title: effectiveEventType ? `${effectiveEventType} - ${formData.name}` : formData.name,
+            client: formData.name,
+            clientId: newLeadId,
+            clientPhone: formData.whatsapp,
+            clientEmail: formData.email,
+            clientCpf: formData.cpf,
+            clientRg: formData.rg,
+            clientAddress: formData.clientAddress,
+            clientGender: formData.clientGender,
+            eventType: effectiveEventType,
+            date: formData.date,
+            dateEnd: formData.dateEnd || '',
+            time: formData.time,
+            city: formData.city,
+            local: formData.local,
+            description: formData.observacao,
+            status: 'orcamento',
+            valorTotal: total,
+            desconto: formData.desconto,
+            items: formData.orcamentoItems,
+          });
+          await addTransaction({
+            client: formData.name,
+            description: `Evento: ${effectiveEventType || 'Evento'} - ${formData.name}${formData.observacao ? ' • ' + formData.observacao : ''}`,
+            amount: total,
+            date: formData.date || new Date().toISOString().split('T')[0],
+            status: 'Pendente',
+            type: 'receita',
+            source: 'evento',
+          });
+        }
       }
       setIsCreateOpen(false);
     } catch (err) {
@@ -1452,7 +1404,7 @@ event.status === 'evento_confirmado' ? 'bg-[#3b82f6] text-white' :
             {/* Mode toggle — 3 colunas */}
             <div className="grid grid-cols-3 shrink-0 border-b border-[#2d2d2d]">
               <button
-                onClick={() => { setAbaAtiva('evento'); setOrcamentoSubTab('selecionar'); }}
+                onClick={() => setAbaAtiva('evento')}
                 className={`px-3 py-3 text-[10px] font-black uppercase leading-tight transition-colors min-w-0 ${abaAtiva === 'evento' ? 'text-[#CDFF00] bg-[#1f1f1f] shadow-[inset_0_-2px_0_0_#CDFF00]' : 'text-neutral-500 hover:text-white'}`}
               >
                 Orçamento
@@ -1501,94 +1453,6 @@ event.status === 'evento_confirmado' ? 'bg-[#3b82f6] text-white' :
               <div className="mx-auto w-full max-w-3xl space-y-6">
               {/* Seção 1 — quem é o cliente + dados do evento */}
               <div className="space-y-5 min-w-0">
-                <div>
-                  {/* Sub-tabs for Orçamento */}
-                  <div className="grid grid-cols-2 border-b border-[#2d2d2d] mb-4">
-                    <button
-                      type="button"
-                      onClick={() => setOrcamentoSubTab('selecionar')}
-                      className={`px-3 py-2 text-[10px] font-black uppercase leading-tight transition-colors ${orcamentoSubTab === 'selecionar' ? 'text-[#CDFF00] border-b-2 border-[#CDFF00]' : 'text-neutral-500 hover:text-white'}`}
-                    >
-                      Selecionar Cliente
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setOrcamentoSubTab('novo')}
-                      className={`px-3 py-2 text-[10px] font-black uppercase leading-tight transition-colors border-l border-[#2d2d2d] ${orcamentoSubTab === 'novo' ? 'text-[#CDFF00] border-b-2 border-[#CDFF00]' : 'text-neutral-500 hover:text-white'}`}
-                    >
-                      Adicionar Novo Cliente
-                    </button>
-                  </div>
-                  {orcamentoSubTab === 'selecionar' ? (
-                    <div ref={clientSearchRef}>
-                      <label className="block text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-1.5 flex items-center gap-1.5">
-                        <User size={12} /> Selecione o Cliente
-                      </label>
-                  <div className="relative">
-                    <div className="flex items-center bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg overflow-hidden focus-within:border-[#CDFF00] transition-colors">
-                      <Search size={14} className="text-neutral-500 ml-3 shrink-0" />
-                      <input
-                        type="text"
-                        value={clientSearch}
-                        onChange={e => { setClientSearch(e.target.value); setClientSearchOpen(true); setSelectedClientId(''); }}
-                        onFocus={() => setClientSearchOpen(true)}
-                        placeholder="Digite para buscar..."
-                        className="w-full bg-transparent border-none px-2 py-2 text-sm text-white placeholder-neutral-600 outline-none"
-                        autoComplete="off"
-                      />
-                    </div>
-                    {clientSearchOpen && (
-                      <div className="mt-1 bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg max-h-48 overflow-y-auto z-50 shadow-xl">
-                        {filteredClients.length === 0 ? (
-                          <div className="px-3 py-2 text-xs text-neutral-500 italic">Nenhum cliente encontrado</div>
-                        ) : (
-filteredClients.map(lead => (
-                              <button
-                                type="button"
-                                key={lead.id}
-                                onClick={() => {
-                                  setSelectedClientId(lead.id);
-                                  setClientSearch(`${lead.nome} — ${lead.whatsapp}`);
-                                  setClientSearchOpen(false);
-                                  setFormData(prev => {
-                                    const fb = clientContractFallbacks(lead.id, lead.nome);
-                                    const evType = matchEventType(lead.niche);
-                                    const valorBase = lead.valor && lead.valor > 0 ? lead.valor : 0;
-                                    return {
-                                      ...prev,
-                                      name: lead.nome,
-                                      city: lead.cidade,
-                                      whatsapp: lead.whatsapp,
-                                      cpf: fb.cpf || prev.cpf,
-                                      rg: fb.rg || prev.rg,
-                                      clientAddress: fb.clientAddress || prev.clientAddress,
-                                      clientGender: fb.clientGender || prev.clientGender,
-                                      eventType: evType.value || prev.eventType,
-                                      outroEventoType: evType.custom || prev.outroEventoType,
-                                      orcamentoItems: (lead.items && lead.items.length > 0) ? lead.items : prev.orcamentoItems,
-                                      valor: (lead.items && lead.items.length > 0) ? prev.valor : (valorBase > 0 ? valorBase : prev.valor),
-                                    };
-                                  });
-                                }}
-                                className={`w-full text-left px-3 py-2 text-sm text-white hover:bg-[#2a2a2a] transition-colors flex items-center gap-2 ${selectedClientId === lead.id ? 'bg-[#2a2a2a] border-l-2 border-[#CDFF00]' : ''}`}
-                              >
-                                <User size={12} className="text-neutral-500 shrink-0" />
-                                <div className="min-w-0">
-                                  <span className="block truncate">{lead.nome}</span>
-                                  <span className="block text-[10px] text-neutral-500 truncate">{lead.whatsapp}</span>
-                                </div>
-                              </button>
-                          ))
-                        )}
-                      </div>
-                    )}
-                  </div>
-                  {selectedClientId && (
-                    <p className="text-[10px] text-[#CDFF00] mt-1">Cliente selecionado</p>
-                  )}
-                </div>
-              ) : (
-                <>
                   <div>
                     <label className="block text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-1.5 flex items-center gap-1.5">
                       <User size={12} /> Nome
@@ -1631,10 +1495,9 @@ filteredClients.map(lead => (
                       </label>
                       <input type="text" value={formData.clientAddress} onChange={e => setFormData(prev => ({ ...prev, clientAddress: e.target.value }))}
                         className="w-full bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg px-3 py-2 text-sm text-white focus:border-[#CDFF00] outline-none" placeholder="Rua, número, bairro, cidade, estado" />
-</div>
-                        </div>
-                </>
-                      )}
+                    </div>
+                </div>
+              </div>
               {/* Event fields — common to both modes */}
               <div className="border-t border-[#2d2d2d] pt-4">
                 <p className="text-[9px] font-black uppercase tracking-widest text-neutral-400 mb-3">Dados do Evento</p>
@@ -1923,7 +1786,6 @@ filteredClients.map(lead => (
 </div>
                 </div>
                 </div>
-                </div>
               </div>
               </div>
                 {submitError && (
@@ -1955,7 +1817,6 @@ filteredClients.map(lead => (
                   <span className="block truncate">{editingEventId ? 'Salvar Alterações' : 'Agendar Evento'}</span>
                 </button>
                 </div>
-              </div>
               </div>
             </form>)}
           </div>
