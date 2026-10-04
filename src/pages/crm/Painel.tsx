@@ -72,7 +72,7 @@ const statusBg: Record<string, string> = {
 };
 
 const CRMDashboard = () => {
-  const { events, Orçamentos, addLead, addEvent, updateEvent, updateLead, deleteEvent, deleteLead } = useCRM();
+  const { events, Orçamentos, addEvent, updateEvent, updateLead, deleteEvent, deleteLead } = useCRM();
   const { activityLogs } = useActivityLogs();
   const [selectedDayEvents, setSelectedDayEvents] = useState<CalendarEvent[] | null>(null);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
@@ -86,7 +86,7 @@ const CRMDashboard = () => {
   const toastTimerRef = useRef<number | null>(null);
 
   const [isCreateOpen, setIsCreateOpen] = useState(false);
-  const [abaAtiva, setAbaAtiva] = useState<'cliente' | 'evento' | 'despesas' | 'contrato'>('cliente');
+  const [abaAtiva, setAbaAtiva] = useState<'evento' | 'despesas' | 'contrato'>('evento');
   const [orcamentoSubTab, setOrcamentoSubTab] = useState<'selecionar' | 'novo'>('selecionar');
   const [isSavingContract, setIsSavingContract] = useState(false);
 
@@ -403,7 +403,7 @@ const CRMDashboard = () => {
     setOrcSearch('');
     setOrcSearchOpen(false);
     setShowCreateItemForm(false);
-    setAbaAtiva('cliente');
+    setAbaAtiva('evento');
     setOrcamentoSubTab('selecionar');
     setIsCreateOpen(true);
   };
@@ -503,7 +503,7 @@ const CRMDashboard = () => {
     setClientSearch(event.client ? `${event.client} — ${event.clientPhone || ''}` : '');
     setOrcSearch('');
     setOrcSearchOpen(false);
-    setAbaAtiva('cliente');
+    setAbaAtiva('evento');
     setIsCreateOpen(true);
     setSelectedDayEvents(null);
     setSelectedDate(null);
@@ -541,44 +541,6 @@ const handleCreateSubmit = async (e: React.FormEvent) => {
           items: formData.orcamentoItems,
         };
 
-        if (abaAtiva === 'cliente' && !selectedClientId) {
-          const leadInput: Partial<Omit<Lead, 'id'>> = {
-            name: formData.name,
-            niche: effectiveEventType || 'Evento',
-            whatsapp: formData.whatsapp,
-            email: '',
-            instagram: '',
-            stage: 'Novos Orçamentos',
-            origin: 'evento',
-            firstContact: formData.date || new Date().toISOString().split('T')[0],
-            closingDate: '',
-            followUpReminder: '',
-            address: formData.city || '',
-            notes: formData.observacao || '',
-            cpf: '',
-            rg: '',
-            clientAddress: formData.clientAddress,
-            clientGender: formData.clientGender,
-          };
-          if (formData.orcamentoItems.length > 0) {
-            leadInput.value = total.toString();
-            leadInput.items = formData.orcamentoItems;
-          }
-          const newLeadId = await addLead(leadInput as Omit<Lead, 'id'>);
-          if (newLeadId) {
-            eventFields.clientId = newLeadId;
-          }
-          await addTransaction({
-            client: formData.name,
-            description: `Evento: ${effectiveEventType || 'Evento'} - ${formData.name}${formData.observacao ? ' • ' + formData.observacao : ''}`,
-            amount: total,
-            date: formData.date || new Date().toISOString().split('T')[0],
-            status: 'Pendente',
-            type: 'receita',
-            source: 'evento',
-          });
-        }
-
         await updateEvent(editingEventId, eventFields);
         if (selectedClientId) {
           const leadUpdate: Partial<Lead> = {
@@ -599,100 +561,6 @@ const handleCreateSubmit = async (e: React.FormEvent) => {
           await updateLead(selectedClientId, leadUpdate);
         }
         setEditingEventId(null);
-      } else if (abaAtiva === 'cliente' && !selectedClientId) {
-        const leadInput: Partial<Omit<Lead, 'id'>> = {
-          name: formData.name,
-          niche: effectiveEventType || 'Evento',
-          whatsapp: formData.whatsapp,
-          email: '',
-          instagram: '',
-          stage: 'Novos Orçamentos',
-          origin: 'evento',
-          firstContact: formData.date || new Date().toISOString().split('T')[0],
-          closingDate: '',
-          followUpReminder: '',
-          address: formData.city || '',
-          notes: formData.observacao || '',
-          cpf: '',
-          rg: '',
-          clientAddress: formData.clientAddress,
-          clientGender: formData.clientGender,
-        };
-        if (formData.orcamentoItems.length > 0) {
-          leadInput.value = total.toString();
-          leadInput.items = formData.orcamentoItems;
-        }
-        const newLeadId = await addLead(leadInput as Omit<Lead, 'id'>);
-        if (newLeadId) {
-          await addEvent({
-            title: effectiveEventType ? `${effectiveEventType} - ${formData.name}` : formData.name,
-            client: formData.name,
-            clientId: newLeadId,
-            clientPhone: formData.whatsapp,
-            clientEmail: '',
-            clientCpf: '',
-            clientRg: '',
-            clientAddress: formData.clientAddress,
-            clientGender: formData.clientGender,
-            eventType: effectiveEventType,
-            date: formData.date,
-            dateEnd: formData.dateEnd || '',
-            time: formData.time,
-            city: formData.city,
-            local: formData.local,
-            description: formData.observacao,
-            status: 'orcamento',
-            valorTotal: total,
-            desconto: formData.desconto,
-            items: formData.orcamentoItems,
-          });
-          await addTransaction({
-            client: formData.name,
-            description: `Evento: ${effectiveEventType || 'Evento'} - ${formData.name}${formData.observacao ? ' • ' + formData.observacao : ''}`,
-            amount: total,
-            date: formData.date || new Date().toISOString().split('T')[0],
-            status: 'Pendente',
-            type: 'receita',
-            source: 'evento',
-          });
-        }
-      } else if (abaAtiva === 'cliente') {
-        const client = Orçamentos.find(l => l.id === selectedClientId);
-        if (!client) {
-          setSubmitError('Cliente não encontrado. Selecione um cliente válido.');
-          return;
-        }
-        await addEvent({
-          title: effectiveEventType ? `${effectiveEventType} - ${client.name}` : client.name,
-          client: client.name,
-          clientId: client.id,
-          clientPhone: client.whatsapp,
-          clientEmail: client.email,
-          clientCpf: '',
-          clientRg: '',
-          clientAddress: formData.clientAddress,
-          clientGender: formData.clientGender,
-          eventType: effectiveEventType,
-          date: formData.date,
-          dateEnd: formData.dateEnd || '',
-          time: formData.time,
-          city: formData.city,
-          local: formData.local,
-          description: formData.observacao,
-          status: 'orcamento',
-          valorTotal: total,
-          desconto: formData.desconto,
-          items: formData.orcamentoItems,
-        });
-        await addTransaction({
-          client: client.name,
-          description: `Evento: ${effectiveEventType || 'Evento'} - ${client.name}${formData.observacao ? ' • ' + formData.observacao : ''}`,
-          amount: total,
-          date: formData.date || new Date().toISOString().split('T')[0],
-          status: 'Pendente',
-          type: 'receita',
-          source: 'evento',
-        });
       } else {
         const client = Orçamentos.find(l => l.id === selectedClientId);
         if (!client) {
@@ -1581,30 +1449,24 @@ event.status === 'evento_confirmado' ? 'bg-[#3b82f6] text-white' :
                 <X size={16} className="text-neutral-400" />
               </button>
             </div>
-            {/* Mode toggle — 2x2 no mobile, 4 colunas a partir de sm */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 shrink-0 border-b border-[#2d2d2d]">
-              <button
-                onClick={() => setAbaAtiva('cliente')}
-                className={`px-3 py-3 text-[10px] font-black uppercase leading-tight transition-colors min-w-0 ${abaAtiva === 'cliente' ? 'text-[#CDFF00] bg-[#1f1f1f] shadow-[inset_0_-2px_0_0_#CDFF00]' : 'text-neutral-500 hover:text-white'}`}
-              >
-                Novo Cliente
-              </button>
+            {/* Mode toggle — 3 colunas */}
+            <div className="grid grid-cols-3 shrink-0 border-b border-[#2d2d2d]">
               <button
                 onClick={() => { setAbaAtiva('evento'); setOrcamentoSubTab('selecionar'); }}
-                className={`px-3 py-3 text-[10px] font-black uppercase leading-tight transition-colors min-w-0 border-l border-[#2d2d2d] ${abaAtiva === 'evento' ? 'text-[#CDFF00] bg-[#1f1f1f] shadow-[inset_0_-2px_0_0_#CDFF00]' : 'text-neutral-500 hover:text-white'}`}
+                className={`px-3 py-3 text-[10px] font-black uppercase leading-tight transition-colors min-w-0 ${abaAtiva === 'evento' ? 'text-[#CDFF00] bg-[#1f1f1f] shadow-[inset_0_-2px_0_0_#CDFF00]' : 'text-neutral-500 hover:text-white'}`}
               >
                 Orçamento
               </button>
               <button
                 onClick={() => openLinkedTab('despesas')}
-                className={`px-3 py-3 text-[10px] font-black uppercase leading-tight transition-colors min-w-0 flex items-center justify-center gap-1.5 border-t sm:border-t-0 border-l border-[#2d2d2d] ${abaAtiva === 'despesas' ? 'text-[#CDFF00] bg-[#1f1f1f] shadow-[inset_0_-2px_0_0_#CDFF00]' : 'text-neutral-500 hover:text-white'}`}
+                className={`px-3 py-3 text-[10px] font-black uppercase leading-tight transition-colors min-w-0 flex items-center justify-center gap-1.5 border-l border-[#2d2d2d] ${abaAtiva === 'despesas' ? 'text-[#CDFF00] bg-[#1f1f1f] shadow-[inset_0_-2px_0_0_#CDFF00]' : 'text-neutral-500 hover:text-white'}`}
               >
                 {!editingEventId && <Lock size={10} className="shrink-0" />}
                 <span className="min-w-0"><span className="sm:hidden">Despesas</span><span className="hidden sm:inline">Despesas do Evento</span></span>
               </button>
               <button
                 onClick={() => openLinkedTab('contrato')}
-                className={`px-3 py-3 text-[10px] font-black uppercase leading-tight transition-colors min-w-0 flex items-center justify-center gap-1.5 border-t sm:border-t-0 border-l border-[#2d2d2d] ${abaAtiva === 'contrato' ? 'text-[#CDFF00] bg-[#1f1f1f] shadow-[inset_0_-2px_0_0_#CDFF00]' : 'text-neutral-500 hover:text-white'}`}
+                className={`px-3 py-3 text-[10px] font-black uppercase leading-tight transition-colors min-w-0 flex items-center justify-center gap-1.5 border-l border-[#2d2d2d] ${abaAtiva === 'contrato' ? 'text-[#CDFF00] bg-[#1f1f1f] shadow-[inset_0_-2px_0_0_#CDFF00]' : 'text-neutral-500 hover:text-white'}`}
               >
                 {!editingEventId && <Lock size={10} className="shrink-0" />}
                 <span className="min-w-0"><span className="sm:hidden">Contrato</span><span className="hidden sm:inline">Emissão do Contrato</span></span>
@@ -1639,24 +1501,6 @@ event.status === 'evento_confirmado' ? 'bg-[#3b82f6] text-white' :
               <div className="mx-auto w-full max-w-3xl space-y-6">
               {/* Seção 1 — quem é o cliente + dados do evento */}
               <div className="space-y-5 min-w-0">
-              {abaAtiva === 'cliente' ? (
-                <div>
-                  <div>
-                    <label className="block text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-1.5 flex items-center gap-1.5">
-                      <User size={12} /> Nome
-                    </label>
-                    <input type="text" value={formData.name} onChange={e => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                      className="w-full bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg px-3 py-2 text-sm text-white focus:border-[#CDFF00] outline-none" required />
-                  </div>
-                  <div>
-                    <label className="block text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-1.5 flex items-center gap-1.5">
-                      <Phone size={12} /> WhatsApp
-                    </label>
-                    <input type="text" value={formData.whatsapp} onChange={e => setFormData(prev => ({ ...prev, whatsapp: e.target.value }))}
-                      className="w-full bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg px-3 py-2 text-sm text-white focus:border-[#CDFF00] outline-none" required />
-                  </div>
-                </div>
-              ) : (
                 <div>
                   {/* Sub-tabs for Orçamento */}
                   <div className="grid grid-cols-2 border-b border-[#2d2d2d] mb-4">
@@ -2080,7 +1924,6 @@ filteredClients.map(lead => (
                 </div>
                 </div>
                 </div>
-              )}
               </div>
               </div>
                 {submitError && (
@@ -2109,7 +1952,7 @@ filteredClients.map(lead => (
                 </button>
                 <button type="submit"
                   className="col-span-2 sm:flex-[1.5] py-3 px-2 bg-[#CDFF00] text-black font-bold text-[10px] uppercase tracking-wider rounded-lg hover:bg-[#a1e600] transition-colors text-center leading-tight min-w-0">
-                  <span className="block truncate">{editingEventId ? 'Salvar Alterações' : abaAtiva === 'cliente' ? 'Cadastrar e Agendar' : 'Agendar Evento'}</span>
+                  <span className="block truncate">{editingEventId ? 'Salvar Alterações' : 'Agendar Evento'}</span>
                 </button>
                 </div>
               </div>
