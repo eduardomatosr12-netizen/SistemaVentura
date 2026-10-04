@@ -95,6 +95,7 @@ const CRMDashboard = () => {
 
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [abaAtiva, setAbaAtiva] = useState<'cliente' | 'evento' | 'despesas' | 'contrato'>('cliente');
+  const [orcamentoSubTab, setOrcamentoSubTab] = useState<'selecionar' | 'novo'>('selecionar');
   const [isSavingContract, setIsSavingContract] = useState(false);
 
   useScrollLock(!!selectedDayEvents || isCreateOpen);
@@ -411,6 +412,7 @@ const CRMDashboard = () => {
     setOrcSearchOpen(false);
     setShowCreateItemForm(false);
     setAbaAtiva('cliente');
+    setOrcamentoSubTab('selecionar');
     setIsCreateOpen(true);
   };
 
@@ -1595,7 +1597,7 @@ event.status === 'evento_confirmado' ? 'bg-[#3b82f6] text-white' :
                 Novo Cliente
               </button>
               <button
-                onClick={() => setAbaAtiva('evento')}
+                onClick={() => { setAbaAtiva('evento'); setOrcamentoSubTab('selecionar'); }}
                 className={`px-3 py-3 text-[10px] font-black uppercase leading-tight transition-colors min-w-0 border-l border-[#2d2d2d] ${abaAtiva === 'evento' ? 'text-[#CDFF00] bg-[#1f1f1f] shadow-[inset_0_-2px_0_0_#CDFF00]' : 'text-neutral-500 hover:text-white'}`}
               >
                 Orçamento
@@ -1661,11 +1663,30 @@ event.status === 'evento_confirmado' ? 'bg-[#3b82f6] text-white' :
                       className="w-full bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg px-3 py-2 text-sm text-white focus:border-[#CDFF00] outline-none" required />
                   </div>
                 </>
-              ) : (
-                <div ref={clientSearchRef}>
-                  <label className="block text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-1.5 flex items-center gap-1.5">
-                    <User size={12} /> Selecione o Cliente
-                  </label>
+              ) : abaAtiva === 'evento' ? (
+                <>
+                  {/* Sub-tabs for Orçamento */}
+                  <div className="grid grid-cols-2 border-b border-[#2d2d2d] mb-4">
+                    <button
+                      type="button"
+                      onClick={() => setOrcamentoSubTab('selecionar')}
+                      className={`px-3 py-2 text-[10px] font-black uppercase leading-tight transition-colors ${orcamentoSubTab === 'selecionar' ? 'text-[#CDFF00] border-b-2 border-[#CDFF00]' : 'text-neutral-500 hover:text-white'}`}
+                    >
+                      Selecionar Cliente
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setOrcamentoSubTab('novo')}
+                      className={`px-3 py-2 text-[10px] font-black uppercase leading-tight transition-colors border-l border-[#2d2d2d] ${orcamentoSubTab === 'novo' ? 'text-[#CDFF00] border-b-2 border-[#CDFF00]' : 'text-neutral-500 hover:text-white'}`}
+                    >
+                      Adicionar Novo Cliente
+                    </button>
+                  </div>
+                  {orcamentoSubTab === 'selecionar' ? (
+                    <div ref={clientSearchRef}>
+                      <label className="block text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-1.5 flex items-center gap-1.5">
+                        <User size={12} /> Selecione o Cliente
+                      </label>
                   <div className="relative">
                     <div className="flex items-center bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg overflow-hidden focus-within:border-[#CDFF00] transition-colors">
                       <Search size={14} className="text-neutral-500 ml-3 shrink-0" />
@@ -1730,6 +1751,23 @@ filteredClients.map(lead => (
                     <p className="text-[10px] text-[#CDFF00] mt-1">Cliente selecionado</p>
                   )}
                 </div>
+              ) : (
+                <>
+                  <div>
+                    <label className="block text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-1.5 flex items-center gap-1.5">
+                      <User size={12} /> Nome
+                    </label>
+                    <input type="text" value={formData.name} onChange={e => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                      className="w-full bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg px-3 py-2 text-sm text-white focus:border-[#CDFF00] outline-none" required />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-1.5 flex items-center gap-1.5">
+                      <Phone size={12} /> WhatsApp
+                    </label>
+                    <input type="text" value={formData.whatsapp} onChange={e => setFormData(prev => ({ ...prev, whatsapp: e.target.value }))}
+                      className="w-full bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg px-3 py-2 text-sm text-white focus:border-[#CDFF00] outline-none" required />
+                  </div>
+                </>
               )}
               {/* Event fields — common to both modes */}
               <div className="border-t border-[#2d2d2d] pt-4">
