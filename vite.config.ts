@@ -76,8 +76,28 @@ export default defineConfig({
         // mid-session SW swap could 404).
         skipWaiting: true,
         clientsClaim: true,
-        globPatterns: ['**/*.{js,css,html,svg,png,jpg,ico,json,woff2}'],
+        // `html` is deliberately excluded from the precache. Vite emits
+        // content-hashed asset names, so a precached index.html survives a
+        // deploy while the bundle it references (index-<hash>.js) is already
+        // gone -- the browser then gets HTML where it expects JavaScript and
+        // the app never boots. Navigations go to the network instead, which
+        // is why `navigateFallback` is disabled and the route below is
+        // NetworkFirst.
+        globPatterns: ['**/*.{js,css,svg,png,jpg,ico,json,woff2}'],
+        navigateFallback: null,
         runtimeCaching: [
+          {
+            // Always prefer the freshest index.html so the asset hashes it
+            // references always exist; fall back to the last good copy only
+            // when the network is unreachable.
+            urlPattern: ({ request }: { request: Request }) => request.mode === 'navigate',
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'pages',
+              networkTimeoutSeconds: 3,
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
           {
             // Webfonts live on a third-party origin and are not in the precache,
             // so without this the installed PWA falls back to the system font
