@@ -867,11 +867,10 @@ export function generateContractPDF(data: ContractData): void {
       ? { nacional: 'brasileiro', portador: 'portador', domiciliado: 'domiciliado' }
       : { nacional: 'brasileiro(a)', portador: 'portador(a)', domiciliado: 'domiciliado(a)' };
 
-  const cpfTermo = safeCpf ? `, ${genero.portador} do CPF sob o n.º ${safeCpf}` : '';
-  const rgTermo = safeRg ? `${safeCpf ? '' : `, ${genero.portador} do`}${safeCpf ? '' : ' '}${!safeCpf ? '' : ''} RG sob o n.º ${safeRg}` : ''; // keep minimal
-  const identidadeTermo = cpfTermo || rgTermo
-    ? `${cpfTermo}${safeRg && safeCpf ? ' e portador(a) do RG sob o n.º ' + safeRg : (safeRg && !safeCpf ? ', ' + genero.portador + ' do RG sob o n.º ' + safeRg : '')}`
-    : '';
+  const docParts: string[] = [];
+  if (safeCpf) docParts.push(`CPF sob o n.º ${safeCpf}`);
+  if (safeRg) docParts.push(`RG sob o n.º ${safeRg}`);
+  const identidadeTermo = docParts.length > 0 ? `, ${genero.portador} do ${docParts.join(' e do ')}` : '';
   const domicilioTermo = safeClientAddress
     ? `, residente e ${genero.domiciliado} na ${safeClientAddress}${safeCity ? `, ${safeCity}` : ''}`
     : safeCity
