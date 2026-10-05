@@ -40,9 +40,12 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-dvh bg-black flex relative overflow-hidden">
+    // `overflow-x-hidden` only: a vertical `overflow-hidden` here clipped the
+    // bottom of the card with no way to scroll, so the submit button became
+    // unreachable as soon as the on-screen keyboard shrank the viewport.
+    <div className="min-h-dvh bg-black flex relative overflow-x-hidden safe-area-top safe-area-bottom">
       {/* Animated background glow */}
-      <div className="absolute inset-0 pointer-events-none">
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <div className="absolute -top-[40%] -right-[20%] w-[800px] h-[800px] rounded-full bg-[#CDFF00] opacity-[0.03] blur-[120px] animate-pulse" style={{ animationDuration: '6s' }} />
         <div className="absolute -bottom-[30%] -left-[15%] w-[600px] h-[600px] rounded-full bg-[#CDFF00] opacity-[0.02] blur-[100px] animate-pulse" style={{ animationDuration: '8s', animationDelay: '2s' }} />
       </div>
@@ -83,8 +86,10 @@ const Login = () => {
         </p>
       </div>
 
-      {/* Right side - Login form */}
-      <div className="flex-1 flex items-center justify-center p-4 md:p-8 relative z-10">
+      {/* Right side - Login form.
+          `items-start` on mobile so the card grows downward from the top and
+          stays scrollable instead of being centred into the keyboard's space. */}
+      <div className="flex-1 flex items-start lg:items-center justify-center p-4 md:p-8 relative z-10 overflow-y-auto">
         <div className="w-full max-w-[420px]">
           {/* Mobile logo */}
           <div
@@ -160,7 +165,9 @@ const Login = () => {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 p-2 text-white/30 hover:text-[#CDFF00] focus:text-[#CDFF00] focus:outline-none transition-colors"
+                    aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+                    aria-pressed={showPassword}
+                    className="absolute right-1 top-1/2 -translate-y-1/2 flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg text-white/30 active:text-[#CDFF00] focus:text-[#CDFF00] focus:outline-none transition-colors"
                     disabled={isLoading}
                   >
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -195,9 +202,7 @@ const Login = () => {
             >
               <p className="text-white/25 text-[11px] font-medium">
                 Esqueceu sua senha?{' '}
-                <button type="button" className="text-[#CDFF00] hover:text-[#a1e600] transition-colors font-bold underline underline-offset-2">
-                  Recuperar
-                </button>
+                <span className="text-white/40 font-bold">Fale com o administrador.</span>
               </p>
             </div>
           </div>

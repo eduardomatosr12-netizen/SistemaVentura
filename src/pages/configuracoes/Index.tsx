@@ -283,7 +283,7 @@ const Configuracoes = () => {
   ];
 
   return (
-    <div className="min-h-screen pb-bottom-nav md:pb-0 relative">
+    <div className="min-h-dvh relative">
       <div className="mb-10 flex justify-between items-end">
         <div>
           <h1 className="text-2xl md:text-[32px] font-black text-white tracking-[0.5px] mb-2 flex items-center gap-3">
@@ -371,8 +371,8 @@ const Configuracoes = () => {
       </div>
 
       {activeModal && activeModal !== 'delete' && (
-        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-6 bg-black/60 backdrop-blur-md animate-in fade-in duration-300" onClick={() => { setActiveModal(null); setProfileError(''); setProfileSuccess(''); setInviteError(''); setInviteSuccess(''); }}>
-          <div className="bg-[#1a1a1a] border border-[#2d2d2d] rounded-t-[40px] sm:rounded-xl shadow-[0_20px_40px_rgba(0,0,0,0.5)] w-full max-w-2xl overflow-hidden transform animate-in slide-in-from-bottom-8 duration-500 flex flex-col max-h-[92dvh]" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 z-[100] flex items-start sm:items-center justify-center p-0 sm:p-6 bg-black/60 backdrop-blur-md overlay-scroll modal-root animate-in fade-in duration-300" onClick={() => { setActiveModal(null); setProfileError(''); setProfileSuccess(''); setInviteError(''); setInviteSuccess(''); }}>
+          <div className="bg-[#1a1a1a] border border-[#2d2d2d] rounded-t-[40px] sm:rounded-xl shadow-[0_20px_40px_rgba(0,0,0,0.5)] w-full max-w-2xl overflow-hidden transform animate-in slide-in-from-bottom-8 duration-500 flex flex-col max-h-[92dvh] mt-auto" onClick={e => e.stopPropagation()}>
             {activeModal === 'perfil' ? (
               <form onSubmit={handleSaveProfile} className="flex flex-col flex-1 min-h-0 overflow-hidden">
                 <div className="px-4 md:px-12 py-10 border-b border-[#222222] flex justify-between items-start shrink-0">
@@ -505,8 +505,8 @@ const Configuracoes = () => {
       )}
 
       {activeModal === 'delete' && (
-        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-6 bg-black/60 backdrop-blur-md animate-in fade-in" onClick={() => { setActiveModal(null); setConfirmationText(''); }}>
-          <div className="bg-[#1a1a1a] border border-red-500/30 rounded-t-[40px] sm:rounded-xl shadow-2xl w-full max-w-md overflow-y-auto p-4 md:p-12 text-center max-h-[92dvh] transform animate-in slide-in-from-bottom-8" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 z-[100] flex items-start sm:items-center justify-center p-0 sm:p-6 bg-black/60 backdrop-blur-md overlay-scroll modal-root animate-in fade-in" onClick={() => { setActiveModal(null); setConfirmationText(''); }}>
+          <div className="bg-[#1a1a1a] border border-red-500/30 rounded-t-[40px] sm:rounded-xl shadow-2xl w-full max-w-md overflow-y-auto p-4 md:p-12 text-center max-h-[92dvh] mt-auto transform animate-in slide-in-from-bottom-8" onClick={e => e.stopPropagation()}>
             <div className="w-24 h-24 bg-red-500/10 border border-red-500/30 rounded-[32px] flex items-center justify-center mx-auto mb-8 animate-bounce"><Trash2 size={48} className="text-red-400" /></div>
             <h2 className="text-4xl font-black text-white tracking-tighter mb-4">Tem certeza?</h2>
             <p className="text-white/60 text-sm font-bold leading-relaxed mb-10">Esta ação é irreversível e apagará todos os dados permanentemente.</p>

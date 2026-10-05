@@ -166,7 +166,7 @@ const TemplatesWhatsApp = () => {
   };
 
   return (
-    <div className="min-h-screen pb-bottom-nav md:pb-0 relative">
+    <div className="min-h-dvh relative">
       {toast && (
         <div className={`fixed top-6 left-4 right-4 sm:left-auto sm:right-6 z-[200] flex items-center gap-3 px-5 py-3 rounded-2xl shadow-2xl border animate-in slide-in-from-top-4 duration-300 sm:w-auto ${
           toast.type === 'success'
@@ -319,9 +319,9 @@ const TemplatesWhatsApp = () => {
       )}
 
       {formOpen && (
-        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-3 md:p-6 bg-black/60 backdrop-blur-md" onClick={closeForm}>
+        <div className="fixed inset-0 z-[100] flex items-start sm:items-center justify-center p-0 sm:p-3 md:p-6 bg-black/60 backdrop-blur-md overlay-scroll modal-root" onClick={closeForm}>
           <div
-            className="bg-[#1a1a1a] border border-[#2d2d2d] rounded-t-2xl sm:rounded-xl shadow-[0_20px_40px_rgba(0,0,0,0.5)] w-full max-w-2xl max-h-[90vh] flex flex-col"
+            className="bg-[#1a1a1a] border border-[#2d2d2d] rounded-t-2xl sm:rounded-xl shadow-[0_20px_40px_rgba(0,0,0,0.5)] w-full max-w-2xl max-h-[90dvh] mt-auto flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between px-4 sm:px-6 py-4 sm:py-5 border-b border-[#333] shrink-0">

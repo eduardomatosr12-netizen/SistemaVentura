@@ -673,7 +673,7 @@ const handleCreateSubmit = async (e: React.FormEvent) => {
   };
 
   return (
-    <div className="relative min-h-screen bg-black pb-bottom-nav md:pb-0">
+    <div className="relative min-h-dvh bg-black">
       {/* Header section */}
       <div className="mb-6">
         <h1 className="text-2xl md:text-[32px] font-black text-white tracking-[0.5px] mb-2 flex items-center gap-3">
@@ -684,7 +684,7 @@ const handleCreateSubmit = async (e: React.FormEvent) => {
       </div>
 
       {/* 4-tab navigation (card style) */}
-      <div className="bg-[#1a1a1a] border border-[#2d2d2d] rounded-xl px-3 sm:px-6 py-3 flex gap-2 sm:gap-6 mb-6 overflow-x-auto scrollbar-hide w-full">
+      <div className="bg-[#1a1a1a] border border-[#2d2d2d] rounded-xl px-3 sm:px-6 py-3 flex gap-2 sm:gap-6 mb-6 overflow-x-auto tab-scroll w-full">
         <button
           onClick={() => handleTabChange('calendario')}
           className={`flex items-center gap-2 px-5 py-3 rounded-lg font-semibold cursor-pointer transition-all duration-150 whitespace-nowrap ${
@@ -806,8 +806,8 @@ const handleCreateSubmit = async (e: React.FormEvent) => {
                       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleDayClick(day); }}
                       className={`relative flex flex-col items-center justify-center aspect-square rounded-lg border select-none transition-all duration-150 cursor-pointer
                         ${isToday
-                          ? 'bg-[#CDFF00] border-[#CDFF00] text-black font-black shadow-[0_4px_12px_rgba(205,255,0,0.3)] scale-105'
-                          : 'bg-[#1a1a1a] border-[#2d2d2d] text-white/80 hover:border-[#CDFF00] hover:bg-[#2a2a2a] hover:scale-105'
+                          ? 'bg-[#CDFF00] border-[#CDFF00] text-black font-black shadow-[0_4px_12px_rgba(205,255,0,0.3)]'
+                          : 'bg-[#1a1a1a] border-[#2d2d2d] text-white/80 hover:border-[#CDFF00] hover:bg-[#2a2a2a] active:border-[#CDFF00] active:bg-[#2a2a2a]'
                         }`}
                       style={{ minHeight: 44 }}
                     >
@@ -1242,8 +1242,8 @@ event.status === 'evento_confirmado' ? 'bg-[#3b82f6] text-white' :
 
       {/* Event Detail Modal */}
       {selectedDayEvents && (
-        <div className="fixed inset-0 bg-black/80 flex items-end sm:items-center justify-center z-[100] p-0 sm:p-4" onClick={closeModal}>
-          <div className="bg-[#1a1a1a] border border-[#2d2d2d] rounded-t-2xl sm:rounded-lg w-full max-w-lg max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-black/80 flex items-start sm:items-center justify-center z-[100] p-0 sm:p-4 overlay-scroll modal-root" onClick={closeModal}>
+          <div className="bg-[#1a1a1a] border border-[#2d2d2d] rounded-t-2xl sm:rounded-lg w-full max-w-lg max-h-[90dvh] mt-auto overflow-y-auto" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between p-4 border-b border-[#2d2d2d]">
               <h3 className="text-sm font-black uppercase tracking-widest text-[#CDFF00]">
                 Eventos — {selectedDate}
@@ -1362,8 +1362,8 @@ event.status === 'evento_confirmado' ? 'bg-[#3b82f6] text-white' :
 
       {/* Create Event/Client Modal */}
       {isCreateOpen && (
-        <div className="fixed inset-0 bg-black/80 flex items-end sm:items-center justify-center z-[100] p-0 sm:p-4" onClick={() => { setEditingEventId(null); setIsCreateOpen(false); }}>
-          <div className="bg-[#1a1a1a] border border-[#2d2d2d] rounded-t-2xl sm:rounded-lg w-full sm:max-w-4xl max-h-[95vh] sm:max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-black/80 flex items-start sm:items-center justify-center z-[100] p-0 sm:p-4 overlay-scroll modal-root" onClick={() => { setEditingEventId(null); setIsCreateOpen(false); }}>
+          <div className="bg-[#1a1a1a] border border-[#2d2d2d] rounded-t-2xl sm:rounded-lg w-full sm:max-w-4xl max-h-[95dvh] mt-auto sm:max-h-[90dvh] flex flex-col" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between p-4 border-b border-[#2d2d2d] shrink-0">
               <h3 className="text-sm font-black uppercase tracking-widest text-[#CDFF00]">{editingEventId ? 'Editar Orçamento' : 'Novo Orçamento'}</h3>
               <button onClick={() => { setEditingEventId(null); setIsCreateOpen(false); }} className="min-w-[44px] min-h-[44px] flex items-center justify-center hover:bg-[#2a2a2a] rounded-md transition-colors">

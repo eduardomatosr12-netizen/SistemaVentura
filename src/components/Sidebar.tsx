@@ -1,4 +1,5 @@
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useEffect, useRef } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import { DollarSign, Package, Settings, LogOut, X, LayoutDashboard, Phone } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -7,24 +8,22 @@ interface SidebarProps {
   onClose?: () => void;
 }
 
+const MAIN_MENU_ITEMS = [
+  { id: 'home', label: 'Home', icon: LayoutDashboard, path: '/home' },
+  { id: 'clientes', label: 'Clientes', icon: Phone, path: '/clientes' },
+  { id: 'tarefas', label: 'Estoque', icon: Package, path: '/tarefas' },
+  { id: 'financeiro', label: 'Financeiro', icon: DollarSign, path: '/financeiro' },
+  { id: 'configuracoes', label: 'Configurações', icon: Settings, path: '/configuracoes' },
+];
+
 const Sidebar = ({ isOpen = false, onClose }: SidebarProps) => {
   const location = useLocation();
-  const navigate = useNavigate();
-  const { user, hasPermission, logout } = useAuth();
+  const { user, logout } = useAuth();
+  const drawerRef = useRef<HTMLElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
 
-  const mainMenuItems = [
-    { id: 'home', label: 'Home', icon: LayoutDashboard, path: '/home', allowedRoles: ['admin', 'manager', 'user'] as const },
-    { id: 'clientes', label: 'Clientes', icon: Phone, path: '/clientes', allowedRoles: ['admin', 'manager', 'user'] as const },
-    { id: 'tarefas', label: 'Estoque', icon: Package, path: '/tarefas', allowedRoles: ['admin', 'manager', 'user'] as const },
-    { id: 'financeiro', label: 'Financeiro', icon: DollarSign, path: '/financeiro', allowedRoles: ['admin', 'manager', 'user'] as const },
-    { id: 'configuracoes', label: 'Configurações', icon: Settings, path: '/configuracoes', allowedRoles: ['admin', 'manager', 'user'] as const },
-  ];
-
-  const visibleMenuItems = !hasPermission ? mainMenuItems : mainMenuItems.filter(item =>
-    user?.role ? item.allowedRoles.includes(user.role) : false
-  );
-
-  const isActive = (path: string) => location.pathname === path || location.pathname.startsWith(path + '/');
+  const isActive = (path: string) =>
+    location.pathname === path || location.pathname.startsWith(`${path}/`);
 
   const handleLogout = async () => {
     try {
@@ -32,12 +31,25 @@ const Sidebar = ({ isOpen = false, onClose }: SidebarProps) => {
     } catch {
       // ignore
     }
-    navigate('/login');
+    onClose?.();
+    window.location.assign('/login');
   };
 
+  // Move focus into the drawer when it opens so keyboard/screen-reader users
+  // land inside the layer instead of behind it.
+  useEffect(() => {
+    if (isOpen) closeButtonRef.current?.focus();
+  }, [isOpen]);
+
   const displayName = user?.name || 'Usuário';
-  const initials = displayName.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase();
-  const roleLabel = user?.role === 'admin' ? 'Administrador' : user?.role === 'manager' ? 'Gerente' : 'Usuário';
+  const initials = displayName
+    .split(' ')
+    .map((n) => n[0])
+    .slice(0, 2)
+    .join('')
+    .toUpperCase();
+  const roleLabel =
+    user?.role === 'admin' ? 'Administrador' : user?.role === 'manager' ? 'Gerente' : 'Usuário';
 
   const menuContent = (
     <>
@@ -46,8 +58,10 @@ const Sidebar = ({ isOpen = false, onClose }: SidebarProps) => {
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full bg-[#CDFF00] text-black flex items-center justify-center text-sm font-bold shrink-0 overflow-hidden">
             {user?.avatar ? (
-              <img src={user.avatar} alt={displayName} className="w-full h-full object-cover" />
-            ) : initials}
+              <img src={user.avatar} alt="" className="w-full h-full object-cover" />
+            ) : (
+              initials
+            )}
           </div>
           <div className="min-w-0">
             <p className="text-sm text-white font-bold truncate">{displayName}</p>
@@ -58,7 +72,7 @@ const Sidebar = ({ isOpen = false, onClose }: SidebarProps) => {
 
       {/* Menu */}
       <nav className="flex-1 px-3 py-3">
-        {visibleMenuItems.map((item) => {
+        {MAIN_MENU_ITEMS.map((item) => {
           const Icon = item.icon;
           const active = isActive(item.path);
           return (
@@ -66,6 +80,7 @@ const Sidebar = ({ isOpen = false, onClose }: SidebarProps) => {
               key={item.id}
               to={item.path}
               onClick={onClose}
+              aria-current={active ? 'page' : undefined}
               className={`sidebar-item ${active ? 'active' : ''}`}
             >
               <Icon className="w-6 h-6 shrink-0" strokeWidth={2} />
@@ -79,7 +94,7 @@ const Sidebar = ({ isOpen = false, onClose }: SidebarProps) => {
       <div className="px-4 pb-6 border-t border-[#2d2d2d] pt-4">
         <button
           onClick={handleLogout}
-          className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-150 cursor-pointer text-white hover:text-[#ff4444] font-medium text-sm"
+          className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg transition-all duration-150 cursor-pointer text-white font-medium text-sm min-h-[44px]"
         >
           <LogOut className="w-6 h-6 shrink-0" strokeWidth={2} />
           <span>Sair</span>
@@ -92,15 +107,23 @@ const Sidebar = ({ isOpen = false, onClose }: SidebarProps) => {
   return (
     <>
       {isOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/50 z-[65] md:hidden"
           onClick={onClose}
+          aria-hidden="true"
         />
       )}
-      
-      {/* Mobile drawer */}
+
+      {/* Mobile drawer. `inert` while closed keeps the off-screen links out of
+          the tab order and away from screen readers. */}
       <aside
-        className={`fixed md:hidden top-0 h-dvh w-[220px] bg-black border-r border-[#2d2d2d] flex flex-col overflow-y-auto overflow-x-hidden z-[70] transform transition-transform duration-300 ease-out ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}
+        ref={drawerRef}
+        id="app-sidebar"
+        inert={!isOpen}
+        aria-label="Menu principal"
+        className={`fixed md:hidden top-0 h-dvh w-[220px] bg-black border-r border-[#2d2d2d] flex flex-col overflow-y-auto overflow-x-hidden z-[70] transition-transform duration-300 ease-out ${
+          isOpen ? 'translate-x-0' : '-translate-x-full'
+        }`}
         style={{
           left: 'env(safe-area-inset-left, 0px)',
           paddingTop: 'env(safe-area-inset-top, 0px)',
@@ -108,12 +131,13 @@ const Sidebar = ({ isOpen = false, onClose }: SidebarProps) => {
         }}
       >
         <button
+          ref={closeButtonRef}
           onClick={onClose}
-          className="absolute right-4 p-2 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-md hover:bg-[#222]"
+          className="absolute right-2 p-2 min-w-[44px] min-h-[44px] flex items-center justify-center rounded-md active:bg-[#222]"
           style={{ top: 'calc(1rem + env(safe-area-inset-top, 0px))' }}
           aria-label="Fechar menu"
         >
-          <X className="w-5 h-5 text-[#A0A0A0] hover:text-[#CDFF00]" />
+          <X className="w-5 h-5 text-[#A0A0A0]" />
         </button>
         {menuContent}
       </aside>

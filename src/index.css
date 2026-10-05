@@ -123,26 +123,6 @@ body {
   }
 }
 
-/* PWA standalone mode - hide browser chrome hints */
-@media (display-mode: standalone) {
-  .pwa-hide-standalone {
-    display: none !important;
-  }
-  body {
-    -webkit-touch-callout: none;
-  }
-}
-
-/* Touch behavior for app-like feel */
-* {
-  -webkit-tap-highlight-color: transparent;
-}
-
-/* Prevent text selection on interactive elements */
-button, a, select, input, textarea {
-  -webkit-touch-callout: none;
-}
-
 /* Bottom navigation bar height variable */
 :root {
   --bottom-nav-height: 64px;
@@ -160,26 +140,56 @@ button, a, select, input, textarea {
   }
 }
 
-/* PWA standalone: adjust bottom nav for no browser chrome */
-@media (display-mode: standalone) {
-  .bottom-nav {
-    padding-bottom: env(safe-area-inset-bottom, 0px);
-    height: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom, 0px));
-  }
+/* Fixed overlays.
+   `contain` stops touch scroll from chaining to the page behind a modal.
+   Safe-area padding is NOT set here: `p-0` on the modal roots is a Tailwind
+   utility inside `@layer utilities`, which outranks a `:where()` rule, so it
+   would silently win and the inset would never apply. Use `.modal-root` below. */
+:where(.fixed.inset-0) {
+  overscroll-behavior: contain;
+}
 
-  /* Extra bottom padding on standalone so content isn't hidden behind nav */
-  @media (max-width: 767px) {
-    .pb-bottom-nav {
-      padding-bottom: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom, 16px));
-    }
+/* Modal root, mobile (<640px), where every overlay is a bottom sheet with `p-0`.
+   Unlayered on purpose so it beats `p-0`/`p-4` from `@layer utilities`. In
+   landscape on a notched phone the side inset is the one that bites, so all
+   four edges are covered. Above 640px the panels are centred with their own
+   `sm:p-*` gutter and this rule stays out of the way. */
+@media (max-width: 639px) {
+  .modal-root {
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    padding-left: env(safe-area-inset-left, 0px);
+    padding-right: env(safe-area-inset-right, 0px);
   }
 }
 
-/* Safe area for fixed overlays.
-   `contain` stops touch scroll from chaining to the page behind a modal. */
-.fixed.inset-0 {
-  padding-top: env(safe-area-inset-top, 0px);
-  padding-bottom: env(safe-area-inset-bottom, 0px);
+/* Horizontal tab strips.
+   `scrollbar-hide` removed the only cue that the row scrolls, so on touch
+   there was nothing signalling more tabs off-screen. A slim visible scrollbar
+   gives that affordance back without the chunky overlay look. */
+.tab-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #3a3a3a transparent;
+  -webkit-overflow-scrolling: touch;
+}
+.tab-scroll::-webkit-scrollbar {
+  height: 3px;
+}
+.tab-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.tab-scroll::-webkit-scrollbar-thumb {
+  background: #3a3a3a;
+  border-radius: 9999px;
+}
+.tab-scroll::-webkit-scrollbar-thumb:hover {
+  background: #CDFF00;
+}
+
+/* Full-bleed overlay root: vertical scroll lives here so tall forms stay
+   reachable when the on-screen keyboard shrinks the viewport. */
+.overlay-scroll {
+  overflow-y: auto;
   overscroll-behavior: contain;
 }
 
@@ -188,10 +198,13 @@ html {
   scroll-behavior: smooth;
 }
 
-/* Mobile-first touch optimizations */
+/* Mobile-first touch optimizations.
+   `select` is deliberately excluded: dropping `-webkit-appearance` on iOS
+   removes the platform's chevron, leaving selects indistinguishable from text
+   inputs. Inputs/textareas gain nothing from the reset anyway. */
 @supports (-webkit-touch-callout: none) {
-  /* iOS specific fixes */
-  input, textarea, select {
+  input:not([type='checkbox']):not([type='radio']):not([type='range']),
+  textarea {
     -webkit-appearance: none;
     appearance: none;
   }
@@ -218,16 +231,25 @@ html {
     font-weight: 600;
   }
 
-  .sidebar-item:hover {
-    background-color: #1a1a1a;
-    color: #FFFFFF;
-    transform: scale(1.05);
-  }
-
   .sidebar-item.active {
     background-color: #CDFF00;
     color: #000000;
     font-weight: 900;
+  }
+
+  /* Touch devices have no real hover: `:hover` sticks after a tap, which leaves
+     nav items and cards visually scaled/selected after navigation. Only apply
+     hover affordances on hover-capable pointers, and give touch an `:active`. */
+  @media (hover: hover) and (pointer: fine) {
+    .sidebar-item:hover {
+      background-color: #1a1a1a;
+      color: #FFFFFF;
+      transform: scale(1.05);
+    }
+  }
+  .sidebar-item:active {
+    background-color: #1a1a1a;
+    color: #FFFFFF;
   }
 
   /* ---- Page Title ---- */
@@ -262,10 +284,15 @@ html {
   .card-clickable {
     transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
   }
-  .card-clickable:hover {
+  @media (hover: hover) and (pointer: fine) {
+    .card-clickable:hover {
+      border-color: #CDFF00;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+      transform: scale(1.02);
+    }
+  }
+  .card-clickable:active {
     border-color: #CDFF00;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.4);
-    transform: scale(1.02);
   }
 
   .card-value {
@@ -292,10 +319,25 @@ html {
     border: none;
     box-shadow: 0 4px 12px rgba(205,255,0,0.2);
   }
-  .btn-primary:hover {
-    background-color: #CDFF00;
-    transform: scale(1.05);
-    box-shadow: 0 6px 16px rgba(205,255,0,0.3);
+  @media (hover: hover) and (pointer: fine) {
+    .btn-primary:hover {
+      background-color: #CDFF00;
+      transform: scale(1.05);
+      box-shadow: 0 6px 16px rgba(205,255,0,0.3);
+    }
+    .btn-secondary:hover {
+      border-color: #CDFF00;
+      background: #1a1a1a;
+    }
+    .btn-destructive:hover {
+      background: rgba(255,68,68,0.1);
+    }
+  }
+  .btn-primary:active {
+    transform: scale(0.97);
+  }
+  .btn-secondary:active {
+    background: #1a1a1a;
   }
 
   .btn-secondary {
@@ -306,17 +348,10 @@ html {
     font-weight: 600;
     font-size: 14px;
   }
-  .btn-secondary:hover {
-    border-color: #CDFF00;
-    background: #1a1a1a;
-  }
 
   .btn-destructive {
     color: #FF4444;
     @apply transition-all duration-150;
-  }
-  .btn-destructive:hover {
-    background: rgba(255,68,68,0.1);
   }
 
   /* ---- Badges ---- */
@@ -368,9 +403,14 @@ html {
   .table-row:nth-child(even) {
     background: rgba(255,255,255,0.02);
   }
-  .table-row:hover {
+  .table-row:active {
     background: rgba(205,255,0,0.04);
-    cursor: pointer;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .table-row:hover {
+      background: rgba(205,255,0,0.04);
+      cursor: pointer;
+    }
   }
 
   .table-cell {
@@ -385,8 +425,10 @@ html {
     opacity: 0.5;
     @apply transition-opacity duration-150;
   }
-  .table-row:hover .table-action-icon {
-    opacity: 1;
+  @media (hover: hover) and (pointer: fine) {
+    .table-row:hover .table-action-icon {
+      opacity: 1;
+    }
   }
 
   /* ---- Inputs ---- */

@@ -435,7 +435,7 @@ const CRMCalendario = () => {
   }, [safeEvents]);
 
   return (
-    <div className="relative min-h-screen bg-black p-2 md:p-8 pb-bottom-nav md:pb-8">
+    <div className="relative min-h-dvh bg-black p-2 md:p-8 md:pb-8">
       <div className="mb-4 md:mb-8 flex flex-col md:flex-row justify-between items-start md:items-end gap-3 md:gap-0">
         <div className="flex items-center gap-4">
           <div>
@@ -626,8 +626,8 @@ const CRMCalendario = () => {
 
       {/* Event View Modal */}
       {showViewModal && viewEvent && (
-        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 animate-in fade-in duration-200">
-          <div className="bg-[#1a1a1a] border border-[#2d2d2d] rounded-t-2xl sm:rounded-xl shadow-[0_20px_40px_rgba(0,0,0,0.5)] w-full max-w-lg transform animate-in slide-in-from-bottom-4 duration-300 max-h-[85vh] flex flex-col">
+        <div className="fixed inset-0 z-[100] flex items-start sm:items-center justify-center p-0 sm:p-4 bg-black/60 animate-in fade-in duration-200 overlay-scroll modal-root">
+          <div className="bg-[#1a1a1a] border border-[#2d2d2d] rounded-t-2xl sm:rounded-xl shadow-[0_20px_40px_rgba(0,0,0,0.5)] w-full max-w-lg transform animate-in slide-in-from-bottom-4 duration-300 max-h-[85dvh] mt-auto flex flex-col">
             <div className="px-4 sm:px-8 py-5 sm:py-7 border-b border-[#333] flex justify-between items-start bg-[#111] shrink-0">
               <div>
                 <span className="text-[9px] font-black uppercase tracking-[2px] mb-2 block"
@@ -777,8 +777,8 @@ const CRMCalendario = () => {
 
       {/* Event Modal (Create/Edit) */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 animate-in fade-in duration-200">
-          <div className="bg-[#1a1a1a] border border-[#2d2d2d] rounded-t-2xl sm:rounded-xl shadow-[0_20px_40px_rgba(0,0,0,0.5)] w-full max-w-lg overflow-hidden transform animate-in slide-in-from-bottom-4 duration-300 max-h-[95vh] overflow-y-auto">
+        <div className="fixed inset-0 z-[100] flex items-start sm:items-center justify-center p-0 sm:p-4 bg-black/60 animate-in fade-in duration-200 overlay-scroll modal-root">
+          <div className="bg-[#1a1a1a] border border-[#2d2d2d] rounded-t-2xl sm:rounded-xl shadow-[0_20px_40px_rgba(0,0,0,0.5)] w-full max-w-lg overflow-hidden transform animate-in slide-in-from-bottom-4 duration-300 max-h-[95dvh] mt-auto overflow-y-auto">
             <form onSubmit={handleSave}>
               <div className="px-4 sm:px-8 py-5 sm:py-7 border-b border-[#2d2d2d] flex justify-between items-start bg-[#1a1a1a]">
                 <div>

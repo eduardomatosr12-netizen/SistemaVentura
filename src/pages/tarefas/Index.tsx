@@ -1154,7 +1154,7 @@ const Tarefas = () => {
   };
 
   return (
-    <div className="p-4 md:p-6 pb-bottom-nav md:pb-6 space-y-4 md:space-y-8 min-h-screen bg-black">
+    <div className="p-4 md:p-6 md:pb-6 space-y-4 md:space-y-8 min-h-dvh bg-black">
       <div>
         <h1 className="text-2xl md:text-[32px] font-black text-white tracking-[0.5px] mb-2 flex items-center gap-3">
           <Package className="text-[#CDFF00]" size={28} />
@@ -1163,10 +1163,10 @@ const Tarefas = () => {
         <p className="text-xs md:text-sm font-medium text-white/70">Gerencie seus itens, categorias e fornecedores.</p>
       </div>
 
-      <div className="flex gap-6 border-b border-[#2d2d2d] overflow-x-auto scrollbar-hide">
+      <div className="flex gap-6 border-b border-[#2d2d2d] overflow-x-auto tab-scroll">
         <button
           onClick={() => setActiveTab('inventario')}
-          className={`py-3 px-1 border-b-2 font-bold text-xs uppercase tracking-widest transition-colors whitespace-nowrap ${
+          className={`py-3 px-1 min-h-[44px] flex items-center border-b-2 font-bold text-xs uppercase tracking-widest transition-colors whitespace-nowrap ${
             activeTab === 'inventario'
               ? 'border-[#CDFF00] text-[#CDFF00]'
               : 'border-transparent text-[#aaaaaa] hover:text-white'
@@ -1177,7 +1177,7 @@ const Tarefas = () => {
         </button>
         <button
           onClick={() => setActiveTab('aluguel')}
-          className={`py-3 px-1 border-b-2 font-bold text-xs uppercase tracking-widest transition-colors whitespace-nowrap ${
+          className={`py-3 px-1 min-h-[44px] flex items-center border-b-2 font-bold text-xs uppercase tracking-widest transition-colors whitespace-nowrap ${
             activeTab === 'aluguel'
               ? 'border-[#CDFF00] text-[#CDFF00]'
               : 'border-transparent text-[#aaaaaa] hover:text-white'
@@ -1399,8 +1399,8 @@ const Tarefas = () => {
       )}
 
       {showRentalModal && (
-        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-sm">
-          <div className="bg-[#1a1a1a] border border-[#2d2d2d] rounded-t-2xl sm:rounded-xl p-4 md:p-8 max-w-full md:max-w-2xl w-full shadow-[0_20px_40px_rgba(0,0,0,0.5)] max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 z-[100] flex items-start sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-sm overlay-scroll modal-root">
+          <div className="bg-[#1a1a1a] border border-[#2d2d2d] rounded-t-2xl sm:rounded-xl p-4 md:p-8 max-w-full md:max-w-2xl w-full shadow-[0_20px_40px_rgba(0,0,0,0.5)] max-h-[90dvh] mt-auto overflow-y-auto" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xl font-black text-white">{isNewRental ? 'Novo Aluguel' : 'Editar Aluguel'}</h3>
               <button onClick={() => setShowRentalModal(false)} className="text-neutral-400 hover:text-white p-2 min-h-[44px]">
@@ -1574,8 +1574,8 @@ const Tarefas = () => {
       )}
 
       {showCreateTaskModal && (
-        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-sm">
-          <div className="bg-[#1a1a1a] border border-[#2d2d2d] rounded-t-2xl sm:rounded-xl p-4 md:p-8 max-w-full md:max-w-md w-full shadow-[0_20px_40px_rgba(0,0,0,0.5)]" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 z-[100] flex items-start sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-sm overlay-scroll modal-root">
+          <div className="bg-[#1a1a1a] border border-[#2d2d2d] rounded-t-2xl sm:rounded-xl p-4 md:p-8 max-w-full md:max-w-md w-full shadow-[0_20px_40px_rgba(0,0,0,0.5)] mt-auto" onClick={e => e.stopPropagation()}>
             <h3 className="text-xl font-black text-white mb-6">Qual categoria deseja adicionar o item?</h3>
             <div className="space-y-3">
               {boards.map(board => (
@@ -1600,8 +1600,8 @@ const Tarefas = () => {
       )}
 
       {showSeedModal && (
-        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-sm" onClick={() => { if (!seedLoading) setShowSeedModal(false); }}>
-          <div className="bg-[#1a1a1a] border border-[#2d2d2d] rounded-t-2xl sm:rounded-xl p-6 md:p-8 max-w-full md:max-w-md w-full shadow-[0_20px_40px_rgba(0,0,0,0.5)]" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 z-[100] flex items-start sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-sm overlay-scroll modal-root" onClick={() => { if (!seedLoading) setShowSeedModal(false); }}>
+          <div className="bg-[#1a1a1a] border border-[#2d2d2d] rounded-t-2xl sm:rounded-xl p-6 md:p-8 max-w-full md:max-w-md w-full shadow-[0_20px_40px_rgba(0,0,0,0.5)] mt-auto" onClick={e => e.stopPropagation()}>
             <div className="w-12 h-12 bg-yellow-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
               <AlertTriangle size={24} className="text-yellow-500" />
             </div>
@@ -1645,8 +1645,8 @@ const Tarefas = () => {
       )}
 
       {editingNote && (
-        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-sm">
-          <div className="bg-[#1a1a1a] border border-[#2d2d2d] rounded-t-2xl sm:rounded-xl p-4 md:p-8 max-w-full md:max-w-2xl w-full shadow-[0_20px_40px_rgba(0,0,0,0.5)] flex flex-col max-h-[90dvh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 z-[100] flex items-start sm:items-center justify-center p-0 sm:p-4 bg-black/60 backdrop-blur-sm overlay-scroll modal-root">
+          <div className="bg-[#1a1a1a] border border-[#2d2d2d] rounded-t-2xl sm:rounded-xl p-4 md:p-8 max-w-full md:max-w-2xl w-full shadow-[0_20px_40px_rgba(0,0,0,0.5)] flex flex-col max-h-[90dvh] mt-auto overflow-y-auto" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-6 shrink-0">
               <h3 className="text-xl font-black text-white">Editar Notas</h3>
               <button onClick={() => { setEditingNote(null); setNoteContent(''); }} className="text-neutral-400 hover:text-white p-2 min-h-[44px]">

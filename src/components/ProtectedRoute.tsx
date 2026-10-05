@@ -8,11 +8,15 @@ interface ProtectedRouteProps {
 }
 
 const ProtectedRoute = ({ children, allowedRoles }: ProtectedRouteProps) => {
-  const { isAuthenticated, isLoading, user, hasPermission } = useAuth();
+  const { isAuthenticated, isLoading, hasPermission } = useAuth();
 
   if (isLoading) {
     return (
-      <div className="h-dvh w-full flex items-center justify-center bg-black" role="status" aria-live="polite">
+      <div
+        className="h-dvh w-full flex items-center justify-center bg-black safe-area-top"
+        role="status"
+        aria-live="polite"
+      >
         <div className="w-8 h-8 border-4 border-white/10 border-t-[#CDFF00] rounded-full animate-spin" />
       </div>
     );
@@ -22,10 +26,8 @@ const ProtectedRoute = ({ children, allowedRoles }: ProtectedRouteProps) => {
     return <Navigate to="/login" replace />;
   }
 
-  if (allowedRoles && allowedRoles.length > 0) {
-    if (!hasPermission(allowedRoles)) {
-      return <Navigate to="/unauthorized" replace />;
-    }
+  if (allowedRoles && allowedRoles.length > 0 && !hasPermission(allowedRoles)) {
+    return <Navigate to="/unauthorized" replace />;
   }
 
   return <>{children}</>;

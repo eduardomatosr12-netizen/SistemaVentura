@@ -1,4 +1,4 @@
-import { useMemo, useCallback, useState, useRef } from 'react';
+import { useMemo, useCallback, useState, useRef, useEffect } from 'react';
 import { useCRM } from '../contexts/CRMContext';
 
 export interface AppNotification {
@@ -95,7 +95,12 @@ export function useNotifications() {
     return list.slice(0, MAX_NOTIFICATIONS).filter(n => !dismissed.has(n.id));
   }, [Orçamentos, events, readMap, dismissed]);
 
-  notificationsRef.current = notifications;
+  // Mirror into a ref inside an effect, not during render: mutating a ref while
+  // rendering is unsafe under concurrent React, and these refs are only read
+  // from callbacks that run after commit.
+  useEffect(() => {
+    notificationsRef.current = notifications;
+  }, [notifications]);
 
   const unreadCount = useMemo(() => notifications.filter(n => !n.isRead).length, [notifications]);
 

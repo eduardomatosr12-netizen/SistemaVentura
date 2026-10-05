@@ -950,7 +950,7 @@ const Financeiro = () => {
   );
 
   return (
-    <div className="min-h-screen bg-[#000000] text-white pb-bottom-nav md:pb-0">
+    <div className="min-h-dvh bg-[#000000] text-white">
       {/* Header */}
       <div className="p-6 md:p-8 border-b border-[rgba(255,255,255,0.08)]">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -1822,7 +1822,7 @@ const Financeiro = () => {
 
       {/* Delete Recurring Expense Dialog */}
       {deleteDialog.show && deleteDialog.expense && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[200] p-4">
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[200] p-4 overlay-scroll">
           <div className="card w-full max-w-md p-8">
             <h3 className="text-lg font-extrabold text-white mb-4">Excluir Despesa Fixa</h3>
             <p className="text-sm text-[#A0A0A0] mb-6">Deseja excluir apenas este lançamento ou todos os futuros?</p>
@@ -1852,8 +1852,8 @@ const Financeiro = () => {
 
       {/* Invoice Modal */}
       {isInvoiceModalOpen && editingInvoice && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[100] p-4">
-          <div className="card w-full max-w-full md:max-w-md p-4 sm:p-8 max-h-[90vh] flex flex-col">
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[100] p-4 overlay-scroll">
+          <div className="card w-full max-w-full md:max-w-md p-4 sm:p-8 max-h-[90dvh] flex flex-col">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-lg font-extrabold text-white">
                 {isNewInvoice ? 'Nova Fatura' : 'Editar Fatura'}
@@ -1958,8 +1958,8 @@ const Financeiro = () => {
 
       {/* Expense Modal */}
       {isExpenseModalOpen && editingExpense && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[100] p-4">
-          <div className="card w-full max-w-full md:max-w-md p-4 sm:p-8 max-h-[90vh] flex flex-col">
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[100] p-4 overlay-scroll">
+          <div className="card w-full max-w-full md:max-w-md p-4 sm:p-8 max-h-[90dvh] flex flex-col">
             <div className="flex justify-between items-center mb-6 shrink-0">
               <h3 className="text-lg font-extrabold text-white">
                 {isNewExpense ? 'Nova Despesa' : 'Editar Despesa'}

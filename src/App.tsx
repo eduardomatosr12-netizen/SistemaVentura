@@ -1,5 +1,5 @@
+import { Suspense, lazy } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import './App.css';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { CRMProvider } from './contexts/CRMContext';
 import { FinanceProvider } from './contexts/FinanceContext';
@@ -7,174 +7,100 @@ import { ActivityLogsProvider } from './contexts/ActivityContext';
 import { FilterProvider } from './contexts/FilterContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import ErrorBoundary from './components/ErrorBoundary';
+import PwaUpdateBanner from './components/PwaUpdateBanner';
 import Login from './pages/Login';
 import MainLayout from './layouts/MainLayout';
-import CRMPainel from './pages/crm/Painel';
-import OrçamentosPage from './pages/crm/Orçamentos';
-import CRMCalendario from './pages/crm/Calendario';
-import Financeiro from './pages/financeiro/Index';
-import DashboardFinanceiro from './pages/financeiro/Dashboard';
-import Tarefas from './pages/tarefas/Index';
-import Configuracoes from './pages/configuracoes/Index';
-import TemplatesWhatsApp from './pages/configuracoes/TemplatesWhatsApp';
+
+// Route-level code splitting. Every page used to be pulled into the entry chunk,
+// which shipped ~1.3 MB (363 kB gzip) before first paint — painful on mobile
+// data. Login stays eager because it is the first paint for signed-out users.
+const CRMPainel = lazy(() => import('./pages/crm/Painel'));
+const OrcamentosPage = lazy(() => import('./pages/crm/Orçamentos'));
+const CRMCalendario = lazy(() => import('./pages/crm/Calendario'));
+const Financeiro = lazy(() => import('./pages/financeiro/Index'));
+const DashboardFinanceiro = lazy(() => import('./pages/financeiro/Dashboard'));
+const Tarefas = lazy(() => import('./pages/tarefas/Index'));
+const Configuracoes = lazy(() => import('./pages/configuracoes/Index'));
+const TemplatesWhatsApp = lazy(() => import('./pages/configuracoes/TemplatesWhatsApp'));
+
+const ALL_ROLES = ['admin', 'manager', 'user'] as const;
+
+function RouteFallback() {
+  return (
+    <div
+      className="h-dvh w-full flex items-center justify-center bg-black safe-area-top"
+      role="status"
+      aria-live="polite"
+    >
+      <div className="w-8 h-8 border-4 border-white/10 border-t-[#CDFF00] rounded-full animate-spin" />
+    </div>
+  );
+}
+
+const protectedPage = (element: React.ReactNode) => (
+  <ProtectedRoute allowedRoles={[...ALL_ROLES]}>
+    <Suspense fallback={<RouteFallback />}>
+      <MainLayout>{element}</MainLayout>
+    </Suspense>
+  </ProtectedRoute>
+);
 
 function AppRoutes() {
   const { isAuthenticated } = useAuth();
 
   return (
-    <Routes>
-      {/* Login Route */}
-      <Route
-        path="/login"
-        element={isAuthenticated ? <Navigate to="/home" replace /> : <Login />}
-      />
+    <>
+      <Routes>
+        <Route
+          path="/login"
+          element={isAuthenticated ? <Navigate to="/home" replace /> : <Login />}
+        />
 
-      {/* Unauthorized Route */}
-      <Route
-        path="/unauthorized"
-        element={
-          <div className="h-dvh w-full flex items-center justify-center bg-black px-4 text-center">
-            <div>
-              <h1 className="text-2xl font-black text-white mb-2">Acesso Negado</h1>
-              <p className="text-neutral-400">Você não tem permissão para acessar esta página.</p>
-              <a href="/home" className="text-[#CDFF00] underline mt-4 inline-block min-h-[44px] leading-[44px]">Voltar ao início</a>
+        {/* Standalone pages — no shell, so they handle their own safe areas. */}
+        <Route
+          path="/unauthorized"
+          element={
+            <div className="h-dvh w-full flex items-center justify-center bg-black px-4 text-center safe-area-top safe-area-bottom">
+              <div>
+                <h1 className="text-2xl font-black text-white mb-2">Acesso Negado</h1>
+                <p className="text-neutral-400">Você não tem permissão para acessar esta página.</p>
+                <a
+                  href="/home"
+                  className="text-[#CDFF00] underline mt-4 inline-block min-h-[44px] leading-[44px]"
+                >
+                  Voltar ao início
+                </a>
+              </div>
             </div>
-          </div>
-        }
-      />
+          }
+        />
 
-      {/* HOME - Página Principal (Dashboard) */}
-      <Route
-        path="/home"
-        element={
-          <ProtectedRoute allowedRoles={['admin', 'manager', 'user']}>
-            <MainLayout hideSubmenu>
-              <CRMPainel />
-            </MainLayout>
-          </ProtectedRoute>
-        }
-      />
+        <Route path="/home" element={protectedPage(<CRMPainel />)} />
+        <Route path="/contatos" element={protectedPage(<OrcamentosPage />)} />
+        <Route path="/clientes" element={protectedPage(<OrcamentosPage />)} />
+        <Route path="/reuniao" element={protectedPage(<CRMCalendario />)} />
+        <Route path="/calendario" element={protectedPage(<CRMCalendario />)} />
+        <Route path="/financeiro" element={protectedPage(<Financeiro />)} />
+        <Route path="/financeiro/dashboard" element={protectedPage(<DashboardFinanceiro />)} />
+        <Route path="/tarefas" element={protectedPage(<Tarefas />)} />
+        <Route path="/configuracoes" element={protectedPage(<Configuracoes />)} />
+        <Route path="/configuracoes/templates-whatsapp" element={protectedPage(<TemplatesWhatsApp />)} />
 
-      {/* CONTATOS - Independente */}
-      <Route
-        path="/contatos"
-        element={
-          <ProtectedRoute allowedRoles={['admin', 'manager', 'user']}>
-            <MainLayout hideSubmenu>
-              <OrçamentosPage />
-            </MainLayout>
-          </ProtectedRoute>
-        }
-      />
+        {/* Legacy CRM routes - keep for backward compatibility */}
+        <Route path="/crm/painel" element={<Navigate to="/home" replace />} />
+        <Route path="/crm/pipeline" element={<Navigate to="/home" replace />} />
+        <Route path="/crm/orcamentos" element={<Navigate to="/clientes" replace />} />
+        <Route path="/crm/calendario" element={<Navigate to="/calendario" replace />} />
+        <Route path="/crm/reuniao" element={<Navigate to="/reuniao" replace />} />
+        <Route path="/crm/clientes" element={<Navigate to="/clientes" replace />} />
+        <Route path="/crm" element={<Navigate to="/home" replace />} />
 
-      {/* REUNIÃO - Independente (mesmo layout de calendário) */}
-      <Route
-        path="/reuniao"
-        element={
-          <ProtectedRoute allowedRoles={['admin', 'manager', 'user']}>
-            <MainLayout hideSubmenu>
-              <CRMCalendario />
-            </MainLayout>
-          </ProtectedRoute>
-        }
-      />
+        <Route path="/" element={<Navigate to={isAuthenticated ? '/home' : '/login'} replace />} />
+        <Route path="*" element={<Navigate to="/home" replace />} />
+      </Routes>
 
-      {/* CALENDÁRIO - Independente */}
-      <Route
-        path="/calendario"
-        element={
-          <ProtectedRoute allowedRoles={['admin', 'manager', 'user']}>
-            <MainLayout hideSubmenu>
-              <CRMCalendario />
-            </MainLayout>
-          </ProtectedRoute>
-        }
-      />
-
-      {/* CLIENTES - Independente */}
-      <Route
-        path="/clientes"
-        element={
-          <ProtectedRoute allowedRoles={['admin', 'manager', 'user']}>
-            <MainLayout hideSubmenu>
-              <OrçamentosPage />
-            </MainLayout>
-          </ProtectedRoute>
-        }
-      />
-
-      {/* Legacy CRM routes - keep for backward compatibility */}
-      <Route path="/crm/painel" element={<Navigate to="/home" replace />} />
-      <Route path="/crm/pipeline" element={<Navigate to="/home" replace />} />
-      <Route path="/crm/orcamentos" element={<Navigate to="/clientes" replace />} />
-      <Route path="/crm/calendario" element={<Navigate to="/calendario" replace />} />
-      <Route path="/crm/reuniao" element={<Navigate to="/reuniao" replace />} />
-      <Route path="/crm/clientes" element={<Navigate to="/clientes" replace />} />
-      <Route path="/crm/importar" element={<Navigate to="/home" replace />} />
-      <Route path="/crm" element={<Navigate to="/home" replace />} />
-
-      {/* Protected Routes - Financeiro */}
-      <Route
-        path="/financeiro"
-        element={
-          <ProtectedRoute allowedRoles={['admin', 'manager', 'user']}>
-            <MainLayout hideSubmenu>
-              <Financeiro />
-            </MainLayout>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/financeiro/dashboard"
-        element={
-          <ProtectedRoute allowedRoles={['admin', 'manager', 'user']}>
-            <MainLayout hideSubmenu>
-              <DashboardFinanceiro />
-            </MainLayout>
-          </ProtectedRoute>
-        }
-      />
-
-      {/* Protected Routes - Estoque - All authenticated users */}
-      <Route
-        path="/tarefas"
-        element={
-          <ProtectedRoute allowedRoles={['admin', 'manager', 'user']}>
-            <MainLayout hideSubmenu>
-              <Tarefas />
-            </MainLayout>
-          </ProtectedRoute>
-        }
-      />
-
-      {/* Protected Routes - Configurações */}
-      <Route
-        path="/configuracoes"
-        element={
-          <ProtectedRoute allowedRoles={['admin', 'manager', 'user']}>
-            <MainLayout hideSubmenu>
-              <Configuracoes />
-            </MainLayout>
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/configuracoes/templates-whatsapp"
-        element={
-          <ProtectedRoute allowedRoles={['admin', 'manager', 'user']}>
-            <MainLayout hideSubmenu>
-              <TemplatesWhatsApp />
-            </MainLayout>
-          </ProtectedRoute>
-        }
-      />
-
-      {/* Root redirect to login or dashboard based on auth */}
-      <Route path="/" element={<Navigate to={isAuthenticated ? '/home' : '/login'} replace />} />
-
-      {/* Fallback for unknown routes */}
-      <Route path="*" element={<Navigate to="/home" replace />} />
-    </Routes>
+      <PwaUpdateBanner />
+    </>
   );
 }
 
@@ -186,9 +112,9 @@ function App() {
           <ActivityLogsProvider>
             <CRMProvider>
               <FinanceProvider>
-              <FilterProvider>
-                <AppRoutes />
-              </FilterProvider>
+                <FilterProvider>
+                  <AppRoutes />
+                </FilterProvider>
               </FinanceProvider>
             </CRMProvider>
           </ActivityLogsProvider>

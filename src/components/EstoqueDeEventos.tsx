@@ -523,8 +523,8 @@ const EstoqueDeEventos = ({ onMessage }: EstoqueDeEventosProps) => {
 
       {/* Create/Edit modal */}
       {formOpen && (
-        <div className="fixed inset-0 bg-black/80 flex items-end sm:items-center justify-center z-[100] p-0 sm:p-4" onClick={() => setFormOpen(false)}>
-          <div className="bg-[#1a1a1a] border border-[#2d2d2d] rounded-t-2xl sm:rounded-t-2xl w-full max-w-md max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-black/80 flex items-start sm:items-center justify-center z-[100] p-0 sm:p-4 overlay-scroll modal-root" onClick={() => setFormOpen(false)}>
+          <div className="bg-[#1a1a1a] border border-[#2d2d2d] rounded-t-2xl sm:rounded-t-2xl w-full max-w-md max-h-[90dvh] mt-auto overflow-y-auto" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between p-4 border-b border-[#222]">
               <h3 className="text-sm font-black uppercase tracking-widest text-[#CDFF00]">
                 {editingItem ? 'Editar Item' : 'Novo Item'}
@@ -592,8 +592,8 @@ const EstoqueDeEventos = ({ onMessage }: EstoqueDeEventosProps) => {
 
       {/* Link to orçamento modal */}
       {linkItem && (
-        <div className="fixed inset-0 bg-black/80 flex items-end sm:items-center justify-center z-[100] p-0 sm:p-4" onClick={() => setLinkItem(null)}>
-          <div className="bg-[#1a1a1a] border border-[#2d2d2d] rounded-t-2xl sm:rounded-t-2xl w-full max-w-md max-h-[90vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-black/80 flex items-start sm:items-center justify-center z-[100] p-0 sm:p-4 overlay-scroll modal-root" onClick={() => setLinkItem(null)}>
+          <div className="bg-[#1a1a1a] border border-[#2d2d2d] rounded-t-2xl sm:rounded-t-2xl w-full max-w-md max-h-[90dvh] mt-auto overflow-y-auto" onClick={e => e.stopPropagation()}>
             <div className="flex items-center justify-between p-4 border-b border-[#222]">
               <h3 className="text-sm font-black uppercase tracking-widest text-[#CDFF00]">Adicionar ao Orçamento</h3>
               <button onClick={() => setLinkItem(null)} className="p-2 hover:bg-[#222] rounded-md transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center">

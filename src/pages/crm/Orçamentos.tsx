@@ -1,5 +1,5 @@
 import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
-import { Plus, Pencil, Trash2, X, Save, Filter, XCircle, ChevronDown, ChevronUp, AlertCircle, MessageCircle, Package, Search, FileText, Percent, DollarSign, Users } from 'lucide-react';
+import { Plus, Pencil, Trash2, X, Save, Filter, XCircle, ChevronDown, ChevronUp, MessageCircle, Package, Search, Percent, Users } from 'lucide-react';
 import WhatsAppModal from '../../components/WhatsAppModal';
 import { useCRM } from '../../contexts/CRMContext';
 import type { Lead, OrcamentoItem } from '../../types/crm';
@@ -486,7 +486,7 @@ const CRMOrçamentos = () => {
 
   return (
     <>
-    <div className="relative min-h-screen pb-bottom-nav md:pb-0">
+    <div className="relative min-h-dvh">
       {isSidebarOpen && (
         <>
           <div className="fixed inset-0 bg-black/60 z-[55] md:hidden" onClick={() => setIsSidebarOpen(false)} />
@@ -514,7 +514,7 @@ const CRMOrçamentos = () => {
             {renderFilterField('status', 'Status', 'text')}
             </div>
           </div>
-          <div className="hidden md:block absolute top-14 left-4 w-[280px] max-h-[80vh] bg-[#1a1a1a] border border-[#2d2d2d] rounded-xl shadow-xl overflow-y-auto z-50">
+          <div className="hidden md:block absolute top-14 left-4 w-[280px] max-h-[80dvh] bg-[#1a1a1a] border border-[#2d2d2d] rounded-xl shadow-xl overflow-y-auto z-50">
             <div className="p-3 sticky top-0 bg-[#1a1a1a] border-b border-[#2d2d2d] flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <div>
@@ -587,13 +587,15 @@ const CRMOrçamentos = () => {
           <div className="flex flex-col md:flex-row justify-between items-start md:items-start gap-4 mb-2 md:mb-4">
             <div className="flex items-center gap-3">
               <div className="relative group">
-                <button 
+                <button
                   onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                  className={`p-2 rounded-lg border transition-all relative ${hasActiveFilters || selectedMonth ? 'bg-[#111] text-white border-[#333]' : 'bg-transparent border-transparent text-[#CDFF00] hover:text-[#CDFF00] hover:bg-[#0a0a0a]'}`}
+                  aria-label="Filtros"
+                  aria-expanded={isSidebarOpen}
+                  className={`min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg border transition-all relative active:bg-[#0a0a0a] ${hasActiveFilters || selectedMonth ? 'bg-[#111] text-white border-[#333]' : 'bg-transparent border-transparent text-[#CDFF00] hover:text-[#CDFF00] hover:bg-[#0a0a0a]'}`}
                 >
                   <Filter size={16} strokeWidth={hasActiveFilters || selectedMonth ? 2.5 : 1.5} />
                   {(hasActiveFilters || selectedMonth) && (
-                    <span className="absolute top-1 right-1 w-1.5 h-1.5 bg-red-500 rounded-full" />
+                    <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-red-500 rounded-full" />
                   )}
                 </button>
                 <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2 py-1 bg-neutral-800 text-white text-[10px] font-medium rounded opacity-0 md:group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap hidden md:block">
@@ -745,8 +747,8 @@ const CRMOrçamentos = () => {
       </main>
 
       {isOpen && (
-        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-3 md:p-4 bg-black/30 backdrop-blur-sm" onClick={() => setIsOpen(false)}>
-          <div className="bg-[#111] border border-[#333] w-full max-w-sm md:max-w-2xl rounded-t-2xl sm:rounded-2xl shadow-xl overflow-hidden max-h-[92vh] sm:max-h-[90vh] flex flex-col" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 z-[100] flex items-start sm:items-center justify-center p-0 sm:p-3 md:p-4 bg-black/30 backdrop-blur-sm overlay-scroll modal-root" onClick={() => setIsOpen(false)}>
+          <div className="bg-[#111] border border-[#333] w-full max-w-sm md:max-w-2xl rounded-t-2xl sm:rounded-2xl shadow-xl overflow-hidden max-h-[92dvh] mt-auto sm:max-h-[90dvh] flex flex-col" onClick={e => e.stopPropagation()}>
             <div className="flex justify-between items-start md:items-center gap-3 px-4 md:px-7 py-3 md:py-5 border-b border-slate-100 shrink-0">
               <div>
                 <h2 className="text-lg md:text-xl font-black text-white tracking-tight">
