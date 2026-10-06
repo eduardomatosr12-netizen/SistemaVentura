@@ -349,13 +349,25 @@ const CRMDashboard = () => {
         ? formData.outroEventoType.trim()
         : formData.eventType;
 
-      await updateEvent(eventId, {
+      const eventFieldsToSave: Partial<CalendarEvent> = {
         clientCpf: formData.cpf,
         clientRg: formData.rg,
         clientAddress: formData.clientAddress,
         clientGender: formData.clientGender,
         contractServices: formData.contractServices,
-      });
+      };
+      // Garante que os campos obrigatórios do evento (title/date/client)
+      // sempre cheguem preenchidos na validação, mesmo em eventos antigos
+      // que não os tenham gravados.
+      if (formData.name.trim()) {
+        eventFieldsToSave.client = formData.name.trim();
+        eventFieldsToSave.title = eventType
+          ? `${eventType} - ${formData.name.trim()}`
+          : formData.name.trim();
+      }
+      if (formData.date) eventFieldsToSave.date = formData.date;
+
+      await updateEvent(eventId, eventFieldsToSave);
 
       // Montado a partir do formulário (e não do snapshot) para funcionar logo
       // após criar o rascunho do evento.

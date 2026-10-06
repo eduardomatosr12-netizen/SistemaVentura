@@ -1,0 +1,13 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "event_expenses",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "eventId", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "ASCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}
