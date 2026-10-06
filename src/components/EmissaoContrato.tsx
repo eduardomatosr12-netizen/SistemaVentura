@@ -15,6 +15,8 @@ import {
 interface Props {
   eventId: string | null;
   data: ContractData;
+  onNameChange?: (value: string) => void;
+  onWhatsappChange?: (value: string) => void;
   onCpfChange?: (value: string) => void;
   onRgChange?: (value: string) => void;
   onAddressChange?: (value: string) => void;
@@ -48,7 +50,7 @@ const Block = ({ icon, title, children }: { icon: React.ReactNode; title: string
   </section>
 );
 
-export default function EmissaoContrato({ eventId, data, onCpfChange, onRgChange, onAddressChange, onGenderChange, onServicesChange, onDownPaymentChange, onSave, saving }: Props) {
+export default function EmissaoContrato({ eventId, data, onNameChange, onWhatsappChange, onCpfChange, onRgChange, onAddressChange, onGenderChange, onServicesChange, onDownPaymentChange, onSave, saving }: Props) {
   const items = data.items || [];
   const selected = data.services || [];
 
@@ -132,6 +134,7 @@ export default function EmissaoContrato({ eventId, data, onCpfChange, onRgChange
   const pendencias = useMemo(() => {
     const list: string[] = [];
     if (!data.clientName) list.push('Nome do contratante');
+    if (!data.whatsapp) list.push('WhatsApp do contratante');
     if (!data.cpf && !data.rg) list.push('CPF ou RG do contratante');
     if (!data.clientAddress) list.push('Endereço do contratante');
     if (!data.clientGender) list.push('Sexo do contratante');
@@ -183,7 +186,32 @@ export default function EmissaoContrato({ eventId, data, onCpfChange, onRgChange
       )}
 
       <Block icon={<User size={12} />} title="Partes">
-        <Row label="Contratante" value={data.clientName || '—'} />
+        {onNameChange ? (
+          <EditableRow label="Nome do Contratante">
+            <input
+              type="text"
+              value={data.clientName || ''}
+              onChange={e => onNameChange(e.target.value)}
+              placeholder="Nome do cliente do orçamento"
+              className={inputClass}
+            />
+          </EditableRow>
+        ) : (
+          <Row label="Contratante" value={data.clientName || '—'} />
+        )}
+        {onWhatsappChange ? (
+          <EditableRow label="WhatsApp do Contratante">
+            <input
+              type="text"
+              value={data.whatsapp || ''}
+              onChange={e => onWhatsappChange(e.target.value)}
+              placeholder="(00) 00000-0000"
+              className={inputClass}
+            />
+          </EditableRow>
+        ) : (
+          <Row label="WhatsApp" value={data.whatsapp || '—'} />
+        )}
         {onCpfChange ? (
           <EditableRow label="CPF do Contratante">
             <input

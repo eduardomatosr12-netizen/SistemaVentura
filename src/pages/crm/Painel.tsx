@@ -233,7 +233,7 @@ const CRMDashboard = () => {
       : formData.eventType;
 
     return {
-      clientName: formData.name || 'Cliente',
+      clientName: formData.name || '',
       whatsapp: formData.whatsapp || '',
       cpf: formData.cpf || '',
       rg: formData.rg || '',
@@ -365,6 +365,7 @@ const CRMDashboard = () => {
           ? `${eventType} - ${formData.name.trim()}`
           : formData.name.trim();
       }
+      if (formData.whatsapp.trim()) eventFieldsToSave.clientPhone = formData.whatsapp.trim();
       if (formData.date) eventFieldsToSave.date = formData.date;
 
       await updateEvent(eventId, eventFieldsToSave);
@@ -402,6 +403,16 @@ const CRMDashboard = () => {
   // Abas de Despesas e Contrato dependem do ID do evento: cria o rascunho se ainda não existir.
   const openLinkedTab = async (target: 'despesas' | 'contrato') => {
     if (editingEventId) {
+      // Carrega da orçamento salvo os dados do cliente (nome/WhatsApp) para
+      // a aba aberta, caso ainda não estejam no state.
+      const current = events.find(e => e.id === editingEventId);
+      if (current) {
+        setFormData(prev => ({
+          ...prev,
+          name: prev.name && prev.name.trim() ? prev.name : (current.client || ''),
+          whatsapp: prev.whatsapp && prev.whatsapp.trim() ? prev.whatsapp : (current.clientPhone || ''),
+        }));
+      }
       setAbaAtiva(target);
       return;
     }
@@ -1420,6 +1431,8 @@ event.status === 'evento_confirmado' ? 'bg-[#3b82f6] text-white' :
                 <EmissaoContrato
                   eventId={editingEventId}
                   data={contractData}
+                  onNameChange={value => setFormData(prev => ({ ...prev, name: value }))}
+                  onWhatsappChange={value => setFormData(prev => ({ ...prev, whatsapp: value }))}
                   onCpfChange={value => setFormData(prev => ({ ...prev, cpf: value }))}
                   onRgChange={value => setFormData(prev => ({ ...prev, rg: value }))}
                   onAddressChange={value => setFormData(prev => ({ ...prev, clientAddress: value }))}
