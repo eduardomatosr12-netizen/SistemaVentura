@@ -4,6 +4,8 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   build: {
+    outDir: 'dist',
+    emptyOutDir: true,
     // Lightning CSS (Vite's default cssMinify) rewrites `max-width`/`min-width`
     // into Media Queries Level 4 range syntax (`(width<=767px)`). Browsers that
     // don't parse range syntax discard the whole block, which silently kills every
