@@ -1,5 +1,5 @@
 import {
-  collection, getDocs, addDoc, updateDoc, deleteDoc, doc, query, orderBy, onSnapshot, Timestamp,
+  collection, getDocs, getDoc, addDoc, updateDoc, deleteDoc, doc, query, orderBy, onSnapshot, Timestamp,
 } from 'firebase/firestore';
 import { db } from './firebase';
 import type { CalendarEvent } from '../types/crm';
@@ -87,7 +87,18 @@ export const addEvent = async (event: Omit<CalendarEvent, 'id'>): Promise<string
 
 export const updateEvent = async (id: string, fields: Partial<CalendarEvent>): Promise<void> => {
   try {
-    const result = validateAndCleanEvent({ ...fields, id });
+    const docRef = doc(db, COLLECTION, id);
+    const snapshot = await getDoc(docRef);
+    if (!snapshot.exists()) {
+      const error = new Error('Evento não encontrado: ' + id);
+      console.error('[Firestore] Erro ao atualizar evento:', error.message);
+      throw error;
+    }
+    // A validação exige title/date/client, mas updateEvent recebe apenas os
+    // campos alterados (ex.: dados do contrato). Mescla com o documento atual
+    // para validar o estado completo e não sobrescrever campos não enviados.
+    const existing = snapshot.data() as Partial<CalendarEvent>;
+    const result = validateAndCleanEvent({ ...existing, ...fields, id });
     if (!result.success) {
       const error = new Error('Validação falhou: ' + result.errors?.join(', '));
       console.error('[Firestore] Validação falhou ao atualizar evento:', error.message);
@@ -97,7 +108,12 @@ export const updateEvent = async (id: string, fields: Partial<CalendarEvent>): P
     delete data.id;
     delete data.createdAt;
     delete data.updatedAt;
-    await updateDoc(doc(db, COLLECTION, id), { ...data, updatedAt: Timestamp.now() });
+    // O validador omite campos opcionais vazios; quando o usuário limpou um
+    // campo ('') gravamos '' explicitamente para apagar o valor antigo.
+    Object.entries(fields).forEach(([key, value]) => {
+      if (value === '' && !(key in data)) data[key] = '';
+    });
+    await updateDoc(docRef, { ...data, updatedAt: Timestamp.now() });
     console.log('[Firestore] Evento atualizado:', id);
   } catch (err) {
     console.error('[Firestore] Erro ao atualizar evento:', id, err);

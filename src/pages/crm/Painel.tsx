@@ -1,6 +1,6 @@
 import { useState, useMemo, useRef, useEffect } from 'react';
 import { useScrollLock } from '../../hooks/useScrollLock';
-import { Calendar, UserPlus, ArrowRight, CheckSquare, Activity, AlertCircle, LayoutDashboard, X, ChevronLeft, ChevronRight, ChevronDown, Search, User, Phone, CalendarDays, Clock, Plus, Trash2, MapPin, Pencil, FileText, MessageCircle, Lock, Package, History, BadgeDollarSign } from 'lucide-react';
+import { Calendar, UserPlus, ArrowRight, CheckSquare, Activity, AlertCircle, LayoutDashboard, X, ChevronLeft, ChevronRight, ChevronDown, Search, User, Phone, CalendarDays, Clock, Plus, Trash2, MapPin, Pencil, FileText, MessageCircle, Lock, Package, History, BadgeDollarSign, Flag } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell, LabelList, CartesianGrid, Tooltip } from 'recharts';
 import { ChartTooltipContent } from '../../components/charts';
@@ -114,6 +114,7 @@ const CRMDashboard = () => {
     cpf: '', rg: '', clientAddress: '', clientGender: '' as 'F' | 'M' | '',
     eventType: '', date: '', dateEnd: '', time: '', city: '', local: '', observacao: '',
     outroEventoType: '',
+    status: 'orcamento' as CalendarEvent['status'],
     orcamentoItems: [] as OrcamentoItem[], desconto: 0, valor: 0,
     contractServices: [] as string[],
     downPayment: 50,
@@ -328,7 +329,7 @@ const CRMDashboard = () => {
   const openCreateModal = (dateStr: string) => {
     setEditingEventId(null);
     setCreateDate(dateStr);
-    setFormData(prev => ({ ...prev, date: dateStr, dateEnd: '', eventType: '', city: '', local: '', cpf: '', rg: '', clientAddress: '', clientGender: '', observacao: '', outroEventoType: '', orcamentoItems: [], desconto: 0, valor: 0, contractServices: [] }));
+    setFormData(prev => ({ ...prev, date: dateStr, dateEnd: '', eventType: '', city: '', local: '', cpf: '', rg: '', clientAddress: '', clientGender: '', observacao: '', outroEventoType: '', status: 'orcamento', orcamentoItems: [], desconto: 0, valor: 0, contractServices: [] }));
     setOrcSearch('');
     setOrcSearchOpen(false);
     setShowCreateItemForm(false);
@@ -405,7 +406,7 @@ const CRMDashboard = () => {
         time: formData.time || '',
         city: formData.city || '',
         description: formData.observacao || '',
-        status: 'orcamento' as const,
+        status: formData.status || 'orcamento',
       });
       if (newId) {
         setEditingEventId(newId);
@@ -440,6 +441,7 @@ const CRMDashboard = () => {
       local: event.local || '',
       observacao: event.description || '',
       outroEventoType: isCustomType ? eventTypeValue : '',
+      status: event.status || 'orcamento',
       orcamentoItems: (event.items as OrcamentoItem[]) || [],
       desconto: event.desconto || 0,
       valor: (event.valorTotal || 0) + (event.desconto || 0),
@@ -480,7 +482,7 @@ const handleCreateSubmit = async (e: React.FormEvent) => {
           city: formData.city,
           local: formData.local,
           description: formData.observacao,
-          status: 'orcamento',
+          status: formData.status || 'orcamento',
           valorTotal: total,
           desconto: formData.desconto,
           items: formData.orcamentoItems,
@@ -502,7 +504,7 @@ const handleCreateSubmit = async (e: React.FormEvent) => {
           city: formData.city,
           local: formData.local,
           description: formData.observacao,
-          status: 'orcamento',
+          status: formData.status || 'orcamento',
           valorTotal: total,
           desconto: formData.desconto,
           items: formData.orcamentoItems,
@@ -1523,6 +1525,24 @@ event.status === 'evento_confirmado' ? 'bg-[#3b82f6] text-white' :
                     <input type="date" value={formData.dateEnd || ''} onChange={e => setFormData(prev => ({ ...prev, dateEnd: e.target.value }))}
                       className="w-full bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg px-3 py-2 text-sm text-white focus:border-[#CDFF00] outline-none" style={{ colorScheme: 'dark' }} />
 </div>
+                  {/* Status do Evento */}
+                  <div>
+                    <label className="block text-[10px] font-black uppercase tracking-widest text-neutral-400 mb-1.5 flex items-center gap-1.5">
+                      <Flag size={12} /> Status do Evento
+                    </label>
+                    <div className="relative">
+                      <select
+                        value={formData.status || 'orcamento'}
+                        onChange={e => setFormData(prev => ({ ...prev, status: e.target.value as CalendarEvent['status'] }))}
+                        className="w-full bg-[#1a1a1a] border border-[#2d2d2d] rounded-lg px-3 py-2 text-sm text-white appearance-none focus:border-[#CDFF00] outline-none"
+                      >
+                        {Object.entries(statusLabel).map(([key, label]) => (
+                          <option key={key} value={key}>{label}</option>
+                        ))}
+                      </select>
+                      <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 w-2.5 h-2.5 rounded-full" style={{ backgroundColor: getStatusColor(formData.status) }} />
+                    </div>
+                  </div>
               {/* Seção 2 — itens do orçamento, valores e observação */}
               <div className="space-y-5 min-w-0">
                   {/* Itens do Orçamento */}
